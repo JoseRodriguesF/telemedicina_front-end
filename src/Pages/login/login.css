@@ -1,0 +1,61 @@
+/* Login page styles reused from register.css with small adjustments */
+.login-page {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F9FAFB;
+  font-family: 'AR One Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+
+.login-main {
+  width: 100%;
+  max-width: 420px;
+  margin: 0;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.register-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 0.5rem 0; text-align: center; }
+.register-subtitle { margin: 0 0 1rem 0; color: #718096; font-size: 0.95rem; text-align: center; }
+
+.register-form { display: flex; flex-direction: column; gap: 0.75rem; }
+.form-input { padding: 0.75rem 1rem; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 0.95rem; background: #fafafa; }
+
+.primary-btn { margin-top: 8px; background: #2563EB; color: #fff; padding: 0.85rem 1rem; border-radius: 8px; border: 0; font-weight: 700; cursor: pointer; }
+.primary-btn:hover { background: #1d4ed8; }
+
+.forgot-row { margin-top: 0.6rem; text-align: center; }
+.link-small { color: #2563EB; font-size: 0.88rem; text-decoration: none; }
+
+.divider { display: flex; align-items: center; gap: 0.75rem; margin: 1rem 0; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e6e6e6; }
+.divider span { font-size: 0.9rem; color: #94a3b8; padding: 0 0.5rem; }
+
+.google-btn { display: inline-flex; align-items: center; gap: 0.75rem; justify-content: center; width: 100%; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; }
+.google-btn img, .google-btn svg { display: block; }
+
+.register-footer { margin-top: 1rem; text-align: center; font-size: 0.9rem; color: #64748b; }
+.register-footer .link-small { margin-left: 4px; }
+
+.error-text { color: #f87171; font-size: 0.85rem; margin-top: 0.25rem; }
+
+@media (max-width: 640px) {
+  .login-main, .register-card { max-width: 92%; padding: 1rem; }
+  .login-page { overflow: auto; align-items: flex-start; padding-top: 20px; }
+}

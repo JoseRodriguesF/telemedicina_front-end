@@ -1,0 +1,259 @@
+/* Styles for Register page (local to src/pages/register) */
+.register-page {
+  /* Fill the viewport and center the card both vertically and horizontally */
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F9FAFB;
+  font-family: 'AR One Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  overflow: hidden; /* remove page scrolling by default */
+}
+
+.register-main {
+  width: 100%;
+  max-width: 420px; /* default card width for step 1 */
+  margin: 0;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  text-align: center;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* Title row inside a label (text + asterisk) */
+.form-label .label-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.form-input {
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-size: 0.95rem;
+}
+
+.submit-btn {
+  background: #2563EB;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.submit-btn:hover { background: #1d4ed8; }
+
+/* Card */
+.register-card {
+  width: 100%;
+  max-width: 420px; /* default card width (step 1) */
+  margin: 0 auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Responsive: keep card smaller than viewport on small screens */
+@media (max-width: 640px) {
+  .register-main,
+  .register-card {
+    max-width: 92%;
+    padding: 1rem;
+  }
+
+  /* On small screens allow page scrolling and add top/bottom padding so the card isn't cut off */
+  .register-page {
+    overflow: auto;
+    align-items: flex-start; /* place card starting from top area */
+    padding-top: 20px;
+    padding-bottom: 0px;
+  }
+}
+
+.register-subtitle {
+  margin: 0 0 1rem 0;
+  color: #718096;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.register-form { gap: 0.75rem; }
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #fafafa;
+}
+
+/* Make sure inputs and buttons inside the card fill available width */
+.register-card {
+  align-items: stretch;
+}
+
+.register-card .c-input,
+.register-card input,
+.register-card textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* placeholder color for regular inputs */
+.register-card .c-input::placeholder {
+  color: #718096;
+  opacity: 1;
+}
+
+/* native controls (select / date) — style when empty using :invalid */
+.register-card select.c-input:invalid,
+.register-card input[type="date"]:invalid {
+  color: #718096;
+}
+.register-card select.c-input option[value=""] {
+  color: #718096;
+}
+
+.register-card .c-btn {
+  width: 100%;
+}
+
+.c-input.c-input--error {
+  border-color: #f87171; /* red-400 */
+  background: #fff5f5;
+}
+
+.error-text {
+  color: #f87171;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+/* small red asterisk for required labels */
+.required-asterisk {
+  color: #ef4444; /* red-500 */
+  font-size: 0.85em;
+  margin-left: 0; /* spacing handled by .label-title gap */
+}
+
+.primary-btn {
+  margin-top: 8px;
+  background: #2563EB;
+  color: #fff;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  border: 0;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-btn:hover { background: #1d4ed8; }
+
+.forgot-row { margin-top: 0.6rem; text-align: center; }
+.link-small { color: #2563EB; font-size: 0.88rem; text-decoration: none; }
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e6e6e6;
+}
+.divider span { font-size: 0.9rem; color: #94a3b8; padding: 0 0.5rem; }
+
+.google-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: center;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+}
+.google-btn img, .google-btn svg { display: block; }
+
+.register-footer { margin-top: 1rem; text-align: center; font-size: 0.9rem; color: #64748b; }
+.register-footer .link-small { margin-left: 4px; }
+
+/* Explicit card size modifiers per step */
+.register-card.dados-acesso-card { max-width: 420px; }
+.register-card.dados-pessoais-card {
+  max-width: 600px;
+  padding: 1rem; /* reduce vertical space so the card appears lower-height */
+  transform: translateY(-6px); /* lift slightly to look 'floating' */
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+/* Make action buttons on step 2 equal width */
+.register-card .form-actions.two-equal {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.register-card .form-actions.two-equal .left-actions,
+.register-card .form-actions.two-equal .right-actions {
+  flex: 1 1 0;
+}
+.register-card .form-actions.two-equal .left-actions .c-btn,
+.register-card .form-actions.two-equal .right-actions .c-btn {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* When showing the Dados Pessoais step, allow the page container to be wider */
+.register-main.dados-pessoais-wide {
+  max-width: 640px;
+}
+
+/* When showing step 2, allow a little extra scroll space (20px) on the page */
+.register-page.dados-pessoais-active {
+  overflow: auto;
+  padding-bottom: 0px; /* reduced bottom padding while keeping top padding */
+}
+
+/* Ensure wide layout still collapses on small screens */
+@media (max-width: 640px) {
+  .register-main.dados-pessoais-wide {
+    max-width: 92%;
+  }
+}
+

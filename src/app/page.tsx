@@ -1,5 +1,5 @@
-import HomeScreen from "../Pages/Home";
+import HomeScreen from "@/pages/Home"; 
 
-export default function Page() {
+export default function Page() { 
   return <HomeScreen />;
-}
+ }

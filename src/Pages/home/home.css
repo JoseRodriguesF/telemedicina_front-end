@@ -1,0 +1,18 @@
+/* Home page CSS (moved under pages/home) */
+.page-home {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+.page-home__main {
+  flex: 1;
+  padding: 1.5rem;
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+.home-page-duplicate {
+  /* Duplicate home CSS removed - using root `Home.css` as source of truth */
+}

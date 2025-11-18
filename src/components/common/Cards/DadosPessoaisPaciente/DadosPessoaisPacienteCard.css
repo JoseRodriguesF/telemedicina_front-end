@@ -1,0 +1,94 @@
+/* Styles specific to DadosPessoaisPacienteCard to match the provided layout */
+/* layout rules (sizing for this component are handled in register.css via a specific class) */
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+  align-items: start;
+}
+
+.form-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.form-label.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-actions.actions-full {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.form-actions.actions-full .c-btn {
+  min-width: 140px;
+}
+
+/* Smaller visual size for compact inputs like date/CPF */
+.grid-2 .form-label input[type="text"],
+.grid-2 .form-label input[type="tel"],
+.grid-2 .form-label input[type="date"] {
+  height: 40px;
+}
+
+@media (max-width: 640px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .form-actions.actions-full {
+    flex-direction: column-reverse;
+  }
+}
+/* Specific styles for step 2 (personal data) */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+}
+
+/* Allow some fields to span full width */
+.grid-2 .full-width {
+  grid-column: 1 / -1;
+}
+
+.form-actions .c-btn {
+  min-width: 120px;
+}
+
+/* Make selects and inputs consistent */
+.c-input, select {
+  height: 40px;
+}
+
+@media (max-width: 640px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+}
+
+/* Slightly smaller labels, inputs and buttons inside the Dados Pessoais card */
+.register-card.dados-pessoais-card .form-label {
+  font-size: 0.95rem; /* a bit smaller */
+}
+.register-card.dados-pessoais-card .c-input {
+  padding: 0.6rem 0.9rem;
+  font-size: 0.92rem;
+}
+.register-card.dados-pessoais-card .c-btn {
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+}
+.register-card.dados-pessoais-card .form-actions .c-btn {
+  min-width: 110px;
+}

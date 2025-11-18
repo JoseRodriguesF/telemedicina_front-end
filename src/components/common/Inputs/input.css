@@ -1,0 +1,18 @@
+/* Reusable input styles for common inputs */
+.c-input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #fafafa;
+  color: #0f172a;
+}
+
+.c-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+  border-color: #2563EB;
+}

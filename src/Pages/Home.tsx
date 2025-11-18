@@ -1,13 +1,13 @@
-import Header from "../components/Header";
+import Header from "@/components/layout/Header/Header";
+import './Home.css';
 
 export default function HomeScreen() {
-  return (
-    <div>
-      <Header />
-      <main style={{padding: 16}}>
-        <h2>Bem-vindo ao Telemedicina</h2>
-        <p>Esta é a tela inicial. Edite `src/screens/Home.tsx` para personalizar.</p>
-      </main>
-    </div>
-  );
+	return (
+		<div className="page-home">
+			<Header />
+			<main className="page-home__main">
+				<h2 className="home-heading">Bem-vindo ao Telemedicina</h2>
+			</main>
+		</div>
+	);
 }
