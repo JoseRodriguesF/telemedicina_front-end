@@ -6,6 +6,49 @@
   justify-content: center;
   background: #F9FAFB;
   font-family: 'AR One Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  overflow: hidden;
+}
+
+.login-main {
+  width: 100%;
+  max-width: 420px;
+  margin: 0;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.register-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 0.5rem 0; text-align: center; }
+.register-subtitle { margin: 0 0 1rem 0; color: #718096; font-size: 0.95rem; text-align: center; }
+.register-form { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.register-footer { margin-top: 1rem; text-align: center; font-size: 0.9rem; color: #64748b; }
+.register-footer .link-small { margin-left: 4px; }
+
+  .login-main, .register-card { max-width: 92%; padding: 1rem; }
+  .login-page { overflow: auto; align-items: flex-start; padding-top: 20px; }
+/* Login page styles reused from register.css with small adjustments */
+.login-page {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F9FAFB;
+  font-family: 'AR One Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }
 
 .login-main {

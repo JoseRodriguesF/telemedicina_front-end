@@ -1,4 +1,4 @@
-import '@/pages/register/register.css';
+// global styles for register are imported in app layout
 import './DadosPessoaisPacienteCard.css';
 import Input from '@/components/common/Inputs/Input';
 import Button from '@/components/common/Buttons/Button';
@@ -13,9 +13,21 @@ import {
   isValidDDD,
 } from '@/lib/validation/validators';
 
+export type DadosPessoais = {
+  name: string;
+  birthDate: string;
+  cpf: string;
+  gender: string;
+  marital: string;
+  address: string;
+  number: string;
+  guardian: string;
+  guardianContact: string;
+};
+
 type Props = {
   onBack?: () => void;
-  onComplete?: (data?: any) => void;
+  onComplete?: (data?: DadosPessoais) => void;
 };
 
 export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props) {
@@ -77,17 +89,7 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
 
   const minor = isMinor(birthDate);
 
-  // Clear guardian fields and related errors when the person is no longer a minor
-  useEffect(() => {
-    if (!minor) {
-      if (guardian || guardianContact) {
-        setGuardian('');
-        setGuardianContact('');
-      }
-      setGuardianError('');
-      setGuardianContactError('');
-    }
-  }, [minor]);
+  // No effect-based state resets; handle via birthDate onChange to avoid setState in effect
 
   function validateAll() {
     // reset all errors
@@ -180,7 +182,7 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
     return valid;
   }
 
-  function buildData() {
+  function buildData(): DadosPessoais {
     return { name, birthDate, cpf, gender, marital, address, number, guardian, guardianContact };
   }
 
@@ -220,7 +222,24 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
 
         <label className="form-label">
           <span className="label-title">Data de nascimento <span className="required-asterisk">*</span></span>
-          <Input type="date" required value={birthDate} onChange={(e) => { setBirthDate(e.target.value); setBirthDateError(''); }} />
+          <Input
+            type="date"
+            required
+            value={birthDate}
+            onChange={(e) => {
+              const nextVal = e.target.value;
+              setBirthDate(nextVal);
+              setBirthDateError('');
+              if (!isMinor(nextVal)) {
+                if (guardian || guardianContact) {
+                  setGuardian('');
+                  setGuardianContact('');
+                }
+                setGuardianError('');
+                setGuardianContactError('');
+              }
+            }}
+          />
           {birthDateError && <div className="error-text">{birthDateError}</div>}
         </label>
 

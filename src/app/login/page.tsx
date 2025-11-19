@@ -1,14 +1,14 @@
+'use client';
+
 import './login.css';
 import LoginCard from '@/components/common/Cards/LoginCard/LoginCard';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const router = useRouter();
 
   function handleLogin(data?: { email: string; password: string }) {
-    // aqui você faria chamada à API e trataria resposta/erros
     console.log('Login solicitado:', data);
-    // por enquanto, apenas redireciona como exemplo
     router.push('/inicio');
   }
 

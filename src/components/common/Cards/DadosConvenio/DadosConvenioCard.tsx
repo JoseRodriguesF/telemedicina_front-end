@@ -1,4 +1,4 @@
-import '@/pages/register/register.css';
+// global styles for register are imported in app layout
 import './DadosConvenioCard.css';
 import Input from '@/components/common/Inputs/Input';
 import Button from '@/components/common/Buttons/Button';

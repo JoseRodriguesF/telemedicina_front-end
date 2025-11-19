@@ -1,4 +1,3 @@
-import '@/pages/login/login.css';
 import Image from 'next/image';
 import Input from '@/components/common/Inputs/Input';
 import Button from '@/components/common/Buttons/Button';
