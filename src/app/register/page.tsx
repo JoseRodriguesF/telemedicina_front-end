@@ -3,7 +3,7 @@
 import './register.css';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DadosAcessoPacienteCard from '@/components/common/Cards/DadosAcessoPacienteCard/DadosAcessoPacienteCard';
+import DadosAcessoPacienteCard from '@/components/common/Cards/DadosACessoPacienteCard/DadosAcessoPacienteCard';
 import DadosPessoaisPacienteCard from '@/components/common/Cards/DadosPessoaisPaciente/DadosPessoaisPacienteCard';
 import DadosConvenioCard from '@/components/common/Cards/DadosConvenio/DadosConvenioCard';
 

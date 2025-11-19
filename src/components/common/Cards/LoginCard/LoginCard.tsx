@@ -1,8 +1,9 @@
+'use client';
+
 import Image from 'next/image';
 import Input from '@/components/common/Inputs/Input';
 import Button from '@/components/common/Buttons/Button';
 import { useState } from 'react';
-import { useRouter } from 'next/router';
 
 type Props = {
   onLogin?: (data?: { email: string; password: string }) => void;
@@ -12,7 +13,6 @@ export default function LoginCard({ onLogin }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const router = useRouter();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,8 +22,6 @@ export default function LoginCard({ onLogin }: Props) {
       return;
     }
     onLogin?.({ email, password });
-    // Simular redirecionamento
-    router.push('/inicio');
   }
 
   return (
