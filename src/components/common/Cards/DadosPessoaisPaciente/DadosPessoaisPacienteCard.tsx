@@ -1,3 +1,5 @@
+'use client';
+
 // global styles for register are imported in app layout
 import './DadosPessoaisPacienteCard.css';
 import Input from '@/components/common/Inputs/Input';

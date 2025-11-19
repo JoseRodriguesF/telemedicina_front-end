@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import './TermsModal.css';
 import Button from '@/components/common/Buttons/Button';

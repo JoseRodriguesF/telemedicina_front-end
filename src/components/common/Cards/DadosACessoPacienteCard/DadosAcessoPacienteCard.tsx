@@ -1,3 +1,5 @@
+'use client';
+
 // global styles for register are imported in app layout
 import Image from 'next/image';
 import { useState } from 'react';
