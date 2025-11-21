@@ -1,7 +1,7 @@
 /* Styles for Register page (local to src/pages/register) */
 .register-page {
   /* Fill the viewport and center the card both vertically and horizontally */
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -92,12 +92,7 @@
   }
 
   /* On small screens allow page scrolling and add top/bottom padding so the card isn't cut off */
-  .register-page {
-    overflow: auto;
-    align-items: flex-start; /* place card starting from top area */
-    padding-top: 20px;
-    padding-bottom: 0px;
-  }
+  .register-page { overflow: auto; }   .register-card .form-actions.two-equal { flex-direction: column; }
 }
 
 .register-subtitle {
@@ -145,9 +140,7 @@
   color: #718096;
 }
 
-.register-card .c-btn {
-  width: 100%;
-}
+.register-card .c-btn { width: 100%; box-sizing: border-box; }
 
 .c-input.c-input--error {
   border-color: #f87171; /* red-400 */
@@ -239,6 +232,28 @@
   box-sizing: border-box;
 }
 
+/* Mobile: stack action buttons full width like DadosConvenio card */
+@media (max-width: 640px) {
+  .register-card .form-actions.two-equal {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+
+  .register-card .form-actions.two-equal .left-actions,
+  .register-card .form-actions.two-equal .right-actions {
+    width: 100%;
+    flex: none;
+  }
+
+  .register-card .form-actions.two-equal .left-actions .c-btn,
+  .register-card .form-actions.two-equal .right-actions .c-btn {
+    width: 100%;
+    box-sizing: border-box;
+    display: block;
+  }
+}
+
 /* When showing the Dados Pessoais step, allow the page container to be wider */
 .register-main.dados-pessoais-wide {
   max-width: 640px;
@@ -247,7 +262,7 @@
 /* When showing step 2, allow a little extra scroll space (20px) on the page */
 .register-page.dados-pessoais-active {
   overflow: auto;
-  padding-bottom: 0px; /* reduced bottom padding while keeping top padding */
+   /* reduced bottom padding while keeping top padding */
 }
 
 /* Ensure wide layout still collapses on small screens */
@@ -259,7 +274,7 @@
 /* Styles for Register page (local to src/pages/register) */
 .register-page {
   /* Fill the viewport and center the card both vertically and horizontally */
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -350,12 +365,7 @@
   }
 
   /* On small screens allow page scrolling and add top/bottom padding so the card isn't cut off */
-  .register-page {
-    overflow: auto;
-    align-items: flex-start; /* place card starting from top area */
-    padding-top: 20px;
-    padding-bottom: 0px;
-  }
+  .register-page { overflow: auto; }   .register-card .form-actions.two-equal { flex-direction: column; }
 }
 
 .register-subtitle {
@@ -403,9 +413,7 @@
   color: #718096;
 }
 
-.register-card .c-btn {
-  width: 100%;
-}
+.register-card .c-btn { width: 100%; box-sizing: border-box; }
 
 .c-input.c-input--error {
   border-color: #f87171; /* red-400 */
@@ -505,7 +513,7 @@
 /* When showing step 2, allow a little extra scroll space (20px) on the page */
 .register-page.dados-pessoais-active {
   overflow: auto;
-  padding-bottom: 0px; /* reduced bottom padding while keeping top padding */
+   /* reduced bottom padding while keeping top padding */
 }
 
 /* Ensure wide layout still collapses on small screens */
@@ -514,4 +522,6 @@
     max-width: 92%;
   }
 }
+
+
 

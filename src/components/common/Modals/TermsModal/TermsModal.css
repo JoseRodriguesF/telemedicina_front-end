@@ -33,8 +33,15 @@
 .tm-body { padding: 16px 24px; max-height: 360px; overflow: auto; }
 .tm-terms h4 { margin: 8px 0; font-size: 13px; color:#1f2937 }
 .tm-terms p { margin: 6px 0 12px; color: #374151; font-size: 13px; line-height:1.45 }
-.tm-accept { display:block; padding: 12px 0; border-top:1px solid #f3f6f8; }
-.tm-accept input { margin-right: 8px }
+.tm-accept {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid #f3f6f8;
+  justify-content: flex-start;
+}
+.tm-accept input { margin: 0; width: 18px; height: 18px; }
 .tm-actions { display:flex; gap:12px; padding: 16px 24px; border-top:1px solid #eef2f6; justify-content:flex-end }
 .tm-actions .c-button[disabled] { opacity:0.6; pointer-events:none }
 

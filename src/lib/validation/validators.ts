@@ -155,18 +155,73 @@ export function isStrongPassword(password: string): boolean {
   return true;
 }
 
-/** Valida data ISO (YYYY-MM-DD) e não futura */
+/**
+ * Valida data nas formas DD/MM/YYYY ou YYYY-MM-DD e verifica se não é futura
+ * e tem idade plausível (0..130).
+ */
 export function isValidDate(dateStr: string): boolean {
   if (!dateStr || typeof dateStr !== 'string') return false;
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return false;
+
+  let year: number | null = null;
+  let month: number | null = null; // 0-based
+  let day: number | null = null;
+
+  const s = dateStr.trim();
+
+  // Caso formato DD/MM/YYYY
+  if (s.includes('/')) {
+    const parts = s.split('/').map((p) => p.trim());
+    if (parts.length !== 3) return false;
+    const d = Number(parts[0]);
+    const m = Number(parts[1]);
+    const y = Number(parts[2]);
+    if (!Number.isInteger(d) || !Number.isInteger(m) || !Number.isInteger(y)) return false;
+    day = d;
+    month = m - 1;
+    year = y;
+  } else if (s.includes('-')) {
+    // aceitar YYYY-MM-DD ou possivelmente ISO
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return false;
+    year = d.getFullYear();
+    month = d.getMonth();
+    day = d.getDate();
+  } else {
+    // tentar interpretar como DDMMYYYY (somente dígitos)
+    const only = s.replace(/\D/g, '');
+    if (only.length === 8) {
+      const d = Number(only.slice(0, 2));
+      const m = Number(only.slice(2, 4));
+      const y = Number(only.slice(4, 8));
+      day = d;
+      month = m - 1;
+      year = y;
+    } else {
+      return false;
+    }
+  }
+
+  if (year === null || month === null || day === null) return false;
+  // basic ranges
+  if (year < 1900 || year > 9999) return false;
+  if (month < 0 || month > 11) return false;
+  if (day < 1 || day > 31) return false;
+
+  const dt = new Date(year, month, day);
+  if (isNaN(dt.getTime())) return false;
+  // ensure the constructed date matches parts (avoid 31/02 -> becomes 03/03)
+  if (dt.getFullYear() !== year || dt.getMonth() !== month || dt.getDate() !== day) return false;
+
   const today = new Date();
-  // ignore time part
-  const dt = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const now = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  if (dt > now) return false;
+  const cmp = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  if (cmp > now) return false;
+
   // age sanity check: not older than 130
-  const age = now.getFullYear() - dt.getFullYear() - (now.getMonth() < dt.getMonth() || (now.getMonth() === dt.getMonth() && now.getDate() < dt.getDate()) ? 1 : 0);
+  let age = now.getFullYear() - cmp.getFullYear();
+  if (now.getMonth() < cmp.getMonth() || (now.getMonth() === cmp.getMonth() && now.getDate() < cmp.getDate())) {
+    age -= 1;
+  }
   return age >= 0 && age <= 130;
 }
 
