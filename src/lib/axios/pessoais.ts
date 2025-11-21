@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export type PessoaisPayload = {
-  usuario_id: number;
+  usuario_id?: number | null;
   nome_completo: string;
   data_nascimento: string; // expect YYYY-MM-DD
   cpf: string;
