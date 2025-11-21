@@ -6,13 +6,16 @@ import Input from '@/components/common/Inputs/Input';
 import Button from '@/components/common/Buttons/Button';
 import TermsModal from '@/components/common/Modals/TermsModal/TermsModal';
 import { useState } from 'react';
+import createPessoais from '@/lib/axios/pessoais';
 
 type Props = {
   onBack?: () => void;
   onComplete?: (data?: any) => void;
+  userId?: number | null;
+  pessoaisData?: any | null;
 };
 
-export default function DadosConvenioCard({ onBack, onComplete }: Props) {
+export default function DadosConvenioCard({ onBack, onComplete, userId, pessoaisData }: Props) {
   const [convenio, setConvenio] = useState('');
   const [numero, setNumero] = useState('');
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -70,9 +73,38 @@ export default function DadosConvenioCard({ onBack, onComplete }: Props) {
       </form>
       <TermsModal
         open={showTermsModal}
-        onConfirm={() => {
+        onConfirm={async () => {
           setShowTermsModal(false);
-          onComplete?.(pendingData);
+          // build final payload combining pessoaisData and convenio
+          if (!userId && !pessoaisData) {
+            onComplete?.(undefined);
+            return;
+          }
+          const payload = {
+            usuario_id: userId,
+            nome_completo: pessoaisData?.name || pessoaisData?.nome || '',
+            data_nascimento: (() => {
+              const d = (pessoaisData?.birthDate || '').trim();
+              if (!d) return ''; if (d.includes('/')) { const parts = d.split('/'); if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`; }
+              return d;
+            })(),
+            cpf: (pessoaisData?.cpf || '').replace(/\D/g, ''),
+            sexo: pessoaisData?.gender || pessoaisData?.sexo || '',
+            estado_civil: pessoaisData?.marital || pessoaisData?.estado_civil || '',
+            endereco: pessoaisData?.address || pessoaisData?.endereco || '',
+            telefone: (pessoaisData?.number || '').replace(/\D/g, ''),
+            responsavel_legal: pessoaisData?.guardian || null,
+            telefone_responsavel: (pessoaisData?.guardianContact || '').replace(/\D/g, '') || null,
+            convenio: pendingData?.convenio || null,
+            numero_carteirinha: (pendingData?.numero || '') || null,
+          };
+          try {
+            const resp = await createPessoais(payload);
+            onComplete?.(resp);
+          } catch (err: any) {
+            // propagate error upward if desired
+            onComplete?.(undefined);
+          }
         }}
         onCancel={() => {
           setShowTermsModal(false);

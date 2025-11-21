@@ -9,6 +9,7 @@ export default function LoginPage() {
 
   function handleLogin(data?: { email: string; password: string }) {
     console.log('Login solicitado:', data);
+    // if login returned user, you can store in state or redirect
     router.push('/inicio');
   }
 

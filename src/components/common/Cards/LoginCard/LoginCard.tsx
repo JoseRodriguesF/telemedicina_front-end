@@ -4,15 +4,18 @@ import Image from 'next/image';
 import Input from '@/components/common/Inputs/Input';
 import Button from '@/components/common/Buttons/Button';
 import { useState } from 'react';
+import doLogin from '@/lib/axios/login';
+import { saveUser } from '@/lib/auth';
 
 type Props = {
-  onLogin?: (data?: { email: string; password: string }) => void;
+  onLogin?: (data?: any) => void;
 };
 
 export default function LoginCard({ onLogin }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,7 +24,21 @@ export default function LoginCard({ onLogin }: Props) {
       setError('Informe email e senha para continuar.');
       return;
     }
-    onLogin?.({ email, password });
+    (async () => {
+      setLoading(true);
+      try {
+        const resp = await doLogin({ email, senha: password });
+        // resp expected: { message, user }
+        const user = resp?.user || null;
+        // save user to localStorage
+        saveUser(user);
+        onLogin?.({ email, password, user, raw: resp });
+      } catch (err: any) {
+        setError(err?.response?.data?.message || err?.message || 'Erro ao efetuar login');
+      } finally {
+        setLoading(false);
+      }
+    })();
   }
 
   return (
@@ -53,7 +70,7 @@ export default function LoginCard({ onLogin }: Props) {
 
         {error && <div className="error-text">{error}</div>}
 
-        <Button type="submit" variant="primary">Entrar</Button>
+        <Button type="submit" variant="primary" disabled={loading}>{loading ? 'Entrando...' : 'Entrar'}</Button>
       </form>
 
       <div className="forgot-row">

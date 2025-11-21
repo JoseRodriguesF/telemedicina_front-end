@@ -6,9 +6,10 @@ import { useState } from 'react';
 import Input from '@/components/common/Inputs/Input';
 import Button from '@/components/common/Buttons/Button';
 import { isEmailAllowedDomain, doPasswordsMatch, isStrongPassword } from '@/lib/validation/validators';
+import createAcesso from '@/lib/axios/acesso';
 
 type Props = {
-  onNext?: (data?: { email: string; password: string }) => void;
+  onNext?: (data?: { email: string; password: string; userId?: number }) => void;
 };
 
 export default function DadosAcessoPacienteCard({ onNext }: Props) {
@@ -19,6 +20,7 @@ export default function DadosAcessoPacienteCard({ onNext }: Props) {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmError, setConfirmError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   function isFormValid() {
     return (
@@ -50,10 +52,19 @@ export default function DadosAcessoPacienteCard({ onNext }: Props) {
     }
     if (!valid) return;
 
-    // Aqui deveria enviar email+senha para API e criar registro de acesso
-    console.log('Criar conta (step1):', { email, password });
-    // onNext pode receber os dados para persistência entre etapas
-    onNext?.({ email, password });
+    // Envia para API e cria registro de acesso
+    (async () => {
+      setLoading(true);
+      try {
+        const resp = await createAcesso({ email, senha: password, tipo_usuario: 'paciente' });
+        const userId = resp?.userId;
+        onNext?.({ email, password, userId });
+      } catch (err: any) {
+        setEmailError(err?.response?.data?.message || 'Erro ao criar dados de acesso');
+      } finally {
+        setLoading(false);
+      }
+    })();
   }
 
   return (
@@ -98,8 +109,8 @@ export default function DadosAcessoPacienteCard({ onNext }: Props) {
         />
         {confirmError && <div className="error-text">{confirmError}</div>}
 
-        <Button type="submit" variant="primary" disabled={!isFormValid()}>
-          Criar conta
+        <Button type="submit" variant="primary" disabled={!isFormValid() || loading}>
+          {loading ? 'Enviando...' : 'Criar conta'}
         </Button>
       </form>
 
