@@ -16,7 +16,7 @@ export type PessoaisPayload = {
 };
 
 export async function createPessoais(payload: PessoaisPayload) {
-  // Use local proxy route to avoid CORS
+  // Use local Next.js proxy route to avoid CORS in development
   const resp = await axios.post('/api/register/pessoais', payload, { headers: { 'Content-Type': 'application/json' } });
   return resp.data;
 }

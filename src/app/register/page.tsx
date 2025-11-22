@@ -1,7 +1,7 @@
 'use client';
 
 import './register.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import DadosAcessoPacienteCard from '@/components/common/Cards/DadosACessoPacienteCard/DadosAcessoPacienteCard';
 import DadosPessoaisPacienteCard from '@/components/common/Cards/DadosPessoaisPaciente/DadosPessoaisPacienteCard';
@@ -13,6 +13,21 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    // if the user already logged in but didn't finish the registration, initialize state
+    try {
+      const u = require('@/lib/auth').getUser?.();
+      if (u && typeof u.registro_full !== 'undefined') {
+        if (u.registro_full === false) {
+          setCredentials({ email: u.email, password: '', userId: u.id });
+          setStep(2);
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
 
   // Step 1 -> recebe do card o userId após createAcesso
   function handleNextFromStep1(data?: { email: string; password: string; userId?: number }) {

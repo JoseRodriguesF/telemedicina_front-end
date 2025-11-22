@@ -3,13 +3,20 @@
 import './login.css';
 import LoginCard from '@/components/common/Cards/LoginCard/LoginCard';
 import { useRouter } from 'next/navigation';
+import { getUser } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
 
   function handleLogin(data?: { email: string; password: string }) {
     console.log('Login solicitado:', data);
-    // if login returned user, you can store in state or redirect
+    const user = (data as any)?.user || null;
+    // if the user exists and didn't finish registration, redirect to register
+    if (user && user.registro_full === false) {
+      router.push('/register');
+      return;
+    }
+    // otherwise go to inicio
     router.push('/inicio');
   }
 

@@ -7,6 +7,7 @@ import Button from '@/components/common/Buttons/Button';
 import TermsModal from '@/components/common/Modals/TermsModal/TermsModal';
 import { useState } from 'react';
 import createPessoais from '@/lib/axios/pessoais';
+import { saveUser } from '@/lib/auth';
 
 type Props = {
   onBack?: () => void;
@@ -89,17 +90,31 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
               return d;
             })(),
             cpf: (pessoaisData?.cpf || '').replace(/\D/g, ''),
-            sexo: pessoaisData?.gender || pessoaisData?.sexo || '',
+            sexo: (() => {
+              const s = (pessoaisData?.gender || pessoaisData?.sexo || '').toString().toLowerCase();
+              if (s === 'm') return 'masculino';
+              if (s === 'f') return 'feminino';
+              if (s === 'masculino' || s === 'feminino') return s;
+              return '';
+            })(),
             estado_civil: pessoaisData?.marital || pessoaisData?.estado_civil || '',
             endereco: pessoaisData?.address || pessoaisData?.endereco || '',
-            telefone: (pessoaisData?.number || '').replace(/\D/g, ''),
-            responsavel_legal: pessoaisData?.guardian || null,
-            telefone_responsavel: (pessoaisData?.guardianContact || '').replace(/\D/g, '') || null,
-            convenio: pendingData?.convenio || null,
-            numero_carteirinha: (pendingData?.numero || '') || null,
+            telefone: (pessoaisData?.number || '')?.replace(/\D/g, '') || '',
+            responsavel_legal: pessoaisData?.guardian || '',
+            telefone_responsavel: (pessoaisData?.guardianContact || '')?.replace(/\D/g, '') || '',
+            convenio: pendingData?.convenio || '',
+            numero_carteirinha: (pendingData?.numero || '')?.replace(/\D/g, '') || '',
           };
           try {
             const resp = await createPessoais(payload);
+            // if the API returned an authenticated user (with token), persist it
+            if (resp?.user) {
+              try {
+                saveUser(resp.user);
+              } catch (_) {
+                // ignore storage errors
+              }
+            }
             onComplete?.(resp);
           } catch (err: any) {
             // propagate error upward if desired

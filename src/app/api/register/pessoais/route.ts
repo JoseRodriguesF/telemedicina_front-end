@@ -5,12 +5,22 @@ const TARGET = process.env.NEXT_PUBLIC_API_URL || 'https://telemedicina-api-774w
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    if (process.env.NODE_ENV === 'development') console.log('[proxy] /api/register/pessoais received body:', body);
     const resp = await fetch(`${TARGET}/register/pessoais`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    const data = await resp.json().catch(() => ({}));
+    // try to parse JSON, otherwise capture text for debugging
+    let data: any = null;
+    try {
+      data = await resp.json();
+    } catch (e) {
+      data = await resp.text().catch(() => ({}));
+    }
+    if (process.env.NODE_ENV === 'development' && resp.status >= 400) {
+      console.warn('[proxy] /api/register/pessoais remote status:', resp.status, 'response:', data);
+    }
     return NextResponse.json(data, { status: resp.status });
   } catch (err: any) {
     return NextResponse.json({ message: err?.message || 'Proxy error' }, { status: 502 });
