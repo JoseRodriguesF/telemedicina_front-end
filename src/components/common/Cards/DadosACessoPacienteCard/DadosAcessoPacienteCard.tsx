@@ -68,10 +68,10 @@ export default function DadosAcessoPacienteCard({ onNext }: Props) {
           // map details to field errors
           parsed.details.forEach((d: any) => {
             const p = Array.isArray(d.path) ? String(d.path[0]) : undefined;
-            const msg = d.message || parsed.message;
-            if (p === 'email') setEmailError(msg);
-            else if (p === 'senha' || p === 'password') setPasswordError(msg);
-            else setEmailError(parsed.message);
+            const msg = d.message || parsed.message || 'Dados inválidos';
+            if (p === 'email') setEmailError(String(msg));
+            else if (p === 'senha' || p === 'password') setPasswordError(String(msg));
+            else setEmailError(String(msg));
           });
         } else if (parsed.code === 'INTERNAL_ERROR') {
           setEmailError('Erro interno. Tente novamente mais tarde.');
