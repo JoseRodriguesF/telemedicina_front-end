@@ -6,6 +6,7 @@ import Button from '@/components/common/Buttons/Button';
 import { useState } from 'react';
 import doLogin from '@/lib/axios/login';
 import { saveUser } from '@/lib/auth';
+import { parseApiError } from '@/lib/apiError';
 
 type Props = {
   onLogin?: (data?: any) => void;
@@ -15,6 +16,8 @@ export default function LoginCard({ onLogin }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
@@ -34,7 +37,26 @@ export default function LoginCard({ onLogin }: Props) {
         saveUser(user);
         onLogin?.({ email, password, user, raw: resp });
       } catch (err: any) {
-        setError(err?.response?.data?.message || err?.message || 'Erro ao efetuar login');
+        const parsed = parseApiError(err);
+        // reset field errors
+        setEmailError('');
+        setPasswordError('');
+        if (parsed.code === 'USER_NOT_FOUND') {
+          setError('Email não cadastrado. Deseja criar uma conta?');
+        } else if (parsed.code === 'WRONG_PASSWORD') {
+          setPasswordError(parsed.message || 'Senha incorreta.');
+        } else if (parsed.code === 'INVALID_INPUT' && Array.isArray(parsed.details)) {
+          parsed.details.forEach((d: any) => {
+            const p = Array.isArray(d.path) ? String(d.path[0]) : undefined;
+            const msg = d.message || parsed.message;
+            if (p === 'email') setEmailError(msg);
+            if (p === 'senha' || p === 'password') setPasswordError(msg);
+          });
+        } else if (parsed.code === 'INTERNAL_ERROR') {
+          setError('Erro interno. Tente novamente mais tarde.');
+        } else {
+          setError(parsed.message || 'Erro ao efetuar login');
+        }
       } finally {
         setLoading(false);
       }
@@ -58,7 +80,9 @@ export default function LoginCard({ onLogin }: Props) {
           placeholder="seu.email@exemplo.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          className={emailError ? 'c-input--error' : ''}
         />
+        {emailError && <div className="error-text">{emailError}</div>}
 
         <Input
           name="password"
@@ -66,7 +90,9 @@ export default function LoginCard({ onLogin }: Props) {
           placeholder="Sua senha"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          className={passwordError ? 'c-input--error' : ''}
         />
+        {passwordError && <div className="error-text">{passwordError}</div>}
 
         {error && <div className="error-text">{error}</div>}
 

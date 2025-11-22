@@ -261,9 +261,9 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
           <span className="label-title">Sexo <span className="required-asterisk">*</span></span>
           <select className="c-input" required value={gender} onChange={(e) => { setGender(e.target.value); setGenderError(''); }}>
             <option value="">Selecione</option>
-            <option value="f">Feminino</option>
-            <option value="m">Masculino</option>
-            <option value="o">Outro</option>
+            <option value="feminino">Feminino</option>
+            <option value="masculino">Masculino</option>
+            <option value="outro">Outro</option>
           </select>
           {genderError && <div className="error-text">{genderError}</div>}
         </label>

@@ -7,6 +7,7 @@ import Input from '@/components/common/Inputs/Input';
 import Button from '@/components/common/Buttons/Button';
 import { isEmailAllowedDomain, doPasswordsMatch, isStrongPassword } from '@/lib/validation/validators';
 import createAcesso from '@/lib/axios/acesso';
+import { parseApiError } from '@/lib/apiError';
 
 type Props = {
   onNext?: (data?: { email: string; password: string; userId?: number }) => void;
@@ -60,7 +61,23 @@ export default function DadosAcessoPacienteCard({ onNext }: Props) {
         const userId = resp?.userId;
         onNext?.({ email, password, userId });
       } catch (err: any) {
-        setEmailError(err?.response?.data?.message || 'Erro ao criar dados de acesso');
+        const parsed = parseApiError(err);
+        if (parsed.code === 'EMAIL_ALREADY_EXISTS') {
+          setEmailError(parsed.message + ' Já possui conta? Faça login.');
+        } else if (parsed.code === 'INVALID_INPUT' && Array.isArray(parsed.details)) {
+          // map details to field errors
+          parsed.details.forEach((d: any) => {
+            const p = Array.isArray(d.path) ? String(d.path[0]) : undefined;
+            const msg = d.message || parsed.message;
+            if (p === 'email') setEmailError(msg);
+            else if (p === 'senha' || p === 'password') setPasswordError(msg);
+            else setEmailError(parsed.message);
+          });
+        } else if (parsed.code === 'INTERNAL_ERROR') {
+          setEmailError('Erro interno. Tente novamente mais tarde.');
+        } else {
+          setEmailError(parsed.message || 'Erro ao criar dados de acesso');
+        }
       } finally {
         setLoading(false);
       }

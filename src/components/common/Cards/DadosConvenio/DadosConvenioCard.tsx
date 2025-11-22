@@ -21,6 +21,7 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
   const [numero, setNumero] = useState('');
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [pendingData, setPendingData] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -106,6 +107,7 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
             numero_carteirinha: (pendingData?.numero || '')?.replace(/\D/g, '') || '',
           };
           try {
+            setErrorMessage('');
             const resp = await createPessoais(payload);
             // if the API returned an authenticated user (with token), persist it
             if (resp?.user) {
@@ -117,7 +119,27 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
             }
             onComplete?.(resp);
           } catch (err: any) {
-            // propagate error upward if desired
+            // parse API errors and show friendly messages
+            try {
+              const parsed = require('@/lib/apiError').parseApiError(err);
+              if (parsed.code === 'USER_NOT_FOUND') {
+                setErrorMessage('Usuário não encontrado. Faça login novamente.');
+              } else if (parsed.code === 'INVALID_USER_TYPE') {
+                setErrorMessage('Este tipo de conta não permite registrar dados pessoais.');
+              } else if (parsed.code === 'CPF_ALREADY_EXISTS') {
+                setErrorMessage('Este CPF já está registrado no sistema.');
+              } else if (parsed.code === 'PATIENT_ALREADY_EXISTS') {
+                setErrorMessage('Dados pessoais já registrados. Acesse sua conta.');
+              } else if (parsed.code === 'INVALID_INPUT') {
+                setErrorMessage(parsed.message || 'Dados inválidos. Verifique os campos.');
+              } else if (parsed.code === 'INTERNAL_ERROR') {
+                setErrorMessage('Erro interno. Tente novamente mais tarde.');
+              } else {
+                setErrorMessage(parsed.message || 'Erro ao registrar dados pessoais');
+              }
+            } catch (e) {
+              setErrorMessage('Erro ao registrar dados pessoais');
+            }
             onComplete?.(undefined);
           }
         }}
@@ -125,6 +147,7 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
           setShowTermsModal(false);
         }}
       />
+      {errorMessage && <div className="error-text" style={{ marginTop: 12 }}>{errorMessage}</div>}
     </section>
   );
 }
