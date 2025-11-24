@@ -11,9 +11,10 @@ type Props = {
   termsHtml?: React.ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
+  loading?: boolean;
 };
 
-export default function TermsModal({ open, title = 'Termos de Uso e Consentimento', termsHtml, onConfirm, onCancel }: Props) {
+export default function TermsModal({ open, title = 'Termos de Uso e Consentimento', termsHtml, onConfirm, onCancel, loading = false }: Props) {
   const [accepted, setAccepted] = useState(false);
 
   if (!open) return null;
@@ -36,8 +37,10 @@ export default function TermsModal({ open, title = 'Termos de Uso e Consentiment
         </div>
 
         <div className="tm-actions">
-          <Button variant="ghost" onClick={onCancel}>Cancelar</Button>
-          <Button variant="primary" onClick={() => accepted && onConfirm()} disabled={!accepted}>Aceito e Continuar</Button>
+          <Button variant="ghost" onClick={onCancel} disabled={loading}>Cancelar</Button>
+          <Button variant="primary" loading={loading} onClick={() => accepted && onConfirm()} disabled={!accepted || loading}>
+            {loading ? 'Carregando...' : 'Aceito e Continuar'}
+          </Button>
         </div>
       </div>
     </div>

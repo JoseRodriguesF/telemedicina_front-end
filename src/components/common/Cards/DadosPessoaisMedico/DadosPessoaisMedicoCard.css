@@ -1,0 +1,6 @@
+.register-card.dados-pessoais-medico-card {
+  max-width: 680px;
+}
+.register-form .form-label .label-title { font-size: 0.9rem; }
+.required-asterisk { color: #d00; }
+.error-text { color: #b91c1c; font-size: 0.85rem; margin-top: 6px; }

@@ -118,6 +118,11 @@
   align-items: stretch;
 }
 
+/* add spacing between inputs and the action buttons */
+.register-card .form-actions {
+  margin-top: 1rem;
+}
+
 .register-card .c-input,
 .register-card input,
 .register-card textarea {

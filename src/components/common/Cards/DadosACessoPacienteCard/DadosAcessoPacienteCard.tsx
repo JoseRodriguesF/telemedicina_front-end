@@ -9,11 +9,15 @@ import { isEmailAllowedDomain, doPasswordsMatch, isStrongPassword } from '@/lib/
 import createAcesso from '@/lib/axios/acesso';
 import { parseApiError } from '@/lib/apiError';
 
+import { useRouter } from 'next/navigation';
+
 type Props = {
   onNext?: (data?: { email: string; password: string; userId?: number }) => void;
+  tipoUsuario?: string; // 'paciente' | 'medico'
 };
 
-export default function DadosAcessoPacienteCard({ onNext }: Props) {
+export default function DadosAcessoPacienteCard({ onNext, tipoUsuario }: Props) {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -57,8 +61,14 @@ export default function DadosAcessoPacienteCard({ onNext }: Props) {
     (async () => {
       setLoading(true);
       try {
-        const resp = await createAcesso({ email, senha: password, tipo_usuario: 'paciente' });
+        const tipoToSend = (tipoUsuario && String(tipoUsuario)) || 'paciente';
+        const resp = await createAcesso({ email, senha: password, tipo_usuario: tipoToSend });
         const userId = resp?.userId;
+        if (tipoToSend === 'medico') {
+          // for medico registrations, continue the registration flow (do not redirect here)
+          onNext?.({ email, password, userId });
+          return;
+        }
         onNext?.({ email, password, userId });
       } catch (err: any) {
         const parsed = parseApiError(err);

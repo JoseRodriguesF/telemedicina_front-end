@@ -1,11 +1,13 @@
-'use client';
+ 'use client';
 
 import './register.css';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import DadosAcessoPacienteCard from '@/components/common/Cards/DadosACessoPacienteCard/DadosAcessoPacienteCard';
 import DadosPessoaisPacienteCard from '@/components/common/Cards/DadosPessoaisPaciente/DadosPessoaisPacienteCard';
 import DadosConvenioCard from '@/components/common/Cards/DadosConvenio/DadosConvenioCard';
+import DadosPessoaisMedicoCard from '@/components/common/Cards/DadosPessoaisMedico/DadosPessoaisMedicoCard';
+import DadosDocumentosMedicoCard from '@/components/common/Cards/DadosDocumentosMedico/DadosDocumentosMedicoCard';
 export default function RegisterPage() {
   const [step, setStep] = useState<number>(1);
   const [credentials, setCredentials] = useState<{ email?: string; password?: string; userId?: number } | null>(null);
@@ -13,6 +15,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tipoParam = searchParams?.get('tipo') || 'paciente';
 
   useEffect(() => {
     // if the user already logged in but didn't finish the registration, initialize state
@@ -59,16 +63,29 @@ export default function RegisterPage() {
   return (
     <div className={`register-page ${step === 2 || step === 3 ? 'dados-pessoais-active' : ''}`}>
       <main className={`register-main ${step === 2 || step === 3 ? 'dados-pessoais-wide' : ''}`}>
-        {step === 1 && <DadosAcessoPacienteCard onNext={handleNextFromStep1} />}
-        {step === 2 && <DadosPessoaisPacienteCard onBack={handleBackFromStep2} onComplete={handleCompleteStep2} />}
-        {step === 3 && (
+        {step === 1 && <DadosAcessoPacienteCard onNext={handleNextFromStep1} tipoUsuario={tipoParam} />}
+        {step === 2 && (tipoParam === 'medico' ? (
+          <DadosPessoaisMedicoCard onBack={handleBackFromStep2} onComplete={(data) => { setPessoaisData(data); setStep(3); }} />
+        ) : (
+          <DadosPessoaisPacienteCard onBack={handleBackFromStep2} onComplete={handleCompleteStep2} />
+        ))}
+        {step === 3 && (tipoParam === 'medico' ? (
+          <DadosDocumentosMedicoCard
+            onBack={handleBackFromStep3}
+            onComplete={(data) => {
+              // here you would upload files and finalize the medico registration
+              // for now, redirect to inicio after completion
+              router.push('/inicio');
+            }}
+          />
+        ) : (
           <DadosConvenioCard
             onBack={handleBackFromStep3}
             onComplete={handleCompleteStep3}
             userId={credentials?.userId}
             pessoaisData={pessoaisData}
           />
-        )}
+        ))}
         {loading && <div style={{ marginTop: 12 }}>Enviando...</div>}
         {error && <div style={{ marginTop: 12, color: 'var(--error-color, #f87171)' }}>{error}</div>}
       </main>

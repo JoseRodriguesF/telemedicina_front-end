@@ -22,6 +22,7 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [pendingData, setPendingData] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [loading, setLoading] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -75,19 +76,25 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
       </form>
       <TermsModal
         open={showTermsModal}
+        loading={loading}
         onConfirm={async () => {
-          setShowTermsModal(false);
-          // build final payload combining pessoaisData and convenio
           if (!userId && !pessoaisData) {
+            setShowTermsModal(false);
             onComplete?.(undefined);
             return;
           }
+          setErrorMessage('');
+          setLoading(true);
           const payload = {
             usuario_id: userId,
             nome_completo: pessoaisData?.name || pessoaisData?.nome || '',
             data_nascimento: (() => {
               const d = (pessoaisData?.birthDate || '').trim();
-              if (!d) return ''; if (d.includes('/')) { const parts = d.split('/'); if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`; }
+              if (!d) return '';
+              if (d.includes('/')) {
+                const parts = d.split('/');
+                if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+              }
               return d;
             })(),
             cpf: (pessoaisData?.cpf || '').replace(/\D/g, ''),
@@ -107,9 +114,7 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
             numero_carteirinha: (pendingData?.numero || '')?.replace(/\D/g, '') || '',
           };
           try {
-            setErrorMessage('');
             const resp = await createPessoais(payload);
-            // if the API returned an authenticated user (with token), persist it
             if (resp?.user) {
               try {
                 saveUser(resp.user);
@@ -117,9 +122,9 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
                 // ignore storage errors
               }
             }
+            setShowTermsModal(false);
             onComplete?.(resp);
           } catch (err: any) {
-            // parse API errors and show friendly messages
             try {
               const parsed = require('@/lib/apiError').parseApiError(err);
               if (parsed.code === 'USER_NOT_FOUND') {
@@ -141,6 +146,8 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
               setErrorMessage('Erro ao registrar dados pessoais');
             }
             onComplete?.(undefined);
+          } finally {
+            setLoading(false);
           }
         }}
         onCancel={() => {
@@ -151,3 +158,4 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
     </section>
   );
 }
+ 

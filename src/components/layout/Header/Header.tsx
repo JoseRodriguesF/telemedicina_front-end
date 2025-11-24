@@ -9,7 +9,8 @@ export default function Header() {
 
         <div className="header-actions">
           <Link href="/login" className="btn btn-ghost" aria-label="Login">Login</Link>
-          <Link href="/register" className="btn btn-primary" aria-label="Cadastro">Cadastro</Link>
+          <Link href={{ pathname: '/register', query: { tipo: 'paciente' } }} className="btn btn-primary" aria-label="Cadastro">Cadastro</Link>
+          <Link href={{ pathname: '/register', query: { tipo: 'medico' } }} className="btn btn-secondary" aria-label="Cadastro para médicos">Cadastro Médicos</Link>
         </div>
       </div>
     </header>

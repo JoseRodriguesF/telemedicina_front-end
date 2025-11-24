@@ -35,3 +35,9 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* simple inline spinner/text for loading state */
+.c-btn__spinner {
+  display: inline-block;
+  font-weight: 700;
+}

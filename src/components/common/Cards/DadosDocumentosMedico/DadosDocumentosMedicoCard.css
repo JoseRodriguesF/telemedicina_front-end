@@ -1,0 +1,44 @@
+.register-card.dados-documentos-medico-card { max-width: 680px; }
+
+/* File field wrapper */
+.file-field {
+	position: relative;
+	width: 100%;
+}
+
+.file-field input[type="file"] {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	cursor: pointer;
+}
+
+.file-visual {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	padding: 12px;
+	border: 1px dashed #e5e7eb;
+	border-radius: 8px;
+	background: #fff;
+	text-align: center;
+}
+
+.file-icon { display: flex; align-items: center; justify-content: center; }
+.file-text { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.file-placeholder { color: #9CA3AF; }
+.file-sub { font-size: 0.8rem; color: #94a3b8; }
+.file-placeholder.has-file { color: #111827; font-weight: 600; }
+
+.file-attached { color: #2563EB; font-weight: 700; }
+.error-text { color: #b91c1c; margin-top: 8px; }
+
+.file-visual:hover { background: #fafafa; }
+
+/* when a file is attached change border and text/icon color */
+.file-visual.has-file { border-style: solid; border-color: #2563EB; }
+.file-visual.has-file .file-placeholder.has-file { color: #2563EB; }
+.file-visual.has-file .file-icon img { filter: none; }
