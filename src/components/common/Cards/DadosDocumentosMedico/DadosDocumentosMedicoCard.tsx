@@ -8,14 +8,17 @@ import { useState } from 'react';
 type Props = {
   onBack?: () => void;
   onComplete?: (data?: any) => void;
+  userId?: number | null;
+  pessoaisData?: any | null;
 };
 
-export default function DadosDocumentosMedicoCard({ onBack, onComplete }: Props) {
+export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, pessoaisData }: Props) {
   const [seguroFile, setSeguroFile] = useState<File | null>(null);
   const [diplomaFile, setDiplomaFile] = useState<File | null>(null);
   const [diplomaEspFile, setDiplomaEspFile] = useState<File | null>(null);
   const [assinaturaFile, setAssinaturaFile] = useState<File | null>(null);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   function FileField({ id, accept, file, setFile, placeholder }: { id: string; accept?: string; file: File | null; setFile: (f: File | null) => void; placeholder: string; }) {
     const iconSrc = file ? '/images/document.svg' : '/images/document-upload.svg';
@@ -35,23 +38,63 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete }: Props)
     );
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    if (!seguroFile) {
-      setError('Anexe o Seguro de Responsabilidade Civil.');
+    if (!seguroFile || !diplomaFile || !assinaturaFile) {
+      setError('Por favor, anexe todos os documentos obrigatórios.');
       return;
     }
-    if (!diplomaFile) {
-      setError('Anexe o Diploma.');
-      return;
+    setLoading(true);
+    try {
+      const upload = (await import('@/lib/upload')).default;
+      const createMedico = (await import('@/lib/axios/medicos')).default;
+
+      // upload required files to server -> cloudinary
+      const seguroResp = await upload(seguroFile as File);
+      const diplomaResp = await upload(diplomaFile as File);
+      const assinaturaResp = await upload(assinaturaFile as File);
+      const especializacaoResp = diplomaEspFile ? await upload(diplomaEspFile as File) : null;
+
+      // build payload using passed props (userId and pessoaisData) or fallbacks
+      const pd = pessoaisData || {};
+      const toISODate = (d: string) => {
+        if (!d) return '';
+        if (d.includes('/')) {
+          const parts = d.split('/');
+          if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        }
+        return d;
+      };
+
+      const payload: any = {
+        usuario_id: userId || null,
+        nome_completo: pd?.name || pd?.nome || '',
+        data_nascimento: toISODate(pd?.birthDate || pd?.data_nascimento || ''),
+        cpf: (pd?.cpf || '').toString().replace(/\D/g, ''),
+        sexo: (pd?.gender || pd?.sexo || '').toString().toLowerCase(),
+        crm: pd?.crm || '',
+        diploma_url: diplomaResp?.secure_url || diplomaResp?.url || null,
+        especializacao_url: especializacaoResp?.secure_url || especializacaoResp?.url || null,
+        assinatura_digital_url: assinaturaResp?.secure_url || assinaturaResp?.url || null,
+        seguro_responsabilidade_url: seguroResp?.secure_url || seguroResp?.url || null,
+      };
+
+      const resp = await createMedico(payload);
+
+      try {
+        const { saveUser } = await import('@/lib/auth');
+        if (resp?.user) saveUser(resp.user);
+      } catch (e) {
+        // ignore save failures
+      }
+
+      onComplete?.(resp);
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao enviar documentos');
+    } finally {
+      setLoading(false);
     }
-    if (!assinaturaFile) {
-      setError('Anexe a Assinatura digital.');
-      return;
-    }
-    // pass back file refs; upload handled elsewhere
-    onComplete?.({ seguroFile, diplomaFile, diplomaEspFile, assinaturaFile });
   }
 
   return (
@@ -93,14 +136,15 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete }: Props)
         {error && <div className="error-text">{error}</div>}
 
         <div className="form-actions actions-full">
-          <Button type="button" variant="ghost" onClick={onBack} className="btn-equal">Voltar</Button>
+          <Button type="button" variant="ghost" onClick={onBack} className="btn-equal" disabled={loading}>Voltar</Button>
           <Button
             type="submit"
             variant="primary"
             className="btn-equal"
-            disabled={!(seguroFile && diplomaFile && assinaturaFile)}
+            disabled={loading || !(seguroFile && diplomaFile && assinaturaFile)}
+            loading={loading}
           >
-            Próximo
+            {loading ? 'Enviando...' : 'Próximo'}
           </Button>
         </div>
       </form>

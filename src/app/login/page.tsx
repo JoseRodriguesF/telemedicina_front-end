@@ -13,7 +13,10 @@ export default function LoginPage() {
     const user = (data as any)?.user || null;
     // if the user exists and didn't finish registration, redirect to register
     if (user && user.registro_full === false) {
-      router.push('/register');
+      // determine user type (backend may use 'tipo_usuario', 'tipo' or similar)
+      const rawTipo = (user.tipo_usuario || user.tipo || user.tipoUsuario || 'paciente');
+      const tipo = String(rawTipo || 'paciente').toLowerCase() === 'medico' ? 'medico' : 'paciente';
+      router.push(`/register?tipo=${encodeURIComponent(tipo)}`);
       return;
     }
     // otherwise go to inicio

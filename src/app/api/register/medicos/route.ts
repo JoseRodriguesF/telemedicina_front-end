@@ -6,11 +6,25 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     if (process.env.NODE_ENV === 'development') console.log('[proxy] /api/register/medicos received body:', body);
-    const resp = await fetch(`${TARGET}/register/medicos`, {
+    // Try plural endpoint first (most backends use /register/medicos). If the
+    // remote returns 404 try the singular `/register/medico` as a fallback.
+    const endpoints = [`${TARGET}/register/medicos`, `${TARGET}/register/medico`];
+    let resp = await fetch(endpoints[0], {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+
+    let used = endpoints[0];
+    if (resp.status === 404) {
+      if (process.env.NODE_ENV === 'development') console.warn('[proxy] primary endpoint returned 404, trying fallback', endpoints[1]);
+      resp = await fetch(endpoints[1], {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      used = endpoints[1];
+    }
     // try to parse JSON, otherwise capture text for debugging
     let data: any = null;
     try {

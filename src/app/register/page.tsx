@@ -72,9 +72,19 @@ export default function RegisterPage() {
         {step === 3 && (tipoParam === 'medico' ? (
           <DadosDocumentosMedicoCard
             onBack={handleBackFromStep3}
+            userId={credentials?.userId}
+            pessoaisData={pessoaisData}
             onComplete={(data) => {
-              // here you would upload files and finalize the medico registration
-              // for now, redirect to inicio after completion
+              // finalization result from createMedico
+              // if success, redirect to inicio
+              try {
+                if (data && (data.medicoId || data.message)) {
+                  router.push('/inicio');
+                  return;
+                }
+              } catch (e) {
+                // fallback
+              }
               router.push('/inicio');
             }}
           />
