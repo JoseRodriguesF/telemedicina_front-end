@@ -2,7 +2,7 @@
 
 import './register.css';
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import DadosAcessoPacienteCard from '@/components/common/Cards/DadosACessoPacienteCard/DadosAcessoPacienteCard';
 import DadosPessoaisPacienteCard from '@/components/common/Cards/DadosPessoaisPaciente/DadosPessoaisPacienteCard';
 import DadosConvenioCard from '@/components/common/Cards/DadosConvenio/DadosConvenioCard';
@@ -15,8 +15,16 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const tipoParam = searchParams?.get('tipo') || 'paciente';
+  const [tipoParam, setTipoParam] = useState<string>('paciente');
+
+  useEffect(() => {
+    try {
+      const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      setTipoParam(params?.get('tipo') || 'paciente');
+    } catch (e) {
+      setTipoParam('paciente');
+    }
+  }, []);
 
   useEffect(() => {
     // if the user already logged in but didn't finish the registration, initialize state
