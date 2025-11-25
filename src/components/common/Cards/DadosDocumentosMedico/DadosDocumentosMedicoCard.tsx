@@ -80,6 +80,14 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
         seguro_responsabilidade_url: seguroResp?.secure_url || seguroResp?.url || null,
       };
 
+      // Remove keys with null or undefined values so the backend doesn't reject
+      // optional fields that are omitted by the client.
+      Object.keys(payload).forEach((k) => {
+        if (payload[k] === null || typeof payload[k] === 'undefined') {
+          delete payload[k];
+        }
+      });
+
       const resp = await createMedico(payload);
 
       try {

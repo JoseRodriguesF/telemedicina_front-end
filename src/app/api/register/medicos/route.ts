@@ -33,8 +33,21 @@ export async function POST(req: Request) {
       data = await resp.text().catch(() => ({}));
     }
     if (process.env.NODE_ENV === 'development' && resp.status >= 400) {
-      console.warn('[proxy] /api/register/medicos remote status:', resp.status, 'response:', data);
+      console.warn('[proxy] /api/register/medicos remote status:', resp.status, 'response:', data, 'used:', used);
     }
+
+    // If remote returned an error, include proxy debug info (used endpoint and remote body)
+    if (resp.status >= 400) {
+      const wrapped = {
+        error: data || null,
+        _proxy: {
+          usedEndpoint: used,
+          remoteStatus: resp.status,
+        },
+      };
+      return NextResponse.json(wrapped, { status: resp.status });
+    }
+
     return NextResponse.json(data, { status: resp.status });
   } catch (err: any) {
     return NextResponse.json({ message: err?.message || 'Proxy error' }, { status: 502 });
