@@ -13,6 +13,7 @@ import {
   isNotEmpty,
   getStatesForDDD,
   isValidDDD,
+  formatConstrainedDateInput,
 } from '@/lib/validation/validators';
 
 export type DadosPessoais = {
@@ -230,12 +231,7 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
             placeholder="DD/MM/AAAA"
             value={birthDate}
             onChange={(e) => {
-              // format as DD/MM/YYYY while typing
-              let v = (e.target.value || '').replace(/\D/g, '').slice(0, 8);
-              if (v.length >= 5) v = v.replace(/(\d{2})(\d{2})(\d{1,4})/, '$1/$2/$3');
-              else if (v.length >= 3) v = v.replace(/(\d{2})(\d{1,2})/, '$1/$2');
-              // ensure final formatted string has slashes
-              const formatted = v;
+              const formatted = formatConstrainedDateInput(e.target.value || '');
               setBirthDate(formatted);
               setBirthDateError('');
               if (!isMinor(formatted)) {
