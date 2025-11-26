@@ -1,18 +1,25 @@
 "use client";
 
 import './inicio.css';
+import '@/components/layout/Header/header.css';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 export default function InicioPage() {
   const items = [
     { id: 'inicio', label: 'Início', icon: '/images/home-06.svg' },
-    { id: 'perfil', label: 'Perfil', icon: '/images/user.svg' },
-    { id: 'historico', label: 'Histórico', icon: '/images/clock.svg' },
     { id: 'consultas', label: 'Consultas', icon: '/images/first-aid.svg' },
+    { id: 'historico', label: 'Histórico', icon: '/images/clock.svg' },
+    { id: 'perfil', label: 'Perfil', icon: '/images/user.svg' },
   ];
 
   return (
     <div className="inicio-page">
+      {/* Mobile header only; desktop keeps sidebar */}
+      <div className="inicio-mobile-header">
+        <MobileInicioHeader />
+      </div>
       <aside className="inicio-sidebar" aria-label="Menu lateral">
         <div className="sidebar-top">
           <div className="platform-name">
@@ -64,6 +71,42 @@ export default function InicioPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+function MobileInicioHeader() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    function onResize() { if (window.innerWidth > 900 && open) setOpen(false); }
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [open]);
+
+  return (
+    <header className="site-header">
+      <div className="header-inner">
+        <h1 className="brand">Telemedicina</h1>
+        <button
+          className={`hamburger ${open ? 'is-open' : ''}`}
+          aria-label="Menu"
+          aria-expanded={open}
+          onClick={() => setOpen((v) => !v)}
+        >
+          <span className="bar" />
+          <span className="bar" />
+          <span className="bar" />
+        </button>
+      </div>
+
+      <nav className={`mobile-menu ${open ? 'open' : ''}`} aria-hidden={!open}>
+        <Link href="/inicio" onClick={() => setOpen(false)} className="mobile-link">Início</Link>
+        <Link href="/consultas" onClick={() => setOpen(false)} className="mobile-link">Consultas</Link>
+        <Link href="/historico" onClick={() => setOpen(false)} className="mobile-link">Histórico</Link>
+        <Link href="/perfil" onClick={() => setOpen(false)} className="mobile-link">Perfil</Link>
+        <Link href="/configuracoes" onClick={() => setOpen(false)} className="mobile-link">Configurações</Link>
+      </nav>
+    </header>
   );
 }
 

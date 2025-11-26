@@ -1,5 +1,6 @@
-.inicio-page{display:flex;min-height:100vh;background:#ffffff}
-.inicio-sidebar{width:72px;background:#ffffff;color:#0f172a;padding:1rem;display:flex;flex-direction:column;gap:0.5rem;border-right:1px solid #e9eef5;transition:width 200ms ease;box-shadow:0 4px 18px rgba(15,23,42,0.10)}
+.inicio-page{display:block;min-height:100vh;background:#ffffff;position:relative}
+.inicio-mobile-header{display:none}
+.inicio-sidebar{position:fixed;left:0;top:0;height:100vh;width:72px;background:#ffffff;color:#0f172a;padding:1rem;display:flex;flex-direction:column;gap:0.5rem;border-right:1px solid #e9eef5;transition:width 200ms ease, box-shadow 200ms ease;box-shadow:0 8px 28px rgba(15,23,42,0.12);border-radius:0 16px 16px 0;z-index:50}
 .inicio-sidebar:hover{width:260px}
 .sidebar-top{display:flex;align-items:center;justify-content:flex-start;padding-bottom:6px}
 .platform-logo{width:36px;height:36px;border-radius:999px;background:#eef2ff;display:inline-block;margin-right:8px;flex:0 0 auto}
@@ -28,22 +29,34 @@
 .inicio-sidebar:hover .nav-item.active{background:rgba(37,99,235,0.15);} /* levemente mais visível quando expandida */
 .nav-item.active .nav-icon{background:transparent}
 
-/* Responsividade: em dispositivos sem hover (toque), manter expandida */
-@media (hover: none){
+/* Responsividade: em dispositivos sem hover (toque) apenas em celular, manter expandida */
+@media (hover: none) and (max-width: 768px){
 	.inicio-sidebar{width:260px}
 	.inicio-sidebar:hover{width:260px}
 	.nav-item .nav-label{display:inline-block}
 }
 
 @media (max-width:900px){
-	.inicio-sidebar{position:sticky;left:0;top:0;height:100vh;z-index:30}
+	.inicio-sidebar{display:none}
+	/* Mobile header overlays content */
+	.inicio-mobile-header{display:block}
+	.inicio-mobile-header .site-header{position:fixed;left:0;top:0;width:100%;z-index:60;box-shadow:0 6px 18px rgba(15,23,42,0.10)}
+	.inicio-main{padding-top:4.25rem}
+
+    /* Ensure header actions hidden and hamburger visible for mobile-specific header */
+    .inicio-mobile-header .header-actions{ display: none; }
+    .inicio-mobile-header .hamburger{ display:inline-flex; }
+
+    /* Ensure header actions hidden and hamburger visible for mobile-specific header */
+    .inicio-mobile-header .header-actions{ display: none; }
+    .inicio-mobile-header .hamburger{ display:inline-flex; }
 }
 .inicio-sidebar .nav-item{width:100%}
 .sidebar-bottom{margin-top:auto;padding-top:8px;width:100%}
 .inicio-sidebar:hover .nav-item{justify-content:flex-start;padding:10px}
 .inicio-sidebar:hover .nav-item .nav-label{display:inline-block}
 .sidebar-bottom{margin-top:auto;padding-top:8px}
-.inicio-main{flex:1;display:flex;align-items:flex-start;justify-content:flex-start;padding:2.5rem}
+.inicio-main{display:flex;align-items:flex-start;justify-content:flex-start;padding:2.5rem;margin-left:0}
 .center-card{flex:1;margin-left:24px;background:transparent;border-radius:8px;padding:1rem;color:#0f172a}
 .center-card h2{font-size:2rem;font-weight:800;margin:0 0 1rem 0}
 .cards-row{display:flex;gap:28px;margin-top:18px}
@@ -57,5 +70,20 @@
 .btn.primary.full{width:100%}
 
 @media (max-width:900px){
-	.inicio-sidebar{position:sticky;left:0;top:0;height:100vh;z-index:30}
+@media (max-width:768px){
+	/* Stack cards and shrink paddings/typography for mobile */
+	.inicio-main{padding:1rem; padding-top:4.25rem;}
+	.center-card{margin-left:0}
+	.center-card h2{font-size:1.5rem}
+	.cards-row{flex-direction:column; gap:16px; margin-top:12px}
+	.feature-card{width:100%; padding:18px}
+	.feature-card .icon{width:52px;height:52px;border-radius:12px;margin-bottom:12px}
+	.btn.primary{padding:10px 16px}
+}
+
+@media (max-width:560px){
+	.center-card h2{font-size:1.25rem}
+	.feature-card{padding:16px}
+	.feature-card .icon{width:48px;height:48px}
+	.btn.primary{padding:9px 14px}
 }
