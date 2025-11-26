@@ -287,7 +287,7 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
         </label>
 
         <label className="form-label">
-          <span className="label-title">Número <span className="required-asterisk">*</span></span>
+          <span className="label-title">Telefone <span className="required-asterisk">*</span></span>
           <Input mask="phone" placeholder="(00) 00000-0000" value={number} onChange={(e) => { setNumber(e.target.value); setNumberError(''); }} />
           {numberError && <div className="error-text">{numberError}</div>}
         </label>

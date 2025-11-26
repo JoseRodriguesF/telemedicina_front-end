@@ -6,11 +6,22 @@
   background: #ffffff;
 }
 
+/* Make the home header overlay the page content */
+.page-home .site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 60;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.10);
+}
+
 .page-home__main {
   flex: 1;
   padding: 1.5rem;
   max-width: 56rem;
   margin: 0 auto;
+  padding-top: 4.25rem; /* offset fixed header */
 }
 
 .home-heading {
