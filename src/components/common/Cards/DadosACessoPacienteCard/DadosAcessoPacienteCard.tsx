@@ -7,6 +7,9 @@ import Input from '@/components/common/Inputs/Input';
 import Button from '@/components/common/Buttons/Button';
 import { isEmailAllowedDomain, doPasswordsMatch, isStrongPassword } from '@/lib/validation/validators';
 import createAcesso from '@/lib/axios/acesso';
+import doSocialLogin from '@/lib/axios/social';
+import { doGoogleRegister } from '@/lib/axios/google';
+import signInWithGoogle from '@/lib/google';
 import { parseApiError } from '@/lib/apiError';
 
 import { useRouter } from 'next/navigation';
@@ -94,6 +97,25 @@ export default function DadosAcessoPacienteCard({ onNext, tipoUsuario }: Props) 
     })();
   }
 
+  async function handleGoogleSignup() {
+    setEmailError('');
+    setPasswordError('');
+    setConfirmError('');
+    setLoading(true);
+    try {
+      const idToken = await signInWithGoogle();
+      const resp = await doGoogleRegister({ id_token: idToken, tipo_usuario: tipoUsuario || 'paciente' });
+      const user = resp?.user || null;
+      const userId = user?.id || resp?.userId || null;
+      onNext?.({ email: user?.email || '', password: '', userId });
+    } catch (err: any) {
+      const parsed = parseApiError(err);
+      setEmailError(parsed.message || 'Erro ao cadastrar com Google');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <section className="register-card dados-acesso-card">
       <h1 className="register-title">Crie sua conta</h1>
@@ -147,7 +169,7 @@ export default function DadosAcessoPacienteCard({ onNext, tipoUsuario }: Props) 
 
       <div className="divider"><span>Ou continue com</span></div>
 
-      <Button className="google-btn" variant="google" type="button">
+      <Button className="google-btn" variant="google" type="button" onClick={handleGoogleSignup} disabled={loading}>
         <Image src="/images/googleIcon.svg" alt="Google" width={20} height={20} />
         <span>Cadastrar com Google</span>
       </Button>

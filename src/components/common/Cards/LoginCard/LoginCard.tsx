@@ -5,6 +5,9 @@ import Input from '@/components/common/Inputs/Input';
 import Button from '@/components/common/Buttons/Button';
 import { useState } from 'react';
 import doLogin from '@/lib/axios/login';
+import doSocialLogin from '@/lib/axios/social';
+import { doGoogleAuth } from '@/lib/axios/google';
+import signInWithGoogle from '@/lib/google';
 import { saveUser } from '@/lib/auth';
 import { parseApiError } from '@/lib/apiError';
 
@@ -63,6 +66,23 @@ export default function LoginCard({ onLogin }: Props) {
     })();
   }
 
+  async function handleGoogleSignIn() {
+    setError('');
+    setLoading(true);
+    try {
+      const idToken = await signInWithGoogle();
+      const resp = await doGoogleAuth({ id_token: idToken });
+      const user = resp?.user || null;
+      saveUser(user);
+      onLogin?.({ email: user?.email, password: '', user, raw: resp });
+    } catch (err: any) {
+      const parsed = parseApiError(err);
+      setError(parsed.message || (err && err.message) || 'Erro ao efetuar login com Google');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <section className="register-card dados-acesso-card">
       <h1 className="register-title">Bem-vindo(a) de volta!</h1>
@@ -105,7 +125,7 @@ export default function LoginCard({ onLogin }: Props) {
 
       <div className="divider"><span>Ou continue com</span></div>
 
-      <Button className="google-btn" variant="google" type="button">
+      <Button className="google-btn" variant="google" type="button" onClick={handleGoogleSignIn} disabled={loading}>
         <Image src="/images/googleIcon.svg" alt="Google" width={20} height={20} />
         <span>Entrar com Google</span>
       </Button>
