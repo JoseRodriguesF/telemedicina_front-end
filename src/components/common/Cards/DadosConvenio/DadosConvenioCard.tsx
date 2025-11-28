@@ -7,7 +7,7 @@ import Button from '@/components/common/Buttons/Button';
 import TermsModal from '@/components/common/Modals/TermsModal/TermsModal';
 import { useState } from 'react';
 import createPessoais from '@/lib/axios/pessoais';
-import { saveUser } from '@/lib/auth';
+import { saveUser, getUserId } from '@/lib/auth';
 
 type Props = {
   onBack?: () => void;
@@ -85,8 +85,18 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
           }
           setErrorMessage('');
           setLoading(true);
+          // Normalizações para backend
+          const estadoCivilForApi = (() => {
+            const v = String(pessoaisData?.marital || pessoaisData?.estado_civil || '').toLowerCase();
+            if (v.startsWith('solte')) return 'Solteiro';
+            if (v.startsWith('casad')) return 'Casado';
+            if (v.startsWith('divorc')) return 'Divorciado';
+            if (v.startsWith('viuv') || v.startsWith('viúv')) return 'Viúvo';
+            return pessoaisData?.estado_civil || '';
+          })();
+
           const payload = {
-            usuario_id: userId,
+            usuario_id: userId ?? getUserId(),
             nome_completo: pessoaisData?.name || pessoaisData?.nome || '',
             data_nascimento: (() => {
               const d = (pessoaisData?.birthDate || '').trim();
@@ -105,7 +115,7 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
               if (s.startsWith('f')) return 'feminino';
               return '';
             })(),
-            estado_civil: pessoaisData?.marital || pessoaisData?.estado_civil || '',
+            estado_civil: estadoCivilForApi,
             endereco: pessoaisData?.address || pessoaisData?.endereco || '',
             numero: (() => {
               const n = (pessoaisData?.addressNumber ?? pessoaisData?.numero);
@@ -118,7 +128,7 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
             responsavel_legal: pessoaisData?.guardian || '',
             telefone_responsavel: (pessoaisData?.guardianContact || '')?.replace(/\D/g, '') || '',
             convenio: pendingData?.convenio || '',
-            numero_carteirinha: (pendingData?.numero || '')?.replace(/\D/g, '') || '',
+            numero_carteirinha: String(pendingData?.numero || '').trim(),
           };
           try {
             const resp = await createPessoais(payload);

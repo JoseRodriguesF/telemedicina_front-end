@@ -23,6 +23,16 @@ export default function RegisterPage() {
       setTipoParam(params?.get('tipo') || 'paciente');
       const resume = params?.get('resume');
       if (resume === '1') {
+        // Quando retomando cadastro, tentar preencher userId a partir do localStorage
+        try {
+          const auth = require('@/lib/auth');
+          const u = auth?.getUser?.();
+          if (u?.id) {
+            setCredentials({ email: u.email, password: '', userId: u.id });
+          }
+        } catch (e) {
+          // ignore
+        }
         setStep(2);
       } else {
         setStep(1);
