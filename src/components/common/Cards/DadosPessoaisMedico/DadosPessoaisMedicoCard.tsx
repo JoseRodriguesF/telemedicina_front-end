@@ -142,7 +142,7 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
               onClick={() => {
                 const ok = validateAll();
                 if (!isValidCRM(crm)) {
-                  setCrmError('Formato de CRM inválido. Use 0000000-0/UF (ex.: 1234567-8/SP).');
+                  setCrmError('CRM inválido. Formato: 0000000-0/UF (UF brasileira válida, ex.: 1234567-8/SP).');
                   return;
                 }
                 if (ok) onComplete?.({ name, crm, cpf, gender, birthDate });

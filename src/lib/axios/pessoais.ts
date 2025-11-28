@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { isValidDDD } from '@/lib/validation/validators';
 
 export type PessoaisPayload = {
   usuario_id?: number | null;
@@ -35,9 +36,15 @@ export async function createPessoais(payload: PessoaisPayload) {
     if (typeof v === 'string' && v.trim() === '') return; // omite vazio
     cleaned[k] = v;
   });
-  // Validação rápida de telefone (10 ou 11 dígitos)
-  if (cleaned.telefone && !/^\d{10,11}$/.test(cleaned.telefone)) {
-    throw new Error('Telefone inválido. Use DDD + número (10 ou 11 dígitos).');
+  // Validação rápida de telefone (10 ou 11 dígitos) e DDD
+  if (cleaned.telefone) {
+    if (!/^\d{10,11}$/.test(cleaned.telefone)) {
+      throw new Error('Telefone inválido. Use DDD + número (10 ou 11 dígitos).');
+    }
+    const ddd = cleaned.telefone.slice(0, 2);
+    if (!isValidDDD(ddd)) {
+      throw new Error('DDD inválido. Informe um DDD brasileiro válido.');
+    }
   }
   // Log somente em desenvolvimento
   if (process.env.NODE_ENV === 'development') {

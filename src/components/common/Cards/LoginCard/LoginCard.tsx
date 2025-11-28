@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Input from '@/components/common/Inputs/Input';
 import Button from '@/components/common/Buttons/Button';
 import { useState } from 'react';
+import { isEmailAllowedDomain, isEmailFormatValid } from '@/lib/validation/validators';
 import doLogin from '@/lib/axios/login';
 import doSocialLogin from '@/lib/axios/social';
 import { doGoogleAuth } from '@/lib/axios/google';
@@ -26,6 +27,16 @@ export default function LoginCard({ onLogin }: Props) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    setEmailError('');
+    // Validar formato e domínio
+    if (!isEmailFormatValid(email)) {
+      setEmailError('Formato de email inválido.');
+      return;
+    }
+    if (!isEmailAllowedDomain(email)) {
+      setEmailError('Domínio de email não permitido. Use um provedor comum (ex: gmail.com).');
+      return;
+    }
     if (!email || !password) {
       setError('Informe email e senha para continuar.');
       return;
@@ -70,6 +81,7 @@ export default function LoginCard({ onLogin }: Props) {
     setError('');
     setLoading(true);
     try {
+      // Não validar domínio aqui (Google garante email); apenas fluxo social.
       const idToken = await signInWithGoogle();
       const resp = await doGoogleAuth({ id_token: idToken });
       const user = resp?.user || null;

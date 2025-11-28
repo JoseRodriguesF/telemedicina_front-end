@@ -115,7 +115,12 @@ export function isValidDDD(ddd: string): boolean {
 export function isValidCRM(crm: string): boolean {
   if (!crm || typeof crm !== 'string') return false;
   const s = crm.trim().toUpperCase();
-  return /^\d{7}-\d\/[A-Z]{2}$/.test(s);
+  if (!/^\d{7}-\d\/[A-Z]{2}$/.test(s)) return false;
+  const uf = s.slice(-2);
+  const VALID_UFS = [
+    'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
+  ];
+  return VALID_UFS.includes(uf);
 }
 
 /** Retorna os estados/UFs que utilizam o DDD informado (array vazio se nenhum) */
