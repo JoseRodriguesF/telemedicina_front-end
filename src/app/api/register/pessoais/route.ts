@@ -18,8 +18,11 @@ export async function POST(req: Request) {
     } catch (e) {
       data = await resp.text().catch(() => ({}));
     }
-    if (process.env.NODE_ENV === 'development' && resp.status >= 400) {
+    if (resp.status >= 400) {
+      // Always log minimal diagnostic info in server console; helps debug 400 without exposing sensitive details to client.
       console.warn('[proxy] /api/register/pessoais remote status:', resp.status, 'response:', data);
+      // Attach raw response for client-side inspection (still returning upstream status)
+      return NextResponse.json({ error: true, status: resp.status, upstream: data }, { status: resp.status });
     }
     return NextResponse.json(data, { status: resp.status });
   } catch (err: any) {

@@ -18,13 +18,33 @@ export type PessoaisPayload = {
 };
 
 export async function createPessoais(payload: PessoaisPayload) {
-  // Use local Next.js proxy route to avoid CORS in development
-  if (process.env.NODE_ENV === 'development') {
-    // Debug outbound payload in development
-    // eslint-disable-next-line no-console
-    console.log('[createPessoais] sending payload:', payload);
+  // Normalizar sexo para 'M'/'F' se vier por extenso
+  if (payload.sexo) {
+    const s = payload.sexo.toString().toLowerCase();
+    if (s.startsWith('m')) payload.sexo = 'M';
+    else if (s.startsWith('f')) payload.sexo = 'F';
   }
-  const resp = await axios.post('/api/register/pessoais', payload, { headers: { 'Content-Type': 'application/json' } });
+  // Sanitizar CPF / telefone
+  if (payload.cpf) payload.cpf = payload.cpf.replace(/\D/g, '');
+  if (payload.telefone) payload.telefone = payload.telefone.replace(/\D/g, '');
+  if (payload.telefone_responsavel) payload.telefone_responsavel = payload.telefone_responsavel.replace(/\D/g, '');
+  // Remover campos opcionais vazios ('' ou null) para evitar rejeição por validação
+  const cleaned: Record<string, any> = {};
+  Object.entries(payload).forEach(([k, v]) => {
+    if (v === null) return; // omite null
+    if (typeof v === 'string' && v.trim() === '') return; // omite vazio
+    cleaned[k] = v;
+  });
+  // Validação rápida de telefone (10 ou 11 dígitos)
+  if (cleaned.telefone && !/^\d{10,11}$/.test(cleaned.telefone)) {
+    throw new Error('Telefone inválido. Use DDD + número (10 ou 11 dígitos).');
+  }
+  // Log somente em desenvolvimento
+  if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
+    console.log('[createPessoais] sending sanitized payload:', cleaned);
+  }
+  const resp = await axios.post('/api/register/pessoais', cleaned, { headers: { 'Content-Type': 'application/json' } });
   return resp.data;
 }
 
