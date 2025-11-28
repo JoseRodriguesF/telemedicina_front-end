@@ -2,7 +2,7 @@
 
 import './register.css';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import DadosAcessoPacienteCard from '@/components/common/Cards/DadosACessoPacienteCard/DadosAcessoPacienteCard';
 import DadosPessoaisPacienteCard from '@/components/common/Cards/DadosPessoaisPaciente/DadosPessoaisPacienteCard';
 import DadosConvenioCard from '@/components/common/Cards/DadosConvenio/DadosConvenioCard';
@@ -15,19 +15,27 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [tipoParam, setTipoParam] = useState<string>('paciente');
+  const [freshStart, setFreshStart] = useState<boolean>(false);
+  const [paramsReady, setParamsReady] = useState<boolean>(false);
 
   useEffect(() => {
-    try {
-      const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-      setTipoParam(params?.get('tipo') || 'paciente');
-    } catch (e) {
-      setTipoParam('paciente');
-    }
-  }, []);
+    const tipo = searchParams?.get('tipo') || 'paciente';
+    // Se a rota contém 'tipo', consideramos que é um início novo via navegação explícita
+    const isFresh = searchParams?.has('tipo') ?? false;
+    setTipoParam(tipo);
+    setFreshStart(isFresh);
+    setParamsReady(true);
+  }, [searchParams]);
 
   useEffect(() => {
     // if the user already logged in but didn't finish the registration, initialize state
+    if (!paramsReady) return;
+    if (freshStart) {
+      setStep(1);
+      return;
+    }
     try {
       const u = require('@/lib/auth').getUser?.();
       if (u && typeof u.registro_full !== 'undefined') {
@@ -39,7 +47,7 @@ export default function RegisterPage() {
     } catch (e) {
       // ignore
     }
-  }, []);
+  }, [paramsReady, freshStart]);
 
   // Step 1 -> recebe do card o userId após createAcesso
   function handleNextFromStep1(data?: { email: string; password: string; userId?: number }) {
