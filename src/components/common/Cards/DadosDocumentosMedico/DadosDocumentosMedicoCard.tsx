@@ -30,7 +30,7 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
             <Image src={iconSrc} alt={file ? 'Documento anexado' : 'Anexar documento'} width={28} height={28} />
           </div>
           <div className="file-text">
-            <div className={`file-placeholder ${file ? 'has-file' : ''}`}>{file ? (file.name.length > 40 ? file.name.slice(0, 36) + '...' : file.name) : placeholder}</div>
+            <div className={`file-placeholder ${file ? 'has-file' : ''}`}>{file ? 'Documento anexado' : placeholder}</div>
             {file && <div className="file-sub">Clique para substituir</div>}
           </div>
         </label>
