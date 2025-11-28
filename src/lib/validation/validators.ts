@@ -109,6 +109,15 @@ export function isValidDDD(ddd: string): boolean {
   return states.length > 0;
 }
 
+/**
+ * Valida CRM no formato 0000000-0/UF (7 dígitos, hífen, 1 dígito, barra, duas letras)
+ */
+export function isValidCRM(crm: string): boolean {
+  if (!crm || typeof crm !== 'string') return false;
+  const s = crm.trim().toUpperCase();
+  return /^\d{7}-\d\/[A-Z]{2}$/.test(s);
+}
+
 /** Retorna os estados/UFs que utilizam o DDD informado (array vazio se nenhum) */
 export function getStatesForDDD(ddd: string): string[] {
   if (!ddd || typeof ddd !== 'string') return [];
@@ -286,4 +295,5 @@ export default {
   getStatesForDDD,
   isStrongPassword,
   isValidDate,
+  isValidCRM,
 };

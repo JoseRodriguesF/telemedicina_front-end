@@ -4,7 +4,7 @@ import './DadosPessoaisMedicoCard.css';
 import Input from '@/components/common/Inputs/Input';
 import Button from '@/components/common/Buttons/Button';
 import { useState } from 'react';
-import { isValidName, isValidCPF, isValidDate, isNotEmpty } from '@/lib/validation/validators';
+import { isValidName, isValidCPF, isValidDate, isNotEmpty, isValidCRM } from '@/lib/validation/validators';
 
 export type DadosPessoaisMedico = {
   name: string;
@@ -78,15 +78,17 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
         <label className="form-label">
           <span className="label-title">CRM <span className="required-asterisk">*</span></span>
           <Input
-            placeholder="CRM: 000000/SP"
+            placeholder="CRM: 0000000-0/UF"
             value={crm}
             onChange={(e) => {
               const raw = (e.target.value || '').toUpperCase();
-              // extract up to 6 digits for number part
-              const digits = (raw.replace(/\D/g, '') || '').slice(0, 6);
-              // extract up to 2 letters for state part
+              const nums = (raw.replace(/\D/g, '') || '').slice(0, 8); // 7 + 1 dígito verificador
               const letters = (raw.replace(/[^A-Z]/g, '') || '').slice(0, 2);
-              const formatted = letters ? `${digits}/${letters}` : digits;
+              const left = nums.slice(0, 7);
+              const dv = nums.slice(7, 8);
+              let formatted = left;
+              if (dv) formatted += `-${dv}`;
+              if (letters) formatted += `/${letters}`;
               setCrm(formatted);
               setCrmError('');
             }}
@@ -134,7 +136,20 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
             <Button type="button" variant="ghost" onClick={onBack}>Voltar</Button>
           </div>
           <div className="right-actions">
-            <Button type="button" variant="primary" onClick={() => { if (validateAll()) onComplete?.({ name, crm, cpf, gender, birthDate }); }}>Próximo</Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => {
+                const ok = validateAll();
+                if (!isValidCRM(crm)) {
+                  setCrmError('Formato de CRM inválido. Use 0000000-0/UF (ex.: 1234567-8/SP).');
+                  return;
+                }
+                if (ok) onComplete?.({ name, crm, cpf, gender, birthDate });
+              }}
+            >
+              Próximo
+            </Button>
           </div>
         </div>
       </form>
