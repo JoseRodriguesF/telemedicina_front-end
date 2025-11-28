@@ -100,13 +100,20 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
             cpf: (pessoaisData?.cpf || '').replace(/\D/g, ''),
             sexo: (() => {
               const s = (pessoaisData?.gender || pessoaisData?.sexo || '').toString().toLowerCase();
-              if (s === 'm') return 'masculino';
-              if (s === 'f') return 'feminino';
               if (s === 'masculino' || s === 'feminino') return s;
+              if (s.startsWith('m')) return 'masculino';
+              if (s.startsWith('f')) return 'feminino';
               return '';
             })(),
             estado_civil: pessoaisData?.marital || pessoaisData?.estado_civil || '',
             endereco: pessoaisData?.address || pessoaisData?.endereco || '',
+            numero: (() => {
+              const n = (pessoaisData?.addressNumber ?? pessoaisData?.numero);
+              if (n === null || n === undefined) return null;
+              const v = Number(String(n).replace(/\D/g, ''));
+              return Number.isFinite(v) ? v : null;
+            })(),
+            complemento: (pessoaisData?.complement || pessoaisData?.complemento || '') || null,
             telefone: (pessoaisData?.number || '')?.replace(/\D/g, '') || '',
             responsavel_legal: pessoaisData?.guardian || '',
             telefone_responsavel: (pessoaisData?.guardianContact || '')?.replace(/\D/g, '') || '',
