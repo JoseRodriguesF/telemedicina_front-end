@@ -33,6 +33,9 @@ export default function RegisterPage() {
     // if the user already logged in but didn't finish the registration, initialize state
     if (!paramsReady) return;
     if (freshStart) {
+      // Fresh navigation to registration: force step 1 and reset any prior state
+      setCredentials(null);
+      setPessoaisData(null);
       setStep(1);
       return;
     }
