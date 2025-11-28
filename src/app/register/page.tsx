@@ -16,43 +16,21 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const [tipoParam, setTipoParam] = useState<string>('paciente');
-  const [freshStart, setFreshStart] = useState<boolean>(false);
-  const [paramsReady, setParamsReady] = useState<boolean>(false);
 
   useEffect(() => {
     try {
       const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-      const tipo = params?.get('tipo') || 'paciente';
-      const isFresh = !!params?.get('tipo');
-      setTipoParam(tipo);
-      setFreshStart(isFresh);
-    } finally {
-      setParamsReady(true);
+      setTipoParam(params?.get('tipo') || 'paciente');
+    } catch (e) {
+      setTipoParam('paciente');
     }
   }, []);
 
   useEffect(() => {
-    // if the user already logged in but didn't finish the registration, initialize state
-    if (!paramsReady) return;
-    if (freshStart) {
-      // Fresh navigation to registration: force step 1 and reset any prior state
-      setCredentials(null);
-      setPessoaisData(null);
-      setStep(1);
-      return;
-    }
-    try {
-      const u = require('@/lib/auth').getUser?.();
-      if (u && typeof u.registro_full !== 'undefined') {
-        if (u.registro_full === false) {
-          setCredentials({ email: u.email, password: '', userId: u.id });
-          setStep(2);
-        }
-      }
-    } catch (e) {
-      // ignore
-    }
-  }, [paramsReady, freshStart]);
+    // Removido avanço automático para etapa 2.
+    // Agora sempre inicia na etapa 1 ao entrar via header, independente de dados salvos.
+    // Caso se deseje retomar automaticamente no futuro, adicionar flag explícita (ex: localStorage 'resume_reg').
+  }, []);
 
   // Step 1 -> recebe do card o userId após createAcesso
   function handleNextFromStep1(data?: { email: string; password: string; userId?: number }) {
