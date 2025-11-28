@@ -21,24 +21,30 @@ export default function RegisterPage() {
     try {
       const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
       setTipoParam(params?.get('tipo') || 'paciente');
+      const resume = params?.get('resume');
+      if (resume === '1') {
+        // Quando retomando cadastro, tentar preencher userId a partir do localStorage
+        try {
+          const auth = require('@/lib/auth');
+          const u = auth?.getUser?.();
+          if (u?.id) {
+            setCredentials({ email: u.email, password: '', userId: u.id });
+          }
+        } catch (e) {
+          // ignore
+        }
+        setStep(2);
+      } else {
+        setStep(1);
+      }
     } catch (e) {
       setTipoParam('paciente');
+      setStep(1);
     }
   }, []);
 
   useEffect(() => {
-    // if the user already logged in but didn't finish the registration, initialize state
-    try {
-      const u = require('@/lib/auth').getUser?.();
-      if (u && typeof u.registro_full !== 'undefined') {
-        if (u.registro_full === false) {
-          setCredentials({ email: u.email, password: '', userId: u.id });
-          setStep(2);
-        }
-      }
-    } catch (e) {
-      // ignore
-    }
+    // Sem auto avanço por localStorage. O progresso é controlado via query 'resume=1'.
   }, []);
 
   // Step 1 -> recebe do card o userId após createAcesso

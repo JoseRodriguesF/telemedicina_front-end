@@ -132,7 +132,7 @@ export default function LoginCard({ onLogin }: Props) {
 
       <div className="register-footer">
         <span>Não tem uma conta? </span>
-        <a className="link-small" href="/register">Cadastre-se</a>
+        <a className="link-small" href="/register?tipo=paciente">Cadastre-se</a>
       </div>
     </section>
   );
