@@ -110,9 +110,8 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
             cpf: (pessoaisData?.cpf || '').replace(/\D/g, ''),
             sexo: (() => {
               const s = (pessoaisData?.gender || pessoaisData?.sexo || '').toString().toLowerCase();
-              if (s === 'masculino' || s === 'feminino') return s;
-              if (s.startsWith('m')) return 'masculino';
-              if (s.startsWith('f')) return 'feminino';
+              if (s === 'm' || s.startsWith('masculino')) return 'masculino';
+              if (s === 'f' || s.startsWith('feminino')) return 'feminino';
               return '';
             })(),
             estado_civil: estadoCivilForApi,
@@ -123,12 +122,27 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
               const v = Number(String(n).replace(/\D/g, ''));
               return Number.isFinite(v) ? v : null;
             })(),
-            complemento: (pessoaisData?.complement || pessoaisData?.complemento || '') || null,
+            complemento: (() => {
+              const v = (pessoaisData?.complement || pessoaisData?.complemento || '').trim();
+              return v ? v : null;
+            })(),
             telefone: (pessoaisData?.number || '')?.replace(/\D/g, '') || '',
-            responsavel_legal: pessoaisData?.guardian || '',
-            telefone_responsavel: (pessoaisData?.guardianContact || '')?.replace(/\D/g, '') || '',
-            convenio: pendingData?.convenio || '',
-            numero_carteirinha: String(pendingData?.numero || '').trim(),
+            responsavel_legal: (() => {
+              const v = (pessoaisData?.guardian || '').trim();
+              return v ? v : null;
+            })(),
+            telefone_responsavel: (() => {
+              const v = (pessoaisData?.guardianContact || '')?.replace(/\D/g, '') || '';
+              return v ? v : null;
+            })(),
+            convenio: (() => {
+              const v = String(pendingData?.convenio || '').trim();
+              return v ? v : null;
+            })(),
+            numero_carteirinha: (() => {
+              const v = String(pendingData?.numero || '').trim();
+              return v ? v : null;
+            })(),
           };
           try {
             const resp = await createPessoais(payload);
