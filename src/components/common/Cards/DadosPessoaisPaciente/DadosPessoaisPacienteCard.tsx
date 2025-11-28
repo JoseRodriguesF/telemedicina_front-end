@@ -24,6 +24,8 @@ export type DadosPessoais = {
   gender: string;
   marital: string;
   address: string;
+  addressNumber?: number;
+  complement?: string;
   number: string;
   guardian: string;
   guardianContact: string;
@@ -41,6 +43,8 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
   const [gender, setGender] = useState('');
   const [marital, setMarital] = useState('');
   const [address, setAddress] = useState('');
+  const [addressNumber, setAddressNumber] = useState('');
+  const [complement, setComplement] = useState('');
   const [number, setNumber] = useState('');
   const [guardian, setGuardian] = useState('');
   const [guardianContact, setGuardianContact] = useState('');
@@ -52,6 +56,8 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
   const [genderError, setGenderError] = useState('');
   const [maritalError, setMaritalError] = useState('');
   const [addressError, setAddressError] = useState('');
+  const [addressNumberError, setAddressNumberError] = useState('');
+  const [complementError, setComplementError] = useState('');
   const [numberError, setNumberError] = useState('');
   
 
@@ -103,6 +109,8 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
     setGenderError('');
     setMaritalError('');
     setAddressError('');
+    setAddressNumberError('');
+    setComplementError('');
     setNumberError('');
     setGuardianError('');
     setGuardianContactError('');
@@ -187,7 +195,8 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
   }
 
   function buildData(): DadosPessoais {
-    return { name, birthDate, cpf, gender, marital, address, number, guardian, guardianContact };
+    const numVal = addressNumber ? Number(addressNumber) : undefined;
+    return { name, birthDate, cpf, gender, marital, address, addressNumber: numVal, complement: complement || undefined, number, guardian, guardianContact };
   }
 
   
@@ -280,22 +289,52 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
         <label className="form-label full-width">
           <span className="label-title">Endereço <span className="required-asterisk">*</span></span>
           <AddressAutocomplete
-            placeholder="Rua, número, bairro, cidade - UF"
+            placeholder="Rua, bairro, cidade - UF"
             value={address}
             onChange={(v) => { setAddress(v); setAddressError(''); }}
             onPlaceSelected={({ description }) => {
-              // Clear any previous error when a valid place is selected
               setAddressError('');
             }}
           />
           {addressError && <div className="error-text">{addressError}</div>}
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+            <label className="form-label" style={{ flex: '0 0 80px' }}>
+              <span className="label-title">Número</span>
+              <input
+                className="c-input"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                placeholder="N°123"
+                value={addressNumber}
+                onChange={(e) => {
+                  const v = (e.target.value || '').replace(/\D/g, '').slice(0, 6);
+                  setAddressNumber(v);
+                  setAddressNumberError('');
+                }}
+                type="text"
+              />
+              {addressNumberError && <div className="error-text">{addressNumberError}</div>}
+            </label>
+            <label className="form-label" style={{ flex: '0 1 160px', minWidth: '120px' }}>
+              <span className="label-title">Complemento</span>
+              <input
+                className="c-input"
+                placeholder="Apto 101, Bloco B"
+                value={complement}
+                onChange={(e) => { setComplement(e.target.value); setComplementError(''); }}
+                type="text"
+              />
+              {complementError && <div className="error-text">{complementError}</div>}
+            </label>
+            <label className="form-label" style={{ flex: '1 1 220px', minWidth: '180px' }}>
+              <span className="label-title">Telefone <span className="required-asterisk">*</span></span>
+              <Input mask="phone" placeholder="(00) 00000-0000" value={number} onChange={(e) => { setNumber(e.target.value); setNumberError(''); }} />
+              {numberError && <div className="error-text">{numberError}</div>}
+            </label>
+          </div>
         </label>
 
-        <label className="form-label">
-          <span className="label-title">Telefone <span className="required-asterisk">*</span></span>
-          <Input mask="phone" placeholder="(00) 00000-0000" value={number} onChange={(e) => { setNumber(e.target.value); setNumberError(''); }} />
-          {numberError && <div className="error-text">{numberError}</div>}
-        </label>
+        
 
         {minor && (
           <>

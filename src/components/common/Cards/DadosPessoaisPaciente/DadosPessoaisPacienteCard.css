@@ -38,12 +38,42 @@
   height: 40px;
 }
 
+/* Row to align Número, Complemento e Telefone em linha no desktop */
+.address-contact-row {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.address-contact-row .form-label {
+  margin: 0;
+}
+
+.address-number {
+  flex: 0 1 120px;
+}
+
+.address-complement {
+  flex: 0 1 220px;
+  min-width: 160px;
+}
+
+.address-phone {
+  flex: 1 1 240px;
+  min-width: 220px;
+}
+
 @media (max-width: 640px) {
   .grid-2 {
     grid-template-columns: 1fr;
   }
   .form-actions.actions-full {
     flex-direction: column-reverse;
+  }
+  .address-contact-row {
+    gap: 0.5rem;
   }
 }
 /* Specific styles for step 2 (personal data) */
