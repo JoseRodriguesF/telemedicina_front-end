@@ -21,15 +21,20 @@ export default function RegisterPage() {
     try {
       const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
       setTipoParam(params?.get('tipo') || 'paciente');
+      const resume = params?.get('resume');
+      if (resume === '1') {
+        setStep(2);
+      } else {
+        setStep(1);
+      }
     } catch (e) {
       setTipoParam('paciente');
+      setStep(1);
     }
   }, []);
 
   useEffect(() => {
-    // Removido avanço automático para etapa 2.
-    // Agora sempre inicia na etapa 1 ao entrar via header, independente de dados salvos.
-    // Caso se deseje retomar automaticamente no futuro, adicionar flag explícita (ex: localStorage 'resume_reg').
+    // Sem auto avanço por localStorage. O progresso é controlado via query 'resume=1'.
   }, []);
 
   // Step 1 -> recebe do card o userId após createAcesso
