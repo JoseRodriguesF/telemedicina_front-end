@@ -19,6 +19,15 @@ export default function LoginPage() {
       router.push(`/register?tipo=${encodeURIComponent(tipo)}&resume=1`);
       return;
     }
+    // if medico and verification is in analysis, go to analysis page
+    if (user) {
+      const tipo = String(user.tipo_usuario || user.tipo || '').toLowerCase();
+      const verificacao = String(user.verificacao || '').toLowerCase();
+      if (tipo === 'medico' && verificacao === 'analise') {
+        router.push('/analise');
+        return;
+      }
+    }
     // otherwise go to inicio
     router.push('/inicio');
   }

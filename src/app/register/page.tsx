@@ -90,16 +90,16 @@ export default function RegisterPage() {
             pessoaisData={pessoaisData}
             onComplete={(data) => {
               // finalization result from createMedico
-              // if success, redirect to inicio
+              // if success, redirect to analysis page for doctors
               try {
                 if (data && (data.medicoId || data.message)) {
-                  router.push('/inicio');
+                  router.push('/analise');
                   return;
                 }
               } catch (e) {
                 // fallback
               }
-              router.push('/inicio');
+              router.push('/analise');
             }}
           />
         ) : (
