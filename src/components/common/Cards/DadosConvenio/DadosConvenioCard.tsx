@@ -74,6 +74,7 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
           <Button type="submit" variant="primary" className="btn-equal">Próximo</Button>
         </div>
       </form>
+
       <TermsModal
         open={showTermsModal}
         loading={loading}
@@ -110,23 +111,25 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
             cpf: (pessoaisData?.cpf || '').replace(/\D/g, ''),
             sexo: (() => {
               const s = (pessoaisData?.gender || pessoaisData?.sexo || '').toString().toLowerCase();
-              if (s === 'm' || s.startsWith('masculino')) return 'masculino';
-              if (s === 'f' || s.startsWith('feminino')) return 'feminino';
+              if (s === 'm' || s.startsWith('masc')) return 'M';
+              if (s === 'f' || s.startsWith('fem')) return 'F';
               return '';
             })(),
             estado_civil: estadoCivilForApi,
-            endereco: pessoaisData?.address || pessoaisData?.endereco || '',
-            numero: (() => {
-              const n = (pessoaisData?.addressNumber ?? pessoaisData?.numero);
-              if (n === null || n === undefined) return null;
-              const v = Number(String(n).replace(/\D/g, ''));
-              return Number.isFinite(v) ? v : null;
-            })(),
-            complemento: (() => {
-              const v = (pessoaisData?.complement || pessoaisData?.complemento || '').trim();
-              return v ? v : null;
-            })(),
             telefone: (pessoaisData?.number || '')?.replace(/\D/g, '') || '',
+            endereco: {
+              endereco: pessoaisData?.address || pessoaisData?.endereco || '',
+              numero: (() => {
+                const n = (pessoaisData?.addressNumber ?? pessoaisData?.numero);
+                if (n === null || n === undefined) return null;
+                const v = Number(String(n).replace(/\D/g, ''));
+                return Number.isFinite(v) ? v : null;
+              })(),
+              complemento: (() => {
+                const v = (pessoaisData?.complement || pessoaisData?.complemento || '').trim();
+                return v ? v : null;
+              })(),
+            },
             responsavel_legal: (() => {
               const v = (pessoaisData?.guardian || '').trim();
               return v ? v : null;
@@ -144,6 +147,7 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
               return v ? v : null;
             })(),
           };
+
           try {
             const resp = await createPessoais(payload);
             if (resp?.user) {
@@ -185,6 +189,7 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
           setShowTermsModal(false);
         }}
       />
+
       {errorMessage && <div className="error-text" style={{ marginTop: 12 }}>{errorMessage}</div>}
     </section>
   );
