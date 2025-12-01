@@ -24,3 +24,17 @@ img { max-width: 100%; display: block; }
 
 /* Utility classes that might be referenced in markup can be added if needed later */
 
+/* Google Places Autocomplete dropdown (pac-container) shadow adjustment */
+.pac-container {
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12) !important; /* was too strong, now softer */
+	border: 1px solid rgba(0,0,0,0.08);
+}
+
+.pac-item {
+	padding: 8px 12px;
+}
+
+.pac-item:hover {
+	background-color: #f7f7f7;
+}
+
