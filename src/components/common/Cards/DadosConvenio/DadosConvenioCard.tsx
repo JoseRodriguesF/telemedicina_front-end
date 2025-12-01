@@ -141,6 +141,7 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
             convenio: (() => {
               const v = String(pendingData?.convenio || '').trim();
               return v ? v : null;
+            })(),
             numero_carteirinha: (() => {
               const v = String(pendingData?.numero || '').trim();
               return v ? v : null;
