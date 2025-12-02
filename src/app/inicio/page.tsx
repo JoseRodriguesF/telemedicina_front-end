@@ -5,8 +5,17 @@ import '@/components/layout/Header/header.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { getUser } from '@/lib/auth';
 
 export default function InicioPage() {
+  const [displayName, setDisplayName] = useState<string>('');
+
+  useEffect(() => {
+    const u = getUser();
+    const name = (u && (u.nome || u.name || u.nome_completo || u.fullName)) || '';
+    const fallback = u?.email || '';
+    setDisplayName(name || fallback || 'Usuário');
+  }, []);
   const items = [
     { id: 'inicio', label: 'Início', icon: '/images/home-06.svg' },
     { id: 'consultas', label: 'Consultas', icon: '/images/first-aid.svg' },
@@ -49,7 +58,7 @@ export default function InicioPage() {
 
       <main className="inicio-main">
         <div className="center-card">
-          <h2>Bem-vindo, (Usuario)!</h2>
+          <h2>Bem-vindo, {displayName}!</h2>
           <div className="cards-row">
             <div className="feature-card">
               <div className="icon primary" aria-hidden>
