@@ -5,16 +5,14 @@ import '@/components/layout/Header/header.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { getUser } from '@/lib/auth';
+import { getUser, getUserFirstName } from '@/lib/auth';
 
 export default function InicioPage() {
   const [displayName, setDisplayName] = useState<string>('');
 
   useEffect(() => {
     const u = getUser();
-    const name = (u && (u.nome || u.name || u.nome_completo || u.fullName)) || '';
-    const fallback = u?.email || '';
-    setDisplayName(name || fallback || 'Usuário');
+    setDisplayName(getUserFirstName(u));
   }, []);
   const items = [
     { id: 'inicio', label: 'Início', icon: '/images/home-06.svg' },
