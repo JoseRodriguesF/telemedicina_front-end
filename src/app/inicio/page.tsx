@@ -35,24 +35,6 @@ export default function InicioPage() {
       <main className="inicio-main">
         <div className="center-card">
           <h2>Bem-vindo, {displayName}!</h2>
-          <div className="cards-row">
-            <div className="feature-card">
-              <div className="icon primary" aria-hidden>
-                <Image src="/images/calendar.svg" alt="Consultas" width={28} height={28} />
-              </div>
-              <h3>Consultas agendadas</h3>
-              <p>Agende suas consultas de acordo com sua disponibilidade.</p>
-              <button className="btn primary full">Agendar</button>
-            </div>
-            <div className="feature-card">
-              <div className="icon accent" aria-hidden>
-                <Image src="/images/alarm.svg" alt="Pronto Socorro" width={28} height={28} />
-              </div>
-              <h3>Pronto Socorro</h3>
-              <p>Atendimento rápido para casos de urgência e emergência.</p>
-              <button className="btn primary full">Entrar para fila</button>
-            </div>
-          </div>
         </div>
       </main>
     </div>

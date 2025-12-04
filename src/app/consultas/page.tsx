@@ -35,13 +35,24 @@ export default function ConsultasPage() {
       <main className="inicio-main">
         <div className="center-card">
           <h2>Consultas de {displayName}</h2>
-          <div className="feature-card">
-            <div className="icon primary" aria-hidden>
-              <Image src="/images/calendar.svg" alt="Consultas" width={28} height={28} />
+          <div className="cards-row">
+            <div className="feature-card">
+              <div className="icon primary" aria-hidden>
+                <Image src="/images/calendar-check.svg" alt="Agendar consultas" width={48} height={48} />
+              </div>
+              <h3>Agendar consultas</h3>
+              <p>Agende suas consultas conforme sua disponibilidade.</p>
+              <button className="btn primary full" onClick={() => router.push('/consultas/nova')}>Agendar</button>
             </div>
-            <h3>Agendamentos</h3>
-            <p>Em breve: listagem e agendamento de consultas.</p>
-            <button className="btn primary full" onClick={() => router.push('/consultas/nova')}>Agendar</button>
+
+            <div className="feature-card">
+              <div className="icon accent" aria-hidden>
+                <Image src="/images/alarm.svg" alt="Fila de atendimento" width={48} height={48} />
+              </div>
+              <h3>Pronto socorro</h3>
+              <p>Atendimento rapido para casos de urgência e emergencia.</p>
+              <button className="btn primary full" onClick={() => router.push('/consultas/pre-consulta')}>Entrar na fila</button>
+            </div>
           </div>
         </div>
       </main>
