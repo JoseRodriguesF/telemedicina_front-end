@@ -41,6 +41,12 @@ export default function Header() {
       </div>
 
       <nav className={`mobile-menu ${open ? 'open' : ''}`} aria-hidden={!open}>
+        <Link href="/inicio" onClick={() => setOpen(false)} className="mobile-link">Início</Link>
+        <Link href="/consultas" onClick={() => setOpen(false)} className="mobile-link">Consultas</Link>
+        <Link href="/historico" onClick={() => setOpen(false)} className="mobile-link">Histórico</Link>
+        <Link href="/perfil" onClick={() => setOpen(false)} className="mobile-link">Perfil</Link>
+        <Link href="/configuracoes" onClick={() => setOpen(false)} className="mobile-link">Configurações</Link>
+        <hr style={{ border: 'none', borderTop: '1px solid var(--border-color, #e5e7eb)', margin: '0.5rem 0' }} />
         <Link href="/login" onClick={() => setOpen(false)} className="mobile-link">Login</Link>
         <Link href={{ pathname: '/register', query: { tipo: 'paciente' } }} onClick={() => setOpen(false)} className="mobile-link">Cadastro</Link>
         <Link href={{ pathname: '/register', query: { tipo: 'medico' } }} onClick={() => setOpen(false)} className="mobile-link">Cadastro Médicos</Link>
