@@ -1,0 +1,30 @@
+:root {
+  /* Inherit app-wide CSS variables; this file is for sidebar-specific tweaks */
+}
+
+.inicio-sidebar {
+  /* uses existing layout from src/app/inicio/inicio.css */
+}
+
+.inicio-nav .nav-item.active {
+  background: var(--nav-active-bg, rgba(99,102,241,0.12));
+  color: var(--primary, #6366f1);
+}
+
+.sidebar-bottom .nav-item.active {
+  background: var(--nav-active-bg, rgba(99,102,241,0.12));
+  color: var(--primary, #6366f1);
+}
+
+.inicio-nav .nav-item:hover {
+  background: var(--nav-hover-bg, rgba(99,102,241,0.08));
+}
+
+.sidebar-bottom .nav-item:hover {
+  background: var(--nav-hover-bg, rgba(99,102,241,0.08));
+}
+
+.sidebar-bottom .nav-item.settings.active,
+.sidebar-bottom .nav-item.settings:focus {
+  outline: none;
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import './inicio.css';
+import '../inicio/inicio.css';
 import '@/components/layout/Header/header.css';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import { getUser, getUserFirstName } from '@/lib/auth';
 
-export default function InicioPage() {
+export default function HistoricoPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>('');
 
@@ -17,6 +17,7 @@ export default function InicioPage() {
     const u = getUser();
     setDisplayName(getUserFirstName(u));
   }, []);
+
   const items = [
     { id: 'inicio', label: 'Início', icon: '/images/home-06.svg', href: '/inicio' },
     { id: 'consultas', label: 'Consultas', icon: '/images/first-aid.svg', href: '/consultas' },
@@ -26,32 +27,21 @@ export default function InicioPage() {
 
   return (
     <div className="inicio-page">
-      {/* Mobile header only; desktop keeps sidebar */}
       <div className="inicio-mobile-header">
         <MobileInicioHeader />
       </div>
-      <Sidebar activeId="inicio" />
+      <Sidebar activeId="historico" />
 
       <main className="inicio-main">
         <div className="center-card">
-          <h2>Bem-vindo, {displayName}!</h2>
-          <div className="cards-row">
-            <div className="feature-card">
-              <div className="icon primary" aria-hidden>
-                <Image src="/images/calendar.svg" alt="Consultas" width={28} height={28} />
-              </div>
-              <h3>Consultas agendadas</h3>
-              <p>Agende suas consultas de acordo com sua disponibilidade.</p>
-              <button className="btn primary full">Agendar</button>
+          <h2>Histórico de {displayName}</h2>
+          <div className="feature-card">
+            <div className="icon accent" aria-hidden>
+              <Image src="/images/clock.svg" alt="Histórico" width={28} height={28} />
             </div>
-            <div className="feature-card">
-              <div className="icon accent" aria-hidden>
-                <Image src="/images/alarm.svg" alt="Pronto Socorro" width={28} height={28} />
-              </div>
-              <h3>Pronto Socorro</h3>
-              <p>Atendimento rápido para casos de urgência e emergência.</p>
-              <button className="btn primary full">Entrar para fila</button>
-            </div>
+            <h3>Consultas anteriores</h3>
+            <p>Em breve: listagem de históricos e detalhes.</p>
+            <button className="btn primary full" onClick={() => router.push('/consultas')}>Ver consultas</button>
           </div>
         </div>
       </main>
@@ -94,4 +84,3 @@ function MobileInicioHeader() {
     </header>
   );
 }
-
