@@ -5,7 +5,7 @@ import '@/components/layout/Header/header.css';
 import Button from '@/components/common/Buttons/Button';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState } from 'react';
-import { getUser } from '@/lib/auth';
+import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
 import { endConsulta, getRoom, joinRoom, listParticipants } from '@/lib/axios/consultas';
 
@@ -15,7 +15,7 @@ function AtendimentoInner() {
   const router = useRouter();
   const search = useSearchParams();
   const consultaId = search.get('id') || '';
-  const token = (typeof window !== 'undefined' ? localStorage.getItem('telemedicina_token') : '') || '';
+  const token = getToken();
   const user = getUser();
   const role = (user?.tipo_usuario === 'medico' ? 'medico' : 'paciente') as 'medico' | 'paciente';
   // Deriva a URL de sinalização a partir da URL da API, trocando protocolo para ws/wss e usando caminho /signal
@@ -53,8 +53,16 @@ function AtendimentoInner() {
   }
 
   async function startCall() {
-    if (!consultaId || !token || !wsBaseUrl) {
-      alert('Faltam informações: consultaId/token/WS URL');
+    if (!consultaId) {
+      alert('Consulta não identificada. Retorne e selecione novamente.');
+      return;
+    }
+    if (!token) {
+      alert('Token não encontrado. Faça login novamente.');
+      return;
+    }
+    if (!wsBaseUrl) {
+      alert('URL de sinalização indisponível. Verifique NEXT_PUBLIC_API_URL.');
       return;
     }
     try {

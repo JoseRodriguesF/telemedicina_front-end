@@ -6,6 +6,7 @@ type StoredUser = {
 };
 
 const STORAGE_KEY = 'telemedicina_user';
+const TOKEN_KEYS = ['telemedicina_token', 'token', 'auth_token'];
 
 export function saveUser(user: StoredUser | null) {
   if (typeof window === 'undefined') return;
@@ -88,4 +89,25 @@ export function getUserFirstName(user?: StoredUser | null): string {
   return parts[0] || trimmed || 'Usuário';
 }
 
-export default { saveUser, getUser, clearUser, getUserId, getUserDisplayName, getUserFirstName };
+export function getToken(): string {
+  if (typeof window === 'undefined') return '';
+  // Try common token locations
+  for (const k of TOKEN_KEYS) {
+    const v = localStorage.getItem(k);
+    if (v && v.trim().length > 0) return v.trim();
+  }
+  const u = getUser();
+  const tryStr = (v: any) => (typeof v === 'string' ? v.trim() : '');
+  // Look for token fields inside stored user
+  const candidates = [
+    tryStr((u as any)?.token),
+    tryStr((u as any)?.jwt),
+    tryStr((u as any)?.id_token),
+    tryStr((u as any)?.accessToken),
+    tryStr((u as any)?.auth?.token),
+  ];
+  const found = candidates.find((s) => s && s.length > 0);
+  return found || '';
+}
+
+export default { saveUser, getUser, clearUser, getUserId, getUserDisplayName, getUserFirstName, getToken };
