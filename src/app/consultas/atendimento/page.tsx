@@ -11,7 +11,7 @@ import { endConsulta, getRoom, joinRoom, listParticipants } from '@/lib/axios/co
 
 type ChatMessage = { author: 'Você' | 'Médico'; text: string };
 
-function AtendimentoInner() {
+  function AtendimentoInner() {
   const router = useRouter();
   const search = useSearchParams();
   const consultaId = search.get('id') || '';
@@ -44,6 +44,12 @@ function AtendimentoInner() {
     { author: 'Médico', text: 'Olá, como se sente?' },
   ]);
   const [draft, setDraft] = useState('');
+
+  // Paciente deve iniciar automaticamente ao entrar na tela
+  if (role === 'paciente' && consultaId && token && wsBaseUrl && !connecting && !roomId) {
+    // Defer to next tick to avoid rendering loop
+    setTimeout(() => { startCall().catch(() => {}); }, 0);
+  }
 
   function sendMessage() {
     const t = draft.trim();

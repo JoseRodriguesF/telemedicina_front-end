@@ -7,11 +7,13 @@ import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import Input from '@/components/common/Inputs/Input';
 import TagAutocomplete from '@/components/common/Inputs/TagAutocomplete';
 import Button from '@/components/common/Buttons/Button';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 export default function PreConsultaPage() {
   const router = useRouter();
+  const search = useSearchParams();
+  const consultaId = search.get('id') || '';
 
   const [queixa, setQueixa] = useState('');
   const [descricao, setDescricao] = useState('');
@@ -37,8 +39,11 @@ export default function PreConsultaPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // TODO: integrate API when available
-    router.push('/consultas/atendimento');
+    if (!consultaId) {
+      alert('Consulta não identificada. Volte e selecione novamente.');
+      return;
+    }
+    router.push(`/consultas/atendimento?id=${encodeURIComponent(consultaId)}`);
   }
 
   return (
