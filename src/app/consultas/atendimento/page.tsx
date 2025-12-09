@@ -4,14 +4,14 @@ import '../../inicio/inicio.css';
 import '@/components/layout/Header/header.css';
 import Button from '@/components/common/Buttons/Button';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useRef, useState } from 'react';
 import { getUser } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
 import { endConsulta, getRoom, joinRoom, listParticipants } from '@/lib/axios/consultas';
 
 type ChatMessage = { author: 'Você' | 'Médico'; text: string };
 
-export default function AtendimentoPage() {
+function AtendimentoInner() {
   const router = useRouter();
   const search = useSearchParams();
   const consultaId = search.get('id') || '';
@@ -140,5 +140,13 @@ export default function AtendimentoPage() {
         </aside>
       </main>
     </div>
+  );
+}
+
+export default function AtendimentoPage() {
+  return (
+    <Suspense fallback={<div className="atendimento-loading">Carregando atendimento...</div>}>
+      <AtendimentoInner />
+    </Suspense>
   );
 }

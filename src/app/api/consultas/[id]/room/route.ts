@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-  const id = params.id;
+  const { id } = await context.params;
   const auth = req.headers.get('authorization') || '';
   const url = `${apiBase.replace(/\/$/, '')}/consultas/${encodeURIComponent(id)}/room`;
   const res = await fetch(url, {
