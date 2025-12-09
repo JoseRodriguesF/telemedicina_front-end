@@ -12,10 +12,12 @@ import { getUser, getUserFirstName } from '@/lib/auth';
 export default function ConsultasPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>('');
+  const [isMedico, setIsMedico] = useState<boolean>(false);
 
   useEffect(() => {
     const u = getUser();
     setDisplayName(getUserFirstName(u));
+    setIsMedico((u?.tipo_usuario || '').toLowerCase() === 'medico');
   }, []);
 
   const items = [
@@ -51,7 +53,12 @@ export default function ConsultasPage() {
               </div>
               <h3>Pronto socorro</h3>
               <p>Atendimento rapido para casos de urgência e emergencia.</p>
-              <button className="btn primary full" onClick={() => router.push('/consultas/pre-consulta')}>Entrar na fila</button>
+              <button
+                className="btn primary full"
+                onClick={() => router.push(isMedico ? '/consultas/pacientes' : '/consultas/pre-consulta')}
+              >
+                {isMedico ? 'Ver pacientes' : 'Entrar na fila'}
+              </button>
             </div>
           </div>
         </div>

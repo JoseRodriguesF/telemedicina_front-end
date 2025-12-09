@@ -1,0 +1,54 @@
+import axios from 'axios';
+
+export type IceServer = {
+  urls: string[];
+  username?: string;
+  credential?: string;
+};
+
+export type RoomResponse = {
+  roomId: string;
+  iceServers: IceServer[];
+};
+
+export type JoinPayload = {
+  userId: number;
+  role: 'medico' | 'paciente';
+};
+
+export type ParticipantsResponse = {
+  roomId: string;
+  participants: Array<JoinPayload>;
+};
+
+export type WaitingConsulta = {
+  id: string; // consultaId
+  nome: string; // nome do paciente
+  status: 'aguardando' | 'em_consulta' | 'concluido' | 'cancelado';
+  prioridade?: 'alta' | 'normal' | 'baixa';
+};
+
+export async function listWaitingConsultas(token: string): Promise<WaitingConsulta[]> {
+  const res = await axios.get('/api/consultas/aguardando', { headers: { Authorization: `Bearer ${token}` } });
+  return res.data as WaitingConsulta[];
+}
+
+export async function getRoom(consultaId: string, token: string): Promise<RoomResponse> {
+  const res = await axios.post(`/api/consultas/${consultaId}/room`, {}, { headers: { Authorization: `Bearer ${token}` } });
+  return res.data as RoomResponse;
+}
+
+export async function joinRoom(consultaId: string, payload: JoinPayload, token: string): Promise<ParticipantsResponse> {
+  const res = await axios.post(`/api/consultas/${consultaId}/join`, payload, { headers: { Authorization: `Bearer ${token}` } });
+  return res.data as ParticipantsResponse;
+}
+
+export async function listParticipants(consultaId: string, token: string): Promise<ParticipantsResponse> {
+  const res = await axios.get(`/api/consultas/${consultaId}/participants`, { headers: { Authorization: `Bearer ${token}` } });
+  return res.data as ParticipantsResponse;
+}
+
+export async function endConsulta(consultaId: string, token: string): Promise<{ ok: boolean }> {
+  const res = await axios.post(`/api/consultas/${consultaId}/end`, {}, { headers: { Authorization: `Bearer ${token}` } });
+  return res.data as { ok: boolean };
+}
