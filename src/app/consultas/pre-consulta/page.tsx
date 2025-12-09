@@ -8,9 +8,10 @@ import Input from '@/components/common/Inputs/Input';
 import TagAutocomplete from '@/components/common/Inputs/TagAutocomplete';
 import Button from '@/components/common/Buttons/Button';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { useState } from 'react';
 
-export default function PreConsultaPage() {
+function PreConsultaInner() {
   const router = useRouter();
   const search = useSearchParams();
   const consultaId = search.get('id') || '';
@@ -108,5 +109,13 @@ export default function PreConsultaPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function PreConsultaPage() {
+  return (
+    <Suspense fallback={<div className="pc-loading">Carregando pré-consulta...</div>}>
+      <PreConsultaInner />
+    </Suspense>
   );
 }
