@@ -73,13 +73,20 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
   async function startPacienteFlow() {
     if (!token || !wsBaseUrl) return;
     await startLocalMedia();
-    const { roomId, consultaId, iceServers } = await psCreateRoom(token);
-    setRoomId(roomId);
-    setConsultaIdState(consultaId);
-    const session = createWebRTCSession({ roomId, token, role, wsBaseUrl, iceServers });
+    const raw = typeof window !== 'undefined' ? sessionStorage.getItem('ps_room') : null;
+    if (!raw) {
+      setStatusText('Consulta não identificada. Volte e selecione novamente.');
+      return;
+    }
+    let data: { roomId: string; consultaId: string; iceServers: any };
+    try { data = JSON.parse(raw!); } catch { setStatusText('Dados da consulta inválidos.'); return; }
+    setRoomId(data.roomId);
+    setConsultaIdState(data.consultaId);
+    const session = createWebRTCSession({ roomId: data.roomId, token, role, wsBaseUrl, iceServers: data.iceServers });
     sessionRef.current = session;
     session.onRemoteTrack((stream) => { if (remoteRef.current) remoteRef.current.srcObject = stream; });
     // Answer é criado automaticamente ao receber offer no webrtc.ts
+    try { sessionStorage.removeItem('ps_room'); } catch {}
   }
 
   async function startMedicoFlow() {
@@ -98,6 +105,7 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
 
   function finishCall() {
     try { sessionRef.current?.end(); } catch {}
+    try { sessionStorage.removeItem('ps_room'); } catch {}
     router.push('/consultas');
   }
 

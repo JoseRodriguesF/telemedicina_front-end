@@ -7,14 +7,15 @@ import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import Input from '@/components/common/Inputs/Input';
 import TagAutocomplete from '@/components/common/Inputs/TagAutocomplete';
 import Button from '@/components/common/Buttons/Button';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 import { useState } from 'react';
+import { getToken } from '@/lib/auth';
+import { psCreateRoom } from '@/lib/axios/consultas';
 
 function PreConsultaInner() {
   const router = useRouter();
-  const search = useSearchParams();
-  const consultaId = search.get('id') || '';
+  // consultaId será gerado na criação da sala ao enviar o formulário
 
   const [queixa, setQueixa] = useState('');
   const [descricao, setDescricao] = useState('');
@@ -38,13 +39,20 @@ function PreConsultaInner() {
     else setList([...list, tag]);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!consultaId) {
-      alert('Consulta não identificada. Volte e selecione novamente.');
+    const token = getToken();
+    if (!token) {
+      alert('Faça login novamente para continuar.');
       return;
     }
-    router.push(`/consultas/atendimento?id=${encodeURIComponent(consultaId)}`);
+    try {
+      const { roomId, consultaId, iceServers } = await psCreateRoom(token);
+      sessionStorage.setItem('ps_room', JSON.stringify({ roomId, consultaId, iceServers }));
+      router.push(`/consultas/atendimento?id=${encodeURIComponent(consultaId)}`);
+    } catch (err) {
+      alert('Não foi possível criar sua consulta. Tente novamente.');
+    }
   }
 
   return (
