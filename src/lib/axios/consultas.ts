@@ -69,8 +69,13 @@ export type PSRoomResponse = {
 };
 
 export async function psCreateRoom(token: string): Promise<PSRoomResponse> {
-  const res = await axios.post(`/api/ps/rooms`, {}, { headers: { Authorization: `Bearer ${token}` } });
-  return res.data as PSRoomResponse;
+  try {
+    const res = await axios.post(`/api/ps/rooms`, {}, { headers: { Authorization: `Bearer ${token}` } });
+    return res.data as PSRoomResponse;
+  } catch (e: any) {
+    const msg = e?.response?.data?.error || e?.message || 'Falha ao criar sala';
+    throw new Error(msg);
+  }
 }
 
 export async function psListFila(token: string): Promise<PSFilaItem[]> {

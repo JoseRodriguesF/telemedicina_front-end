@@ -50,8 +50,9 @@ function PreConsultaInner() {
       const { roomId, consultaId, iceServers } = await psCreateRoom(token);
       sessionStorage.setItem('ps_room', JSON.stringify({ roomId, consultaId, iceServers }));
       router.push(`/consultas/atendimento?id=${encodeURIComponent(consultaId)}`);
-    } catch (err) {
-      alert('Não foi possível criar sua consulta. Tente novamente.');
+    } catch (err: any) {
+      const msg = err?.message || 'Não foi possível criar sua consulta. Tente novamente.';
+      alert(msg);
     }
   }
 
