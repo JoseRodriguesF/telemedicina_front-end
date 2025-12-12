@@ -8,7 +8,8 @@ export async function POST(req: NextRequest, context: { params: Promise<{ consul
   try {
     const res = await fetch(`${apiBase}/ps/fila/${encodeURIComponent(consultaId)}/claim`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: token },
+      // Não enviar Content-Type sem body
+      headers: { Authorization: token },
     });
     const body = await res.text();
     return new Response(body, { status: res.status, headers: { 'Content-Type': res.headers.get('content-type') || 'application/json' } });

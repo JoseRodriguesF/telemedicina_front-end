@@ -7,7 +7,8 @@ export async function POST(req: NextRequest) {
   try {
     const res = await fetch(`${apiBase}/ps/rooms`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: token },
+      // Não enviar Content-Type sem body
+      headers: { Authorization: token },
     });
     const contentType = res.headers.get('content-type') || 'application/json';
     const text = await res.text();
