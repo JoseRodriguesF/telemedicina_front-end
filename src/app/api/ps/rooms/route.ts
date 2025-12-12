@@ -9,9 +9,16 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: token },
     });
-    const body = await res.text();
-    return new Response(body, { status: res.status, headers: { 'Content-Type': res.headers.get('content-type') || 'application/json' } });
+    const contentType = res.headers.get('content-type') || 'application/json';
+    const text = await res.text();
+    // Passar resposta do backend tal como veio
+    if (!res.ok) {
+      // Envelope diagnóstico para facilitar no cliente
+      const payload = contentType.includes('application/json') ? text : JSON.stringify({ error: text });
+      return new Response(payload, { status: res.status, headers: { 'Content-Type': 'application/json' } });
+    }
+    return new Response(text, { status: res.status, headers: { 'Content-Type': contentType } });
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: 'Falha ao criar sala' }), { status: 502 });
+    return new Response(JSON.stringify({ error: e?.message || 'Falha ao criar sala (proxy)' }), { status: 502 });
   }
 }
