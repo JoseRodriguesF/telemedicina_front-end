@@ -7,7 +7,7 @@ import Button from '@/components/common/Buttons/Button';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { getUserFirstName } from '@/lib/auth';
-import { listWaitingConsultas, WaitingConsulta } from '@/lib/axios/consultas';
+import { psListFila, PSFilaItem } from '@/lib/axios/consultas';
 
 type Paciente = {
   id: string; // consultaId associado
@@ -21,7 +21,7 @@ const POLL_MS = 5000;
 export default function PacientesPage() {
   const router = useRouter();
   const [medicoNome, setMedicoNome] = useState('');
-  const [pacientes, setPacientes] = useState<WaitingConsulta[]>([]);
+  const [pacientes, setPacientes] = useState<PSFilaItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,7 +33,7 @@ export default function PacientesPage() {
       if (!token) return;
       try {
         setLoading(true);
-        const list = await listWaitingConsultas(token);
+        const list = await psListFila(token);
         if (mounted) {
           setPacientes(list);
           setError(null);
@@ -60,14 +60,13 @@ export default function PacientesPage() {
             {loading && <div className="pac-loading">Carregando fila...</div>}
             {error && <div className="pac-error">{error}</div>}
             {pacientes.map((p) => (
-              <div key={p.id} className="pac-item">
+              <div key={p.consultaId} className="pac-item">
                 <div className="pac-info">
-                  <div className="pac-name">{p.nome}</div>
-                  <div className={`pac-status s-${p.status}`}>Status: {p.status.replace('_', ' ')}</div>
-                  {p.prioridade && <div className={`pac-prio pr-${p.prioridade}`}>Prioridade: {p.prioridade}</div>}
+                  <div className="pac-name">Paciente #{p.pacienteId}</div>
+                  <div className={`pac-status s-${p.status}`}>Status: {p.status}</div>
                 </div>
                 <div className="pac-actions">
-                  <Button variant="primary" onClick={() => router.push(`/consultas/atendimento?id=${encodeURIComponent(p.id)}`)}>Atender</Button>
+                  <Button variant="primary" onClick={() => router.push(`/consultas/atendimento?id=${encodeURIComponent(p.consultaId)}`)}>Atender</Button>
                 </div>
               </div>
             ))}

@@ -52,3 +52,33 @@ export async function endConsulta(consultaId: string, token: string): Promise<{ 
   const res = await axios.post(`/api/consultas/${consultaId}/end`, {}, { headers: { Authorization: `Bearer ${token}` } });
   return res.data as { ok: boolean };
 }
+
+// Pronto Socorro (PS) endpoints
+export type PSFilaItem = {
+  consultaId: string;
+  pacienteId: string;
+  roomId?: string;
+  createdAt: string;
+  status: 'scheduled' | 'in_progress' | 'finished';
+};
+
+export type PSRoomResponse = {
+  roomId: string;
+  consultaId: string;
+  iceServers: IceServer[];
+};
+
+export async function psCreateRoom(token: string): Promise<PSRoomResponse> {
+  const res = await axios.post(`/api/ps/rooms`, {}, { headers: { Authorization: `Bearer ${token}` } });
+  return res.data as PSRoomResponse;
+}
+
+export async function psListFila(token: string): Promise<PSFilaItem[]> {
+  const res = await axios.get(`/api/ps/fila`, { headers: { Authorization: `Bearer ${token}` } });
+  return res.data as PSFilaItem[];
+}
+
+export async function psClaim(consultaId: string, token: string): Promise<PSRoomResponse> {
+  const res = await axios.post(`/api/ps/fila/${consultaId}/claim`, {}, { headers: { Authorization: `Bearer ${token}` } });
+  return res.data as PSRoomResponse;
+}

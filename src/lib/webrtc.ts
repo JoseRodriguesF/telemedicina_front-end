@@ -3,6 +3,7 @@ export type SignalMessage =
   | { type: 'offer'; sdp: RTCSessionDescriptionInit }
   | { type: 'answer'; sdp: RTCSessionDescriptionInit }
   | { type: 'candidate'; candidate: RTCIceCandidateInit }
+  | { type: 'ice-candidate'; candidate: RTCIceCandidateInit }
   | { type: 'end' };
 
 export type WebRTCSessionArgs = {
@@ -22,6 +23,8 @@ export type WebRTCSession = {
   createAndSendAnswer: () => Promise<void>;
   end: () => void;
   onRemoteTrack: (cb: (stream: MediaStream) => void) => void;
+  createChatChannel: () => RTCDataChannel | null;
+  onChatMessage: (cb: (text: string) => void) => void;
 };
 
 export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
@@ -29,10 +32,14 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   const ws = new WebSocket(`${args.wsBaseUrl}?roomId=${encodeURIComponent(args.roomId)}&token=${encodeURIComponent(args.token)}`);
   let localStream: MediaStream | null = null;
   let onRemote: ((stream: MediaStream) => void) | null = null;
+  let chatChannel: RTCDataChannel | null = null;
+  let onChatMsg: ((text: string) => void) | null = null;
 
   pc.onicecandidate = (e) => {
     if (e.candidate) {
-      const msg: SignalMessage = { type: 'candidate', candidate: e.candidate.toJSON() };
+      const candidate = e.candidate.toJSON();
+      // Prefer 'ice-candidate' but also support 'candidate'
+      const msg: SignalMessage = { type: 'ice-candidate', candidate };
       ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(msg));
     }
   };
@@ -57,7 +64,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
         ws.send(JSON.stringify({ type: 'answer', sdp: answer }));
       } else if (msg.type === 'answer') {
         await pc.setRemoteDescription(msg.sdp);
-      } else if (msg.type === 'candidate') {
+      } else if (msg.type === 'candidate' || msg.type === 'ice-candidate') {
         await pc.addIceCandidate(msg.candidate);
       } else if (msg.type === 'end') {
         pc.close();
@@ -103,5 +110,30 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     onRemote = cb;
   };
 
-  return { pc, ws, localStream, startLocalMedia, createAndSendOffer, createAndSendAnswer, end, onRemoteTrack };
+  // Chat via DataChannel
+  const createChatChannel = () => {
+    if (chatChannel) return chatChannel;
+    try {
+      chatChannel = pc.createDataChannel('chat');
+      chatChannel.onmessage = (ev) => {
+        if (onChatMsg) onChatMsg(String(ev.data ?? ''));
+      };
+      return chatChannel;
+    } catch {
+      return null;
+    }
+  };
+
+  pc.ondatachannel = (ev) => {
+    chatChannel = ev.channel;
+    chatChannel.onmessage = (e) => {
+      if (onChatMsg) onChatMsg(String(e.data ?? ''));
+    };
+  };
+
+  const onChatMessage = (cb: (text: string) => void) => {
+    onChatMsg = cb;
+  };
+
+  return { pc, ws, localStream, startLocalMedia, createAndSendOffer, createAndSendAnswer, end, onRemoteTrack, createChatChannel, onChatMessage };
 }
