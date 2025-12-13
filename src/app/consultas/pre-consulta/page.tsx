@@ -10,7 +10,7 @@ import Button from '@/components/common/Buttons/Button';
 import { useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 import { useState } from 'react';
-import { getToken } from '@/lib/auth';
+import { getToken, getUser } from '@/lib/auth';
 import { psCreateRoom } from '@/lib/axios/consultas';
 
 function PreConsultaInner() {
@@ -42,6 +42,11 @@ function PreConsultaInner() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const token = getToken();
+    const user = getUser();
+    if (user?.tipo_usuario !== 'paciente') {
+      alert('Apenas pacientes podem iniciar consultas no pronto socorro. (forbidden_only_paciente_can_create_room)');
+      return;
+    }
     if (!token) {
       alert('Faça login novamente para continuar.');
       return;
@@ -51,8 +56,14 @@ function PreConsultaInner() {
       sessionStorage.setItem('ps_room', JSON.stringify({ roomId, consultaId, iceServers }));
       router.push(`/consultas/atendimento?id=${encodeURIComponent(consultaId)}`);
     } catch (err: any) {
-      const msg = err?.message || 'Não foi possível criar sua consulta. Tente novamente.';
-      alert(msg);
+      const msg = String(err?.message || 'Não foi possível criar sua consulta. Tente novamente.');
+      if (msg.includes('forbidden_only_paciente_can_create_room')) {
+        alert('Apenas pacientes podem criar consulta no pronto socorro.');
+      } else if (msg.includes('paciente_record_not_found_for_usuario')) {
+        alert('Seu usuário não está vinculado a um cadastro de Paciente. Complete o cadastro para continuar.');
+      } else {
+        alert(msg);
+      }
     }
   }
 

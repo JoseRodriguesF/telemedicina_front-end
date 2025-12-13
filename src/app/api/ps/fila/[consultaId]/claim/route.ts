@@ -3,10 +3,17 @@ import { NextRequest } from 'next/server';
 export async function POST(req: NextRequest, context: { params: Promise<{ consultaId: string }> }) {
   const apiBase = (process.env.NEXT_PUBLIC_API_URL || '').trim();
   if (!apiBase) return new Response(JSON.stringify({ error: 'API base URL não configurada' }), { status: 500 });
-  const token = req.headers.get('authorization') || '';
+  const token = req.headers.get('authorization') || req.headers.get('Authorization') || '';
+  if (!token || !token.toLowerCase().startsWith('bearer ')) {
+    return new Response(JSON.stringify({ error: 'missing_authorization_header' }), { status: 401 });
+  }
   const { consultaId } = await context.params;
+  if (!/^[0-9]+$/.test(consultaId)) {
+    return new Response(JSON.stringify({ error: 'invalid_consulta_id' }), { status: 400 });
+  }
   try {
-    const res = await fetch(`${apiBase}/ps/fila/${encodeURIComponent(consultaId)}/claim`, {
+    const base = apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase;
+    const res = await fetch(`${base}/ps/fila/${encodeURIComponent(consultaId)}/claim`, {
       method: 'POST',
       // Não enviar Content-Type sem body
       headers: { Authorization: token },

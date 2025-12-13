@@ -3,9 +3,13 @@ import { NextRequest } from 'next/server';
 export async function POST(req: NextRequest) {
   const apiBase = (process.env.NEXT_PUBLIC_API_URL || '').trim();
   if (!apiBase) return new Response(JSON.stringify({ error: 'API base URL não configurada' }), { status: 500 });
-  const token = req.headers.get('authorization') || '';
+  const token = req.headers.get('authorization') || req.headers.get('Authorization') || '';
+  if (!token || !token.toLowerCase().startsWith('bearer ')) {
+    return new Response(JSON.stringify({ error: 'missing_authorization_header' }), { status: 401 });
+  }
   try {
-    const res = await fetch(`${apiBase}/ps/rooms`, {
+    const url = apiBase.endsWith('/') ? `${apiBase}ps/rooms` : `${apiBase}/ps/rooms`;
+    const res = await fetch(url, {
       method: 'POST',
       // Não enviar Content-Type sem body
       headers: { Authorization: token },

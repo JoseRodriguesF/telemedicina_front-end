@@ -62,7 +62,7 @@ export default function PacientesPage() {
             {pacientes.map((p) => (
               <div key={p.consultaId} className="pac-item">
                 <div className="pac-info">
-                  <div className="pac-name">Paciente #{p.pacienteId}</div>
+                  <div className="pac-name">Paciente ID: {p.pacienteId}</div>
                   <div className={`pac-status s-${p.status}`}>Status: {p.status}</div>
                 </div>
                 <div className="pac-actions">

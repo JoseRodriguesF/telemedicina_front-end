@@ -91,6 +91,11 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
 
   async function startMedicoFlow() {
     if (!token || !wsBaseUrl) return;
+    const u = getUser();
+    if (u?.tipo_usuario !== 'medico') {
+      alert('Apenas médicos podem atender pacientes. (forbidden_only_medico_can_claim)');
+      return;
+    }
     await startLocalMedia();
     const cid = getConsultaIdFromUrl() || consultaIdState || '';
     const { roomId, consultaId, iceServers } = await psClaim(cid, token);
@@ -100,7 +105,24 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
     sessionRef.current = session;
     session.onRemoteTrack((stream) => { if (remoteRef.current) remoteRef.current.srcObject = stream; });
     // Médico é quem envia a offer
-    await session.createAndSendOffer();
+    try {
+      await session.createAndSendOffer();
+    } catch (err: any) {
+      const msg = String(err?.message || 'Falha ao iniciar oferta.');
+      if (msg.includes('forbidden_only_medico_can_claim')) {
+        alert('Apenas médicos podem realizar o claim da consulta.');
+      } else if (msg.includes('medico_record_not_found_for_usuario')) {
+        alert('Seu usuário não está vinculado a um cadastro de Médico. Complete o cadastro para continuar.');
+      } else if (msg.includes('consulta_not_found')) {
+        alert('Consulta não encontrada. Volte à fila e selecione novamente.');
+      } else if (msg.includes('invalid_consulta_id')) {
+        alert('ID da consulta inválido.');
+      } else if (msg.includes('already_claimed_or_in_progress')) {
+        alert('Consulta já foi atribuída ou está em andamento por outro médico.');
+      } else {
+        alert(msg);
+      }
+    }
   }
 
   function finishCall() {
