@@ -36,6 +36,7 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
   const [draft, setDraft] = useState('');
   const [chatReady, setChatReady] = useState(false);
   const [statusText, setStatusText] = useState<string | null>(null);
+  const claimingRef = useRef(false);
 
   // Fluxo UI: ao entrar, o paciente "cria" a sala e já compartilha mídia.
   // Médico entra e compartilha sua mídia ao chegar.
@@ -101,16 +102,18 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
       alert('Apenas médicos podem atender pacientes. (forbidden_only_medico_can_claim)');
       return;
     }
+    if (claimingRef.current) return;
+    claimingRef.current = true;
     await startLocalMedia();
     const cid = getConsultaIdFromUrl() || consultaIdState || '';
-    const { roomId, consultaId, iceServers } = await psClaim(cid, token);
-    setRoomId(roomId);
-    setConsultaIdState(consultaId);
-    const session = createWebRTCSession({ roomId, token, role, wsBaseUrl, iceServers });
-    sessionRef.current = session;
-    session.onRemoteTrack((stream) => { if (remoteRef.current) remoteRef.current.srcObject = stream; });
-    // Médico é quem envia a offer
     try {
+      const { roomId, consultaId, iceServers } = await psClaim(cid, token);
+      setRoomId(roomId);
+      setConsultaIdState(consultaId);
+      const session = createWebRTCSession({ roomId, token, role, wsBaseUrl, iceServers });
+      sessionRef.current = session;
+      session.onRemoteTrack((stream) => { if (remoteRef.current) remoteRef.current.srcObject = stream; });
+      setStatusText('Conectado. Iniciando oferta...');
       await session.createAndSendOffer();
     } catch (err: any) {
       const msg = String(err?.message || 'Falha ao iniciar oferta.');
@@ -120,13 +123,18 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
         alert('Seu usuário não está vinculado a um cadastro de Médico. Complete o cadastro para continuar.');
       } else if (msg.includes('consulta_not_found')) {
         alert('Consulta não encontrada. Volte à fila e selecione novamente.');
+        router.push('/consultas/pacientes');
       } else if (msg.includes('invalid_consulta_id')) {
         alert('ID da consulta inválido.');
+        router.push('/consultas/pacientes');
       } else if (msg.includes('already_claimed_or_in_progress')) {
-        alert('Consulta já foi atribuída ou está em andamento por outro médico.');
+        alert('Outro médico já assumiu esta consulta. Atualize a fila e escolha outro paciente.');
+        router.push('/consultas/pacientes');
       } else {
         alert(msg);
       }
+    } finally {
+      claimingRef.current = false;
     }
   }
 
