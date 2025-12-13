@@ -90,6 +90,8 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
     session.onRemoteTrack((stream) => { if (remoteRef.current) remoteRef.current.srcObject = stream; });
     // Answer é criado automaticamente ao receber offer no webrtc.ts
     try { sessionStorage.removeItem('ps_room'); } catch {}
+    // Ajustar status para ficar claro que está aguardando o médico
+    setStatusText('Sala criada. Aguardando médico...');
   }
 
   async function startMedicoFlow() {
