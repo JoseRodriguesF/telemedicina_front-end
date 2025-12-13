@@ -35,7 +35,7 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
   ]);
   const [draft, setDraft] = useState('');
   const [chatReady, setChatReady] = useState(false);
-  const [statusText, setStatusText] = useState('Aguardando conexão...');
+  const [statusText, setStatusText] = useState<string | null>(null);
 
   // Fluxo UI: ao entrar, o paciente "cria" a sala e já compartilha mídia.
   // Médico entra e compartilha sua mídia ao chegar.
@@ -75,7 +75,9 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
     await startLocalMedia();
     const raw = typeof window !== 'undefined' ? sessionStorage.getItem('ps_room') : null;
     if (!raw) {
-      setStatusText('Consulta não identificada. Volte e selecione novamente.');
+      // Não exibir mensagem de erro aqui para não confundir o paciente;
+      // apenas manter o status padrão.
+      setStatusText(null);
       return;
     }
     let data: { roomId: string; consultaId: string; iceServers: any };
@@ -142,10 +144,11 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
           </div>
           <div className="call-controls">
             <button className="control-btn" aria-label="Abrir chat">💬</button>
-            <button className="control-btn" aria-label="Iniciar chamada" onClick={role === 'paciente' ? startPacienteFlow : startMedicoFlow} disabled={connecting}>{connecting ? 'Conectando...' : 'Iniciar'}</button>
+            <button className="control-btn" aria-label="Iniciar chamada" onClick={role === 'paciente' ? startPacienteFlow : startMedicoFlow} disabled={connecting}>Iniciar</button>
             <button className="control-btn end" aria-label="Encerrar chamada" onClick={finishCall}>📞</button>
           </div>
-          <div className="call-status" aria-live="polite">{statusText}</div>
+          {connecting && <div className="call-status" aria-live="polite">Conectando...</div>}
+          {statusText && !connecting && <div className="call-status" aria-live="polite">{statusText}</div>}
         </section>
 
         <aside className="chat-panel" aria-label="Chat da consulta">
