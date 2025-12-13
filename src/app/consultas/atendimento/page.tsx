@@ -40,6 +40,7 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
   // Fluxo UI: ao entrar, o paciente "cria" a sala e já compartilha mídia.
   // Médico entra e compartilha sua mídia ao chegar.
   // Ao entrar, paciente cria sala + mídia; médico apenas abre mídia e faz claim.
+  // Auto-start sem botão: inicia o fluxo ao montar a página.
   if (!connecting) {
     setTimeout(() => {
       role === 'paciente' ? startPacienteFlow().catch(() => {}) : startMedicoFlow().catch(() => {});
@@ -144,7 +145,6 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
           </div>
           <div className="call-controls">
             <button className="control-btn" aria-label="Abrir chat">💬</button>
-            <button className="control-btn" aria-label="Iniciar chamada" onClick={role === 'paciente' ? startPacienteFlow : startMedicoFlow} disabled={connecting}>Iniciar</button>
             <button className="control-btn end" aria-label="Encerrar chamada" onClick={finishCall}>📞</button>
           </div>
           {connecting && <div className="call-status" aria-live="polite">Conectando...</div>}

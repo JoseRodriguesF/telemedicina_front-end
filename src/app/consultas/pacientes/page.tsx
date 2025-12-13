@@ -59,7 +59,9 @@ export default function PacientesPage() {
           <div className="pac-list">
             {loading && <div className="pac-loading">Carregando fila...</div>}
             {error && <div className="pac-error">{error}</div>}
-            {pacientes.map((p) => (
+            {pacientes
+              .filter((p) => p.status === 'scheduled')
+              .map((p) => (
               <div key={p.consultaId} className="pac-item">
                 <div className="pac-info">
                   <div className="pac-name">Paciente ID: {p.pacienteId}</div>
