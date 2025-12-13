@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { getUserFirstName } from '@/lib/auth';
 import { psListFila, PSFilaItem } from '@/lib/axios/consultas';
+import { getToken, getUser } from '@/lib/auth';
 
 type Paciente = {
   id: string; // consultaId associado
@@ -27,10 +28,18 @@ export default function PacientesPage() {
 
   useEffect(() => {
     setMedicoNome(getUserFirstName());
-    const token = typeof window !== 'undefined' ? localStorage.getItem('telemedicina_token') || '' : '';
+    const token = getToken();
     let mounted = true;
     const fetchList = async () => {
-      if (!token) return;
+      if (!token) {
+        if (mounted) setError('Faça login como médico para ver a fila.');
+        return;
+      }
+      const u = getUser();
+      if (u?.tipo_usuario !== 'medico') {
+        if (mounted) setError('Apenas médicos podem ver a fila de pacientes.');
+        return;
+      }
       try {
         setLoading(true);
         const list = await psListFila(token);
