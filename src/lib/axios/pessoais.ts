@@ -21,6 +21,11 @@ export type PessoaisPayload = {
 };
 
 export async function createPessoais(payload: PessoaisPayload) {
+  // Coerções iniciais para evitar 400 por tipo
+  if (payload.usuario_id !== null && typeof payload.usuario_id !== 'undefined') {
+    const uid = Number(String(payload.usuario_id).replace(/\D/g, ''));
+    payload.usuario_id = Number.isFinite(uid) && uid > 0 ? uid : null;
+  }
   // Normalizar sexo para 'M'/'F' se vier por extenso
   if (payload.sexo) {
     const s = payload.sexo.toString().toLowerCase();
@@ -31,6 +36,26 @@ export async function createPessoais(payload: PessoaisPayload) {
   if (payload.cpf) payload.cpf = payload.cpf.replace(/\D/g, '');
   if (payload.telefone) payload.telefone = payload.telefone.replace(/\D/g, '');
   if (payload.telefone_responsavel) payload.telefone_responsavel = payload.telefone_responsavel.replace(/\D/g, '');
+
+  // Validar formato de data (YYYY-MM-DD) e evitar datas não parseáveis
+  if (payload.data_nascimento) {
+    const d = payload.data_nascimento.trim();
+    const isoMatch = /^\d{4}-\d{2}-\d{2}$/.test(d);
+    if (!isoMatch) {
+      throw new Error('data_nascimento inválida. Use formato ISO YYYY-MM-DD.');
+    }
+    const time = Date.parse(d);
+    if (Number.isNaN(time)) {
+      throw new Error('data_nascimento não reconhecida. Verifique o dia/mês/ano.');
+    }
+  }
+
+  // Validar CPF (exatamente 11 dígitos)
+  if (payload.cpf) {
+    if (!/^\d{11}$/.test(payload.cpf)) {
+      throw new Error('CPF inválido. Use exatamente 11 dígitos (sem pontos/traços).');
+    }
+  }
 
   // Remover campos opcionais vazios ('' ou null) no nível raiz
   const cleaned: Record<string, any> = {};
