@@ -3,7 +3,7 @@
 // global styles for register are imported in app layout
 import './DadosPessoaisPacienteCard.css';
 import Input from '@/components/common/Inputs/Input';
-import AddressPlacePicker from '@/components/common/Inputs/AddressPlacePicker';
+import AddressAutocomplete from '@/components/common/Inputs/AddressAutocomplete';
 import Button from '@/components/common/Buttons/Button';
 import { useState, useEffect } from 'react';
 import {
@@ -300,7 +300,7 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
 
         <label className="form-label full-width">
           <span className="label-title">Endereço <span className="required-asterisk">*</span></span>
-          <AddressPlacePicker
+          <AddressAutocomplete
             placeholder="Rua, bairro, cidade - UF"
             value={address}
             onChange={(v) => { setAddress(v); setAddressError(''); }}
