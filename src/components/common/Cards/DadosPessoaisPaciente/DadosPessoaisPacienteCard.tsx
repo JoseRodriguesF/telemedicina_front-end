@@ -3,7 +3,7 @@
 // global styles for register are imported in app layout
 import './DadosPessoaisPacienteCard.css';
 import Input from '@/components/common/Inputs/Input';
-import AddressAutocomplete from '@/components/common/Inputs/AddressAutocomplete';
+import AddressPlacePicker from '@/components/common/Inputs/AddressPlacePicker';
 import Button from '@/components/common/Buttons/Button';
 import { useState, useEffect } from 'react';
 import {
@@ -147,6 +147,19 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
       valid = false;
     }
 
+    // address number required and numeric
+    const addrNumDigits = (addressNumber || '').replace(/\D/g, '');
+    if (!addrNumDigits) {
+      setAddressNumberError('Informe o número do endereço.');
+      valid = false;
+    } else {
+      const numVal = Number(addrNumDigits);
+      if (!Number.isFinite(numVal) || numVal < 0) {
+        setAddressNumberError('Número inválido. Use apenas dígitos (inteiro não negativo).');
+        valid = false;
+      }
+    }
+
     // phone validation: normalize and give specific messages for common cases
     let onlyNums = number.replace(/\D/g, '');
     // strip country code if user pasted with +55 or 55 prefix
@@ -269,7 +282,6 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
             <option value="">Selecione</option>
             <option value="feminino">Feminino</option>
             <option value="masculino">Masculino</option>
-            <option value="outro">Outro</option>
           </select>
           {genderError && <div className="error-text">{genderError}</div>}
         </label>
@@ -288,7 +300,7 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
 
         <label className="form-label full-width">
           <span className="label-title">Endereço <span className="required-asterisk">*</span></span>
-          <AddressAutocomplete
+          <AddressPlacePicker
             placeholder="Rua, bairro, cidade - UF"
             value={address}
             onChange={(v) => { setAddress(v); setAddressError(''); }}

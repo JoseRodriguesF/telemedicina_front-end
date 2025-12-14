@@ -89,11 +89,11 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
           // Normalizações para backend
           const estadoCivilForApi = (() => {
             const v = String(pessoaisData?.marital || pessoaisData?.estado_civil || '').toLowerCase();
-            if (v.startsWith('solte')) return 'Solteiro';
-            if (v.startsWith('casad')) return 'Casado';
-            if (v.startsWith('divorc')) return 'Divorciado';
-            if (v.startsWith('viuv') || v.startsWith('viúv')) return 'Viúvo';
-            return pessoaisData?.estado_civil || '';
+            if (v.startsWith('solte')) return 'solteiro';
+            if (v.startsWith('casad')) return 'casado';
+            if (v.startsWith('divorc')) return 'divorciado';
+            if (v.startsWith('viuv') || v.startsWith('viúv')) return 'viuvo';
+            return (pessoaisData?.estado_civil || '').toLowerCase();
           })();
 
           const payload = {

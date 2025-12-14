@@ -26,11 +26,13 @@ export async function createPessoais(payload: PessoaisPayload) {
     const uid = Number(String(payload.usuario_id).replace(/\D/g, ''));
     payload.usuario_id = Number.isFinite(uid) && uid > 0 ? uid : null;
   }
-  // Normalizar sexo para 'M'/'F' se vier por extenso
+  // Normalizar sexo para valores textuais esperados pelo backend ('masculino'/'feminino')
   if (payload.sexo) {
     const s = payload.sexo.toString().toLowerCase();
-    if (s.startsWith('m')) payload.sexo = 'M';
-    else if (s.startsWith('f')) payload.sexo = 'F';
+    if (s === 'm') payload.sexo = 'masculino';
+    else if (s === 'f') payload.sexo = 'feminino';
+    else if (s.startsWith('masc')) payload.sexo = 'masculino';
+    else if (s.startsWith('fem')) payload.sexo = 'feminino';
   }
   // Sanitizar CPF / telefone e normalizar endereço aninhado
   if (payload.cpf) payload.cpf = payload.cpf.replace(/\D/g, '');
