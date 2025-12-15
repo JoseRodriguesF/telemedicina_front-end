@@ -27,6 +27,7 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
   const remoteRef = useRef<HTMLVideoElement | null>(null);
   const [connecting, setConnecting] = useState(false);
   const sessionRef = useRef<ReturnType<typeof createWebRTCSession> | null>(null);
+  const pollingRef = useRef<number | null>(null);
   const [roomId, setRoomId] = useState<string>('');
   const [consultaIdState, setConsultaIdState] = useState<string>('');
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -63,24 +64,41 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
     // infinite GET /participants requests).
     if (!cid || !token) return;
     if (!rawSession && !consultaIdState) return;
+    if (pollingRef.current !== null) return; // already polling
     let stopped = false;
     const check = async () => {
+      // if we've already created a WebRTC session, stop polling
+      if (sessionRef.current) {
+        stopped = true;
+        if (pollingRef.current !== null) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
+        return;
+      }
       try {
         const resp = await listParticipants(cid, token);
         if (!stopped && Array.isArray(resp?.participants) && resp.participants.length >= 2) {
           setStatusText('Conectado.');
           stopped = true;
-          clearInterval(timerId);
+          if (pollingRef.current !== null) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
         }
       } catch {
         // ignore transient errors
       }
     };
     const timerId = window.setInterval(check, 1500);
+    pollingRef.current = timerId;
     check();
     return () => {
       stopped = true;
-      clearInterval(timerId);
+      if (pollingRef.current !== null) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
     };
   }, [role, consultaIdState, consultaId, token]);
 
