@@ -99,6 +99,9 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
       else if (state === 'disconnected') setStatusText('Conexão perdida. Tentando reconectar...');
       else if (state === 'failed') setStatusText('Falha de conexão.');
     });
+    session.onSignalEvent((ev) => {
+      if (ev === 'answerSent' || ev === 'answerReceived') setStatusText('Conectado.');
+    });
     session.onRemoteTrack((stream) => {
       if (remoteRef.current) remoteRef.current.srcObject = stream;
       setStatusText('Conectado.');
@@ -133,6 +136,9 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
         if (state === 'connected' || state === 'completed') setStatusText('Conectado.');
         else if (state === 'disconnected') setStatusText('Conexão perdida. Tentando reconectar...');
         else if (state === 'failed') setStatusText('Falha de conexão.');
+      });
+      session.onSignalEvent((ev) => {
+        if (ev === 'answerSent' || ev === 'answerReceived') setStatusText('Conectado.');
       });
       session.onRemoteTrack((stream) => {
         if (remoteRef.current) remoteRef.current.srcObject = stream;
