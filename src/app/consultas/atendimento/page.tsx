@@ -54,8 +54,15 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
   // Paciente: após obter consultaId, faça polling de participantes até haver 2 na sala
   useEffect(() => {
     if (role !== 'paciente') return;
+    if (typeof window === 'undefined') return;
+    const rawSession = sessionStorage.getItem('ps_room');
     const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
+    // Only poll if we have a consulta id and either an active session or
+    // the `consultaIdState` was explicitly set by the flow. This prevents
+    // polling when the page is opened without a started session (causing
+    // infinite GET /participants requests).
     if (!cid || !token) return;
+    if (!rawSession && !consultaIdState) return;
     let stopped = false;
     const check = async () => {
       try {
@@ -206,8 +213,22 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
         <section className="call-area">
           <div className="call-header">Você está em uma consulta</div>
           <div className="call-screen">
-            <video ref={remoteRef} className="remote-video" playsInline autoPlay aria-label="Vídeo remoto" />
-            <video ref={localRef} className="self-video" playsInline autoPlay aria-label="Sua câmera" />
+            {/* O vídeo remoto sempre ocupa o retângulo grande (principal) */}
+            <video
+              ref={remoteRef}
+              className="remote-video large"
+              playsInline
+              autoPlay
+              aria-label={role === 'medico' ? 'Vídeo do paciente' : 'Vídeo do médico'}
+            />
+            {/* O vídeo local aparece em miniatura (picture-in-picture) */}
+            <video
+              ref={localRef}
+              className="self-video pip"
+              playsInline
+              autoPlay
+              aria-label="Sua câmera"
+            />
           </div>
           <div className="call-controls">
             <button className="control-btn" aria-label="Abrir chat">💬</button>
