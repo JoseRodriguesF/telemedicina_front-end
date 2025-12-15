@@ -108,8 +108,7 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
     });
     // Answer é criado automaticamente ao receber offer no webrtc.ts
     try { sessionStorage.removeItem('ps_room'); } catch {}
-    // Ajustar status para ficar claro que está aguardando o médico
-    setStatusText('Sala criada. Aguardando médico...');
+    // Status será atualizado pelos eventos de conexão/sinalização e track remoto
   }
 
   async function startMedicoFlow() {
