@@ -128,7 +128,6 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
 
   async function startPacienteFlow() {
     if (!token || !wsBaseUrl) return;
-    await startLocalMedia();
     const raw = typeof window !== 'undefined' ? sessionStorage.getItem('ps_room') : null;
     if (!raw) {
       // Não exibir mensagem de erro aqui para não confundir o paciente;
@@ -142,6 +141,16 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
     setConsultaIdState(data.consultaId);
     const session = createWebRTCSession({ roomId: data.roomId, token, role, wsBaseUrl, iceServers: data.iceServers });
     sessionRef.current = session;
+    try {
+      const stream = await session.startLocalMedia();
+      if (localRef.current) {
+        localRef.current.srcObject = stream;
+        localRef.current.muted = true;
+        await localRef.current.play().catch(() => {});
+      }
+    } catch (e) {
+      setStatusText('Permissões de câmera/microfone negadas ou indisponíveis.');
+    }
     session.onConnectionStateChange((state) => {
       if (state === 'connected') setStatusText('Conectado.');
     });
@@ -171,7 +180,6 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
     }
     if (claimingRef.current) return;
     claimingRef.current = true;
-    await startLocalMedia();
     const cid = getConsultaIdFromUrl() || consultaIdState || '';
     try {
       const { roomId, consultaId, iceServers } = await psClaim(cid, token);
@@ -179,6 +187,16 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
       setConsultaIdState(consultaId);
       const session = createWebRTCSession({ roomId, token, role, wsBaseUrl, iceServers });
       sessionRef.current = session;
+      try {
+        const stream = await session.startLocalMedia();
+        if (localRef.current) {
+          localRef.current.srcObject = stream;
+          localRef.current.muted = true;
+          await localRef.current.play().catch(() => {});
+        }
+      } catch (e) {
+        setStatusText('Permissões de câmera/microfone negadas ou indisponíveis.');
+      }
       session.onConnectionStateChange((state) => {
         if (state === 'connected') setStatusText('Conectado.');
       });
