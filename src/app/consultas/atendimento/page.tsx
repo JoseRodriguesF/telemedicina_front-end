@@ -91,6 +91,14 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
     setConsultaIdState(data.consultaId);
     const session = createWebRTCSession({ roomId: data.roomId, token, role, wsBaseUrl, iceServers: data.iceServers });
     sessionRef.current = session;
+    session.onConnectionStateChange((state) => {
+      if (state === 'connected') setStatusText('Conectado.');
+    });
+    session.onIceConnectionStateChange((state) => {
+      if (state === 'connected' || state === 'completed') setStatusText('Conectado.');
+      else if (state === 'disconnected') setStatusText('Conexão perdida. Tentando reconectar...');
+      else if (state === 'failed') setStatusText('Falha de conexão.');
+    });
     session.onRemoteTrack((stream) => {
       if (remoteRef.current) remoteRef.current.srcObject = stream;
       setStatusText('Conectado.');
@@ -118,6 +126,14 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
       setConsultaIdState(consultaId);
       const session = createWebRTCSession({ roomId, token, role, wsBaseUrl, iceServers });
       sessionRef.current = session;
+      session.onConnectionStateChange((state) => {
+        if (state === 'connected') setStatusText('Conectado.');
+      });
+      session.onIceConnectionStateChange((state) => {
+        if (state === 'connected' || state === 'completed') setStatusText('Conectado.');
+        else if (state === 'disconnected') setStatusText('Conexão perdida. Tentando reconectar...');
+        else if (state === 'failed') setStatusText('Falha de conexão.');
+      });
       session.onRemoteTrack((stream) => {
         if (remoteRef.current) remoteRef.current.srcObject = stream;
         setStatusText('Conectado.');

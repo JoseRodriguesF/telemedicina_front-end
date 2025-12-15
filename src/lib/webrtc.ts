@@ -25,6 +25,8 @@ export type WebRTCSession = {
   onRemoteTrack: (cb: (stream: MediaStream) => void) => void;
   createChatChannel: () => RTCDataChannel | null;
   onChatMessage: (cb: (text: string) => void) => void;
+  onConnectionStateChange: (cb: (state: RTCPeerConnectionState) => void) => void;
+  onIceConnectionStateChange: (cb: (state: RTCIceConnectionState) => void) => void;
 };
 
 export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
@@ -34,6 +36,8 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   let onRemote: ((stream: MediaStream) => void) | null = null;
   let chatChannel: RTCDataChannel | null = null;
   let onChatMsg: ((text: string) => void) | null = null;
+  let onConnState: ((state: RTCPeerConnectionState) => void) | null = null;
+  let onIceState: ((state: RTCIceConnectionState) => void) | null = null;
 
   const waitForOpen = () =>
     new Promise<void>((resolve, reject) => {
@@ -75,6 +79,15 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   pc.ontrack = (e) => {
     const stream = e.streams[0];
     if (onRemote) onRemote(stream);
+  };
+
+  pc.onconnectionstatechange = () => {
+    if (onConnState) onConnState(pc.connectionState);
+  };
+
+  // Note: oniceconnectionstatechange also fires during negotiation
+  pc.oniceconnectionstatechange = () => {
+    if (onIceState) onIceState(pc.iceConnectionState);
   };
 
   ws.onopen = () => {
@@ -165,5 +178,26 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     onChatMsg = cb;
   };
 
-  return { pc, ws, localStream, startLocalMedia, createAndSendOffer, createAndSendAnswer, end, onRemoteTrack, createChatChannel, onChatMessage };
+  const onConnectionStateChange = (cb: (state: RTCPeerConnectionState) => void) => {
+    onConnState = cb;
+  };
+
+  const onIceConnectionStateChange = (cb: (state: RTCIceConnectionState) => void) => {
+    onIceState = cb;
+  };
+
+  return {
+    pc,
+    ws,
+    localStream,
+    startLocalMedia,
+    createAndSendOffer,
+    createAndSendAnswer,
+    end,
+    onRemoteTrack,
+    createChatChannel,
+    onChatMessage,
+    onConnectionStateChange,
+    onIceConnectionStateChange,
+  };
 }
