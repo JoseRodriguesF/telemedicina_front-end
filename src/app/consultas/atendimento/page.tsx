@@ -4,7 +4,7 @@ import '../../inicio/inicio.css';
 import '@/components/layout/Header/header.css';
 import Button from '@/components/common/Buttons/Button';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useRef, useState } from 'react';
+import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
 import { psCreateRoom, psClaim } from '@/lib/axios/consultas';
@@ -37,16 +37,19 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
   const [chatReady, setChatReady] = useState(false);
   const [statusText, setStatusText] = useState<string | null>(null);
   const claimingRef = useRef(false);
+  const startedRef = useRef(false);
 
   // Fluxo UI: ao entrar, o paciente "cria" a sala e já compartilha mídia.
   // Médico entra e compartilha sua mídia ao chegar.
   // Ao entrar, paciente cria sala + mídia; médico apenas abre mídia e faz claim.
-  // Auto-start sem botão: inicia o fluxo ao montar a página.
-  if (!connecting) {
-    setTimeout(() => {
-      role === 'paciente' ? startPacienteFlow().catch(() => {}) : startMedicoFlow().catch(() => {});
-    }, 0);
-  }
+  // Auto-start sem botão: inicia o fluxo uma única vez ao montar a página.
+  // Protegido por ref para evitar re-execução em StrictMode/dev e loops.
+  useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    (role === 'paciente' ? startPacienteFlow() : startMedicoFlow()).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function sendMessage() {
     const t = draft.trim();
@@ -88,7 +91,10 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
     setConsultaIdState(data.consultaId);
     const session = createWebRTCSession({ roomId: data.roomId, token, role, wsBaseUrl, iceServers: data.iceServers });
     sessionRef.current = session;
-    session.onRemoteTrack((stream) => { if (remoteRef.current) remoteRef.current.srcObject = stream; });
+    session.onRemoteTrack((stream) => {
+      if (remoteRef.current) remoteRef.current.srcObject = stream;
+      setStatusText('Conectado.');
+    });
     // Answer é criado automaticamente ao receber offer no webrtc.ts
     try { sessionStorage.removeItem('ps_room'); } catch {}
     // Ajustar status para ficar claro que está aguardando o médico
@@ -112,7 +118,10 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
       setConsultaIdState(consultaId);
       const session = createWebRTCSession({ roomId, token, role, wsBaseUrl, iceServers });
       sessionRef.current = session;
-      session.onRemoteTrack((stream) => { if (remoteRef.current) remoteRef.current.srcObject = stream; });
+      session.onRemoteTrack((stream) => {
+        if (remoteRef.current) remoteRef.current.srcObject = stream;
+        setStatusText('Conectado.');
+      });
       setStatusText('Conectado. Iniciando oferta...');
       await session.createAndSendOffer();
     } catch (err: any) {

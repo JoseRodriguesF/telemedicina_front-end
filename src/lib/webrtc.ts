@@ -35,6 +35,34 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   let chatChannel: RTCDataChannel | null = null;
   let onChatMsg: ((text: string) => void) | null = null;
 
+  const waitForOpen = () =>
+    new Promise<void>((resolve, reject) => {
+      if (ws.readyState === WebSocket.OPEN) {
+        resolve();
+        return;
+      }
+      const onOpen = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = () => {
+        cleanup();
+        reject(new Error('Signal socket error'));
+      };
+      const onClose = () => {
+        cleanup();
+        reject(new Error('Signal socket closed before open'));
+      };
+      const cleanup = () => {
+        ws.removeEventListener('open', onOpen);
+        ws.removeEventListener('error', onError);
+        ws.removeEventListener('close', onClose);
+      };
+      ws.addEventListener('open', onOpen, { once: true });
+      ws.addEventListener('error', onError, { once: true });
+      ws.addEventListener('close', onClose, { once: true });
+    });
+
   pc.onicecandidate = (e) => {
     if (e.candidate) {
       const candidate = e.candidate.toJSON();
@@ -85,6 +113,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     const msg: SignalMessage = { type: 'offer', sdp: offer };
+    await waitForOpen();
     ws.send(JSON.stringify(msg));
   };
 
@@ -92,6 +121,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
     const msg: SignalMessage = { type: 'answer', sdp: answer };
+    await waitForOpen();
     ws.send(JSON.stringify(msg));
   };
 
