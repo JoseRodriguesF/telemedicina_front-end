@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
-import { psCreateRoom, psClaim } from '@/lib/axios/consultas';
+import { psCreateRoom, psClaim, listParticipants } from '@/lib/axios/consultas';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 
 type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
@@ -50,6 +50,32 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
     (role === 'paciente' ? startPacienteFlow() : startMedicoFlow()).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Paciente: após obter consultaId, faça polling de participantes até haver 2 na sala
+  useEffect(() => {
+    if (role !== 'paciente') return;
+    const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
+    if (!cid || !token) return;
+    let stopped = false;
+    const check = async () => {
+      try {
+        const resp = await listParticipants(cid, token);
+        if (!stopped && Array.isArray(resp?.participants) && resp.participants.length >= 2) {
+          setStatusText('Conectado.');
+          stopped = true;
+          clearInterval(timerId);
+        }
+      } catch {
+        // ignore transient errors
+      }
+    };
+    const timerId = window.setInterval(check, 1500);
+    check();
+    return () => {
+      stopped = true;
+      clearInterval(timerId);
+    };
+  }, [role, consultaIdState, consultaId, token]);
 
   function sendMessage() {
     const t = draft.trim();
