@@ -160,9 +160,22 @@
 .chat-header{background:#2563EB;color:#fff;padding:10px 12px;font-weight:700}
 .chat-body{flex:1;padding:12px;display:flex;flex-direction:column;gap:10px;overflow:auto}
 .chat-msg{display:flex;flex-direction:column;gap:4px}
-.chat-msg .chat-author{font-size:0.8rem;color:#6b7280}
-.chat-bubble{background:#f3f4f6;color:#0f172a;padding:8px 10px;border-radius:12px;max-width:80%}
-.chat-msg.me .chat-bubble{background:#e0e7ff;color:#1d4ed8;align-self:flex-end}
+.chat-msg .chat-author{font-size:0.75rem;color:#6b7280;margin-left:4px}
+.chat-bubble{background:#f3f4f6;color:#0f172a;padding:8px 12px;border-radius:12px;max-width:80%;word-wrap:break-word}
+
+/* ME (Você) - Alinhado à direita */
+.chat-msg.me {align-items:flex-end}
+.chat-msg.me .chat-bubble{background:#e0e7ff;color:#1d4ed8;border-bottom-right-radius:2px}
+.chat-msg.me .chat-author{margin-right:4px;margin-left:0}
+
+/* DOCTOR (Médico) - Alinhado à esquerda com destaque */
+.chat-msg.doctor {align-items:flex-start}
+.chat-msg.doctor .chat-bubble{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;border-bottom-left-radius:2px}
+.chat-msg.doctor .chat-author{color:#059669;font-weight:700}
+
+/* PATIENT (Paciente) - Alinhado à esquerda padrão */
+.chat-msg.patient {align-items:flex-start}
+.chat-msg.patient .chat-bubble{background:#f3f4f6;color:#1f2937;border-bottom-left-radius:2px}
 .chat-input{display:flex;gap:8px;padding:10px;border-top:1px solid #eef2f6}
 
 @media (max-width: 900px){

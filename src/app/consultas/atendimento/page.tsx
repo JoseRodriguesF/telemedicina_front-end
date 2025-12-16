@@ -12,7 +12,7 @@ import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 
 type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
 
-  function AtendimentoInner() {
+function AtendimentoInner() {
   const router = useRouter();
   const search = useSearchParams();
   const consultaId = search.get('id') || '';
@@ -30,10 +30,7 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
   const pollingRef = useRef<number | null>(null);
   const [roomId, setRoomId] = useState<string>('');
   const [consultaIdState, setConsultaIdState] = useState<string>('');
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { author: 'Você', text: 'Olá' },
-    { author: 'Médico', text: 'Olá, como se sente?' },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [chatReady, setChatReady] = useState(false);
   const [statusText, setStatusText] = useState<string | null>(null);
@@ -48,7 +45,7 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
-    (role === 'paciente' ? startPacienteFlow() : startMedicoFlow()).catch(() => {});
+    (role === 'paciente' ? startPacienteFlow() : startMedicoFlow()).catch(() => { });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -105,7 +102,8 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
   function sendMessage() {
     const t = draft.trim();
     if (!t) return;
-    setMessages([...messages, { author: 'Você', text: t }]);
+    setMessages((prev) => [...prev, { author: 'Você', text: t }]);
+    sessionRef.current?.sendMessage(t);
     setDraft('');
   }
 
@@ -116,7 +114,7 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
       if (localRef.current) {
         localRef.current.srcObject = stream;
         localRef.current.muted = true;
-        await localRef.current.play().catch(() => {});
+        await localRef.current.play().catch(() => { });
       }
       setStatusText(role === 'paciente' ? 'Sala criada. Aguardando médico...' : 'Conectado. Aguardando paciente...');
     } catch (e) {
@@ -146,7 +144,7 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
       if (localRef.current) {
         localRef.current.srcObject = stream;
         localRef.current.muted = true;
-        await localRef.current.play().catch(() => {});
+        await localRef.current.play().catch(() => { });
       }
     } catch (e) {
       setStatusText('Permissões de câmera/microfone negadas ou indisponíveis.');
@@ -166,8 +164,11 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
       if (remoteRef.current) remoteRef.current.srcObject = stream;
       setStatusText('Conectado.');
     });
+    session.onChatMessage((text) => {
+      setMessages((prev) => [...prev, { author: 'Médico', text }]);
+    });
     // Answer é criado automaticamente ao receber offer no webrtc.ts
-    try { sessionStorage.removeItem('ps_room'); } catch {}
+    try { sessionStorage.removeItem('ps_room'); } catch { }
     // Status será atualizado pelos eventos de conexão/sinalização e track remoto
   }
 
@@ -192,7 +193,7 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
         if (localRef.current) {
           localRef.current.srcObject = stream;
           localRef.current.muted = true;
-          await localRef.current.play().catch(() => {});
+          await localRef.current.play().catch(() => { });
         }
       } catch (e) {
         setStatusText('Permissões de câmera/microfone negadas ou indisponíveis.');
@@ -212,6 +213,10 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
         if (remoteRef.current) remoteRef.current.srcObject = stream;
         setStatusText('Conectado.');
       });
+      session.onChatMessage((text) => {
+        setMessages((prev) => [...prev, { author: 'Paciente', text }]);
+      });
+      session.createChatChannel(); // Médico cria o canal
       setStatusText('Conectado. Iniciando oferta...');
       await session.createAndSendOffer();
     } catch (err: any) {
@@ -238,8 +243,8 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
   }
 
   function finishCall() {
-    try { sessionRef.current?.end(); } catch {}
-    try { sessionStorage.removeItem('ps_room'); } catch {}
+    try { sessionRef.current?.end(); } catch { }
+    try { sessionStorage.removeItem('ps_room'); } catch { }
     router.push('/consultas');
   }
 
@@ -277,12 +282,19 @@ type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
         <aside className="chat-panel" aria-label="Chat da consulta">
           <div className="chat-header">Chat da consulta</div>
           <div className="chat-body">
-            {messages.map((m, idx) => (
-              <div key={idx} className={`chat-msg ${m.author === 'Você' ? 'me' : 'doctor'}`}>
-                <div className="chat-author">{m.author}</div>
-                <div className="chat-bubble">{m.text}</div>
-              </div>
-            ))}
+            {messages.map((m, idx) => {
+              let cls = 'chat-msg';
+              if (m.author === 'Você') cls += ' me';
+              else if (m.author === 'Médico') cls += ' doctor';
+              else cls += ' patient';
+
+              return (
+                <div key={idx} className={cls}>
+                  <div className="chat-author">{m.author}</div>
+                  <div className="chat-bubble">{m.text}</div>
+                </div>
+              );
+            })}
           </div>
           <div className="chat-input">
             <input

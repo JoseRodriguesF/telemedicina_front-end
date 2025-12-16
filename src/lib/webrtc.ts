@@ -28,6 +28,7 @@ export type WebRTCSession = {
   onConnectionStateChange: (cb: (state: RTCPeerConnectionState) => void) => void;
   onIceConnectionStateChange: (cb: (state: RTCIceConnectionState) => void) => void;
   onSignalEvent: (cb: (ev: 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived') => void) => void;
+  sendMessage: (text: string) => void;
 };
 
 export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
@@ -147,7 +148,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   const end = () => {
     try {
       ws.send(JSON.stringify({ type: 'end' }));
-    } catch {}
+    } catch { }
     pc.close();
     ws.close();
     if (localStream) {
@@ -196,6 +197,12 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     onSignalEv = cb;
   };
 
+  const sendMessage = (text: string) => {
+    if (chatChannel && chatChannel.readyState === 'open') {
+      chatChannel.send(text);
+    }
+  };
+
   return {
     pc,
     ws,
@@ -207,6 +214,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     onRemoteTrack,
     createChatChannel,
     onChatMessage,
+    sendMessage, // Expose sendMessage
     onConnectionStateChange,
     onIceConnectionStateChange,
     onSignalEvent,
