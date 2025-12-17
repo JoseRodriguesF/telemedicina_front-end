@@ -285,6 +285,21 @@
     }
 }
 
+@media (max-width: 768px) {
+    .medico-mobile-header {
+        display: none;
+    }
+
+    .chat-panel {
+        height: auto;
+    }
+
+    .chat-body {
+        max-height: 250px;
+        /* Approx 3 messages */
+    }
+}
+
 /* Ensure controls overlay on bottom */
 .call-controls {
     position: absolute;
