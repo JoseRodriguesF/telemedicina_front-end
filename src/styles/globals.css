@@ -68,7 +68,7 @@ img { max-width: 100%; display: block; }
 .atendimento-page .self-video.pip {
 	position: absolute;
 	right: 16px;
-	bottom: 16px;
+	bottom: 90px;
 	width: 26%;
 	max-width: 360px;
 	aspect-ratio: 16 / 9;
