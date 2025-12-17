@@ -42,7 +42,7 @@ img { max-width: 100%; display: block; }
 .atendimento-page .call-area {
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	
 }
 
 .atendimento-page .call-screen {

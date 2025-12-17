@@ -369,4 +369,5 @@
     letter-spacing: 0.2px;
     text-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 8px rgba(255,255,255,0.15);
     z-index: 26;
+    margin-bottom: 50px;
 }
