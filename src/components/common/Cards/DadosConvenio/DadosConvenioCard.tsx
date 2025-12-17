@@ -138,14 +138,7 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
               const v = (pessoaisData?.guardianContact || '')?.replace(/\D/g, '') || '';
               return v ? v : null;
             })(),
-            convenio: (() => {
-              const v = String(pendingData?.convenio || '').trim();
-              return v ? v : null;
-            })(),
-            numero_carteirinha: (() => {
-              const v = String(pendingData?.numero || '').trim();
-              return v ? v : null;
-            })(),
+            // NOTE: Convênio and numero_carteirinha were removed from API — do not include them
           };
 
           try {

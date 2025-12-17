@@ -16,8 +16,7 @@ export type PessoaisPayload = {
   };
   responsavel_legal?: string | null;
   telefone_responsavel?: string | null;
-  convenio?: string | null;
-  numero_carteirinha?: string | null;
+  // convenio and numero_carteirinha removed from API and DB — no longer sent
 };
 
 export async function createPessoais(payload: PessoaisPayload) {
