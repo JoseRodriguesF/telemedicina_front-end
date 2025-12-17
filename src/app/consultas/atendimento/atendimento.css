@@ -4,6 +4,16 @@
     background: #ffffff;
 }
 
+.medico-mobile-header {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .medico-mobile-header {
+        display: block;
+    }
+}
+
 .atendimento-main {
     display: grid;
     grid-template-columns: 1fr 360px;
