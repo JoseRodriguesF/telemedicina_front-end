@@ -11,6 +11,10 @@
     padding: 24px;
 }
 
+.atendimento-main.full-width {
+    grid-template-columns: 1fr;
+}
+
 .call-area {
     background: #fff;
     border: 1px solid #eef2f6;

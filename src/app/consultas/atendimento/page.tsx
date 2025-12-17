@@ -36,6 +36,7 @@ function AtendimentoInner() {
   const [statusText, setStatusText] = useState<string | null>(null);
   const claimingRef = useRef(false);
   const startedRef = useRef(false);
+  const [showChat, setShowChat] = useState(true);
 
   // Fluxo UI: ao entrar, o paciente "cria" a sala e já compartilha mídia.
   // Médico entra e compartilha sua mídia ao chegar.
@@ -250,7 +251,7 @@ function AtendimentoInner() {
 
   return (
     <div className="atendimento-page">
-      <main className="atendimento-main">
+      <main className={`atendimento-main ${!showChat ? 'full-width' : ''}`}>
         <section className="call-area">
           <div className="call-header">Você está em uma consulta</div>
           <div className="call-screen">
@@ -272,41 +273,49 @@ function AtendimentoInner() {
             />
           </div>
           <div className="call-controls">
-            <button className="control-btn" aria-label="Abrir chat">💬</button>
+            <button
+              className={`control-btn ${showChat ? 'active' : ''}`}
+              aria-label={showChat ? "Esconder chat" : "Mostrar chat"}
+              onClick={() => setShowChat(prev => !prev)}
+            >
+              💬
+            </button>
             <button className="control-btn end" aria-label="Encerrar chamada" onClick={finishCall}>📞</button>
           </div>
           {connecting && <div className="call-status" aria-live="polite">Conectando...</div>}
           {statusText && !connecting && <div className="call-status" aria-live="polite">{statusText}</div>}
         </section>
 
-        <aside className="chat-panel" aria-label="Chat da consulta">
-          <div className="chat-header">Chat da consulta</div>
-          <div className="chat-body">
-            {messages.map((m, idx) => {
-              let cls = 'chat-msg';
-              if (m.author === 'Você') cls += ' me';
-              else if (m.author === 'Médico') cls += ' doctor';
-              else cls += ' patient';
+        {showChat && (
+          <aside className="chat-panel" aria-label="Chat da consulta">
+            <div className="chat-header">Chat da consulta</div>
+            <div className="chat-body">
+              {messages.map((m, idx) => {
+                let cls = 'chat-msg';
+                if (m.author === 'Você') cls += ' me';
+                else if (m.author === 'Médico') cls += ' doctor';
+                else cls += ' patient';
 
-              return (
-                <div key={idx} className={cls}>
-                  <div className="chat-author">{m.author}</div>
-                  <div className="chat-bubble">{m.text}</div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="chat-input">
-            <input
-              className="c-input"
-              placeholder="Digite..."
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
-            />
-            <Button variant="primary" onClick={sendMessage} aria-label="Enviar">➤</Button>
-          </div>
-        </aside>
+                return (
+                  <div key={idx} className={cls}>
+                    <div className="chat-author">{m.author}</div>
+                    <div className="chat-bubble">{m.text}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="chat-input">
+              <input
+                className="c-input"
+                placeholder="Digite..."
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
+              />
+              <Button variant="primary" onClick={sendMessage} aria-label="Enviar">➤</Button>
+            </div>
+          </aside>
+        )}
       </main>
     </div>
   );
