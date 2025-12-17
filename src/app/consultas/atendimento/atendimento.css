@@ -37,6 +37,8 @@
     flex-direction: column;
     overflow: hidden;
     height: 100%;
+    gap: 0;
+    /* Ensure no gap between header and video */
 }
 
 .call-header {
@@ -57,6 +59,8 @@
     justify-content: center;
     flex: 1;
     /* Fill remaining space */
+    margin: 0;
+    /* Strict 0 margin */
 }
 
 .call-screen .remote-video {
@@ -250,10 +254,14 @@
     /* Make video screen taller and narrower (90% width) */
     .call-screen {
         width: 90%;
-        margin: 16px auto;
+        margin: 0 auto 16px auto;
+        /* 0 top margin to touch header */
         height: auto;
         aspect-ratio: 3 / 4;
         border-radius: 12px;
+        /* Maybe reduce top radius if flush? */
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
         flex: none;
         overflow: hidden;
     }
