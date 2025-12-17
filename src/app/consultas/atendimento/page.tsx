@@ -1,6 +1,8 @@
 "use client";
 
+import './atendimento.css';
 import '@/components/layout/Header/header.css';
+import Header from '@/components/layout/Header/Header';
 import Button from '@/components/common/Buttons/Button';
 import ConfirmationModal from '@/components/common/Modals/ConfirmationModal/ConfirmationModal';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -283,6 +285,11 @@ function AtendimentoInner() {
 
   return (
     <div className="atendimento-page">
+      {role === 'medico' && (
+        <div className="medico-mobile-header">
+          <Header />
+        </div>
+      )}
       <main className={`atendimento-main ${!showChat ? 'full-width' : ''}`}>
         <section className="call-area">
           <div className="call-header">Você está em uma consulta</div>
