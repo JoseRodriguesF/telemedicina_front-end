@@ -43,6 +43,7 @@ function AtendimentoInner() {
 
   // Mídia controls
   const localStreamRef = useRef<MediaStream | null>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
   const [camEnabled, setCamEnabled] = useState(true);
   const [micEnabled, setMicEnabled] = useState(true);
   const [remoteConnected, setRemoteConnected] = useState(false);
@@ -117,6 +118,13 @@ function AtendimentoInner() {
       }
     };
   }, [role, consultaIdState, consultaId, token]);
+
+  // Auto-scroll chat
+  useEffect(() => {
+    if (showChat) {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, showChat]);
 
   function sendMessage() {
     const t = draft.trim();
@@ -387,6 +395,7 @@ function AtendimentoInner() {
                   </div>
                 );
               })}
+              <div ref={chatEndRef} />
             </div>
             <div className="chat-input">
               <input
