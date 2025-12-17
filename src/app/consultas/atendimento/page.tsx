@@ -326,9 +326,12 @@ function AtendimentoInner() {
               aria-label={role === 'medico' ? 'Vídeo do paciente' : 'Vídeo do médico'}
             />
             {/* O vídeo local aparece em miniatura (picture-in-picture) */}
-            playsInline
-            autoPlay
-            aria-label="Sua câmera"
+            <video
+              ref={localRef}
+              className="self-video pip"
+              playsInline
+              autoPlay
+              aria-label="Sua câmera"
             />
             {/* Loading Spinner overlay if not connected */}
             {!remoteConnected && (
