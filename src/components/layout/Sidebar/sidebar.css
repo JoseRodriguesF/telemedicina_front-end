@@ -1,30 +1,218 @@
-:root {
-  /* Inherit app-wide CSS variables; this file is for sidebar-specific tweaks */
-}
-
 .inicio-sidebar {
-  /* uses existing layout from src/app/inicio/inicio.css */
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 72px;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-right: 1px solid #e9eef5;
+  transition: width 200ms ease, box-shadow 200ms ease;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.12);
+  border-radius: 0;
+  z-index: 50
 }
 
-.inicio-nav .nav-item.active {
-  background: var(--nav-active-bg, rgba(99,102,241,0.12));
-  color: var(--primary, #6366f1);
+.inicio-sidebar:hover {
+  width: 260px
 }
 
-.sidebar-bottom .nav-item.active {
-  background: var(--nav-active-bg, rgba(99,102,241,0.12));
-  color: var(--primary, #6366f1);
+.sidebar-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-bottom: 6px
 }
 
-.inicio-nav .nav-item:hover {
-  background: var(--nav-hover-bg, rgba(99,102,241,0.08));
+.platform-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: #eef2ff;
+  display: inline-block;
+  margin-right: 8px;
+  flex: 0 0 auto
 }
 
-.sidebar-bottom .nav-item:hover {
-  background: var(--nav-hover-bg, rgba(99,102,241,0.08));
+.platform-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 8px
 }
 
-.sidebar-bottom .nav-item.settings.active,
-.sidebar-bottom .nav-item.settings:focus {
+.platform-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px
+}
+
+.platform-name .short {
+  display: inline-block
+}
+
+.platform-name .full {
+  display: none
+}
+
+.inicio-sidebar:hover .platform-name .short {
+  display: none
+}
+
+.inicio-sidebar:hover .platform-name .full {
+  display: inline-block
+}
+
+.inicio-sidebar:hover .platform-name {
+  padding-left: 4px
+}
+
+.inicio-sidebar:hover .platform-name .full {
+  font-size: 1.25rem;
+  letter-spacing: .5px;
+}
+
+/* Garantir que o 'T' colapsado ocupe a mesma área dos ícones e fique centralizado */
+.platform-name .short {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.inicio-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px
+}
+
+.nav-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: #111827;
+  text-decoration: none;
+  padding: 10px;
+  border-radius: 12px;
+  position: relative;
+  background: transparent;
+  border: none;
+  box-sizing: border-box
+}
+
+.nav-item .nav-icon {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: transparent;
+  color: #2563eb;
+  flex: 0 0 44px
+}
+
+.nav-item .nav-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  display: none;
+  font-weight: 600
+}
+
+.inicio-sidebar:hover .nav-item .nav-label {
+  display: inline-block
+}
+
+/* Colapsada: centralizar ícones e ajustar paddings */
+.inicio-sidebar:not(:hover) .nav-item {
+  justify-content: center;
+  padding: 6px
+}
+
+.inicio-sidebar:not(:hover) .nav-item .nav-icon {
+  margin: 0
+}
+
+.inicio-sidebar:not(:hover) .platform-name {
+  justify-content: center
+}
+
+.inicio-sidebar:not(:hover) .sidebar-bottom .nav-item {
+  justify-content: center
+}
+
+.nav-item.active {
+  background: rgba(37, 99, 235, 0.12);
+  color: #0b4ed0;
+  border: none;
   outline: none;
+}
+
+.inicio-sidebar:hover .nav-item.active {
+  background: rgba(37, 99, 235, 0.15);
+}
+
+/* levemente mais visível quando expandida */
+.nav-item.active .nav-icon {
+  background: transparent
+}
+
+.inicio-sidebar .nav-item {
+  width: 100%
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding-top: 8px;
+  width: 100%
+}
+
+.inicio-sidebar:hover .nav-item {
+  justify-content: flex-start;
+  padding: 10px
+}
+
+.inicio-sidebar:hover .nav-item .nav-label {
+  display: inline-block
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+  padding-top: 8px
+}
+
+/* Responsividade: em dispositivos sem hover (toque) apenas em celular, manter expandida */
+@media (hover: none) and (max-width: 768px) {
+  .inicio-sidebar {
+    width: 260px
+  }
+
+  .inicio-sidebar:hover {
+    width: 260px
+  }
+
+  .nav-item .nav-label {
+    display: inline-block
+  }
+}
+
+@media (max-width:900px) {
+  .inicio-sidebar {
+    display: none
+  }
 }

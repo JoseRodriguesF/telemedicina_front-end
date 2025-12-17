@@ -1,0 +1,246 @@
+.atendimento-page {
+    display: block;
+    min-height: 100vh;
+    background: #ffffff;
+}
+
+.atendimento-main {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 16px;
+    padding: 24px;
+}
+
+.call-area {
+    background: #fff;
+    border: 1px solid #eef2f6;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.call-header {
+    background: #2563EB;
+    color: #fff;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-weight: 700;
+}
+
+.call-screen {
+    position: relative;
+    width: 100%;
+    /* max-width: 960px; removed max-width constraint to fit container */
+    aspect-ratio: 16 / 9;
+    margin: 0 auto;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0b0b0b;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.call-screen .remote-video,
+.call-screen .self-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+/* Local video (PIP) */
+.call-screen .self-video {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    width: 240px;
+    height: 135px;
+    /* 16:9 aspect ratio matches width */
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    background: #d1d5db;
+    /* fallback */
+    z-index: 10;
+}
+
+.call-wait {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+    z-index: 5;
+}
+
+.call-controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    /* Center controls */
+    padding: 6px;
+}
+
+.control-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    border: none;
+    background: #1d4ed8;
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.control-btn:hover {
+    background: #1e40af;
+}
+
+.control-btn.end {
+    background: #ef4444;
+}
+
+.control-btn.end:hover {
+    background: #dc2626;
+}
+
+.call-status {
+    text-align: center;
+    font-size: 14px;
+    color: #4b5563;
+}
+
+/* Chat Panel */
+.chat-panel {
+    background: #fff;
+    border: 1px solid #eef2f6;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100%;
+    /* Match parent height if grid */
+    max-height: 80vh;
+    /* Fallback constraint */
+}
+
+.chat-header {
+    background: #2563EB;
+    color: #fff;
+    padding: 10px 12px;
+    font-weight: 700;
+}
+
+.chat-body {
+    flex: 1;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+}
+
+.chat-msg {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.chat-msg .chat-author {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-left: 4px;
+}
+
+.chat-bubble {
+    background: #f3f4f6;
+    color: #0f172a;
+    padding: 8px 12px;
+    border-radius: 12px;
+    max-width: 85%;
+    word-wrap: break-word;
+}
+
+/* ME (Você) - Alinhado à direita */
+.chat-msg.me {
+    align-items: flex-end;
+}
+
+.chat-msg.me .chat-bubble {
+    background: #e0e7ff;
+    color: #1d4ed8;
+    border-bottom-right-radius: 2px;
+}
+
+.chat-msg.me .chat-author {
+    margin-right: 4px;
+    margin-left: 0;
+}
+
+/* DOCTOR (Médico) - Alinhado à esquerda com destaque */
+.chat-msg.doctor {
+    align-items: flex-start;
+}
+
+.chat-msg.doctor .chat-bubble {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    border-bottom-left-radius: 2px;
+}
+
+.chat-msg.doctor .chat-author {
+    color: #059669;
+    font-weight: 700;
+}
+
+/* PATIENT (Paciente) - Alinhado à esquerda padrão */
+.chat-msg.patient {
+    align-items: flex-start;
+}
+
+.chat-msg.patient .chat-bubble {
+    background: #f3f4f6;
+    color: #1f2937;
+    border-bottom-left-radius: 2px;
+}
+
+.chat-input {
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    border-top: 1px solid #eef2f6;
+}
+
+.c-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.c-input:focus {
+    outline: none;
+    border-color: #2563EB;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+@media (max-width: 900px) {
+    .atendimento-main {
+        grid-template-columns: 1fr;
+    }
+
+    .chat-panel {
+        height: 400px;
+        /* Fixed height on mobile when stacked */
+        max-height: none;
+    }
+}

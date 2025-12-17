@@ -1,6 +1,6 @@
 "use client";
 
-import '../../inicio/inicio.css';
+import './atendimento.css';
 import '@/components/layout/Header/header.css';
 import Button from '@/components/common/Buttons/Button';
 import { useRouter, useSearchParams } from 'next/navigation';
