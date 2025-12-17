@@ -252,8 +252,11 @@
     }
 
     .chat-panel {
-        height: 500px;
+        height: 300px;
+        /* Reduced specific height for mobile */
         max-height: none;
+        order: 2;
+        /* Ensure it appears below video if needed, though grid col 1 does this automatically */
     }
 
     .call-area {
