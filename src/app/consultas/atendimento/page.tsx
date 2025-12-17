@@ -41,7 +41,11 @@ function AtendimentoInner() {
   const [showChat, setShowChat] = useState(true);
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
 
-  // Fluxo UI: ao entrar, o paciente "cria" a sala e já compartilha mídia.
+  // Mídia controls
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const [camEnabled, setCamEnabled] = useState(true);
+  const [micEnabled, setMicEnabled] = useState(true);
+  const [remoteConnected, setRemoteConnected] = useState(false);
   // Médico entra e compartilha sua mídia ao chegar.
   // Ao entrar, paciente cria sala + mídia; médico apenas abre mídia e faz claim.
   // Auto-start sem botão: inicia o fluxo uma única vez ao montar a página.
@@ -126,6 +130,7 @@ function AtendimentoInner() {
     try {
       setConnecting(true);
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      localStreamRef.current = stream; // Save ref
       if (localRef.current) {
         localRef.current.srcObject = stream;
         localRef.current.muted = true;
@@ -136,6 +141,20 @@ function AtendimentoInner() {
       setStatusText('Permissões de câmera/microfone negadas ou indisponíveis.');
     } finally {
       setConnecting(false);
+    }
+  }
+
+  function toggleCam() {
+    if (localStreamRef.current) {
+      localStreamRef.current.getVideoTracks().forEach(t => t.enabled = !t.enabled);
+      setCamEnabled(prev => !prev);
+    }
+  }
+
+  function toggleMic() {
+    if (localStreamRef.current) {
+      localStreamRef.current.getAudioTracks().forEach(t => t.enabled = !t.enabled);
+      setMicEnabled(prev => !prev);
     }
   }
 
@@ -156,6 +175,7 @@ function AtendimentoInner() {
     sessionRef.current = session;
     try {
       const stream = await session.startLocalMedia();
+      localStreamRef.current = stream; // Save ref
       if (localRef.current) {
         localRef.current.srcObject = stream;
         localRef.current.muted = true;
@@ -177,6 +197,7 @@ function AtendimentoInner() {
     });
     session.onRemoteTrack((stream) => {
       if (remoteRef.current) remoteRef.current.srcObject = stream;
+      setRemoteConnected(true);
       setStatusText('Conectado.');
     });
     session.onChatMessage((text) => {
@@ -205,6 +226,7 @@ function AtendimentoInner() {
       sessionRef.current = session;
       try {
         const stream = await session.startLocalMedia();
+        localStreamRef.current = stream; // Save ref
         if (localRef.current) {
           localRef.current.srcObject = stream;
           localRef.current.muted = true;
@@ -226,6 +248,7 @@ function AtendimentoInner() {
       });
       session.onRemoteTrack((stream) => {
         if (remoteRef.current) remoteRef.current.srcObject = stream;
+        setRemoteConnected(true);
         setStatusText('Conectado.');
       });
       session.onChatMessage((text) => {
@@ -303,15 +326,33 @@ function AtendimentoInner() {
               aria-label={role === 'medico' ? 'Vídeo do paciente' : 'Vídeo do médico'}
             />
             {/* O vídeo local aparece em miniatura (picture-in-picture) */}
-            <video
-              ref={localRef}
-              className="self-video pip"
-              playsInline
-              autoPlay
-              aria-label="Sua câmera"
+            playsInline
+            autoPlay
+            aria-label="Sua câmera"
             />
+            {/* Loading Spinner overlay if not connected */}
+            {!remoteConnected && (
+              <div className="call-loader-overlay">
+                <div className="call-spinner"></div>
+                <div className="call-loader-text">Aguardando...</div>
+              </div>
+            )}
 
             <div className="call-controls">
+              <button
+                className={`control-btn ${!camEnabled ? 'off' : ''}`}
+                onClick={toggleCam}
+                aria-label={camEnabled ? 'Desativar câmera' : 'Ativar câmera'}
+              >
+                {camEnabled ? '📷' : '🚫'}
+              </button>
+              <button
+                className={`control-btn ${!micEnabled ? 'off' : ''}`}
+                onClick={toggleMic}
+                aria-label={micEnabled ? 'Desativar microfone' : 'Ativar microfone'}
+              >
+                {micEnabled ? '🎤' : '🔇'}
+              </button>
               <button
                 className={`control-btn ${showChat ? 'active' : ''}`}
                 aria-label={showChat ? "Esconder chat" : "Mostrar chat"}
