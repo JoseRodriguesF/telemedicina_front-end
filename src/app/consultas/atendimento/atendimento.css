@@ -79,13 +79,7 @@
     z-index: 5;
 }
 
-.call-controls {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    /* Center controls */
-    padding: 6px;
-}
+/* .call-controls moved to bottom of file for overlay logic */
 
 .control-btn {
     display: inline-flex;
@@ -237,6 +231,7 @@
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
+/* Mobile responsiveness */
 @media (max-width: 900px) {
     .atendimento-main {
         grid-template-columns: 1fr;
@@ -244,7 +239,39 @@
 
     .chat-panel {
         height: 400px;
-        /* Fixed height on mobile when stacked */
         max-height: none;
     }
+
+    /* Make video screen taller and narrower (90% width) */
+    .call-screen {
+        width: 90%;
+        height: auto;
+        aspect-ratio: 3 / 4;
+        /* Higher aspect ratio */
+        margin: 0 auto;
+    }
+
+    /* Adjust PIP position if needed */
+    .call-screen .self-video {
+        width: 120px;
+        height: 160px;
+        /* match relative aspect ratio */
+        bottom: 80px;
+        /* space for controls */
+        right: 12px;
+    }
+}
+
+/* Ensure controls overlay on bottom */
+.call-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    padding: 6px;
+    z-index: 20;
+    /* optional slight background or shadow for visibility */
 }

@@ -304,16 +304,17 @@ function AtendimentoInner() {
               autoPlay
               aria-label="Sua câmera"
             />
-          </div>
-          <div className="call-controls">
-            <button
-              className={`control-btn ${showChat ? 'active' : ''}`}
-              aria-label={showChat ? "Esconder chat" : "Mostrar chat"}
-              onClick={() => setShowChat(prev => !prev)}
-            >
-              💬
-            </button>
-            <button className="control-btn end" aria-label="Encerrar chamada" onClick={requestFinishCall}>📞</button>
+
+            <div className="call-controls">
+              <button
+                className={`control-btn ${showChat ? 'active' : ''}`}
+                aria-label={showChat ? "Esconder chat" : "Mostrar chat"}
+                onClick={() => setShowChat(prev => !prev)}
+              >
+                💬
+              </button>
+              <button className="control-btn end" aria-label="Encerrar chamada" onClick={requestFinishCall}>📞</button>
+            </div>
           </div>
           {connecting && <div className="call-status" aria-live="polite">Conectando...</div>}
           {statusText && !connecting && <div className="call-status" aria-live="polite">{statusText}</div>}
