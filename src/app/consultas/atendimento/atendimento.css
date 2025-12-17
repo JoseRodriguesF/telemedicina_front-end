@@ -298,6 +298,12 @@
         max-height: 180px;
         /* Approx 2 messages */
     }
+
+    .call-screen {
+        width: 100%;
+        margin-top: 0;
+        border-radius: 0;
+    }
 }
 
 /* Ensure controls overlay on bottom */
