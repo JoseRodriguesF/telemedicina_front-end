@@ -314,6 +314,20 @@ function AtendimentoInner() {
     router.push('/consultas');
   }
 
+  // Determine status color:
+  // Red: default / disconnected / failed / error
+  // Yellow: connecting / local media ready but !remoteConnected
+  // Green: remoteConnected
+  let statusColor = 'red';
+  if (remoteConnected) {
+    statusColor = 'green';
+  } else if (localStreamRef.current && !remoteConnected) {
+    // If we have local stream and are waiting, yellow
+    statusColor = 'yellow';
+  } else if (connecting) {
+    statusColor = 'yellow';
+  }
+
   return (
     <div className="atendimento-page">
       {role === 'medico' && (
@@ -323,7 +337,10 @@ function AtendimentoInner() {
       )}
       <main className={`atendimento-main ${!showChat ? 'full-width' : ''}`}>
         <section className="call-area">
-          <div className="call-header">Você está em uma consulta</div>
+          <div className="call-header">
+            <span className={`status-dot ${statusColor}`} aria-label={`Status: ${statusColor}`}></span>
+            Você está em uma consulta
+          </div>
           <div className="call-screen">
             {/* O vídeo remoto sempre ocupa o retângulo grande (principal) */}
             <video
@@ -374,8 +391,6 @@ function AtendimentoInner() {
               <button className="control-btn end" aria-label="Encerrar chamada" onClick={requestFinishCall}>📞</button>
             </div>
           </div>
-          {connecting && <div className="call-status" aria-live="polite">Conectando...</div>}
-          {statusText && !connecting && <div className="call-status" aria-live="polite">{statusText}</div>}
         </section>
 
         {showChat && (
