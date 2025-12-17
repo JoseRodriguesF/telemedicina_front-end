@@ -362,7 +362,7 @@ function AtendimentoInner() {
             {!remoteConnected && (
               <div className="call-loader-overlay">
                 <div className="call-spinner"></div>
-                <div className="call-loader-text">Aguardando...</div>
+                <div className="call-loader-text">{role === 'paciente' ? 'Aguardando médico' : 'Aguardando paciente'}</div>
               </div>
             )}
 
