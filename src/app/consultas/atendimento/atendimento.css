@@ -23,7 +23,7 @@
 .atendimento-main.full-width .call-area {
     width: 100%;
     /* Max width prevents excessive stretching on large screens, keeping it centered */
-    max-width: 1400px;
+    max-width: 1000px;
 }
 
 .call-area {
