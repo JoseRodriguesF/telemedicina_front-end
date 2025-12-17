@@ -295,8 +295,8 @@
     }
 
     .chat-body {
-        max-height: 250px;
-        /* Approx 3 messages */
+        max-height: 180px;
+        /* Approx 2 messages */
     }
 }
 
