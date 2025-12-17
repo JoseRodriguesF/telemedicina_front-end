@@ -1,0 +1,119 @@
+/* Styles specific to pré-consulta chat */
+.pc-card {
+  padding: 24px;
+}
+
+/* Override global box-sizing for the entire pré-consulta page only, avoiding
+   interference from the global `* { box-sizing: border-box }`. This keeps
+   sizing consistent across the page without changing global styles. */
+.inicio-page,
+.inicio-page * {
+  box-sizing: content-box;
+}
+
+/* Ensure page doesn't scroll: make main area fit viewport and hide overflow */
+.inicio-page .inicio-main {
+  height: calc(100vh - 64px);
+  overflow: hidden;
+}
+
+.center-card {
+  display: flex;
+  align-items: stretch;
+}
+
+.pc-card {
+  /* Usar proporções do formulário antigo: padding 24, largura 740 */
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 700px; /* largura ligeiramente reduzida */
+  margin: 24px auto; /* margem top/baixo similar ao formulário */
+  height: 520px; /* reduzir altura conforme solicitado */
+  box-sizing: border-box;
+}
+
+/* Header layout: title left, action near right */
+.pc-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.pc-card-header .pc-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.pc-card-header .pc-action {
+  margin-left: auto;
+  margin-right: 6px; /* keep button close to right edge */
+}
+
+.pc-chat {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 12px;
+}
+
+.pc-chat-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #e6edf3;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.pc-chat-message { margin-bottom: 10px; }
+.pc-chat-message { display: flex; flex-direction: column; margin-bottom: 10px; }
+.pc-chat-message .pc-chat-author { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+.pc-chat-message .pc-chat-bubble {
+  display: inline-block;
+  background: #f3f4f6;
+  color: #0f172a;
+  padding: 10px 14px;
+  border-radius: 12px;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
+/* Left-aligned (assistant/system) */
+.pc-chat-message.assistant { align-items: flex-start; }
+.pc-chat-message.assistant .pc-chat-bubble { background: #f3f4f6; color: #0f172a; }
+
+/* System messages styling */
+.pc-chat-message.system { align-items: flex-start; }
+.pc-chat-message.system .pc-chat-bubble { background: #eef2ff; color: #1e3a8a; }
+
+/* Right-aligned (user) */
+.pc-chat-message.you { align-items: flex-end; }
+.pc-chat-message.you .pc-chat-bubble { background: #e0e7ff; color: #1d4ed8; }
+
+.pc-chat-input {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pc-chat-input .c-input {
+  flex: 1 1 auto;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.pc-chat-input .c-input:focus {
+  outline: none;
+  border-color: #2563EB;
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.06);
+}
+
+/* Make system messages slightly different */
+.pc-chat-message.system .pc-chat-bubble {
+  background: #eef2ff;
+  color: #1e3a8a;
+}

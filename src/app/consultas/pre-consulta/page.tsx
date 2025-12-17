@@ -1,46 +1,35 @@
 "use client";
 
 import '../../inicio/inicio.css';
+import './pre-consulta.css';
 import '@/components/layout/Header/header.css';
 import '@/components/common/Inputs/input.css';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
-import Input from '@/components/common/Inputs/Input';
-import TagAutocomplete from '@/components/common/Inputs/TagAutocomplete';
 import Button from '@/components/common/Buttons/Button';
 import { useRouter } from 'next/navigation';
-import { Suspense } from 'react';
-import { useState } from 'react';
+import { Suspense, useState, useRef, useEffect } from 'react';
 import { getToken, getUser } from '@/lib/auth';
 import { psCreateRoom } from '@/lib/axios/consultas';
 
 function PreConsultaInner() {
   const router = useRouter();
-  // consultaId será gerado na criação da sala ao enviar o formulário
+  // Chat temporário para pré-consulta — substitui o formulário
+  type ChatMessage = { author: 'Você' | 'Assistente' | 'Sistema'; text: string };
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { author: 'Sistema', text: 'Aqui você pode conversar antes da consulta. Mais recursos virão em breve.' }
+  ]);
+  const [draft, setDraft] = useState('');
+  const chatBodyRef = useRef<HTMLDivElement | null>(null);
 
-  const [queixa, setQueixa] = useState('');
-  const [descricao, setDescricao] = useState('');
-  const [antecedentesPessoais, setAntecedentesPessoais] = useState<string[]>([]);
-  const [antecedentesFamiliares, setAntecedentesFamiliares] = useState<string[]>([]);
-  const [estiloVida, setEstiloVida] = useState('');
-  const [vacinacao, setVacinacao] = useState<string[]>([]);
-
-  const sugestoes = ["Diabetes", "Colesterol alto", "Hipertensão", "Asma", "Alergia a penicilina", "Hipotireoidismo", "Ansiedade"];
-  const vacinasSugestoes = [
-    "COVID-19 (2 doses)",
-    "Influenza",
-    "Tétano",
-    "Hepatite B",
-    "Sarampo",
-    "HPV",
-  ];
-
-  function toggleTag(list: string[], setList: (v: string[]) => void, tag: string) {
-    if (list.includes(tag)) setList(list.filter(t => t !== tag));
-    else setList([...list, tag]);
+  function sendMessage() {
+    const t = draft.trim();
+    if (!t) return;
+    setMessages(prev => [...prev, { author: 'Você', text: t }]);
+    setDraft('');
+    // Placeholder: futura integração com chatbot/back-end
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleEnviar() {
     const token = getToken();
     const user = getUser();
     if (user?.tipo_usuario !== 'paciente') {
@@ -67,64 +56,49 @@ function PreConsultaInner() {
     }
   }
 
+  useEffect(() => {
+    const el = chatBodyRef.current;
+    if (el) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    }
+  }, [messages]);
+
   return (
     <div className="inicio-page">
       <Sidebar activeId="consultas" />
       <main className="inicio-main">
         <div className="center-card">
           <div className="pc-card">
-            <h2>Formulario pré consulta</h2>
-            <form className="pc-form" onSubmit={handleSubmit}>
-              <div className="pc-field">
-                <label className="pc-label">Queixa principal</label>
-                <Input placeholder="Ex: Dor de cabeça forte" value={queixa} onChange={(e) => setQueixa(e.target.value)} />
+            <div className="pc-card-header">
+              <h2 className="pc-title">Pré-consulta — Chat</h2>
+              <div className="pc-action">
+                <Button variant="primary" onClick={handleEnviar}>Concluir</Button>
               </div>
-
-              <div className="pc-field">
-                <label className="pc-label">Descrição dos sintomas / Doença atual</label>
-                <textarea className="pc-textarea" placeholder="Ex: Como você está se sentindo e como os sintomas começaram." value={descricao} onChange={(e) => setDescricao(e.target.value)} />
+            </div>
+            <div className="pc-chat">
+              <div className="pc-chat-body" ref={chatBodyRef}>
+                {messages.map((m, i) => {
+                  const roleClass = m.author === 'Sistema' ? 'system' : (m.author === 'Você' ? 'you' : 'assistant');
+                  return (
+                    <div key={i} className={`pc-chat-message ${roleClass}`}>
+                      <div className="pc-chat-author">{m.author}</div>
+                      <div className="pc-chat-bubble">{m.text}</div>
+                    </div>
+                  );
+                })}
               </div>
-
-              <div className="pc-field">
-                <label className="pc-label">Antecedentes pessoais</label>
-                <TagAutocomplete
-                  placeholder="Digite para procurar"
-                  suggestions={sugestoes}
-                  selected={antecedentesPessoais}
-                  onChangeSelected={setAntecedentesPessoais}
+              <div className="pc-chat-input">
+                <input
+                  className="c-input"
+                  placeholder="Digite aqui e pressione Enter para enviar"
+                  value={draft}
+                  autoComplete="off"
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
                 />
+                {/* action moved to header as 'Concluir' */}
               </div>
-
-              <div className="pc-field">
-                <label className="pc-label">Antecedentes familiares</label>
-                <TagAutocomplete
-                  placeholder="Digite para procurar"
-                  suggestions={sugestoes}
-                  selected={antecedentesFamiliares}
-                  onChangeSelected={setAntecedentesFamiliares}
-                />
-              </div>
-
-              <div className="pc-field">
-                <label className="pc-label">Estilo de vida</label>
-                <textarea className="pc-textarea" placeholder="Descreva seus hábitos: alimentação, atividade física, tabagismo, consumo de alcool" value={estiloVida} onChange={(e) => setEstiloVida(e.target.value)} />
-              </div>
-
-              <div className="pc-field">
-                <label className="pc-label">Vacinação</label>
-                <TagAutocomplete
-                  placeholder="Digite para procurar"
-                  suggestions={vacinasSugestoes}
-                  selected={vacinacao}
-                  onChangeSelected={setVacinacao}
-                />
-              </div>
-
-              <div className="pc-actions">
-                <Button type="button" variant="ghost" onClick={() => router.push('/consultas')}>Cancelar</Button>
-                <Button type="submit" variant="primary">Enviar</Button>
-              </div>
-            </form>
+            </div>
           </div>
         </div>
       </main>
