@@ -2,6 +2,7 @@
 
 import '../../inicio/inicio.css';
 import '@/components/layout/Header/header.css';
+import Header from '@/components/layout/Header/Header';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import Button from '@/components/common/Buttons/Button';
 import { useRouter } from 'next/navigation';
@@ -60,7 +61,9 @@ export default function PacientesPage() {
 
   return (
     <div className="inicio-page">
-      <div className="inicio-mobile-header" />
+      <div className="inicio-mobile-header">
+        <Header />
+      </div>
       <Sidebar activeId="consultas" />
       <main className="inicio-main">
         <div className="center-card">
@@ -71,16 +74,16 @@ export default function PacientesPage() {
             {pacientes
               .filter((p) => p.status === 'scheduled')
               .map((p) => (
-              <div key={p.consultaId} className="pac-item">
-                <div className="pac-info">
-                  <div className="pac-name">Paciente ID: {p.pacienteId}</div>
-                  <div className={`pac-status s-${p.status}`}>Status: {p.status}</div>
+                <div key={p.consultaId} className="pac-item">
+                  <div className="pac-info">
+                    <div className="pac-name">Paciente ID: {p.pacienteId}</div>
+                    <div className={`pac-status s-${p.status}`}>Status: {p.status}</div>
+                  </div>
+                  <div className="pac-actions">
+                    <Button variant="primary" onClick={() => router.push(`/consultas/atendimento?id=${encodeURIComponent(p.consultaId)}`)}>Atender</Button>
+                  </div>
                 </div>
-                <div className="pac-actions">
-                  <Button variant="primary" onClick={() => router.push(`/consultas/atendimento?id=${encodeURIComponent(p.consultaId)}`)}>Atender</Button>
-                </div>
-              </div>
-            ))}
+              ))}
             {!loading && pacientes.length === 0 && !error && (
               <div className="pac-empty">Nenhum paciente aguardando no momento.</div>
             )}
