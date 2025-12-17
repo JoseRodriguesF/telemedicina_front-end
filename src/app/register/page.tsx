@@ -96,14 +96,12 @@ export default function RegisterPage() {
         ) : (
           <DadosPessoaisPacienteCard onBack={handleBackFromStep2} onComplete={handleCompleteStep2} />
         ))}
-        {step === 3 && (tipoParam === 'medico' ? (
+        {step === 3 && tipoParam === 'medico' && (
           <DadosDocumentosMedicoCard
             onBack={handleBackFromStep3}
             userId={credentials?.userId}
             pessoaisData={pessoaisData}
             onComplete={(data) => {
-              // finalization result from createMedico
-              // if success, redirect to analysis page for doctors
               try {
                 if (data && (data.medicoId || data.message)) {
                   router.push('/analise');
@@ -115,7 +113,7 @@ export default function RegisterPage() {
               router.push('/analise');
             }}
           />
-        ) )}
+        )}
 
         <TermsModal
           open={showTerms}
