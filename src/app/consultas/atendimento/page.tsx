@@ -3,11 +3,12 @@
 import './atendimento.css';
 import '@/components/layout/Header/header.css';
 import Button from '@/components/common/Buttons/Button';
+import ConfirmationModal from '@/components/common/Modals/ConfirmationModal/ConfirmationModal';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
-import { psCreateRoom, psClaim, listParticipants } from '@/lib/axios/consultas';
+import { psCreateRoom, psClaim, listParticipants, endConsulta } from '@/lib/axios/consultas';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 
 type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
@@ -37,6 +38,7 @@ function AtendimentoInner() {
   const claimingRef = useRef(false);
   const startedRef = useRef(false);
   const [showChat, setShowChat] = useState(true);
+  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
 
   // Fluxo UI: ao entrar, o paciente "cria" a sala e já compartilha mídia.
   // Médico entra e compartilha sua mídia ao chegar.
@@ -47,6 +49,17 @@ function AtendimentoInner() {
     if (startedRef.current) return;
     startedRef.current = true;
     (role === 'paciente' ? startPacienteFlow() : startMedicoFlow()).catch(() => { });
+
+    // Warn on close/reload
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = ''; // Required for Chrome
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -243,7 +256,27 @@ function AtendimentoInner() {
     }
   }
 
-  function finishCall() {
+  function requestFinishCall() {
+    setShowLeaveConfirmation(true);
+  }
+
+  async function confirmFinishCall() {
+    // 1. Check if I am the last one
+    const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
+    if (cid && token) {
+      try {
+        const res = await listParticipants(cid, token);
+        // If 1 or fewer participants (myself or empty), close it.
+        // Usually it includes myself before I leave.
+        if (res.participants && res.participants.length <= 1) {
+          await endConsulta(cid, token);
+        }
+      } catch (err) {
+        console.error('Erro ao verificar/finalizar consulta:', err);
+      }
+    }
+
+    setShowLeaveConfirmation(false);
     try { sessionRef.current?.end(); } catch { }
     try { sessionStorage.removeItem('ps_room'); } catch { }
     router.push('/consultas');
@@ -280,7 +313,7 @@ function AtendimentoInner() {
             >
               💬
             </button>
-            <button className="control-btn end" aria-label="Encerrar chamada" onClick={finishCall}>📞</button>
+            <button className="control-btn end" aria-label="Encerrar chamada" onClick={requestFinishCall}>📞</button>
           </div>
           {connecting && <div className="call-status" aria-live="polite">Conectando...</div>}
           {statusText && !connecting && <div className="call-status" aria-live="polite">{statusText}</div>}
@@ -317,6 +350,16 @@ function AtendimentoInner() {
           </aside>
         )}
       </main>
+
+      <ConfirmationModal
+        open={showLeaveConfirmation}
+        title="Encerrar atendimento"
+        message="Tem certeza que deseja deixar o atendimento?"
+        onConfirm={confirmFinishCall}
+        onCancel={() => setShowLeaveConfirmation(false)}
+        variant="danger"
+        confirmLabel="Sair"
+      />
     </div>
   );
 }
