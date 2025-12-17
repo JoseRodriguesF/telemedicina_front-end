@@ -298,14 +298,6 @@
         max-height: 150px;
         /* Approx 2 messages */
     }
-
-    .call-screen {
-        width: 100%;
-        margin: 0;
-        border-radius: 0;
-        flex: 1;
-        aspect-ratio: unset;
-    }
 }
 
 /* Ensure controls overlay on bottom */
