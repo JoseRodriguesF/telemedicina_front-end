@@ -28,4 +28,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: err?.message || 'Proxy error' }, { status: 502 });
   }
 }
-}
