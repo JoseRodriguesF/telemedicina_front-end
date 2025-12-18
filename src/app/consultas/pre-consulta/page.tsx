@@ -34,9 +34,38 @@ function PreConsultaInner() {
   const router = useRouter();
   // Chat temporário para pré-consulta — substitui o formulário
   type ChatMessage = { author: 'Você' | 'Assistente' | 'Sistema'; text: string };
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { author: 'Sistema', text: 'Aqui você pode conversar antes da consulta. Mais recursos virão em breve.' }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+    // Mensagem inicial do bot (Angélica)
+    useEffect(() => {
+      if (messages.length === 0) {
+        (async () => {
+          const token = getToken();
+          if (!token) return;
+          setIsLoading(true);
+          try {
+            const res = await fetch('/api/chat-ia', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ message: 'oi' })
+            });
+            if (!res.ok) {
+              const txt = await res.text();
+              throw new Error(txt || 'Erro ao contactar a IA');
+            }
+            const data = await res.json();
+            const answer = String(data?.answer ?? 'Olá!');
+            setMessages([{ author: 'Angélica', text: answer }]);
+          } catch (err: any) {
+            setMessages([{ author: 'Angélica', text: 'Olá! (mensagem padrão)' }]);
+          } finally {
+            setIsLoading(false);
+          }
+        })();
+      }
+    }, []);
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
@@ -125,12 +154,14 @@ function PreConsultaInner() {
             <div className="pc-chat">
               <div className="pc-chat-body" ref={chatBodyRef}>
                 {messages.map((m, i) => {
-                  const roleClass = m.author === 'Sistema' ? 'system' : (m.author === 'Você' ? 'you' : 'assistant');
+                  let roleClass = 'assistant';
+                  if (m.author === 'Você') roleClass = 'you';
+                  if (m.author === 'Angélica') roleClass = 'assistant';
                   return (
                     <div key={i} className={`pc-chat-message ${roleClass}`}>
                       <div className="pc-chat-author">{m.author}</div>
                       <div className="pc-chat-bubble">
-                        {m.author === 'Assistente' ? (
+                        {m.author === 'Assistente' || m.author === 'Angélica' ? (
                           <span dangerouslySetInnerHTML={{ __html: formatIaText(m.text) }} />
                         ) : (
                           m.text
