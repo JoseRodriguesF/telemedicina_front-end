@@ -45,6 +45,7 @@ function PreConsultaInner() {
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [iaTyping, setIaTyping] = useState(false);
+  const [completed, setCompleted] = useState(false);
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
 
   // ✅ Função auxiliar para converter messages para history
@@ -103,53 +104,50 @@ function PreConsultaInner() {
   async function sendMessage() {
     const t = draft.trim();
     if (!t || isLoading || iaTyping) return;
-    
-    // ✅ Adicionar mensagem do usuário ao estado visual
+
     setMessages(prev => [...prev, { author: 'Você', text: t }]);
     setDraft('');
-    
+
     const token = getToken();
     if (!token) {
       setMessages(prev => [...prev, { author: 'Sistema', text: 'Não autenticado. Faça login para usar a IA.' }]);
       return;
     }
-    
+
     setIsLoading(true);
     setIaTyping(true);
-    
+
     try {
-      // ✅ Converter messages para history antes de enviar
       const currentHistory = messagesToHistory(messages);
-      
       const res = await fetch('/api/chat-ia', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           message: t,
-          history: currentHistory // ✅ Enviar histórico completo
+          history: currentHistory
         })
       });
-      
+
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(txt || 'Erro ao contactar a IA');
       }
-      
+
       const data = await res.json();
       const answer = String(data?.answer ?? 'Sem resposta da IA.');
-      
-      // ✅ Adicionar resposta da IA ao estado visual
       setMessages(prev => [...prev, { author: 'Assistente', text: answer }]);
-      
-      // ✅ Atualizar histórico com nova mensagem e resposta
       setHistory(prev => [
         ...prev,
         { role: 'user', content: t },
         { role: 'assistant', content: answer }
       ]);
+
+      if (data?.completed === true) {
+        setCompleted(true);
+      }
     } catch (err: any) {
       const msg = String(err?.message ?? 'Erro desconhecido ao chamar a IA');
       setMessages(prev => [...prev, { author: 'Sistema', text: `Erro: ${msg}` }]);
@@ -186,12 +184,21 @@ function PreConsultaInner() {
     }
   }
 
+  // Scroll automático do chat
   useEffect(() => {
     const el = chatBodyRef.current;
     if (el) {
       el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
     }
   }, [messages]);
+
+  // Navegação automática ao completed
+  useEffect(() => {
+    if (completed) {
+      handleEnviar();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completed]);
 
   // ✅ Limpar histórico ao sair da tela (desmontar componente)
   useEffect(() => {
@@ -210,7 +217,9 @@ function PreConsultaInner() {
             <div className="pc-card-header">
               <h2 className="pc-title">Pré-consulta — Chat</h2>
               <div className="pc-action">
-                <Button variant="primary" onClick={handleEnviar}>Concluir</Button>
+                {!completed && (
+                  <Button variant="primary" onClick={handleEnviar}>Concluir</Button>
+                )}
               </div>
             </div>
             <div className="pc-chat">
