@@ -38,7 +38,7 @@ type ChatHistory = Array<{ role: 'user' | 'assistant'; content: string }>;
 function PreConsultaInner() {
   const router = useRouter();
   // Chat temporário para pré-consulta — substitui o formulário
-  type ChatMessage = { author: 'Você' | 'Assistente' | 'Sistema' | 'Angélica'; text: string };
+  type ChatMessage = { author: 'Você' | 'Sistema' | 'Angélica'; text: string };
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   // ✅ NOVO: Histórico no formato que o backend espera
   const [history, setHistory] = useState<ChatHistory>([]);
@@ -51,7 +51,7 @@ function PreConsultaInner() {
   // ✅ Função auxiliar para converter messages para history
   const messagesToHistory = (msgs: ChatMessage[]): ChatHistory => {
     return msgs
-      .filter(m => m.author === 'Você' || m.author === 'Angélica' || m.author === 'Assistente')
+      .filter(m => m.author === 'Você' || m.author === 'Angélica')
       .map(m => ({
         role: m.author === 'Você' ? 'user' : 'assistant',
         content: m.text
@@ -138,7 +138,7 @@ function PreConsultaInner() {
 
       const data = await res.json();
       const answer = String(data?.answer ?? 'Sem resposta da IA.');
-      setMessages(prev => [...prev, { author: 'Assistente', text: answer }]);
+      setMessages(prev => [...prev, { author: 'Angélica', text: answer }]);
       setHistory(prev => [
         ...prev,
         { role: 'user', content: t },
@@ -217,9 +217,7 @@ function PreConsultaInner() {
             <div className="pc-card-header">
               <h2 className="pc-title">Pré-consulta — Chat</h2>
               <div className="pc-action">
-                {!completed && (
-                  <Button variant="primary" onClick={handleEnviar}>Concluir</Button>
-                )}
+                {/* Botão 'Concluir' removido, navegação é automática */}
               </div>
             </div>
             <div className="pc-chat">
