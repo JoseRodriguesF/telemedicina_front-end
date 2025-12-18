@@ -33,7 +33,7 @@ import { psCreateRoom } from '@/lib/axios/consultas';
 function PreConsultaInner() {
   const router = useRouter();
   // Chat temporário para pré-consulta — substitui o formulário
-  type ChatMessage = { author: 'Você' | 'Assistente' | 'Sistema'; text: string };
+  type ChatMessage = { author: 'Você' | 'Assistente' | 'Sistema' | 'Angélica'; text: string };
   const [messages, setMessages] = useState<ChatMessage[]>([]);
     // Mensagem inicial do bot (Angélica)
     useEffect(() => {
