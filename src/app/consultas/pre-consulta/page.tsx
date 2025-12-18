@@ -53,7 +53,7 @@ function PreConsultaInner() {
     }
     setIsLoading(true);
     try {
-      const res = await fetch('/chat-ia', {
+      const res = await fetch('/api/chat-ia', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
