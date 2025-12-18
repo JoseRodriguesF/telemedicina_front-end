@@ -8,6 +8,7 @@ import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import Button from '@/components/common/Buttons/Button';
 import { useRouter } from 'next/navigation';
 import { Suspense, useState, useRef, useEffect } from 'react';
+
 // Função simples para converter markdown básico em HTML seguro
 function formatIaText(text: string): string {
   if (!text) return '';
@@ -27,18 +28,34 @@ function formatIaText(text: string): string {
   }
   return html;
 }
+
 import { getToken, getUser } from '@/lib/auth';
 import { psCreateRoom } from '@/lib/axios/consultas';
+
+// Tipo para o histórico que será enviado ao backend
+type ChatHistory = Array<{ role: 'user' | 'assistant'; content: string }>;
 
 function PreConsultaInner() {
   const router = useRouter();
   // Chat temporário para pré-consulta — substitui o formulário
   type ChatMessage = { author: 'Você' | 'Assistente' | 'Sistema' | 'Angélica'; text: string };
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // ✅ NOVO: Histórico no formato que o backend espera
+  const [history, setHistory] = useState<ChatHistory>([]);
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [iaTyping, setIaTyping] = useState(false);
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
+
+  // ✅ Função auxiliar para converter messages para history
+  const messagesToHistory = (msgs: ChatMessage[]): ChatHistory => {
+    return msgs
+      .filter(m => m.author === 'Você' || m.author === 'Angélica' || m.author === 'Assistente')
+      .map(m => ({
+        role: m.author === 'Você' ? 'user' : 'assistant',
+        content: m.text
+      }));
+  };
 
   // Mensagem inicial do bot (Angélica)
   useEffect(() => {
@@ -49,13 +66,17 @@ function PreConsultaInner() {
         setIsLoading(true);
         setIaTyping(true);
         try {
+          // ✅ Enviar com history vazio (primeira mensagem)
           const res = await fetch('/api/chat-ia', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ message: 'oi' })
+            body: JSON.stringify({ 
+              message: 'oi',
+              history: [] // ✅ Histórico vazio na primeira mensagem
+            })
           });
           if (!res.ok) {
             const txt = await res.text();
@@ -64,6 +85,11 @@ function PreConsultaInner() {
           const data = await res.json();
           const answer = String(data?.answer ?? 'Olá!');
           setMessages([{ author: 'Angélica', text: answer }]);
+          // ✅ Atualizar histórico após primeira resposta
+          setHistory([
+            { role: 'user', content: 'oi' },
+            { role: 'assistant', content: answer }
+          ]);
         } catch (err: any) {
           setMessages([{ author: 'Angélica', text: 'Olá! (mensagem padrão)' }]);
         } finally {
@@ -77,31 +103,53 @@ function PreConsultaInner() {
   async function sendMessage() {
     const t = draft.trim();
     if (!t || isLoading || iaTyping) return;
+    
+    // ✅ Adicionar mensagem do usuário ao estado visual
     setMessages(prev => [...prev, { author: 'Você', text: t }]);
     setDraft('');
+    
     const token = getToken();
     if (!token) {
       setMessages(prev => [...prev, { author: 'Sistema', text: 'Não autenticado. Faça login para usar a IA.' }]);
       return;
     }
+    
     setIsLoading(true);
     setIaTyping(true);
+    
     try {
+      // ✅ Converter messages para history antes de enviar
+      const currentHistory = messagesToHistory(messages);
+      
       const res = await fetch('/api/chat-ia', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ message: t })
+        body: JSON.stringify({ 
+          message: t,
+          history: currentHistory // ✅ Enviar histórico completo
+        })
       });
+      
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(txt || 'Erro ao contactar a IA');
       }
+      
       const data = await res.json();
       const answer = String(data?.answer ?? 'Sem resposta da IA.');
+      
+      // ✅ Adicionar resposta da IA ao estado visual
       setMessages(prev => [...prev, { author: 'Assistente', text: answer }]);
+      
+      // ✅ Atualizar histórico com nova mensagem e resposta
+      setHistory(prev => [
+        ...prev,
+        { role: 'user', content: t },
+        { role: 'assistant', content: answer }
+      ]);
     } catch (err: any) {
       const msg = String(err?.message ?? 'Erro desconhecido ao chamar a IA');
       setMessages(prev => [...prev, { author: 'Sistema', text: `Erro: ${msg}` }]);
@@ -144,6 +192,14 @@ function PreConsultaInner() {
       el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
     }
   }, [messages]);
+
+  // ✅ Limpar histórico ao sair da tela (desmontar componente)
+  useEffect(() => {
+    return () => {
+      setHistory([]);
+      setMessages([]);
+    };
+  }, []);
 
   return (
     <div className="inicio-page">
