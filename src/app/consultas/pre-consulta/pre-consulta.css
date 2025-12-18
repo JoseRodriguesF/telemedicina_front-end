@@ -7,8 +7,8 @@
 
 /* Ensure page doesn't scroll: make main area fit viewport and hide overflow */
 .inicio-page .inicio-main {
-  height: calc(100vh - 64px);
-  overflow: hidden;
+  min-height: calc(100vh - 64px);
+  overflow: auto;
 }
 
 .center-card {
@@ -28,7 +28,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 420px;
+  max-width: 600px;
   margin: 24px auto;
   box-sizing: border-box;
   background: #fff;
@@ -36,14 +36,16 @@
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
   min-height: 420px;
   height: auto;
+  position: relative;
+  z-index: 1;
 }
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .center-card {
     margin-left: 0;
     padding: 0.5rem;
   }
   .pc-card {
-    max-width: 98vw;
+    max-width: 99vw;
     padding: 10px;
     margin: 8px auto;
     min-height: unset;
