@@ -8,6 +8,20 @@ import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import Button from '@/components/common/Buttons/Button';
 import { useRouter } from 'next/navigation';
 import { Suspense, useState, useRef, useEffect } from 'react';
+// Função simples para converter markdown básico em HTML seguro
+function formatIaText(text: string): string {
+  if (!text) return '';
+  let html = text
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // **negrito**
+    .replace(/\n\n/g, '<br/><br/>') // parágrafos
+    .replace(/\n/g, '<br/>') // quebras de linha
+    .replace(/^- (.*)$/gm, '<li>$1</li>'); // tópicos
+  // Se houver <li>, envolver em <ul>
+  if (/<li>/.test(html)) {
+    html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+  }
+  return html;
+}
 import { getToken, getUser } from '@/lib/auth';
 import { psCreateRoom } from '@/lib/axios/consultas';
 
@@ -19,14 +33,42 @@ function PreConsultaInner() {
     { author: 'Sistema', text: 'Aqui você pode conversar antes da consulta. Mais recursos virão em breve.' }
   ]);
   const [draft, setDraft] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
 
-  function sendMessage() {
+  async function sendMessage() {
     const t = draft.trim();
     if (!t) return;
     setMessages(prev => [...prev, { author: 'Você', text: t }]);
     setDraft('');
-    // Placeholder: futura integração com chatbot/back-end
+    const token = getToken();
+    if (!token) {
+      setMessages(prev => [...prev, { author: 'Sistema', text: 'Não autenticado. Faça login para usar a IA.' }]);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const res = await fetch('/chat-ia', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ message: t })
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || 'Erro ao contactar a IA');
+      }
+      const data = await res.json();
+      const answer = String(data?.answer ?? 'Sem resposta da IA.');
+      setMessages(prev => [...prev, { author: 'Assistente', text: answer }]);
+    } catch (err: any) {
+      const msg = String(err?.message ?? 'Erro desconhecido ao chamar a IA');
+      setMessages(prev => [...prev, { author: 'Sistema', text: `Erro: ${msg}` }]);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   async function handleEnviar() {
@@ -82,7 +124,13 @@ function PreConsultaInner() {
                   return (
                     <div key={i} className={`pc-chat-message ${roleClass}`}>
                       <div className="pc-chat-author">{m.author}</div>
-                      <div className="pc-chat-bubble">{m.text}</div>
+                      <div className="pc-chat-bubble">
+                        {m.author === 'Assistente' ? (
+                          <span dangerouslySetInnerHTML={{ __html: formatIaText(m.text) }} />
+                        ) : (
+                          m.text
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -94,8 +142,9 @@ function PreConsultaInner() {
                   value={draft}
                   autoComplete="off"
                   onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } }}
                 />
+                {isLoading && <div className="pc-chat-loading">Enviando...</div>}
                 {/* action moved to header as 'Concluir' */}
               </div>
             </div>
