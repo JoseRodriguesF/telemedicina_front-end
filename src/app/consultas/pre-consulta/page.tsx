@@ -35,44 +35,48 @@ function PreConsultaInner() {
   // Chat temporário para pré-consulta — substitui o formulário
   type ChatMessage = { author: 'Você' | 'Assistente' | 'Sistema' | 'Angélica'; text: string };
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-    // Mensagem inicial do bot (Angélica)
-    useEffect(() => {
-      if (messages.length === 0) {
-        (async () => {
-          const token = getToken();
-          if (!token) return;
-          setIsLoading(true);
-          try {
-            const res = await fetch('/api/chat-ia', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({ message: 'oi' })
-            });
-            if (!res.ok) {
-              const txt = await res.text();
-              throw new Error(txt || 'Erro ao contactar a IA');
-            }
-            const data = await res.json();
-            const answer = String(data?.answer ?? 'Olá!');
-            setMessages([{ author: 'Angélica', text: answer }]);
-          } catch (err: any) {
-            setMessages([{ author: 'Angélica', text: 'Olá! (mensagem padrão)' }]);
-          } finally {
-            setIsLoading(false);
-          }
-        })();
-      }
-    }, []);
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [iaTyping, setIaTyping] = useState(false);
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
+
+  // Mensagem inicial do bot (Angélica)
+  useEffect(() => {
+    if (messages.length === 0) {
+      (async () => {
+        const token = getToken();
+        if (!token) return;
+        setIsLoading(true);
+        setIaTyping(true);
+        try {
+          const res = await fetch('/api/chat-ia', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ message: 'oi' })
+          });
+          if (!res.ok) {
+            const txt = await res.text();
+            throw new Error(txt || 'Erro ao contactar a IA');
+          }
+          const data = await res.json();
+          const answer = String(data?.answer ?? 'Olá!');
+          setMessages([{ author: 'Angélica', text: answer }]);
+        } catch (err: any) {
+          setMessages([{ author: 'Angélica', text: 'Olá! (mensagem padrão)' }]);
+        } finally {
+          setIsLoading(false);
+          setIaTyping(false);
+        }
+      })();
+    }
+  }, []);
 
   async function sendMessage() {
     const t = draft.trim();
-    if (!t) return;
+    if (!t || isLoading || iaTyping) return;
     setMessages(prev => [...prev, { author: 'Você', text: t }]);
     setDraft('');
     const token = getToken();
@@ -81,6 +85,7 @@ function PreConsultaInner() {
       return;
     }
     setIsLoading(true);
+    setIaTyping(true);
     try {
       const res = await fetch('/api/chat-ia', {
         method: 'POST',
@@ -102,6 +107,7 @@ function PreConsultaInner() {
       setMessages(prev => [...prev, { author: 'Sistema', text: `Erro: ${msg}` }]);
     } finally {
       setIsLoading(false);
+      setIaTyping(false);
     }
   }
 
@@ -170,18 +176,36 @@ function PreConsultaInner() {
                     </div>
                   );
                 })}
+                {iaTyping && (
+                  <div className="pc-chat-message assistant">
+                    <div className="pc-chat-author">Angélica</div>
+                    <div className="pc-chat-bubble"><span>...</span></div>
+                  </div>
+                )}
               </div>
-              <div className="pc-chat-input">
+              <div className="pc-chat-input" style={{ display: 'flex', width: '100%' }}>
                 <input
                   className="c-input"
                   placeholder="Digite aqui e pressione Enter para enviar"
                   value={draft}
                   autoComplete="off"
                   onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !isLoading && !iaTyping) {
+                      e.preventDefault();
+                      sendMessage();
+                    }
+                  }}
+                  disabled={isLoading || iaTyping}
+                  style={{ flex: 1 }}
                 />
-                {isLoading && <div className="pc-chat-loading">Enviando...</div>}
-                {/* action moved to header as 'Concluir' */}
+                <button
+                  type="button"
+                  className="pc-send-btn"
+                  onClick={sendMessage}
+                  disabled={isLoading || iaTyping || !draft.trim()}
+                  style={{ marginLeft: 8, padding: '0 16px', borderRadius: 8, background: '#2563EB', color: '#fff', border: 'none', fontWeight: 700, cursor: (isLoading || iaTyping || !draft.trim()) ? 'not-allowed' : 'pointer' }}
+                >Enviar</button>
               </div>
             </div>
           </div>

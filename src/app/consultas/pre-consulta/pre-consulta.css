@@ -8,7 +8,7 @@
 /* Ensure page doesn't scroll: make main area fit viewport and hide overflow */
 .inicio-page .inicio-main {
   min-height: calc(100vh - 64px);
-  overflow: auto;
+  overflow: visible;
 }
 
 .center-card {
@@ -47,6 +47,7 @@
   .pc-card {
     max-width: 99vw;
     padding: 10px;
+    max-height: 350px;
     margin: 8px auto;
     min-height: unset;
   }
@@ -66,6 +67,7 @@
 /* Header layout: title left, action near right */
 .pc-card-header {
   display: flex;
+      max-height: 180px;
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
