@@ -230,7 +230,7 @@ function PreConsultaInner() {
                     <div key={i} className={`pc-chat-message ${roleClass}`}>
                       <div className="pc-chat-author">{m.author}</div>
                       <div className="pc-chat-bubble">
-                        {m.author === 'Assistente' || m.author === 'Angélica' ? (
+                        {m.author === 'Angélica' ? (
                           <span dangerouslySetInnerHTML={{ __html: formatIaText(m.text) }} />
                         ) : (
                           m.text
