@@ -5,10 +5,15 @@
 
 
 
-/* Ensure page doesn't scroll: make main area fit viewport and hide overflow */
+
+/* Bloqueia rolagem da tela inteira */
+body {
+  overflow: hidden !important;
+}
+
 .inicio-page .inicio-main {
   min-height: calc(100vh - 64px);
-  overflow: visible;
+  overflow: hidden;
 }
 
 .center-card {
@@ -92,6 +97,8 @@
 .pc-chat-body {
   flex: 1 1 auto;
   overflow-y: auto;
+  max-height: 50vh;
+  min-height: 120px;
   background: #ffffff;
   border: 1px solid #e6edf3;
   border-radius: 10px;
