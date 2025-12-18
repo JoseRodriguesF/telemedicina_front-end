@@ -16,9 +16,14 @@ function formatIaText(text: string): string {
     .replace(/\n\n/g, '<br/><br/>') // parágrafos
     .replace(/\n/g, '<br/>') // quebras de linha
     .replace(/^- (.*)$/gm, '<li>$1</li>'); // tópicos
-  // Se houver <li>, envolver em <ul>
+  // Se houver <li>, envolver todos em <ul> (sem regex dotAll)
   if (/<li>/.test(html)) {
-    html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+    // Junta todos <li> em um <ul>
+    const lis = html.match(/<li>.*?<\/li>/g);
+    if (lis) {
+      html = html.replace(/(<li>.*?<\/li>)/g, '');
+      html += '<ul>' + lis.join('') + '</ul>';
+    }
   }
   return html;
 }
