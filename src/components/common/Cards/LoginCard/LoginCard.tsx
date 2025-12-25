@@ -10,7 +10,7 @@ import doSocialLogin from '@/lib/axios/social';
 import { doGoogleAuth } from '@/lib/axios/google';
 import signInWithGoogle from '@/lib/google';
 import { saveUser } from '@/lib/auth';
-import { parseApiError } from '@/lib/apiError';
+import { handleApiError } from '@/lib/errorHandler';
 
 type Props = {
   onLogin?: (data?: any) => void;
@@ -51,26 +51,18 @@ export default function LoginCard({ onLogin }: Props) {
         saveUser(user);
         onLogin?.({ email, password, user, raw: resp });
       } catch (err: any) {
-        const parsed = parseApiError(err);
         // reset field errors
         setEmailError('');
         setPasswordError('');
-        if (parsed.code === 'USER_NOT_FOUND') {
-          setError('Email não cadastrado. Deseja criar uma conta?');
-        } else if (parsed.code === 'WRONG_PASSWORD') {
-          setPasswordError(parsed.message || 'Senha incorreta.');
-        } else if (parsed.code === 'INVALID_INPUT' && Array.isArray(parsed.details)) {
-          parsed.details.forEach((d: any) => {
-            const p = Array.isArray(d.path) ? String(d.path[0]) : undefined;
-            const msg = d.message || parsed.message;
-            if (p === 'email') setEmailError(msg);
-            if (p === 'senha' || p === 'password') setPasswordError(msg);
-          });
-        } else if (parsed.code === 'INTERNAL_ERROR') {
-          setError('Erro interno. Tente novamente mais tarde.');
-        } else {
-          setError(parsed.message || 'Erro ao efetuar login');
-        }
+        setError('');
+
+        handleApiError(err, {
+          setGlobalError: setError,
+          setFieldError: (field, msg) => {
+            if (field === 'email') setEmailError(msg);
+            if (field === 'senha' || field === 'password') setPasswordError(msg);
+          }
+        });
       } finally {
         setLoading(false);
       }
@@ -88,8 +80,7 @@ export default function LoginCard({ onLogin }: Props) {
       saveUser(user);
       onLogin?.({ email: user?.email, password: '', user, raw: resp });
     } catch (err: any) {
-      const parsed = parseApiError(err);
-      setError(parsed.message || (err && err.message) || 'Erro ao efetuar login com Google');
+      handleApiError(err, { setGlobalError: setError });
     } finally {
       setLoading(false);
     }

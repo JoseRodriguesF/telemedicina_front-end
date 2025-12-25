@@ -4,6 +4,7 @@ import './DadosDocumentosMedicoCard.css';
 import Button from '@/components/common/Buttons/Button';
 import Image from 'next/image';
 import { useState } from 'react';
+import { handleApiError } from '@/lib/errorHandler';
 
 type Props = {
   onBack?: () => void;
@@ -99,7 +100,7 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
 
       onComplete?.(resp);
     } catch (err: any) {
-      setError(err?.message || 'Erro ao enviar documentos');
+      handleApiError(err, { setGlobalError: setError });
     } finally {
       setLoading(false);
     }

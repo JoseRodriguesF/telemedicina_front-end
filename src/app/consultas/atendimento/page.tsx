@@ -47,6 +47,8 @@ function AtendimentoInner() {
   const [camEnabled, setCamEnabled] = useState(true);
   const [micEnabled, setMicEnabled] = useState(true);
   const [remoteConnected, setRemoteConnected] = useState(false);
+  const [remoteHasVideo, setRemoteHasVideo] = useState(false);
+  const [remoteHasAudio, setRemoteHasAudio] = useState(false);
   // Médico entra e compartilha sua mídia ao chegar.
   // Ao entrar, paciente cria sala + mídia; médico apenas abre mídia e faz claim.
   // Auto-start sem botão: inicia o fluxo uma única vez ao montar a página.
@@ -134,19 +136,71 @@ function AtendimentoInner() {
     setDraft('');
   }
 
+  async function getRobustLocalMedia() {
+    let stream: MediaStream | null = null;
+    let errorMsg = '';
+
+    // 1. Try Video + Audio
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    } catch (e) {
+      // 2. Try Audio only (No Camera or Permission Denied for Camera)
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Warn user
+        errorMsg = 'Câmera não detectada ou permissão negada. Apenas áudio será enviado.';
+      } catch (e2) {
+        // 3. Try Video only (No Mic)
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          errorMsg = 'Microfone não detectado ou permissão negada. Apenas vídeo será enviado.';
+        } catch (e3) {
+          // 4. Give up (Receive Only)
+          stream = null;
+          errorMsg = 'Sem câmera e microfone detectados. Modo apenas espectador.';
+        }
+      }
+    }
+
+    // Sync UI toggles with actual tracks
+    if (stream) {
+      setCamEnabled(stream.getVideoTracks().length > 0);
+      setMicEnabled(stream.getAudioTracks().length > 0);
+    } else {
+      setCamEnabled(false);
+      setMicEnabled(false);
+    }
+
+    if (errorMsg) {
+      // Ideally show a toast, for now updating status text briefly or logging
+      console.warn(errorMsg);
+      // We can append to status text if needed, but the main status text is connection state.
+      // Maybe set a specific error state or toast?
+      // let's use statusText for a moment if connecting.
+    }
+
+    return stream;
+  }
+
   async function startLocalMedia() {
     try {
       setConnecting(true);
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      localStreamRef.current = stream; // Save ref
-      if (localRef.current) {
+      const stream = await getRobustLocalMedia();
+      localStreamRef.current = stream;
+
+      if (stream && localRef.current) {
         localRef.current.srcObject = stream;
         localRef.current.muted = true;
         await localRef.current.play().catch(() => { });
       }
-      setStatusText(role === 'paciente' ? 'Sala criada. Aguardando médico...' : 'Conectado. Aguardando paciente...');
+
+      const msg = role === 'paciente' ? 'Sala criada. Aguardando médico...' : 'Conectado. Aguardando paciente...';
+      const detail = !stream ? ' (Modo Espectador)' : (!stream.getVideoTracks().length ? ' (Sem Câmera)' : '');
+      setStatusText(msg + detail);
+      return stream;
     } catch (e) {
-      setStatusText('Permissões de câmera/microfone negadas ou indisponíveis.');
+      setStatusText('Erro ao acessar dispositivos de mídia.');
+      return null;
     } finally {
       setConnecting(false);
     }
@@ -182,15 +236,11 @@ function AtendimentoInner() {
     const session = createWebRTCSession({ roomId: data.roomId, token, role, wsBaseUrl, iceServers: data.iceServers });
     sessionRef.current = session;
     try {
-      const stream = await session.startLocalMedia();
-      localStreamRef.current = stream; // Save ref
-      if (localRef.current) {
-        localRef.current.srcObject = stream;
-        localRef.current.muted = true;
-        await localRef.current.play().catch(() => { });
-      }
+      // Reuse component helper to get media + update UI
+      const stream = await startLocalMedia();
+      session.setLocalStream(stream);
     } catch (e) {
-      setStatusText('Permissões de câmera/microfone negadas ou indisponíveis.');
+      // already handled in startLocalMedia
     }
     session.onConnectionStateChange((state) => {
       if (state === 'connected') setStatusText('Conectado.');
@@ -206,6 +256,16 @@ function AtendimentoInner() {
     session.onRemoteTrack((stream) => {
       if (remoteRef.current) remoteRef.current.srcObject = stream;
       setRemoteConnected(true);
+      setRemoteHasVideo(stream.getVideoTracks().length > 0);
+      setRemoteHasAudio(stream.getAudioTracks().length > 0);
+      stream.onaddtrack = () => {
+        setRemoteHasVideo(stream.getVideoTracks().length > 0);
+        setRemoteHasAudio(stream.getAudioTracks().length > 0);
+      };
+      stream.onremovetrack = () => {
+        setRemoteHasVideo(stream.getVideoTracks().length > 0);
+        setRemoteHasAudio(stream.getAudioTracks().length > 0);
+      };
       setStatusText('Conectado.');
     });
     session.onChatMessage((text) => {
@@ -233,15 +293,10 @@ function AtendimentoInner() {
       const session = createWebRTCSession({ roomId, token, role, wsBaseUrl, iceServers });
       sessionRef.current = session;
       try {
-        const stream = await session.startLocalMedia();
-        localStreamRef.current = stream; // Save ref
-        if (localRef.current) {
-          localRef.current.srcObject = stream;
-          localRef.current.muted = true;
-          await localRef.current.play().catch(() => { });
-        }
+        const stream = await startLocalMedia();
+        session.setLocalStream(stream);
       } catch (e) {
-        setStatusText('Permissões de câmera/microfone negadas ou indisponíveis.');
+        // handled
       }
       session.onConnectionStateChange((state) => {
         if (state === 'connected') setStatusText('Conectado.');
@@ -257,6 +312,17 @@ function AtendimentoInner() {
       session.onRemoteTrack((stream) => {
         if (remoteRef.current) remoteRef.current.srcObject = stream;
         setRemoteConnected(true);
+        setRemoteHasVideo(stream.getVideoTracks().length > 0);
+        setRemoteHasAudio(stream.getAudioTracks().length > 0);
+        // Add listeners for track changes (if tracks are added later)
+        stream.onaddtrack = () => {
+          setRemoteHasVideo(stream.getVideoTracks().length > 0);
+          setRemoteHasAudio(stream.getAudioTracks().length > 0);
+        };
+        stream.onremovetrack = () => {
+          setRemoteHasVideo(stream.getVideoTracks().length > 0);
+          setRemoteHasAudio(stream.getAudioTracks().length > 0);
+        };
         setStatusText('Conectado.');
       });
       session.onChatMessage((text) => {
@@ -343,21 +409,44 @@ function AtendimentoInner() {
           </div>
           <div className="call-screen">
             {/* O vídeo remoto sempre ocupa o retângulo grande (principal) */}
+            {/* O vídeo remoto sempre ocupa o retângulo grande (principal) */}
             <video
               ref={remoteRef}
               className="remote-video large"
               playsInline
               autoPlay
               aria-label={role === 'medico' ? 'Vídeo do paciente' : 'Vídeo do médico'}
+              style={{ opacity: remoteHasVideo ? 1 : 0 }}
             />
+
+            {remoteConnected && !remoteHasVideo && (
+              <div className="no-camera-placeholder large">
+                <div className="no-camera-icon">📷</div>
+                <div className="no-camera-text">
+                  {role === 'medico' ? 'Paciente sem câmera' : 'Médico sem câmera'}
+                </div>
+                {!remoteHasAudio && <div style={{ fontSize: '0.8rem', marginTop: 4 }}>Example: 🔇 Sem áudio</div>}
+              </div>
+            )}
+
             {/* O vídeo local aparece em miniatura (picture-in-picture) */}
-            <video
-              ref={localRef}
-              className="self-video pip"
-              playsInline
-              autoPlay
-              aria-label="Sua câmera"
-            />
+            <div className="self-video-container pip">
+              <video
+                ref={localRef}
+                className="self-video"
+                playsInline
+                autoPlay
+                muted
+                aria-label="Sua câmera"
+                style={{ opacity: camEnabled ? 1 : 0 }}
+              />
+              {!camEnabled && (
+                <div className="no-camera-placeholder pip-placeholder">
+                  <div style={{ fontSize: '1.5rem' }}>📷</div>
+                </div>
+              )}
+            </div>
+
             {/* Loading Spinner overlay if not connected */}
             {!remoteConnected && (
               <div className="call-loader-overlay">

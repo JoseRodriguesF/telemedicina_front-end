@@ -19,6 +19,7 @@ export type WebRTCSession = {
   ws: WebSocket;
   localStream: MediaStream | null;
   startLocalMedia: (constraints?: MediaStreamConstraints) => Promise<MediaStream>;
+  setLocalStream: (stream: MediaStream | null) => void;
   createAndSendOffer: () => Promise<void>;
   createAndSendAnswer: () => Promise<void>;
   end: () => void;
@@ -129,6 +130,13 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     return localStream;
   };
 
+  const setLocalStream = (stream: MediaStream | null) => {
+    localStream = stream;
+    if (stream) {
+      stream.getTracks().forEach((t) => pc.addTrack(t, stream));
+    }
+  };
+
   const createAndSendOffer = async () => {
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
@@ -208,6 +216,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     ws,
     localStream,
     startLocalMedia,
+    setLocalStream,
     createAndSendOffer,
     createAndSendAnswer,
     end,

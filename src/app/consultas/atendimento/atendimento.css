@@ -352,22 +352,85 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    border: 4px solid rgba(255,255,255,0.15);
-    border-top-color: rgba(255,255,255,0.9);
+    border: 4px solid rgba(255, 255, 255, 0.15);
+    border-top-color: rgba(255, 255, 255, 0.9);
     animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .call-loader-text {
     color: #ffffff;
     font-weight: 500;
-    font-size: 1.50rem; /* cerca de 28px */
+    font-size: 1.50rem;
+    /* cerca de 28px */
     letter-spacing: 0.2px;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 8px rgba(255,255,255,0.15);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 8px rgba(255, 255, 255, 0.15);
     z-index: 26;
     margin-bottom: 50px;
+}
+
+/* No camera placeholder */
+.no-camera-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #1f2937;
+    color: #fff;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+}
+
+.no-camera-placeholder.large {
+    /* Ensure it covers the large video area */
+    width: 100%;
+    height: 100%;
+}
+
+.no-camera-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.no-camera-text {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.self-video-container.pip {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 180px;
+    height: 120px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 20;
+    background: #000;
+}
+
+.self-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pip-placeholder {
+    background-color: #374151;
+    border: 1px solid #4b5563;
 }

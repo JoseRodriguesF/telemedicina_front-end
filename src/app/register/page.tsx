@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import './register.css';
 import { useState, useEffect } from 'react';
@@ -11,6 +11,7 @@ import createPessoais from '@/lib/axios/pessoais';
 import { saveUser, getUserId } from '@/lib/auth';
 import DadosPessoaisMedicoCard from '@/components/common/Cards/DadosPessoaisMedico/DadosPessoaisMedicoCard';
 import DadosDocumentosMedicoCard from '@/components/common/Cards/DadosDocumentosMedico/DadosDocumentosMedicoCard';
+import { handleApiError } from '@/lib/errorHandler';
 export default function RegisterPage() {
   const [step, setStep] = useState<number>(1);
   const [credentials, setCredentials] = useState<{ email?: string; password?: string; userId?: number } | null>(null);
@@ -178,12 +179,12 @@ export default function RegisterPage() {
 
               const resp = await createPessoais(payload);
               if (resp?.user) {
-                try { saveUser(resp.user); } catch (_) {}
+                try { saveUser(resp.user); } catch (_) { }
               }
               setShowTerms(false);
               router.push('/inicio');
             } catch (err: any) {
-              setSubmitError(String(err?.message || 'Erro ao registrar dados pessoais'));
+              handleApiError(err, { setGlobalError: setSubmitError });
             } finally {
               setSubmitting(false);
             }
