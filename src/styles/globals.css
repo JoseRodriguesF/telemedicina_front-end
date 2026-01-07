@@ -69,11 +69,9 @@ img { max-width: 100%; display: block; }
 	position: absolute;
 	right: 16px;
 	bottom: 90px;
-	width: 26%;
 	max-width: 360px;
 	aspect-ratio: 16 / 9;
 	border-radius: 8px;
-	overflow: hidden;
 	box-shadow: 0 6px 24px rgba(0,0,0,0.35);
 	border: 2px solid rgba(255,255,255,0.6);
 	background: #111;
