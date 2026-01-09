@@ -49,6 +49,7 @@ function AtendimentoInner() {
   const [remoteConnected, setRemoteConnected] = useState(false);
   const [remoteHasVideo, setRemoteHasVideo] = useState(false);
   const [remoteHasAudio, setRemoteHasAudio] = useState(false);
+  const [remoteDisconnected, setRemoteDisconnected] = useState(false);
   // Médico entra e compartilha sua mídia ao chegar.
   // Ao entrar, paciente cria sala + mídia; médico apenas abre mídia e faz claim.
   // Auto-start sem botão: inicia o fluxo uma única vez ao montar a página.
@@ -208,15 +209,19 @@ function AtendimentoInner() {
 
   function toggleCam() {
     if (localStreamRef.current) {
-      localStreamRef.current.getVideoTracks().forEach(t => t.enabled = !t.enabled);
-      setCamEnabled(prev => !prev);
+      const enabled = !camEnabled;
+      localStreamRef.current.getVideoTracks().forEach(t => t.enabled = enabled);
+      setCamEnabled(enabled);
+      sessionRef.current?.sendMediaState(enabled, micEnabled);
     }
   }
 
   function toggleMic() {
     if (localStreamRef.current) {
-      localStreamRef.current.getAudioTracks().forEach(t => t.enabled = !t.enabled);
-      setMicEnabled(prev => !prev);
+      const enabled = !micEnabled;
+      localStreamRef.current.getAudioTracks().forEach(t => t.enabled = enabled);
+      setMicEnabled(enabled);
+      sessionRef.current?.sendMediaState(camEnabled, enabled);
     }
   }
 
@@ -239,6 +244,7 @@ function AtendimentoInner() {
       // Reuse component helper to get media + update UI
       const stream = await startLocalMedia();
       session.setLocalStream(stream);
+      session.sendMediaState(camEnabled, micEnabled);
     } catch (e) {
       // already handled in startLocalMedia
     }
@@ -256,6 +262,7 @@ function AtendimentoInner() {
     session.onRemoteTrack((stream) => {
       if (remoteRef.current) remoteRef.current.srcObject = stream;
       setRemoteConnected(true);
+      setRemoteDisconnected(false);
       setRemoteHasVideo(stream.getVideoTracks().length > 0);
       setRemoteHasAudio(stream.getAudioTracks().length > 0);
       stream.onaddtrack = () => {
@@ -267,6 +274,15 @@ function AtendimentoInner() {
         setRemoteHasAudio(stream.getAudioTracks().length > 0);
       };
       setStatusText('Conectado.');
+    });
+    session.onRemoteMediaState((st) => {
+      setRemoteHasVideo(st.video);
+      setRemoteHasAudio(st.audio);
+    });
+    session.onRemoteEnd(() => {
+      setRemoteDisconnected(true);
+      setRemoteConnected(false);
+      setStatusText('O outro usuário saiu da chamada.');
     });
     session.onChatMessage((text) => {
       setMessages((prev) => [...prev, { author: 'Médico', text }]);
@@ -295,6 +311,7 @@ function AtendimentoInner() {
       try {
         const stream = await startLocalMedia();
         session.setLocalStream(stream);
+        session.sendMediaState(camEnabled, micEnabled);
       } catch (e) {
         // handled
       }
@@ -312,6 +329,7 @@ function AtendimentoInner() {
       session.onRemoteTrack((stream) => {
         if (remoteRef.current) remoteRef.current.srcObject = stream;
         setRemoteConnected(true);
+        setRemoteDisconnected(false);
         setRemoteHasVideo(stream.getVideoTracks().length > 0);
         setRemoteHasAudio(stream.getAudioTracks().length > 0);
         // Add listeners for track changes (if tracks are added later)
@@ -324,6 +342,15 @@ function AtendimentoInner() {
           setRemoteHasAudio(stream.getAudioTracks().length > 0);
         };
         setStatusText('Conectado.');
+      });
+      session.onRemoteMediaState((st) => {
+        setRemoteHasVideo(st.video);
+        setRemoteHasAudio(st.audio);
+      });
+      session.onRemoteEnd(() => {
+        setRemoteDisconnected(true);
+        setRemoteConnected(false);
+        setStatusText('O outro usuário saiu da chamada.');
       });
       session.onChatMessage((text) => {
         setMessages((prev) => [...prev, { author: 'Paciente', text }]);
@@ -423,9 +450,19 @@ function AtendimentoInner() {
               <div className="no-camera-placeholder large">
                 <div className="no-camera-icon">📷</div>
                 <div className="no-camera-text">
-                  {role === 'medico' ? 'Paciente sem câmera' : 'Médico sem câmera'}
+                  {role === 'medico' ? 'Paciente desligou a câmera' : 'Médico desligou a câmera'}
                 </div>
-                {!remoteHasAudio && <div style={{ fontSize: '0.8rem', marginTop: 4 }}>Example: 🔇 Sem áudio</div>}
+                {!remoteHasAudio && <div style={{ fontSize: '0.8rem', marginTop: 4 }}>🔇 Microfone desligado</div>}
+              </div>
+            )}
+
+            {remoteDisconnected && (
+              <div className="call-loader-overlay disconnected">
+                <div className="disconnected-icon">📞</div>
+                <div className="call-loader-text">O outro usuário saiu da chamada.</div>
+                <Button variant="primary" onClick={() => router.push('/consultas')} style={{ marginTop: '1rem' }}>
+                  Voltar para Consultas
+                </Button>
               </div>
             )}
 

@@ -2,8 +2,8 @@ export type SignalMessage =
   | { type: 'join'; role: 'medico' | 'paciente' }
   | { type: 'offer'; sdp: RTCSessionDescriptionInit }
   | { type: 'answer'; sdp: RTCSessionDescriptionInit }
-  | { type: 'candidate'; candidate: RTCIceCandidateInit }
-  | { type: 'ice-candidate'; candidate: RTCIceCandidateInit }
+  | { type: 'ice-candidate', candidate: RTCIceCandidateInit }
+  | { type: 'media-state'; video: boolean; audio: boolean }
   | { type: 'end' };
 
 export type WebRTCSessionArgs = {
@@ -23,7 +23,10 @@ export type WebRTCSession = {
   createAndSendOffer: () => Promise<void>;
   createAndSendAnswer: () => Promise<void>;
   end: () => void;
+  sendMediaState: (video: boolean, audio: boolean) => void;
   onRemoteTrack: (cb: (stream: MediaStream) => void) => void;
+  onRemoteMediaState: (cb: (state: { video: boolean; audio: boolean }) => void) => void;
+  onRemoteEnd: (cb: () => void) => void;
   createChatChannel: () => RTCDataChannel | null;
   onChatMessage: (cb: (text: string) => void) => void;
   onConnectionStateChange: (cb: (state: RTCPeerConnectionState) => void) => void;
@@ -37,6 +40,8 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   const ws = new WebSocket(`${args.wsBaseUrl}?roomId=${encodeURIComponent(args.roomId)}&token=${encodeURIComponent(args.token)}`);
   let localStream: MediaStream | null = null;
   let onRemote: ((stream: MediaStream) => void) | null = null;
+  let onRemoteMedia: ((state: { video: boolean; audio: boolean }) => void) | null = null;
+  let onRemoteEndCb: (() => void) | null = null;
   let chatChannel: RTCDataChannel | null = null;
   let onChatMsg: ((text: string) => void) | null = null;
   let onConnState: ((state: RTCPeerConnectionState) => void) | null = null;
@@ -113,9 +118,12 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
       } else if (msg.type === 'answer') {
         await pc.setRemoteDescription(msg.sdp);
         if (onSignalEv) onSignalEv('answerReceived');
-      } else if (msg.type === 'candidate' || msg.type === 'ice-candidate') {
+      } else if (msg.type === 'ice-candidate') {
         await pc.addIceCandidate(msg.candidate);
+      } else if (msg.type === 'media-state') {
+        if (onRemoteMedia) onRemoteMedia({ video: msg.video, audio: msg.audio });
       } else if (msg.type === 'end') {
+        if (onRemoteEndCb) onRemoteEndCb();
         pc.close();
         ws.close();
       }
@@ -153,6 +161,12 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     ws.send(JSON.stringify(msg));
   };
 
+  const sendMediaState = (video: boolean, audio: boolean) => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'media-state', video, audio }));
+    }
+  };
+
   const end = () => {
     try {
       ws.send(JSON.stringify({ type: 'end' }));
@@ -166,6 +180,14 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
 
   const onRemoteTrack = (cb: (stream: MediaStream) => void) => {
     onRemote = cb;
+  };
+
+  const onRemoteMediaState = (cb: (state: { video: boolean; audio: boolean }) => void) => {
+    onRemoteMedia = cb;
+  };
+
+  const onRemoteEnd = (cb: () => void) => {
+    onRemoteEndCb = cb;
   };
 
   // Chat via DataChannel
@@ -220,7 +242,10 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     createAndSendOffer,
     createAndSendAnswer,
     end,
+    sendMediaState,
     onRemoteTrack,
+    onRemoteMediaState,
+    onRemoteEnd,
     createChatChannel,
     onChatMessage,
     sendMessage, // Expose sendMessage
