@@ -2,11 +2,15 @@
 	 Basic reset and sensible defaults for a plain Next.js app.
 */
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
 	box-sizing: border-box;
 }
 
-html, body, #__next {
+html,
+body,
+#__next {
 	height: 100%;
 }
 
@@ -14,20 +18,24 @@ body {
 	margin: 0;
 	min-height: 100%;
 	background: #ffffff;
-	color: #0f172a; /* close to Tailwind's slate-900 */
+	color: #0f172a;
+	/* close to Tailwind's slate-900 */
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }
 
-img { max-width: 100%; display: block; }
+img {
+	max-width: 100%;
+	display: block;
+}
 
 /* Utility classes that might be referenced in markup can be added if needed later */
 
 /* Google Places Autocomplete dropdown (pac-container) shadow adjustment */
 .pac-container {
 	box-shadow: none !important;
-	border: 1px solid rgba(0,0,0,0.08);
+	border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .pac-item {
@@ -37,49 +45,3 @@ img { max-width: 100%; display: block; }
 .pac-item:hover {
 	background-color: #f7f7f7;
 }
-
-/* Atendimento video layout */
-.atendimento-page .call-area {
-	display: flex;
-	flex-direction: column;
-	
-}
-
-.atendimento-page .call-screen {
-	position: relative;
-	width: 100%;
-	height: 60vh;
-	background: #000;
-	border-radius: 8px;
-	overflow: hidden;
-}
-
-.atendimento-page .remote-video,
-.atendimento-page .remote-video.large {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-}
-
-.atendimento-page .self-video,
-.atendimento-page .self-video.pip {
-	position: absolute;
-	right: 16px;
-	bottom: 90px;
-	max-width: 360px;
-	aspect-ratio: 16 / 9;
-	border-radius: 8px;
-	box-shadow: 0 6px 24px rgba(0,0,0,0.35);
-	border: 2px solid rgba(255,255,255,0.6);
-	background: #111;
-	object-fit: cover;
-}
-
-.atendimento-page .call-status {
-	color: #0ef;
-	font-weight: 600;
-}
-
