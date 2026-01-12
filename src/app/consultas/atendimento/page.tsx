@@ -15,6 +15,9 @@ import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
 
 function AtendimentoInner() {
+  // Estado para falha de conexão e reconexão
+  const [connectionFailed, setConnectionFailed] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
   const router = useRouter();
   const search = useSearchParams();
   const consultaId = search.get('id') || '';
@@ -66,8 +69,24 @@ function AtendimentoInner() {
     };
     window.addEventListener('beforeunload', onBeforeUnload);
 
+    // Monitorar status da internet
+    const handleOnline = () => {
+      if (connectionFailed) {
+        setReconnecting(true);
+        // Tentar reconectar
+        window.location.reload(); // Simples: recarrega a página para restabelecer sessão
+      }
+    };
+    const handleOffline = () => {
+      setConnectionFailed(true);
+    };
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
     return () => {
       window.removeEventListener('beforeunload', onBeforeUnload);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -252,9 +271,17 @@ function AtendimentoInner() {
       if (state === 'connected') setStatusText('Conectado.');
     });
     session.onIceConnectionStateChange((state) => {
-      if (state === 'connected' || state === 'completed') setStatusText('Conectado.');
-      else if (state === 'disconnected') setStatusText('Conexão perdida. Tentando reconectar...');
-      else if (state === 'failed') setStatusText('Falha de conexão.');
+      if (state === 'connected' || state === 'completed') {
+        setStatusText('Conectado.');
+        setConnectionFailed(false);
+        setReconnecting(false);
+      } else if (state === 'disconnected') {
+        setStatusText('Conexão perdida. Tentando reconectar...');
+        setConnectionFailed(true);
+      } else if (state === 'failed') {
+        setStatusText('Falha de conexão.');
+        setConnectionFailed(true);
+      }
     });
     session.onSignalEvent((ev) => {
       if (ev === 'answerSent' || ev === 'answerReceived') setStatusText('Conectado.');
@@ -319,9 +346,17 @@ function AtendimentoInner() {
         if (state === 'connected') setStatusText('Conectado.');
       });
       session.onIceConnectionStateChange((state) => {
-        if (state === 'connected' || state === 'completed') setStatusText('Conectado.');
-        else if (state === 'disconnected') setStatusText('Conexão perdida. Tentando reconectar...');
-        else if (state === 'failed') setStatusText('Falha de conexão.');
+        if (state === 'connected' || state === 'completed') {
+          setStatusText('Conectado.');
+          setConnectionFailed(false);
+          setReconnecting(false);
+        } else if (state === 'disconnected') {
+          setStatusText('Conexão perdida. Tentando reconectar...');
+          setConnectionFailed(true);
+        } else if (state === 'failed') {
+          setStatusText('Falha de conexão.');
+          setConnectionFailed(true);
+        }
       });
       session.onSignalEvent((ev) => {
         if (ev === 'answerSent' || ev === 'answerReceived') setStatusText('Conectado.');
@@ -404,6 +439,7 @@ function AtendimentoInner() {
     setShowLeaveConfirmation(false);
     try { sessionRef.current?.end(); } catch { }
     try { sessionStorage.removeItem('ps_room'); } catch { }
+    // Removido alert, apenas modal de confirmação será exibido
     router.push('/consultas');
   }
 
@@ -437,16 +473,30 @@ function AtendimentoInner() {
           <div className="call-screen">
             {/* O vídeo remoto sempre ocupa o retângulo grande (principal) */}
             {/* O vídeo remoto sempre ocupa o retângulo grande (principal) */}
+
             <video
               ref={remoteRef}
               className="remote-video large"
               playsInline
               autoPlay
               aria-label={role === 'medico' ? 'Vídeo do paciente' : 'Vídeo do médico'}
-              style={{ opacity: remoteHasVideo ? 1 : 0 }}
+              style={{ opacity: remoteHasVideo ? 1 : 0, filter: connectionFailed ? 'blur(8px)' : undefined, transition: 'filter 0.3s' }}
             />
 
-            {remoteConnected && !remoteHasVideo && (
+
+            {/* Blur e mensagem para falha de conexão */}
+            {connectionFailed && !remoteDisconnected && (
+              <div className="call-loader-overlay disconnected">
+                <div className="disconnected-icon">🌐</div>
+                <div className="call-loader-text">
+                  Falha de conexão com a internet.<br />
+                  {reconnecting ? 'Reconectando...' : 'Aguardando reconexão...'}
+                </div>
+              </div>
+            )}
+
+            {/* Blur e mensagem para câmera desligada */}
+            {remoteConnected && !remoteHasVideo && !connectionFailed && (
               <div className="no-camera-placeholder large">
                 <div className="no-camera-icon">📷</div>
                 <div className="no-camera-text">
