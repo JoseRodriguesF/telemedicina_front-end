@@ -1,3 +1,17 @@
+// Buscar salas em andamento (consultas ativas)
+export type PSActiveRoom = {
+  consultaId: string;
+  pacienteId: string;
+  medicoId: string;
+  roomId: string;
+  createdAt: number;
+  status: 'in_progress';
+};
+
+export async function psListActiveRooms(token: string): Promise<PSActiveRoom[]> {
+  const res = await axios.get('/api/ps/salas-em-andamento', { headers: { Authorization: `Bearer ${token}` } });
+  return res.data as PSActiveRoom[];
+}
 import axios from 'axios';
 
 export type IceServer = {

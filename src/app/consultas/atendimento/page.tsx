@@ -257,6 +257,16 @@ function AtendimentoInner() {
     try { data = JSON.parse(raw!); } catch { setStatusText('Dados da consulta inválidos.'); return; }
     setRoomId(data.roomId);
     setConsultaIdState(data.consultaId);
+    // Salva dados essenciais para reconexão
+    try {
+      sessionStorage.setItem('consulta_reconnect', JSON.stringify({
+        roomId: data.roomId,
+        consultaId: data.consultaId,
+        userId: user?.id,
+        role,
+        timestamp: Date.now()
+      }));
+    } catch {}
     const session = createWebRTCSession({ roomId: data.roomId, token, role, wsBaseUrl, iceServers: data.iceServers });
     sessionRef.current = session;
     try {
@@ -333,6 +343,16 @@ function AtendimentoInner() {
       const { roomId, consultaId, iceServers } = await psClaim(cid, token);
       setRoomId(roomId);
       setConsultaIdState(consultaId);
+      // Salva dados essenciais para reconexão
+      try {
+        sessionStorage.setItem('consulta_reconnect', JSON.stringify({
+          roomId,
+          consultaId,
+          userId: user?.id,
+          role,
+          timestamp: Date.now()
+        }));
+      } catch {}
       const session = createWebRTCSession({ roomId, token, role, wsBaseUrl, iceServers });
       sessionRef.current = session;
       try {
@@ -439,6 +459,8 @@ function AtendimentoInner() {
     setShowLeaveConfirmation(false);
     try { sessionRef.current?.end(); } catch { }
     try { sessionStorage.removeItem('ps_room'); } catch { }
+    // Remove dados de reconexão ao sair normalmente
+    try { sessionStorage.removeItem('consulta_reconnect'); } catch { }
     // Removido alert, apenas modal de confirmação será exibido
     router.push('/consultas');
   }

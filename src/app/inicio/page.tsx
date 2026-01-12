@@ -5,24 +5,58 @@ import '@/components/layout/Header/header.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import ReconnectConsultaModal from '@/components/common/Modals/ReconnectConsultaModal';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
-import { getUser, getUserFirstName } from '@/lib/auth';
+import { getUser, getUserFirstName, getToken } from '@/lib/auth';
+import { psListActiveRooms } from '@/lib/axios/consultas';
 
 export default function InicioPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>('');
+  const [showReconnect, setShowReconnect] = useState(false);
+  const [reconnectData, setReconnectData] = useState<{ roomId: string; consultaId: string; userId: string; role: string } | null>(null);
 
   useEffect(() => {
     const u = getUser();
     setDisplayName(getUserFirstName(u));
+    const token = getToken();
+    // Verifica consulta ativa no sessionStorage
+    let found = false;
+    try {
+      const raw = sessionStorage.getItem('consulta_reconnect');
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data && data.userId && u && String(data.userId) === String(u.id)) {
+          setReconnectData(data);
+          setShowReconnect(true);
+          found = true;
+        }
+      }
+    } catch {}
+    // Se não achou no sessionStorage, busca no backend
+    if (!found && token && u) {
+      psListActiveRooms(token).then((rooms) => {
+        // Verifica se o usuário está em alguma sala ativa
+        const sala = rooms.find(r => String(r.pacienteId) === String(u.id) || String(r.medicoId) === String(u.id));
+        if (sala) {
+          setReconnectData({
+            roomId: sala.roomId,
+            consultaId: sala.consultaId,
+            userId: u.id,
+            role: String(r.medicoId) === String(u.id) ? 'medico' : 'paciente'
+          });
+          setShowReconnect(true);
+        }
+      }).catch(() => {});
+    }
   }, []);
-  const items = [
-    { id: 'inicio', label: 'Início', icon: '/images/home-06.svg', href: '/inicio' },
-    { id: 'consultas', label: 'Consultas', icon: '/images/first-aid.svg', href: '/consultas' },
-    { id: 'historico', label: 'Histórico', icon: '/images/clock.svg', href: '/historico' },
-    { id: 'perfil', label: 'Perfil', icon: '/images/user.svg', href: '/perfil' },
-  ];
+
+  const handleReconnect = () => {
+    if (reconnectData) {
+      router.push(`/consultas/atendimento?id=${reconnectData.consultaId}`);
+    }
+  };
 
   return (
     <div className="inicio-page">
@@ -37,6 +71,13 @@ export default function InicioPage() {
           <h2>Bem-vindo, {displayName}!</h2>
         </div>
       </main>
+      <ReconnectConsultaModal
+        open={showReconnect}
+        onClose={() => setShowReconnect(false)}
+        onReconnect={handleReconnect}
+        consultaId={reconnectData?.consultaId || ''}
+        role={reconnectData?.role || ''}
+      />
     </div>
   );
 }
