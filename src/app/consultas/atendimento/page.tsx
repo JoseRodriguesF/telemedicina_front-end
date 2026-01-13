@@ -15,9 +15,15 @@ import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
 
 function AtendimentoInner() {
-  // Estado para falha de conexão e reconexão
   const [connectionFailed, setConnectionFailed] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
+
+  const handleConnected = () => {
+    setStatusText('Conectado.');
+    setConnectionFailed(false);
+    setReconnecting(false);
+  };
+
   const router = useRouter();
   const search = useSearchParams();
   const consultaId = search.get('id') || '';
@@ -118,7 +124,7 @@ function AtendimentoInner() {
       try {
         const resp = await listParticipants(cid, token);
         if (!stopped && Array.isArray(resp?.participants) && resp.participants.length >= 2) {
-          setStatusText('Conectado.');
+          handleConnected();
           stopped = true;
           if (pollingRef.current !== null) {
             clearInterval(pollingRef.current);
@@ -266,7 +272,7 @@ function AtendimentoInner() {
         role,
         timestamp: Date.now()
       }));
-    } catch {}
+    } catch { }
     const session = createWebRTCSession({ roomId: data.roomId, token, role, wsBaseUrl, iceServers: data.iceServers });
     sessionRef.current = session;
     try {
@@ -278,13 +284,11 @@ function AtendimentoInner() {
       // already handled in startLocalMedia
     }
     session.onConnectionStateChange((state) => {
-      if (state === 'connected') setStatusText('Conectado.');
+      if (state === 'connected') handleConnected();
     });
     session.onIceConnectionStateChange((state) => {
       if (state === 'connected' || state === 'completed') {
-        setStatusText('Conectado.');
-        setConnectionFailed(false);
-        setReconnecting(false);
+        handleConnected();
       } else if (state === 'disconnected') {
         setStatusText('Conexão perdida. Tentando reconectar...');
         setConnectionFailed(true);
@@ -294,7 +298,7 @@ function AtendimentoInner() {
       }
     });
     session.onSignalEvent((ev) => {
-      if (ev === 'answerSent' || ev === 'answerReceived') setStatusText('Conectado.');
+      if (ev === 'answerSent' || ev === 'answerReceived') handleConnected();
     });
     session.onRemoteTrack((stream) => {
       if (remoteRef.current) remoteRef.current.srcObject = stream;
@@ -310,7 +314,7 @@ function AtendimentoInner() {
         setRemoteHasVideo(stream.getVideoTracks().length > 0);
         setRemoteHasAudio(stream.getAudioTracks().length > 0);
       };
-      setStatusText('Conectado.');
+      handleConnected();
     });
     session.onRemoteMediaState((st) => {
       setRemoteHasVideo(st.video);
@@ -352,7 +356,7 @@ function AtendimentoInner() {
           role,
           timestamp: Date.now()
         }));
-      } catch {}
+      } catch { }
       const session = createWebRTCSession({ roomId, token, role, wsBaseUrl, iceServers });
       sessionRef.current = session;
       try {
@@ -363,13 +367,11 @@ function AtendimentoInner() {
         // handled
       }
       session.onConnectionStateChange((state) => {
-        if (state === 'connected') setStatusText('Conectado.');
+        if (state === 'connected') handleConnected();
       });
       session.onIceConnectionStateChange((state) => {
         if (state === 'connected' || state === 'completed') {
-          setStatusText('Conectado.');
-          setConnectionFailed(false);
-          setReconnecting(false);
+          handleConnected();
         } else if (state === 'disconnected') {
           setStatusText('Conexão perdida. Tentando reconectar...');
           setConnectionFailed(true);
@@ -379,7 +381,7 @@ function AtendimentoInner() {
         }
       });
       session.onSignalEvent((ev) => {
-        if (ev === 'answerSent' || ev === 'answerReceived') setStatusText('Conectado.');
+        if (ev === 'answerSent' || ev === 'answerReceived') handleConnected();
       });
       session.onRemoteTrack((stream) => {
         if (remoteRef.current) remoteRef.current.srcObject = stream;
@@ -396,7 +398,7 @@ function AtendimentoInner() {
           setRemoteHasVideo(stream.getVideoTracks().length > 0);
           setRemoteHasAudio(stream.getAudioTracks().length > 0);
         };
-        setStatusText('Conectado.');
+        handleConnected();
       });
       session.onRemoteMediaState((st) => {
         setRemoteHasVideo(st.video);
