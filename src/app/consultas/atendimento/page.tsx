@@ -49,6 +49,7 @@ function AtendimentoInner() {
   const startedRef = useRef(false);
   const [showChat, setShowChat] = useState(true);
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
+  const offeringInitiatedRef = useRef(false);
 
   // Mídia controls
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -111,11 +112,15 @@ function AtendimentoInner() {
         if (!stopped && Array.isArray(resp?.participants) && resp.participants.length >= 2) {
           handleConnected();
 
-          // Se sou o médico e o outro entrou, mas ainda não conectamos o vídeo, dispara a oferta.
-          // Isso resolve a condição de corrida onde o médico tentava conectar antes do paciente abrir o socket.
-          if (role === 'medico' && sessionRef.current && !remoteConnected) {
-            console.log('Detectado 2 participantes. Médico iniciando oferta...');
-            sessionRef.current.createAndSendOffer().catch(() => { });
+          // Se sou o médico e o outro entrou, dispara a oferta inicial.
+          // Usamos a ref para garantir que enviamos apenas UMA vez a oferta inicial.
+          if (role === 'medico' && sessionRef.current && !remoteConnected && !offeringInitiatedRef.current) {
+            console.log('Detectado 2 participantes. Médico iniciando oferta única...');
+            offeringInitiatedRef.current = true;
+            sessionRef.current.createAndSendOffer().catch((err) => {
+              console.error('Erro ao enviar oferta inicial:', err);
+              offeringInitiatedRef.current = false; // Permite tentar novamente se falhou
+            });
           }
         }
       } catch { }
@@ -264,10 +269,20 @@ function AtendimentoInner() {
     claimingRef.current = true;
 
     try {
-      // Se for paciente, usamos psCreateRoom que já é inteligente para reconectar.
-      // Se for médico, usamos psClaim. Isso resolve o erro 403 reportado.
-      const { roomId: rId, consultaId: cId, iceServers: ice } =
-        role === 'paciente' ? await psCreateRoom(token) : await psClaim(cid, token);
+      // Lógica unificada: Médicos e Pacientes agora usam o claim conforme atualização do backend.
+      // Se der 403 para o paciente (middleware restritivo), tentamos psCreateRoom como fallback.
+      let roomData;
+      try {
+        roomData = await psClaim(cid, token);
+      } catch (err: any) {
+        if (role === 'paciente' && err?.response?.status === 403) {
+          console.warn('psClaim retornou 403 para paciente. Tentando fallback psCreateRoom...');
+          roomData = await psCreateRoom(token);
+        } else {
+          throw err;
+        }
+      }
+      const { roomId: rId, consultaId: cId, iceServers: ice } = roomData;
 
       setRoomId(rId);
       setConsultaIdState(cId);
