@@ -27,7 +27,7 @@ const ReconnectConsultaModal: React.FC<ReconnectConsultaModalProps> = ({ open, o
 
           <div className="info-badge">
             <span className="info-label">ID da Sessão:</span>
-            <span className="info-value">{consultaId.slice(0, 8)}...</span>
+            <span className="info-value">{consultaId ? String(consultaId).slice(0, 8) : '...'}</span>
           </div>
 
           <div className="info-badge">
