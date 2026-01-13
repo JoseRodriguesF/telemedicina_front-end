@@ -8,8 +8,9 @@ export type PSActiveRoom = {
   status: 'in_progress';
 };
 
-export async function psListActiveRooms(token: string): Promise<PSActiveRoom[]> {
-  const res = await axios.get('/api/ps/salas-em-andamento', { headers: { Authorization: `Bearer ${token}` } });
+export async function psListActiveRooms(token: string, userId?: string): Promise<PSActiveRoom[]> {
+  const url = userId ? `/api/ps/salas-em-andamento?userId=${userId}` : '/api/ps/salas-em-andamento';
+  const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
   return res.data as PSActiveRoom[];
 }
 import axios from 'axios';

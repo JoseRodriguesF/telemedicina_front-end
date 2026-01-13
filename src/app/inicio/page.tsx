@@ -36,8 +36,8 @@ export default function InicioPage() {
     } catch { }
     // Se não achou no sessionStorage, busca no backend
     if (!found && token && u) {
-      psListActiveRooms(token).then((rooms) => {
-        // Verifica se o usuário está em alguma sala ativa
+      psListActiveRooms(token, String(u.id)).then((rooms) => {
+        // Agora o backend já retorna o que é relevante para o usuário
         const sala = rooms.find(r => String(r.pacienteId) === String(u.id) || String(r.medicoId) === String(u.id));
         if (sala) {
           setReconnectData({
@@ -48,7 +48,9 @@ export default function InicioPage() {
           });
           setShowReconnect(true);
         }
-      }).catch(() => { });
+      }).catch((err) => {
+        console.error("Erro ao verificar salas ativas:", err);
+      });
     }
   }, []);
 
