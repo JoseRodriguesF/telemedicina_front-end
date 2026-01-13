@@ -252,99 +252,77 @@ function AtendimentoInner() {
 
   async function startPacienteFlow() {
     if (!token || !wsBaseUrl) return;
-    const cidFromUrl = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
-    let data: { roomId: string; consultaId: string; iceServers: any } | null = null;
-
-    const rawPsRoom = typeof window !== 'undefined' ? sessionStorage.getItem('ps_room') : null;
-    if (rawPsRoom) {
-      try { data = JSON.parse(rawPsRoom); } catch { }
-    }
-
-    if (!data || (cidFromUrl && data.consultaId !== cidFromUrl)) {
-      const rawReconnect = typeof window !== 'undefined' ? sessionStorage.getItem('consulta_reconnect') : null;
-      if (rawReconnect) {
-        try {
-          const stored = JSON.parse(rawReconnect);
-          if (stored && stored.consultaId === cidFromUrl && stored.roomId && stored.iceServers) {
-            data = { roomId: stored.roomId, consultaId: stored.consultaId, iceServers: stored.iceServers };
-          }
-        } catch { }
-      }
-    }
-
-    if (!data) {
-      setStatusText(null);
-      return;
-    }
-
-    setRoomId(data.roomId);
-    setConsultaIdState(data.consultaId);
-    const sessionData = {
-      roomId: data.roomId,
-      consultaId: data.consultaId,
-      userId: String(user?.id || ''),
-      role,
-      iceServers: data.iceServers,
-      timestamp: Date.now()
-    };
     try {
-      sessionStorage.setItem('consulta_reconnect', JSON.stringify(sessionData));
-    } catch { }
-    const session = createWebRTCSession({ roomId: data.roomId, token, role, wsBaseUrl, iceServers: data.iceServers });
-    sessionRef.current = session;
-    try {
-      // Reuse component helper to get media + update UI
+      // O backend agora retorna a sala existente se o paciente já estiver em uma.
+      const { roomId, consultaId, iceServers } = await psCreateRoom(token);
+      setRoomId(roomId);
+      setConsultaIdState(consultaId);
+
+      // Salva dados essenciais para reconexão caso precise de um fallback local
+      const sessionData = {
+        roomId,
+        consultaId,
+        userId: String(user?.id || ''),
+        role,
+        iceServers,
+        timestamp: Date.now()
+      };
+      try { sessionStorage.setItem('consulta_reconnect', JSON.stringify(sessionData)); } catch { }
+
+      const session = createWebRTCSession({ roomId, token, role, wsBaseUrl, iceServers });
+      sessionRef.current = session;
+
       const stream = await startLocalMedia();
       session.setLocalStream(stream);
       session.sendMediaState(camEnabled, micEnabled);
-    } catch (e) {
-      // already handled in startLocalMedia
-    }
-    session.onConnectionStateChange((state) => {
-      if (state === 'connected') handleConnected();
-    });
-    session.onIceConnectionStateChange((state) => {
-      if (state === 'connected' || state === 'completed') {
+      session.onConnectionStateChange((state) => {
+        if (state === 'connected') handleConnected();
+      });
+      session.onIceConnectionStateChange((state) => {
+        if (state === 'connected' || state === 'completed') {
+          handleConnected();
+        } else if (state === 'disconnected') {
+          setStatusText('Conexão perdida. Tentando reconectar...');
+          setConnectionFailed(true);
+        } else if (state === 'failed') {
+          setStatusText('Falha de conexão.');
+          setConnectionFailed(true);
+        }
+      });
+      session.onSignalEvent((ev) => {
+        if (ev === 'answerSent' || ev === 'answerReceived') handleConnected();
+      });
+      session.onRemoteTrack((stream) => {
+        if (remoteRef.current) remoteRef.current.srcObject = stream;
+        setRemoteConnected(true);
+        setRemoteDisconnected(false);
+        setRemoteHasVideo(stream.getVideoTracks().length > 0);
+        setRemoteHasAudio(stream.getAudioTracks().length > 0);
+        stream.onaddtrack = () => {
+          setRemoteHasVideo(stream.getVideoTracks().length > 0);
+          setRemoteHasAudio(stream.getAudioTracks().length > 0);
+        };
+        stream.onremovetrack = () => {
+          setRemoteHasVideo(stream.getVideoTracks().length > 0);
+          setRemoteHasAudio(stream.getAudioTracks().length > 0);
+        };
         handleConnected();
-      } else if (state === 'disconnected') {
-        setStatusText('Conexão perdida. Tentando reconectar...');
-        setConnectionFailed(true);
-      } else if (state === 'failed') {
-        setStatusText('Falha de conexão.');
-        setConnectionFailed(true);
-      }
-    });
-    session.onSignalEvent((ev) => {
-      if (ev === 'answerSent' || ev === 'answerReceived') handleConnected();
-    });
-    session.onRemoteTrack((stream) => {
-      if (remoteRef.current) remoteRef.current.srcObject = stream;
-      setRemoteConnected(true);
-      setRemoteDisconnected(false);
-      setRemoteHasVideo(stream.getVideoTracks().length > 0);
-      setRemoteHasAudio(stream.getAudioTracks().length > 0);
-      stream.onaddtrack = () => {
-        setRemoteHasVideo(stream.getVideoTracks().length > 0);
-        setRemoteHasAudio(stream.getAudioTracks().length > 0);
-      };
-      stream.onremovetrack = () => {
-        setRemoteHasVideo(stream.getVideoTracks().length > 0);
-        setRemoteHasAudio(stream.getAudioTracks().length > 0);
-      };
-      handleConnected();
-    });
-    session.onRemoteMediaState((st) => {
-      setRemoteHasVideo(st.video);
-      setRemoteHasAudio(st.audio);
-    });
-    session.onRemoteEnd(() => {
-      setRemoteDisconnected(true);
-      setRemoteConnected(false);
-      setStatusText('O outro usuário saiu da chamada.');
-    });
-    session.onChatMessage((text) => {
-      setMessages((prev) => [...prev, { author: 'Médico', text }]);
-    });
+      });
+      session.onRemoteMediaState((st) => {
+        setRemoteHasVideo(st.video);
+        setRemoteHasAudio(st.audio);
+      });
+      session.onRemoteEnd(() => {
+        setRemoteDisconnected(true);
+        setRemoteConnected(false);
+        setStatusText('O outro usuário saiu da chamada.');
+      });
+      session.onChatMessage((text) => {
+        setMessages((prev) => [...prev, { author: 'Médico', text }]);
+      });
+    } catch (e) {
+      setStatusText('Erro ao entrar na sala.');
+    }
     setStatusText('Conectado.');
   }
 
@@ -352,40 +330,18 @@ function AtendimentoInner() {
     if (!token || !wsBaseUrl) return;
     const u = getUser();
     if (u?.tipo_usuario !== 'medico') {
-      alert('Apenas médicos podem atender pacientes. (forbidden_only_medico_can_claim)');
+      alert('Apenas médicos podem atender pacientes.');
       return;
     }
     claimingRef.current = true;
     const cid = getConsultaIdFromUrl() || consultaIdState || '';
 
-    // Tentar recuperar do sessionStorage primeiro para evitar 409
     try {
-      const raw = sessionStorage.getItem('consulta_reconnect');
-      if (raw) {
-        const stored = JSON.parse(raw);
-        if (stored && stored.consultaId === cid && stored.roomId && stored.iceServers) {
-          setRoomId(stored.roomId);
-          setConsultaIdState(stored.consultaId);
-          const session = createWebRTCSession({
-            roomId: stored.roomId,
-            token,
-            role,
-            wsBaseUrl,
-            iceServers: stored.iceServers
-          });
-          sessionRef.current = session;
-          await setupMedicoSession(session);
-          claimingRef.current = false;
-          return;
-        }
-      }
-    } catch { }
-
-    try {
+      // O médico tenta dar claim. Se ele já for o médico da sala, o backend retorna 200 (Reconexão).
       const { roomId, consultaId, iceServers } = await psClaim(cid, token);
       setRoomId(roomId);
       setConsultaIdState(consultaId);
-      // Salva dados essenciais para reconexão
+
       try {
         sessionStorage.setItem('consulta_reconnect', JSON.stringify({
           roomId,
@@ -396,6 +352,7 @@ function AtendimentoInner() {
           timestamp: Date.now()
         }));
       } catch { }
+
       const session = createWebRTCSession({ roomId, token, role, wsBaseUrl, iceServers });
       sessionRef.current = session;
       await setupMedicoSession(session);
