@@ -66,7 +66,7 @@ function AtendimentoInner() {
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
-    (role === 'paciente' ? startPacienteFlow() : startMedicoFlow()).catch(() => { });
+    startAtendimentoFlow().catch(() => { });
 
     // Warn on close/reload
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -250,34 +250,65 @@ function AtendimentoInner() {
     }
   }
 
-  async function startPacienteFlow() {
+  async function startAtendimentoFlow() {
     if (!token || !wsBaseUrl) return;
+
+    // Obtém o ID da consulta da URL ou do estado inicial
+    const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
+
+    // Se o paciente entrar sem ID (raro, mas possível), tenta recuperar ou criar uma consulta.
+    // No entanto, seguindo a nova lógica unificada, usaremos o claim se houver um ID.
+    if (!cid && role === 'paciente') {
+      try {
+        const { roomId: rId, consultaId: cId, iceServers: ice } = await psCreateRoom(token);
+        // Recarrega com o ID no parâmetro para manter a consistência
+        router.replace(`/consultas/atendimento?id=${cId}`);
+        return;
+      } catch (e: any) {
+        setStatusText('Erro ao iniciar consulta.');
+        return;
+      }
+    }
+
+    if (!cid) {
+      setStatusText('ID da consulta não encontrado.');
+      return;
+    }
+
+    claimingRef.current = true;
+
     try {
-      // O backend agora retorna a sala existente se o paciente já estiver em uma.
-      const { roomId, consultaId, iceServers } = await psCreateRoom(token);
-      setRoomId(roomId);
-      setConsultaIdState(consultaId);
+      // Lógica unificada: Médicos e Pacientes agora usam o claim para entrar ou reconectar.
+      const { roomId: rId, consultaId: cId, iceServers: ice } = await psClaim(cid, token);
 
-      // Salva dados essenciais para reconexão caso precise de um fallback local
-      const sessionData = {
-        roomId,
-        consultaId,
-        userId: String(user?.id || ''),
-        role,
-        iceServers,
-        timestamp: Date.now()
-      };
-      try { sessionStorage.setItem('consulta_reconnect', JSON.stringify(sessionData)); } catch { }
+      setRoomId(rId);
+      setConsultaIdState(cId);
 
-      const session = createWebRTCSession({ roomId, token, role, wsBaseUrl, iceServers });
+      // Persiste os dados para futuras reconexões (refresh de página)
+      try {
+        sessionStorage.setItem('consulta_reconnect', JSON.stringify({
+          roomId: rId,
+          consultaId: cId,
+          userId: String(user?.id || ''),
+          role,
+          iceServers: ice,
+          timestamp: Date.now()
+        }));
+      } catch { }
+
+      const session = createWebRTCSession({ roomId: rId, token, role, wsBaseUrl, iceServers: ice });
       sessionRef.current = session;
 
+      // Inicializa mídia local
       const stream = await startLocalMedia();
       session.setLocalStream(stream);
       session.sendMediaState(camEnabled, micEnabled);
+
+      // Listeners comuns de conexão
       session.onConnectionStateChange((state) => {
         if (state === 'connected') handleConnected();
       });
+
       session.onIceConnectionStateChange((state) => {
         if (state === 'connected' || state === 'completed') {
           handleConnected();
@@ -289,15 +320,18 @@ function AtendimentoInner() {
           setConnectionFailed(true);
         }
       });
+
       session.onSignalEvent((ev) => {
         if (ev === 'answerSent' || ev === 'answerReceived') handleConnected();
       });
+
       session.onRemoteTrack((stream) => {
         if (remoteRef.current) remoteRef.current.srcObject = stream;
         setRemoteConnected(true);
         setRemoteDisconnected(false);
         setRemoteHasVideo(stream.getVideoTracks().length > 0);
         setRemoteHasAudio(stream.getAudioTracks().length > 0);
+
         stream.onaddtrack = () => {
           setRemoteHasVideo(stream.getVideoTracks().length > 0);
           setRemoteHasAudio(stream.getAudioTracks().length > 0);
@@ -308,133 +342,48 @@ function AtendimentoInner() {
         };
         handleConnected();
       });
+
       session.onRemoteMediaState((st) => {
         setRemoteHasVideo(st.video);
         setRemoteHasAudio(st.audio);
       });
+
       session.onRemoteEnd(() => {
         setRemoteDisconnected(true);
         setRemoteConnected(false);
         setStatusText('O outro usuário saiu da chamada.');
       });
-      session.onChatMessage((text) => {
-        setMessages((prev) => [...prev, { author: 'Médico', text }]);
-      });
-    } catch (e) {
-      setStatusText('Erro ao entrar na sala.');
-    }
-    setStatusText('Conectado.');
-  }
 
-  async function startMedicoFlow() {
-    if (!token || !wsBaseUrl) return;
-    const u = getUser();
-    if (u?.tipo_usuario !== 'medico') {
-      alert('Apenas médicos podem atender pacientes.');
-      return;
-    }
-    claimingRef.current = true;
-    const cid = getConsultaIdFromUrl() || consultaIdState || '';
-
-    try {
-      // O médico tenta dar claim. Se ele já for o médico da sala, o backend retorna 200 (Reconexão).
-      const { roomId, consultaId, iceServers } = await psClaim(cid, token);
-      setRoomId(roomId);
-      setConsultaIdState(consultaId);
-
-      try {
-        sessionStorage.setItem('consulta_reconnect', JSON.stringify({
-          roomId,
-          consultaId,
-          userId: String(user?.id || ''),
-          role,
-          iceServers,
-          timestamp: Date.now()
-        }));
-      } catch { }
-
-      const session = createWebRTCSession({ roomId, token, role, wsBaseUrl, iceServers });
-      sessionRef.current = session;
-      await setupMedicoSession(session);
-    } catch (err: any) {
-      const msg = String(err?.message || 'Falha ao iniciar oferta.');
-      if (msg.includes('forbidden_only_medico_can_claim')) {
-        alert('Apenas médicos podem realizar o claim da consulta.');
-      } else if (msg.includes('medico_record_not_found_for_usuario')) {
-        alert('Seu usuário não está vinculado a um cadastro de Médico. Complete o cadastro para continuar.');
-      } else if (msg.includes('consulta_not_found')) {
-        alert('Consulta não encontrada. Volte à fila e selecione novamente.');
-        router.push('/consultas/pacientes');
-      } else if (msg.includes('invalid_consulta_id')) {
-        alert('ID da consulta inválido.');
-        router.push('/consultas/pacientes');
-      } else if (msg.includes('already_claimed_or_in_progress')) {
-        alert('Outro médico já assumiu esta consulta. Atualize a fila e escolha outro paciente.');
-        router.push('/consultas/pacientes');
+      // Configurações específicas por papel
+      if (role === 'medico') {
+        session.onChatMessage((text) => {
+          setMessages((prev) => [...prev, { author: 'Paciente', text }]);
+        });
+        session.createChatChannel();
+        setStatusText('Conectado. Iniciando oferta...');
+        await session.createAndSendOffer();
       } else {
-        alert(msg);
+        session.onChatMessage((text) => {
+          setMessages((prev) => [...prev, { author: 'Médico', text }]);
+        });
+        setStatusText('Conectado.');
+      }
+
+    } catch (err: any) {
+      const msg = String(err?.message || 'Falha ao entrar na sala.');
+      if (msg.includes('already_claimed')) {
+        alert('Esta consulta já está sendo atendida por outro médico.');
+        router.push('/consultas/pacientes');
+      } else if (msg.includes('consulta_not_found')) {
+        alert('Consulta não encontrada.');
+        router.push('/consultas');
+      } else {
+        console.error('Erro no flow de atendimento:', err);
+        setStatusText('Erro ao conectar: ' + msg);
       }
     } finally {
       claimingRef.current = false;
     }
-  }
-
-  // Abstração da lógica comum do médico
-  async function setupMedicoSession(session: ReturnType<typeof createWebRTCSession>) {
-    try {
-      const stream = await startLocalMedia();
-      session.setLocalStream(stream);
-      session.sendMediaState(camEnabled, micEnabled);
-    } catch (e) { }
-
-    session.onConnectionStateChange((state) => {
-      if (state === 'connected') handleConnected();
-    });
-    session.onIceConnectionStateChange((state) => {
-      if (state === 'connected' || state === 'completed') {
-        handleConnected();
-      } else if (state === 'disconnected') {
-        setStatusText('Conexão perdida. Tentando reconectar...');
-        setConnectionFailed(true);
-      } else if (state === 'failed') {
-        setStatusText('Falha de conexão.');
-        setConnectionFailed(true);
-      }
-    });
-    session.onSignalEvent((ev) => {
-      if (ev === 'answerSent' || ev === 'answerReceived') handleConnected();
-    });
-    session.onRemoteTrack((stream) => {
-      if (remoteRef.current) remoteRef.current.srcObject = stream;
-      setRemoteConnected(true);
-      setRemoteDisconnected(false);
-      setRemoteHasVideo(stream.getVideoTracks().length > 0);
-      setRemoteHasAudio(stream.getAudioTracks().length > 0);
-      stream.onaddtrack = () => {
-        setRemoteHasVideo(stream.getVideoTracks().length > 0);
-        setRemoteHasAudio(stream.getAudioTracks().length > 0);
-      };
-      stream.onremovetrack = () => {
-        setRemoteHasVideo(stream.getVideoTracks().length > 0);
-        setRemoteHasAudio(stream.getAudioTracks().length > 0);
-      };
-      handleConnected();
-    });
-    session.onRemoteMediaState((st) => {
-      setRemoteHasVideo(st.video);
-      setRemoteHasAudio(st.audio);
-    });
-    session.onRemoteEnd(() => {
-      setRemoteDisconnected(true);
-      setRemoteConnected(false);
-      setStatusText('O outro usuário saiu da chamada.');
-    });
-    session.onChatMessage((text) => {
-      setMessages((prev) => [...prev, { author: 'Paciente', text }]);
-    });
-    session.createChatChannel();
-    setStatusText('Conectado. Iniciando oferta...');
-    await session.createAndSendOffer();
   }
 
   function requestFinishCall() {
