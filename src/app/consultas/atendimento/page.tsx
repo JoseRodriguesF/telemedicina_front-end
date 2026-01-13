@@ -97,45 +97,30 @@ function AtendimentoInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Paciente: após obter consultaId, faça polling de participantes até haver 2 na sala
+  // Polling de participantes: detecta quando o outro usuário entra e dispara a conexão
   useEffect(() => {
-    if (role !== 'paciente') return;
     if (typeof window === 'undefined') return;
-    const rawSession = sessionStorage.getItem('ps_room');
     const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
-    // Only poll if we have a consulta id and either an active session or
-    // the `consultaIdState` was explicitly set by the flow. This prevents
-    // polling when the page is opened without a started session (causing
-    // infinite GET /participants requests).
     if (!cid || !token) return;
-    if (!rawSession && !consultaIdState) return;
-    if (pollingRef.current !== null) return; // already polling
+    if (pollingRef.current !== null) return;
+
     let stopped = false;
     const check = async () => {
-      // if we've already created a WebRTC session, stop polling
-      if (sessionRef.current) {
-        stopped = true;
-        if (pollingRef.current !== null) {
-          clearInterval(pollingRef.current);
-          pollingRef.current = null;
-        }
-        return;
-      }
       try {
         const resp = await listParticipants(cid, token);
         if (!stopped && Array.isArray(resp?.participants) && resp.participants.length >= 2) {
           handleConnected();
-          stopped = true;
-          if (pollingRef.current !== null) {
-            clearInterval(pollingRef.current);
-            pollingRef.current = null;
+
+          // Se sou o médico e o outro entrou, mas ainda não conectamos o vídeo, dispara a oferta.
+          // Isso resolve a condição de corrida onde o médico tentava conectar antes do paciente abrir o socket.
+          if (role === 'medico' && sessionRef.current && !remoteConnected) {
+            console.log('Detectado 2 participantes. Médico iniciando oferta...');
+            sessionRef.current.createAndSendOffer().catch(() => { });
           }
         }
-      } catch {
-        // ignore transient errors
-      }
+      } catch { }
     };
-    const timerId = window.setInterval(check, 1500);
+    const timerId = window.setInterval(check, 2000);
     pollingRef.current = timerId;
     check();
     return () => {
@@ -145,7 +130,8 @@ function AtendimentoInner() {
         pollingRef.current = null;
       }
     };
-  }, [role, consultaIdState, consultaId, token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role, consultaIdState, consultaId, token, remoteConnected]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -278,8 +264,10 @@ function AtendimentoInner() {
     claimingRef.current = true;
 
     try {
-      // Lógica unificada: Médicos e Pacientes agora usam o claim para entrar ou reconectar.
-      const { roomId: rId, consultaId: cId, iceServers: ice } = await psClaim(cid, token);
+      // Se for paciente, usamos psCreateRoom que já é inteligente para reconectar.
+      // Se for médico, usamos psClaim. Isso resolve o erro 403 reportado.
+      const { roomId: rId, consultaId: cId, iceServers: ice } =
+        role === 'paciente' ? await psCreateRoom(token) : await psClaim(cid, token);
 
       setRoomId(rId);
       setConsultaIdState(cId);
@@ -360,14 +348,14 @@ function AtendimentoInner() {
           setMessages((prev) => [...prev, { author: 'Paciente', text }]);
         });
         session.createChatChannel();
-        setStatusText('Conectado. Iniciando oferta...');
-        await session.createAndSendOffer();
+        // createAndSendOffer agora é disparado pelo polling de participantes
+        // para garantir que o paciente já esteja na sala.
       } else {
         session.onChatMessage((text) => {
           setMessages((prev) => [...prev, { author: 'Médico', text }]);
         });
-        setStatusText('Conectado.');
       }
+      setStatusText('Conectado.');
 
     } catch (err: any) {
       const msg = String(err?.message || 'Falha ao entrar na sala.');
