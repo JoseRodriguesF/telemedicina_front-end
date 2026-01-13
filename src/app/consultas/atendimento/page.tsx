@@ -252,26 +252,43 @@ function AtendimentoInner() {
 
   async function startPacienteFlow() {
     if (!token || !wsBaseUrl) return;
-    const raw = typeof window !== 'undefined' ? sessionStorage.getItem('ps_room') : null;
-    if (!raw) {
-      // Não exibir mensagem de erro aqui para não confundir o paciente;
-      // apenas manter o status padrão.
+    const cidFromUrl = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
+    let data: { roomId: string; consultaId: string; iceServers: any } | null = null;
+
+    const rawPsRoom = typeof window !== 'undefined' ? sessionStorage.getItem('ps_room') : null;
+    if (rawPsRoom) {
+      try { data = JSON.parse(rawPsRoom); } catch { }
+    }
+
+    if (!data || (cidFromUrl && data.consultaId !== cidFromUrl)) {
+      const rawReconnect = typeof window !== 'undefined' ? sessionStorage.getItem('consulta_reconnect') : null;
+      if (rawReconnect) {
+        try {
+          const stored = JSON.parse(rawReconnect);
+          if (stored && stored.consultaId === cidFromUrl && stored.roomId && stored.iceServers) {
+            data = { roomId: stored.roomId, consultaId: stored.consultaId, iceServers: stored.iceServers };
+          }
+        } catch { }
+      }
+    }
+
+    if (!data) {
       setStatusText(null);
       return;
     }
-    let data: { roomId: string; consultaId: string; iceServers: any };
-    try { data = JSON.parse(raw!); } catch { setStatusText('Dados da consulta inválidos.'); return; }
+
     setRoomId(data.roomId);
     setConsultaIdState(data.consultaId);
-    // Salva dados essenciais para reconexão
+    const sessionData = {
+      roomId: data.roomId,
+      consultaId: data.consultaId,
+      userId: String(user?.id || ''),
+      role,
+      iceServers: data.iceServers,
+      timestamp: Date.now()
+    };
     try {
-      sessionStorage.setItem('consulta_reconnect', JSON.stringify({
-        roomId: data.roomId,
-        consultaId: data.consultaId,
-        userId: String(user?.id || ''),
-        role,
-        timestamp: Date.now()
-      }));
+      sessionStorage.setItem('consulta_reconnect', JSON.stringify(sessionData));
     } catch { }
     const session = createWebRTCSession({ roomId: data.roomId, token, role, wsBaseUrl, iceServers: data.iceServers });
     sessionRef.current = session;
@@ -328,9 +345,7 @@ function AtendimentoInner() {
     session.onChatMessage((text) => {
       setMessages((prev) => [...prev, { author: 'Médico', text }]);
     });
-    // Answer é criado automaticamente ao receber offer no webrtc.ts
-    try { sessionStorage.removeItem('ps_room'); } catch { }
-    // Status será atualizado pelos eventos de conexão/sinalização e track remoto
+    setStatusText('Conectado.');
   }
 
   async function startMedicoFlow() {
@@ -340,9 +355,32 @@ function AtendimentoInner() {
       alert('Apenas médicos podem atender pacientes. (forbidden_only_medico_can_claim)');
       return;
     }
-    if (claimingRef.current) return;
     claimingRef.current = true;
     const cid = getConsultaIdFromUrl() || consultaIdState || '';
+
+    // Tentar recuperar do sessionStorage primeiro para evitar 409
+    try {
+      const raw = sessionStorage.getItem('consulta_reconnect');
+      if (raw) {
+        const stored = JSON.parse(raw);
+        if (stored && stored.consultaId === cid && stored.roomId && stored.iceServers) {
+          setRoomId(stored.roomId);
+          setConsultaIdState(stored.consultaId);
+          const session = createWebRTCSession({
+            roomId: stored.roomId,
+            token,
+            role,
+            wsBaseUrl,
+            iceServers: stored.iceServers
+          });
+          sessionRef.current = session;
+          await setupMedicoSession(session);
+          claimingRef.current = false;
+          return;
+        }
+      }
+    } catch { }
+
     try {
       const { roomId, consultaId, iceServers } = await psClaim(cid, token);
       setRoomId(roomId);
@@ -354,67 +392,13 @@ function AtendimentoInner() {
           consultaId,
           userId: String(user?.id || ''),
           role,
+          iceServers,
           timestamp: Date.now()
         }));
       } catch { }
       const session = createWebRTCSession({ roomId, token, role, wsBaseUrl, iceServers });
       sessionRef.current = session;
-      try {
-        const stream = await startLocalMedia();
-        session.setLocalStream(stream);
-        session.sendMediaState(camEnabled, micEnabled);
-      } catch (e) {
-        // handled
-      }
-      session.onConnectionStateChange((state) => {
-        if (state === 'connected') handleConnected();
-      });
-      session.onIceConnectionStateChange((state) => {
-        if (state === 'connected' || state === 'completed') {
-          handleConnected();
-        } else if (state === 'disconnected') {
-          setStatusText('Conexão perdida. Tentando reconectar...');
-          setConnectionFailed(true);
-        } else if (state === 'failed') {
-          setStatusText('Falha de conexão.');
-          setConnectionFailed(true);
-        }
-      });
-      session.onSignalEvent((ev) => {
-        if (ev === 'answerSent' || ev === 'answerReceived') handleConnected();
-      });
-      session.onRemoteTrack((stream) => {
-        if (remoteRef.current) remoteRef.current.srcObject = stream;
-        setRemoteConnected(true);
-        setRemoteDisconnected(false);
-        setRemoteHasVideo(stream.getVideoTracks().length > 0);
-        setRemoteHasAudio(stream.getAudioTracks().length > 0);
-        // Add listeners for track changes (if tracks are added later)
-        stream.onaddtrack = () => {
-          setRemoteHasVideo(stream.getVideoTracks().length > 0);
-          setRemoteHasAudio(stream.getAudioTracks().length > 0);
-        };
-        stream.onremovetrack = () => {
-          setRemoteHasVideo(stream.getVideoTracks().length > 0);
-          setRemoteHasAudio(stream.getAudioTracks().length > 0);
-        };
-        handleConnected();
-      });
-      session.onRemoteMediaState((st) => {
-        setRemoteHasVideo(st.video);
-        setRemoteHasAudio(st.audio);
-      });
-      session.onRemoteEnd(() => {
-        setRemoteDisconnected(true);
-        setRemoteConnected(false);
-        setStatusText('O outro usuário saiu da chamada.');
-      });
-      session.onChatMessage((text) => {
-        setMessages((prev) => [...prev, { author: 'Paciente', text }]);
-      });
-      session.createChatChannel(); // Médico cria o canal
-      setStatusText('Conectado. Iniciando oferta...');
-      await session.createAndSendOffer();
+      await setupMedicoSession(session);
     } catch (err: any) {
       const msg = String(err?.message || 'Falha ao iniciar oferta.');
       if (msg.includes('forbidden_only_medico_can_claim')) {
@@ -436,6 +420,64 @@ function AtendimentoInner() {
     } finally {
       claimingRef.current = false;
     }
+  }
+
+  // Abstração da lógica comum do médico
+  async function setupMedicoSession(session: ReturnType<typeof createWebRTCSession>) {
+    try {
+      const stream = await startLocalMedia();
+      session.setLocalStream(stream);
+      session.sendMediaState(camEnabled, micEnabled);
+    } catch (e) { }
+
+    session.onConnectionStateChange((state) => {
+      if (state === 'connected') handleConnected();
+    });
+    session.onIceConnectionStateChange((state) => {
+      if (state === 'connected' || state === 'completed') {
+        handleConnected();
+      } else if (state === 'disconnected') {
+        setStatusText('Conexão perdida. Tentando reconectar...');
+        setConnectionFailed(true);
+      } else if (state === 'failed') {
+        setStatusText('Falha de conexão.');
+        setConnectionFailed(true);
+      }
+    });
+    session.onSignalEvent((ev) => {
+      if (ev === 'answerSent' || ev === 'answerReceived') handleConnected();
+    });
+    session.onRemoteTrack((stream) => {
+      if (remoteRef.current) remoteRef.current.srcObject = stream;
+      setRemoteConnected(true);
+      setRemoteDisconnected(false);
+      setRemoteHasVideo(stream.getVideoTracks().length > 0);
+      setRemoteHasAudio(stream.getAudioTracks().length > 0);
+      stream.onaddtrack = () => {
+        setRemoteHasVideo(stream.getVideoTracks().length > 0);
+        setRemoteHasAudio(stream.getAudioTracks().length > 0);
+      };
+      stream.onremovetrack = () => {
+        setRemoteHasVideo(stream.getVideoTracks().length > 0);
+        setRemoteHasAudio(stream.getAudioTracks().length > 0);
+      };
+      handleConnected();
+    });
+    session.onRemoteMediaState((st) => {
+      setRemoteHasVideo(st.video);
+      setRemoteHasAudio(st.audio);
+    });
+    session.onRemoteEnd(() => {
+      setRemoteDisconnected(true);
+      setRemoteConnected(false);
+      setStatusText('O outro usuário saiu da chamada.');
+    });
+    session.onChatMessage((text) => {
+      setMessages((prev) => [...prev, { author: 'Paciente', text }]);
+    });
+    session.createChatChannel();
+    setStatusText('Conectado. Iniciando oferta...');
+    await session.createAndSendOffer();
   }
 
   function requestFinishCall() {
