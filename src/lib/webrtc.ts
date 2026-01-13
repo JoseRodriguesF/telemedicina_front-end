@@ -39,8 +39,16 @@ export type WebRTCSession = {
 };
 
 export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
-  const pc = new RTCPeerConnection({ iceServers: args.iceServers });
+  console.log('[WebRTC] Creating session for role:', args.role);
+  const pc = new RTCPeerConnection({
+    iceServers: args.iceServers,
+    iceTransportPolicy: 'all',
+    bundlePolicy: 'max-bundle',
+    rtcpMuxPolicy: 'require'
+  });
+
   const ws = new WebSocket(`${args.wsBaseUrl}?roomId=${encodeURIComponent(args.roomId)}&token=${encodeURIComponent(args.token)}`);
+
   let localStream: MediaStream | null = null;
   let onRemote: ((stream: MediaStream) => void) | null = null;
   let onRemoteMedia: ((state: { video: boolean; audio: boolean }) => void) | null = null;
@@ -51,24 +59,17 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   let onIceState: ((state: RTCIceConnectionState) => void) | null = null;
   let onSignalEv: ((ev: 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived' | 'ready' | 'peer-joined') => void) | null = null;
 
+  const pendingIceCandidates: RTCIceCandidateInit[] = [];
+
   const waitForOpen = () =>
     new Promise<void>((resolve, reject) => {
       if (ws.readyState === WebSocket.OPEN) {
         resolve();
         return;
       }
-      const onOpen = () => {
-        cleanup();
-        resolve();
-      };
-      const onError = () => {
-        cleanup();
-        reject(new Error('Signal socket error'));
-      };
-      const onClose = () => {
-        cleanup();
-        reject(new Error('Signal socket closed before open'));
-      };
+      const onOpen = () => { cleanup(); resolve(); };
+      const onError = () => { cleanup(); reject(new Error('Signal socket error')); };
+      const onClose = () => { cleanup(); reject(new Error('Signal socket closed before open')); };
       const cleanup = () => {
         ws.removeEventListener('open', onOpen);
         ws.removeEventListener('error', onError);
@@ -81,30 +82,44 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
 
   pc.onicecandidate = (e) => {
     if (e.candidate) {
+      console.log('[WebRTC] sending local ice-candidate');
       const candidate = e.candidate.toJSON();
-      // Prefer 'ice-candidate' but also support 'candidate'
       const msg: SignalMessage = { type: 'ice-candidate', candidate };
-      ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(msg));
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(msg));
+      }
     }
   };
 
   pc.ontrack = (e) => {
+    console.log('[WebRTC] ontrack event received', e.streams.length);
     const stream = e.streams[0];
-    if (onRemote) onRemote(stream);
+    if (onRemote && stream) {
+      onRemote(stream);
+    }
   };
 
   pc.onconnectionstatechange = () => {
+    console.log('[WebRTC] Connection state changed:', pc.connectionState);
     if (onConnState) onConnState(pc.connectionState);
   };
 
-  // Note: oniceconnectionstatechange also fires during negotiation
   pc.oniceconnectionstatechange = () => {
+    console.log('[WebRTC] ICE state changed:', pc.iceConnectionState);
     if (onIceState) onIceState(pc.iceConnectionState);
+  };
+
+  ws.onopen = () => {
+    console.log('[WebRTC] Signal socket opened');
+    const joinMsg: SignalMessage = { type: 'join', role: args.role };
+    ws.send(JSON.stringify(joinMsg));
   };
 
   ws.onmessage = async (evt) => {
     try {
       const msg = JSON.parse(evt.data) as SignalMessage;
+      console.log('[WebRTC] Incoming signal:', msg.type);
+
       if (msg.type === 'joined') {
         if (onSignalEv) onSignalEv('joined');
       } else if (msg.type === 'ready') {
@@ -113,16 +128,33 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
         if (onSignalEv) onSignalEv('peer-joined');
       } else if (msg.type === 'offer') {
         if (onSignalEv) onSignalEv('offerReceived');
-        await pc.setRemoteDescription(msg.sdp);
+        await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+
+        // Process pending candidates
+        while (pendingIceCandidates.length > 0) {
+          const cand = pendingIceCandidates.shift();
+          if (cand) await pc.addIceCandidate(cand).catch(e => console.warn('[WebRTC] Error adding pending ICE', e));
+        }
+
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         ws.send(JSON.stringify({ type: 'answer', sdp: answer }));
         if (onSignalEv) onSignalEv('answerSent');
       } else if (msg.type === 'answer') {
-        await pc.setRemoteDescription(msg.sdp);
+        await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
         if (onSignalEv) onSignalEv('answerReceived');
+
+        // Process pending candidates
+        while (pendingIceCandidates.length > 0) {
+          const cand = pendingIceCandidates.shift();
+          if (cand) await pc.addIceCandidate(cand).catch(e => console.warn('[WebRTC] Error adding pending ICE', e));
+        }
       } else if (msg.type === 'ice-candidate') {
-        await pc.addIceCandidate(msg.candidate);
+        if (pc.remoteDescription) {
+          await pc.addIceCandidate(msg.candidate).catch(e => console.warn('[WebRTC] Error adding ICE', e));
+        } else {
+          pendingIceCandidates.push(msg.candidate);
+        }
       } else if (msg.type === 'media-state') {
         if (onRemoteMedia) onRemoteMedia({ video: msg.video, audio: msg.audio });
       } else if (msg.type === 'end') {
@@ -131,25 +163,36 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
         ws.close();
       }
     } catch (err) {
-      console.error('WS message handling error', err);
+      console.error('[WebRTC] WS message handling error', err);
+    }
+  };
+
+  const setLocalStream = (stream: MediaStream | null) => {
+    console.log('[WebRTC] setLocalStream called', stream?.getTracks().length);
+    localStream = stream;
+    if (stream) {
+      stream.getTracks().forEach((t) => {
+        // Evita duplicar tracks se já existirem no PC
+        const alreadyAdded = pc.getSenders().some(s => s.track === t);
+        if (!alreadyAdded) {
+          pc.addTrack(t, stream);
+        }
+      });
     }
   };
 
   const startLocalMedia = async (constraints: MediaStreamConstraints = { video: true, audio: true }) => {
-    localStream = await navigator.mediaDevices.getUserMedia(constraints);
-    localStream.getTracks().forEach((t) => pc.addTrack(t, localStream!));
-    return localStream;
-  };
-
-  const setLocalStream = (stream: MediaStream | null) => {
-    localStream = stream;
-    if (stream) {
-      stream.getTracks().forEach((t) => pc.addTrack(t, stream));
-    }
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    setLocalStream(stream);
+    return stream;
   };
 
   const createAndSendOffer = async () => {
-    const offer = await pc.createOffer();
+    console.log('[WebRTC] createAndSendOffer called');
+    const offer = await pc.createOffer({
+      offerToReceiveAudio: true,
+      offerToReceiveVideo: true
+    });
     await pc.setLocalDescription(offer);
     const msg: SignalMessage = { type: 'offer', sdp: offer };
     await waitForOpen();
@@ -157,6 +200,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   };
 
   const createAndSendAnswer = async () => {
+    console.log('[WebRTC] createAndSendAnswer called');
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
     const msg: SignalMessage = { type: 'answer', sdp: answer };
@@ -171,8 +215,11 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   };
 
   const end = () => {
+    console.log('[WebRTC] ending session');
     try {
-      ws.send(JSON.stringify({ type: 'end' }));
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'end' }));
+      }
     } catch { }
     pc.close();
     ws.close();
@@ -181,79 +228,54 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     }
   };
 
-  const onRemoteTrack = (cb: (stream: MediaStream) => void) => {
-    onRemote = cb;
-  };
+  const onRemoteTrack = (cb: (stream: MediaStream) => void) => { onRemote = cb; };
+  const onRemoteMediaState = (cb: (state: { video: boolean; audio: boolean }) => void) => { onRemoteMedia = cb; };
+  const onRemoteEnd = (cb: () => void) => { onRemoteEndCb = cb; };
 
-  const onRemoteMediaState = (cb: (state: { video: boolean; audio: boolean }) => void) => {
-    onRemoteMedia = cb;
-  };
-
-  const onRemoteEnd = (cb: () => void) => {
-    onRemoteEndCb = cb;
-  };
-
-  // Chat via DataChannel
   const createChatChannel = () => {
     if (chatChannel) return chatChannel;
+    console.log('[WebRTC] creating data channel "chat"');
     try {
-      chatChannel = pc.createDataChannel('chat');
+      chatChannel = pc.createDataChannel('chat', { negotiated: false });
       chatChannel.onmessage = (ev) => {
         if (onChatMsg) onChatMsg(String(ev.data ?? ''));
       };
+      chatChannel.onopen = () => console.log('[WebRTC] Chat channel opened');
+      chatChannel.onerror = (e) => console.error('[WebRTC] Chat channel error', e);
       return chatChannel;
-    } catch {
+    } catch (err) {
+      console.error('[WebRTC] failed to create data channel', err);
       return null;
     }
   };
 
   pc.ondatachannel = (ev) => {
+    console.log('[WebRTC] ondatachannel event received:', ev.channel.label);
     chatChannel = ev.channel;
     chatChannel.onmessage = (e) => {
       if (onChatMsg) onChatMsg(String(e.data ?? ''));
     };
+    chatChannel.onopen = () => console.log('[WebRTC] Remote chat channel opened');
   };
 
-  const onChatMessage = (cb: (text: string) => void) => {
-    onChatMsg = cb;
-  };
-
-  const onConnectionStateChange = (cb: (state: RTCPeerConnectionState) => void) => {
-    onConnState = cb;
-  };
-
-  const onIceConnectionStateChange = (cb: (state: RTCIceConnectionState) => void) => {
-    onIceState = cb;
-  };
-
-  const onSignalEvent = (cb: (ev: 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived' | 'ready' | 'peer-joined') => void) => {
-    onSignalEv = cb;
-  };
+  const onChatMessage = (cb: (text: string) => void) => { onChatMsg = cb; };
+  const onConnectionStateChange = (cb: (state: RTCPeerConnectionState) => void) => { onConnState = cb; };
+  const onIceConnectionStateChange = (cb: (state: RTCIceConnectionState) => void) => { onIceState = cb; };
+  const onSignalEvent = (cb: (ev: 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived' | 'ready' | 'peer-joined') => void) => { onSignalEv = cb; };
 
   const sendMessage = (text: string) => {
     if (chatChannel && chatChannel.readyState === 'open') {
       chatChannel.send(text);
+    } else {
+      console.warn('[WebRTC] cannot send message, chat channel not open');
     }
   };
 
   return {
-    pc,
-    ws,
-    localStream,
-    startLocalMedia,
-    setLocalStream,
-    createAndSendOffer,
-    createAndSendAnswer,
-    end,
-    sendMediaState,
-    onRemoteTrack,
-    onRemoteMediaState,
-    onRemoteEnd,
-    createChatChannel,
-    onChatMessage,
-    sendMessage, // Expose sendMessage
-    onConnectionStateChange,
-    onIceConnectionStateChange,
-    onSignalEvent,
+    pc, ws, localStream,
+    startLocalMedia, setLocalStream, createAndSendOffer, createAndSendAnswer,
+    end, sendMediaState, onRemoteTrack, onRemoteMediaState, onRemoteEnd,
+    createChatChannel, onChatMessage, sendMessage,
+    onConnectionStateChange, onIceConnectionStateChange, onSignalEvent,
   };
 }

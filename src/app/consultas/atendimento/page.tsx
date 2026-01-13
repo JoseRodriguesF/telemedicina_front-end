@@ -19,6 +19,7 @@ function AtendimentoInner() {
   const [reconnecting, setReconnecting] = useState(false);
 
   const handleConnected = () => {
+    console.log('[UI] Connection established/recharged.');
     setStatusText('Conectado.');
     setConnectionFailed(false);
     setReconnecting(false);
@@ -243,15 +244,19 @@ function AtendimentoInner() {
     if (role === 'medico' && hasReadySignalRef.current && isLocalReadyRef.current) {
       if (!offeringInitiatedRef.current && sessionRef.current) {
         offeringInitiatedRef.current = true;
-        console.log('🚀 Iniciando negociação WebRTC (Mídia + Chat)...');
+        console.log('[UI] 🚀 All conditions met. Doctor initiating WebRTC offer...');
         try {
           await sessionRef.current.createAndSendOffer();
-          console.log('✅ Oferta enviada com sucesso.');
+          console.log('[UI] ✅ Offer sent successfully.');
         } catch (err) {
-          console.error('❌ Erro ao enviar oferta:', err);
-          offeringInitiatedRef.current = false; // Permite re-tentativa se falhar
+          console.error('[UI] ❌ Error sending offer:', err);
+          offeringInitiatedRef.current = false;
         }
+      } else {
+        console.log('[UI] Conditions met but offering already initiated or session missing.');
       }
+    } else {
+      console.log('[UI] Delaying offer. Role:', role, 'ReadySignal:', hasReadySignalRef.current, 'LocalReady:', isLocalReadyRef.current);
     }
   };
 
@@ -327,6 +332,7 @@ function AtendimentoInner() {
       });
 
       session.onSignalEvent((ev) => {
+        console.log('[UI] Signal event received:', ev);
         if (ev === 'answerSent' || ev === 'answerReceived' || ev === 'ready' || ev === 'peer-joined') {
           handleConnected();
           if (ev === 'ready' || ev === 'peer-joined') {
@@ -337,7 +343,11 @@ function AtendimentoInner() {
       });
 
       session.onRemoteTrack((stream) => {
-        if (remoteRef.current) remoteRef.current.srcObject = stream;
+        console.log('[UI] Remote track received. Tracks:', stream.getTracks().length);
+        if (remoteRef.current) {
+          remoteRef.current.srcObject = stream;
+          remoteRef.current.play().catch(e => console.warn('[UI] Error playing remote video:', e));
+        }
         setRemoteConnected(true);
         setRemoteDisconnected(false);
         setRemoteHasVideo(stream.getVideoTracks().length > 0);
@@ -378,6 +388,7 @@ function AtendimentoInner() {
       }
 
       // Marca a mídia local como pronta e tenta iniciar a oferta
+      console.log('[UI] Local setup finished. Role:', role);
       isLocalReadyRef.current = true;
       checkAndInitiateOffering();
 
