@@ -288,8 +288,9 @@ function AtendimentoInner() {
     claimingRef.current = true;
 
     try {
-      // Lógica bilateral unificada: Médicos e Pacientes usam o mesmo POST /ps/fila/:id/claim
+      console.log('[UI] 🚀 Starting flow. CID from URL:', cid);
       const { roomId: rId, consultaId: cId, iceServers: ice } = await psClaim(cid, token);
+      console.log('[UI] psClaim success. Room:', rId, 'Consulta:', cId);
 
       setRoomId(rId);
       setConsultaIdState(cId);
@@ -330,12 +331,17 @@ function AtendimentoInner() {
 
       session.onSignalEvent((ev, payload) => {
         console.log('[UI] Signal event received:', ev, payload);
-        const isJoinedReady = ev === 'joined' && Array.isArray(payload?.participants) && payload.participants.length >= 2;
+
+        // Se recebermos 'joined' e já houver 2 pessoas, agimos como se fosse 'ready'
+        const participants = payload?.participants || [];
+        const isJoinedReady = ev === 'joined' && Array.isArray(participants) && participants.length >= 2;
+
+        if (isJoinedReady) console.log('[UI] "joined" signal has 2+ participants. Treating as ready.');
 
         if (ev === 'answerSent' || ev === 'answerReceived' || ev === 'ready' || ev === 'peer-joined' || isJoinedReady) {
           handleConnected();
           if (ev === 'ready' || ev === 'peer-joined' || isJoinedReady) {
-            console.log('[UI] Signal indicates room is ready. Marked hasReadySignalRef.');
+            console.log(`[UI] Signal "${ev}" indicates room is ready. Marked hasReadySignalRef.`);
             hasReadySignalRef.current = true;
             checkAndInitiateOffering();
           }
@@ -402,6 +408,15 @@ function AtendimentoInner() {
       console.log('[UI] Local setup finished. Role:', role);
       isLocalReadyRef.current = true;
       checkAndInitiateOffering();
+
+      // Failsafe: se nada aconteceu em 8 segundos, tenta forçar uma oferta se for médico
+      setTimeout(() => {
+        if (role === 'medico' && !offeringInitiatedRef.current && isLocalReadyRef.current) {
+          console.log('[UI] Failsafe: No signal received after 8s. Forcing offer as doctor.');
+          hasReadySignalRef.current = true;
+          checkAndInitiateOffering();
+        }
+      }, 8000);
 
       setStatusText('Conectado.');
 

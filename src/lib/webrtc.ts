@@ -42,7 +42,7 @@ export type WebRTCSession = {
 };
 
 export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
-  console.log('[WebRTC] Creating session for role:', args.role);
+  console.log('[WebRTC] Creating session for role:', args.role, 'Room:', args.roomId);
   const pc = new RTCPeerConnection({
     iceServers: args.iceServers,
     iceTransportPolicy: 'all',
@@ -60,7 +60,19 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   let onChatMsg: ((text: string) => void) | null = null;
   let onConnState: ((state: RTCPeerConnectionState) => void) | null = null;
   let onIceState: ((state: RTCIceConnectionState) => void) | null = null;
+
+  // Signaling event queuing to avoid race conditions
   let onSignalEv: ((ev: SignalEvent, payload?: any) => void) | null = null;
+  const signalQueue: Array<{ ev: SignalEvent, payload?: any }> = [];
+
+  const emitSignal = (ev: SignalEvent, payload?: any) => {
+    if (onSignalEv) {
+      onSignalEv(ev, payload);
+    } else {
+      console.log(`[WebRTC] Queuing signal event: ${ev} (no listener attached yet)`);
+      signalQueue.push({ ev, payload });
+    }
+  };
 
   const pendingIceCandidates: RTCIceCandidateInit[] = [];
 
@@ -99,8 +111,8 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     const stream = e.streams[0];
     if (onRemote && stream) {
       onRemote(stream);
-    } else {
-      console.warn('[WebRTC] ontrack received but onRemote listener is missing or stream empty');
+    } else if (!onRemote) {
+      console.warn('[WebRTC] ontrack received but no remote listener attached');
     }
   };
 
@@ -126,35 +138,30 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
       console.log('[WebRTC] Incoming signal:', msg.type);
 
       if (msg.type === 'joined') {
-        if (onSignalEv) onSignalEv('joined', msg);
+        emitSignal('joined', msg);
       } else if (msg.type === 'ready') {
-        if (onSignalEv) onSignalEv('ready', msg);
+        emitSignal('ready', msg);
       } else if (msg.type === 'peer-joined') {
-        if (onSignalEv) onSignalEv('peer-joined', msg);
+        emitSignal('peer-joined', msg);
       } else if (msg.type === 'peer-left') {
-        if (onSignalEv) onSignalEv('peer-left', msg);
+        emitSignal('peer-left', msg);
       } else if (msg.type === 'offer') {
-        console.log('[WebRTC] Offer received, setting remote description');
-        if (onSignalEv) onSignalEv('offerReceived', msg);
+        emitSignal('offerReceived', msg);
         await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
 
-        // Process pending candidates
         while (pendingIceCandidates.length > 0) {
           const cand = pendingIceCandidates.shift();
           if (cand) await pc.addIceCandidate(cand).catch(e => console.warn('[WebRTC] Error adding pending ICE', e));
         }
 
-        console.log('[WebRTC] Creating and sending answer');
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         ws.send(JSON.stringify({ type: 'answer', sdp: answer }));
-        if (onSignalEv) onSignalEv('answerSent', { sdp: answer });
+        emitSignal('answerSent', { sdp: answer });
       } else if (msg.type === 'answer') {
-        console.log('[WebRTC] Answer received, setting remote description');
         await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-        if (onSignalEv) onSignalEv('answerReceived', msg);
+        emitSignal('answerReceived', msg);
 
-        // Process pending candidates
         while (pendingIceCandidates.length > 0) {
           const cand = pendingIceCandidates.shift();
           if (cand) await pc.addIceCandidate(cand).catch(e => console.warn('[WebRTC] Error adding pending ICE', e));
@@ -163,13 +170,11 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
         if (pc.remoteDescription) {
           await pc.addIceCandidate(msg.candidate).catch(e => console.warn('[WebRTC] Error adding ICE', e));
         } else {
-          console.log('[WebRTC] ICE candidate arrived before remote description, queuing');
           pendingIceCandidates.push(msg.candidate);
         }
       } else if (msg.type === 'media-state') {
         if (onRemoteMedia) onRemoteMedia({ video: msg.video, audio: msg.audio });
       } else if (msg.type === 'end') {
-        console.log('[WebRTC] "end" signal received');
         if (onRemoteEndCb) onRemoteEndCb();
         pc.close();
         ws.close();
@@ -184,7 +189,6 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     localStream = stream;
     if (stream) {
       stream.getTracks().forEach((t) => {
-        // Evita duplicar tracks se já existirem no PC
         const alreadyAdded = pc.getSenders().some(s => s.track === t);
         if (!alreadyAdded) {
           pc.addTrack(t, stream);
@@ -252,34 +256,38 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
       chatChannel.onmessage = (ev) => {
         if (onChatMsg) onChatMsg(String(ev.data ?? ''));
       };
-      chatChannel.onopen = () => console.log('[WebRTC] Chat channel opened');
-      chatChannel.onerror = (e) => console.error('[WebRTC] Chat channel error', e);
       return chatChannel;
-    } catch (err) {
-      console.error('[WebRTC] failed to create data channel', err);
+    } catch {
       return null;
     }
   };
 
   pc.ondatachannel = (ev) => {
-    console.log('[WebRTC] ondatachannel event received:', ev.channel.label);
     chatChannel = ev.channel;
     chatChannel.onmessage = (e) => {
       if (onChatMsg) onChatMsg(String(e.data ?? ''));
     };
-    chatChannel.onopen = () => console.log('[WebRTC] Remote chat channel opened');
   };
 
   const onChatMessage = (cb: (text: string) => void) => { onChatMsg = cb; };
   const onConnectionStateChange = (cb: (state: RTCPeerConnectionState) => void) => { onConnState = cb; };
   const onIceConnectionStateChange = (cb: (state: RTCIceConnectionState) => void) => { onIceState = cb; };
-  const onSignalEvent = (cb: (ev: SignalEvent, payload?: any) => void) => { onSignalEv = cb; };
+
+  const onSignalEvent = (cb: (ev: SignalEvent, payload?: any) => void) => {
+    onSignalEv = cb;
+    // Flush queued signals
+    while (signalQueue.length > 0) {
+      const item = signalQueue.shift();
+      if (item) {
+        console.log(`[WebRTC] Flushing queued signal: ${item.ev}`);
+        cb(item.ev, item.payload);
+      }
+    }
+  };
 
   const sendMessage = (text: string) => {
     if (chatChannel && chatChannel.readyState === 'open') {
       chatChannel.send(text);
-    } else {
-      console.warn('[WebRTC] cannot send message, chat channel not open');
     }
   };
 
