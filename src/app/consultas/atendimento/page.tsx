@@ -63,6 +63,7 @@ function AtendimentoInner() {
   const [remoteHasVideo, setRemoteHasVideo] = useState(false);
   const [remoteHasAudio, setRemoteHasAudio] = useState(false);
   const [remoteDisconnected, setRemoteDisconnected] = useState(false);
+  const [showExitMessage, setShowExitMessage] = useState(false);
   // Médico entra e compartilha sua mídia ao chegar.
   // Ao entrar, paciente cria sala + mídia; médico apenas abre mídia e faz claim.
   // Auto-start sem botão: inicia o fluxo uma única vez ao montar a página.
@@ -101,9 +102,25 @@ function AtendimentoInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Timer para mostrar mensagem de saída definitiva após 10s de desconexão
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (remoteDisconnected) {
+      setShowExitMessage(false);
+      timer = setTimeout(() => {
+        setShowExitMessage(true);
+      }, 10000); // 10 segundos
+    } else {
+      setShowExitMessage(false);
+    }
+    return () => clearTimeout(timer);
+  }, [remoteDisconnected]);
+
   // Polling de participantes: detecta quando o outro usuário entra e dispara a conexão
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (remoteConnected) return; // Se já está conectado, não precisa de polling redundante
+
     const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
     if (!cid || !token) return;
     if (pollingRef.current !== null) return;
@@ -114,12 +131,20 @@ function AtendimentoInner() {
         const resp = await listParticipants(cid, token);
         if (!stopped && Array.isArray(resp?.participants) && resp.participants.length >= 2) {
           handleConnected();
-          // O polling agora serve apenas para UI. 
-          // A negociação é disparada pelos sinais do WebSocket (ready/peer-joined).
         }
-      } catch { }
+      } catch (err: any) {
+        // Se der 403, paramos o polling para evitar flood no console
+        if (err?.response?.status === 403) {
+          console.warn('[UI] Polling de participantes desativado (403 Forbidden).');
+          stopped = true;
+          if (pollingRef.current !== null) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
+        }
+      }
     };
-    const timerId = window.setInterval(check, 2000);
+    const timerId = window.setInterval(check, 3000); // Aumentado para 3s para ser menos agressivo
     pollingRef.current = timerId;
     check();
     return () => {
@@ -363,6 +388,7 @@ function AtendimentoInner() {
         }
         setRemoteConnected(true);
         setRemoteDisconnected(false);
+        setShowExitMessage(false);
         setRemoteHasVideo(stream.getVideoTracks().length > 0);
         setRemoteHasAudio(stream.getAudioTracks().length > 0);
 
@@ -531,11 +557,17 @@ function AtendimentoInner() {
 
             {remoteDisconnected && (
               <div className="call-loader-overlay disconnected">
-                <div className="disconnected-icon">📞</div>
-                <div className="call-loader-text">O outro usuário saiu da chamada.</div>
-                <Button variant="primary" onClick={() => router.push('/consultas')} style={{ marginTop: '1rem' }}>
-                  Voltar para Consultas
-                </Button>
+                <div className="disconnected-icon">{showExitMessage ? '📞' : '🌐'}</div>
+                <div className="call-loader-text">
+                  {showExitMessage
+                    ? 'O outro usuário saiu da chamada.'
+                    : 'Conexão interrompida. Aguardando reconexão...'}
+                </div>
+                {showExitMessage && (
+                  <Button variant="primary" onClick={() => router.push('/consultas')} style={{ marginTop: '1rem' }}>
+                    Voltar para Consultas
+                  </Button>
+                )}
               </div>
             )}
 
