@@ -33,7 +33,7 @@ export default function InicioPage() {
           found = true;
         }
       }
-    } catch {}
+    } catch { }
     // Se não achou no sessionStorage, busca no backend
     if (!found && token && u) {
       psListActiveRooms(token).then((rooms) => {
@@ -43,12 +43,12 @@ export default function InicioPage() {
           setReconnectData({
             roomId: sala.roomId,
             consultaId: sala.consultaId,
-            userId: u.id,
-            role: String(r.medicoId) === String(u.id) ? 'medico' : 'paciente'
+            userId: String(u.id),
+            role: String(sala.medicoId) === String(u.id) ? 'medico' : 'paciente'
           });
           setShowReconnect(true);
         }
-      }).catch(() => {});
+      }).catch(() => { });
     }
   }, []);
 

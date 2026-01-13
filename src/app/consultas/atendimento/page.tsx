@@ -268,7 +268,7 @@ function AtendimentoInner() {
       sessionStorage.setItem('consulta_reconnect', JSON.stringify({
         roomId: data.roomId,
         consultaId: data.consultaId,
-        userId: user?.id,
+        userId: String(user?.id || ''),
         role,
         timestamp: Date.now()
       }));
@@ -352,7 +352,7 @@ function AtendimentoInner() {
         sessionStorage.setItem('consulta_reconnect', JSON.stringify({
           roomId,
           consultaId,
-          userId: user?.id,
+          userId: String(user?.id || ''),
           role,
           timestamp: Date.now()
         }));
