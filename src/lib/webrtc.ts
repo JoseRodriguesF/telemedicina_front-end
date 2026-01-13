@@ -3,6 +3,7 @@ export type SignalMessage =
   | { type: 'joined'; roomId: string; participants: Array<{ userId: string | number; role: string }> }
   | { type: 'ready' }
   | { type: 'peer-joined'; userId: string | number; role: string }
+  | { type: 'peer-left'; userId: string | number; role: string }
   | { type: 'offer'; sdp: RTCSessionDescriptionInit }
   | { type: 'answer'; sdp: RTCSessionDescriptionInit }
   | { type: 'ice-candidate', candidate: RTCIceCandidateInit }
@@ -16,6 +17,8 @@ export type WebRTCSessionArgs = {
   wsBaseUrl: string; // e.g. wss://.../signal
   iceServers: RTCIceServer[];
 };
+
+export type SignalEvent = 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived' | 'ready' | 'peer-joined' | 'peer-left';
 
 export type WebRTCSession = {
   pc: RTCPeerConnection;
@@ -34,7 +37,7 @@ export type WebRTCSession = {
   onChatMessage: (cb: (text: string) => void) => void;
   onConnectionStateChange: (cb: (state: RTCPeerConnectionState) => void) => void;
   onIceConnectionStateChange: (cb: (state: RTCIceConnectionState) => void) => void;
-  onSignalEvent: (cb: (ev: 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived' | 'ready' | 'peer-joined') => void) => void;
+  onSignalEvent: (cb: (ev: SignalEvent, payload?: any) => void) => void;
   sendMessage: (text: string) => void;
 };
 
@@ -57,7 +60,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   let onChatMsg: ((text: string) => void) | null = null;
   let onConnState: ((state: RTCPeerConnectionState) => void) | null = null;
   let onIceState: ((state: RTCIceConnectionState) => void) | null = null;
-  let onSignalEv: ((ev: 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived' | 'ready' | 'peer-joined') => void) | null = null;
+  let onSignalEv: ((ev: SignalEvent, payload?: any) => void) | null = null;
 
   const pendingIceCandidates: RTCIceCandidateInit[] = [];
 
@@ -121,13 +124,15 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
       console.log('[WebRTC] Incoming signal:', msg.type);
 
       if (msg.type === 'joined') {
-        if (onSignalEv) onSignalEv('joined');
+        if (onSignalEv) onSignalEv('joined', msg);
       } else if (msg.type === 'ready') {
-        if (onSignalEv) onSignalEv('ready');
+        if (onSignalEv) onSignalEv('ready', msg);
       } else if (msg.type === 'peer-joined') {
-        if (onSignalEv) onSignalEv('peer-joined');
+        if (onSignalEv) onSignalEv('peer-joined', msg);
+      } else if (msg.type === 'peer-left') {
+        if (onSignalEv) onSignalEv('peer-left', msg);
       } else if (msg.type === 'offer') {
-        if (onSignalEv) onSignalEv('offerReceived');
+        if (onSignalEv) onSignalEv('offerReceived', msg);
         await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
 
         // Process pending candidates
@@ -139,10 +144,10 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         ws.send(JSON.stringify({ type: 'answer', sdp: answer }));
-        if (onSignalEv) onSignalEv('answerSent');
+        if (onSignalEv) onSignalEv('answerSent', { sdp: answer });
       } else if (msg.type === 'answer') {
         await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-        if (onSignalEv) onSignalEv('answerReceived');
+        if (onSignalEv) onSignalEv('answerReceived', msg);
 
         // Process pending candidates
         while (pendingIceCandidates.length > 0) {
@@ -261,7 +266,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   const onChatMessage = (cb: (text: string) => void) => { onChatMsg = cb; };
   const onConnectionStateChange = (cb: (state: RTCPeerConnectionState) => void) => { onConnState = cb; };
   const onIceConnectionStateChange = (cb: (state: RTCIceConnectionState) => void) => { onIceState = cb; };
-  const onSignalEvent = (cb: (ev: 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived' | 'ready' | 'peer-joined') => void) => { onSignalEv = cb; };
+  const onSignalEvent = (cb: (ev: SignalEvent, payload?: any) => void) => { onSignalEv = cb; };
 
   const sendMessage = (text: string) => {
     if (chatChannel && chatChannel.readyState === 'open') {

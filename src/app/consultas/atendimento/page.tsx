@@ -331,14 +331,26 @@ function AtendimentoInner() {
         }
       });
 
-      session.onSignalEvent((ev) => {
-        console.log('[UI] Signal event received:', ev);
-        if (ev === 'answerSent' || ev === 'answerReceived' || ev === 'ready' || ev === 'peer-joined') {
+      session.onSignalEvent((ev, payload) => {
+        console.log('[UI] Signal event received:', ev, payload);
+
+        // Se recebermos 'joined' e já houver 2 pessoas, agimos como se fosse 'ready'
+        const isJoinedReady = ev === 'joined' && Array.isArray(payload?.participants) && payload.participants.length >= 2;
+
+        if (ev === 'answerSent' || ev === 'answerReceived' || ev === 'ready' || ev === 'peer-joined' || isJoinedReady) {
           handleConnected();
-          if (ev === 'ready' || ev === 'peer-joined') {
+          if (ev === 'ready' || ev === 'peer-joined' || isJoinedReady) {
+            console.log('[UI] Signal indicates room is ready. Marked hasReadySignalRef.');
             hasReadySignalRef.current = true;
             checkAndInitiateOffering();
           }
+        }
+
+        if (ev === 'peer-left') {
+          console.log('[UI] Peer left the room.');
+          setRemoteDisconnected(true);
+          setRemoteConnected(false);
+          setStatusText('O outro usuário saiu da sala.');
         }
       });
 
