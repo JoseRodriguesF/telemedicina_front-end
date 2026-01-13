@@ -99,6 +99,8 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     const stream = e.streams[0];
     if (onRemote && stream) {
       onRemote(stream);
+    } else {
+      console.warn('[WebRTC] ontrack received but onRemote listener is missing or stream empty');
     }
   };
 
@@ -132,6 +134,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
       } else if (msg.type === 'peer-left') {
         if (onSignalEv) onSignalEv('peer-left', msg);
       } else if (msg.type === 'offer') {
+        console.log('[WebRTC] Offer received, setting remote description');
         if (onSignalEv) onSignalEv('offerReceived', msg);
         await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
 
@@ -141,11 +144,13 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
           if (cand) await pc.addIceCandidate(cand).catch(e => console.warn('[WebRTC] Error adding pending ICE', e));
         }
 
+        console.log('[WebRTC] Creating and sending answer');
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         ws.send(JSON.stringify({ type: 'answer', sdp: answer }));
         if (onSignalEv) onSignalEv('answerSent', { sdp: answer });
       } else if (msg.type === 'answer') {
+        console.log('[WebRTC] Answer received, setting remote description');
         await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
         if (onSignalEv) onSignalEv('answerReceived', msg);
 
@@ -158,11 +163,13 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
         if (pc.remoteDescription) {
           await pc.addIceCandidate(msg.candidate).catch(e => console.warn('[WebRTC] Error adding ICE', e));
         } else {
+          console.log('[WebRTC] ICE candidate arrived before remote description, queuing');
           pendingIceCandidates.push(msg.candidate);
         }
       } else if (msg.type === 'media-state') {
         if (onRemoteMedia) onRemoteMedia({ video: msg.video, audio: msg.audio });
       } else if (msg.type === 'end') {
+        console.log('[WebRTC] "end" signal received');
         if (onRemoteEndCb) onRemoteEndCb();
         pc.close();
         ws.close();

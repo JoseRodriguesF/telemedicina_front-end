@@ -309,17 +309,14 @@ function AtendimentoInner() {
       const session = createWebRTCSession({ roomId: rId, token, role, wsBaseUrl, iceServers: ice });
       sessionRef.current = session;
 
-      // Inicializa mídia local
-      const stream = await startLocalMedia();
-      session.setLocalStream(stream);
-      session.sendMediaState(camEnabled, micEnabled);
-
-      // Listeners comuns de conexão
+      // 1. Configurar listeners IMEDIATAMENTE após criar a sessão para não perder sinais
       session.onConnectionStateChange((state) => {
+        console.log('[UI] Connection state:', state);
         if (state === 'connected') handleConnected();
       });
 
       session.onIceConnectionStateChange((state) => {
+        console.log('[UI] ICE state:', state);
         if (state === 'connected' || state === 'completed') {
           handleConnected();
         } else if (state === 'disconnected') {
@@ -333,8 +330,6 @@ function AtendimentoInner() {
 
       session.onSignalEvent((ev, payload) => {
         console.log('[UI] Signal event received:', ev, payload);
-
-        // Se recebermos 'joined' e já houver 2 pessoas, agimos como se fosse 'ready'
         const isJoinedReady = ev === 'joined' && Array.isArray(payload?.participants) && payload.participants.length >= 2;
 
         if (ev === 'answerSent' || ev === 'answerReceived' || ev === 'ready' || ev === 'peer-joined' || isJoinedReady) {
@@ -387,7 +382,6 @@ function AtendimentoInner() {
         setStatusText('O outro usuário saiu da chamada.');
       });
 
-      // Configurações específicas por papel
       if (role === 'medico') {
         session.onChatMessage((text) => {
           setMessages((prev) => [...prev, { author: 'Paciente', text }]);
@@ -398,6 +392,11 @@ function AtendimentoInner() {
           setMessages((prev) => [...prev, { author: 'Médico', text }]);
         });
       }
+
+      // 2. Inicializa mídia local após os listeners
+      const stream = await startLocalMedia();
+      session.setLocalStream(stream);
+      session.sendMediaState(camEnabled, micEnabled);
 
       // Marca a mídia local como pronta e tenta iniciar a oferta
       console.log('[UI] Local setup finished. Role:', role);
