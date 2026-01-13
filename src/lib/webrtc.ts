@@ -1,5 +1,8 @@
 export type SignalMessage =
   | { type: 'join'; role: 'medico' | 'paciente' }
+  | { type: 'joined'; roomId: string; participants: Array<{ userId: string | number; role: string }> }
+  | { type: 'ready' }
+  | { type: 'peer-joined'; userId: string | number; role: string }
   | { type: 'offer'; sdp: RTCSessionDescriptionInit }
   | { type: 'answer'; sdp: RTCSessionDescriptionInit }
   | { type: 'ice-candidate', candidate: RTCIceCandidateInit }
@@ -31,7 +34,7 @@ export type WebRTCSession = {
   onChatMessage: (cb: (text: string) => void) => void;
   onConnectionStateChange: (cb: (state: RTCPeerConnectionState) => void) => void;
   onIceConnectionStateChange: (cb: (state: RTCIceConnectionState) => void) => void;
-  onSignalEvent: (cb: (ev: 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived') => void) => void;
+  onSignalEvent: (cb: (ev: 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived' | 'ready' | 'peer-joined') => void) => void;
   sendMessage: (text: string) => void;
 };
 
@@ -46,7 +49,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   let onChatMsg: ((text: string) => void) | null = null;
   let onConnState: ((state: RTCPeerConnectionState) => void) | null = null;
   let onIceState: ((state: RTCIceConnectionState) => void) | null = null;
-  let onSignalEv: ((ev: 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived') => void) | null = null;
+  let onSignalEv: ((ev: 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived' | 'ready' | 'peer-joined') => void) | null = null;
 
   const waitForOpen = () =>
     new Promise<void>((resolve, reject) => {
@@ -99,16 +102,16 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     if (onIceState) onIceState(pc.iceConnectionState);
   };
 
-  ws.onopen = () => {
-    const joinMsg: SignalMessage = { type: 'join', role: args.role };
-    ws.send(JSON.stringify(joinMsg));
-    if (onSignalEv) onSignalEv('joined');
-  };
-
   ws.onmessage = async (evt) => {
     try {
       const msg = JSON.parse(evt.data) as SignalMessage;
-      if (msg.type === 'offer') {
+      if (msg.type === 'joined') {
+        if (onSignalEv) onSignalEv('joined');
+      } else if (msg.type === 'ready') {
+        if (onSignalEv) onSignalEv('ready');
+      } else if (msg.type === 'peer-joined') {
+        if (onSignalEv) onSignalEv('peer-joined');
+      } else if (msg.type === 'offer') {
         if (onSignalEv) onSignalEv('offerReceived');
         await pc.setRemoteDescription(msg.sdp);
         const answer = await pc.createAnswer();
@@ -223,7 +226,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     onIceState = cb;
   };
 
-  const onSignalEvent = (cb: (ev: 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived') => void) => {
+  const onSignalEvent = (cb: (ev: 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived' | 'ready' | 'peer-joined') => void) => {
     onSignalEv = cb;
   };
 

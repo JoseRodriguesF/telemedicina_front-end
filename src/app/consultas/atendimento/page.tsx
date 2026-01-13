@@ -49,6 +49,8 @@ function AtendimentoInner() {
   const startedRef = useRef(false);
   const [showChat, setShowChat] = useState(true);
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
+  const hasReadySignalRef = useRef(false);
+  const isLocalReadyRef = useRef(false);
   const offeringInitiatedRef = useRef(false);
 
   // Mídia controls
@@ -111,17 +113,8 @@ function AtendimentoInner() {
         const resp = await listParticipants(cid, token);
         if (!stopped && Array.isArray(resp?.participants) && resp.participants.length >= 2) {
           handleConnected();
-
-          // Se sou o médico e o outro entrou, dispara a oferta inicial.
-          // Usamos a ref para garantir que enviamos apenas UMA vez a oferta inicial.
-          if (role === 'medico' && sessionRef.current && !remoteConnected && !offeringInitiatedRef.current) {
-            console.log('Detectado 2 participantes. Médico iniciando oferta única...');
-            offeringInitiatedRef.current = true;
-            sessionRef.current.createAndSendOffer().catch((err) => {
-              console.error('Erro ao enviar oferta inicial:', err);
-              offeringInitiatedRef.current = false; // Permite tentar novamente se falhou
-            });
-          }
+          // O polling agora serve apenas para UI. 
+          // A negociação é disparada pelos sinais do WebSocket (ready/peer-joined).
         }
       } catch { }
     };
@@ -241,6 +234,27 @@ function AtendimentoInner() {
     }
   }
 
+  /**
+   * Dispara a oferta WebRTC apenas quando as duas condições são atendidas:
+   * 1. O servidor enviou 'ready' ou 'peer-joined' (indicando que o outro lado está lá).
+   * 2. O navegador local já abriu a câmera e o canal de chat.
+   */
+  const checkAndInitiateOffering = async () => {
+    if (role === 'medico' && hasReadySignalRef.current && isLocalReadyRef.current) {
+      if (!offeringInitiatedRef.current && sessionRef.current) {
+        offeringInitiatedRef.current = true;
+        console.log('🚀 Iniciando negociação WebRTC (Mídia + Chat)...');
+        try {
+          await sessionRef.current.createAndSendOffer();
+          console.log('✅ Oferta enviada com sucesso.');
+        } catch (err) {
+          console.error('❌ Erro ao enviar oferta:', err);
+          offeringInitiatedRef.current = false; // Permite re-tentativa se falhar
+        }
+      }
+    }
+  };
+
   async function startAtendimentoFlow() {
     if (!token || !wsBaseUrl) return;
 
@@ -269,20 +283,8 @@ function AtendimentoInner() {
     claimingRef.current = true;
 
     try {
-      // Lógica unificada: Médicos e Pacientes agora usam o claim conforme atualização do backend.
-      // Se der 403 para o paciente (middleware restritivo), tentamos psCreateRoom como fallback.
-      let roomData;
-      try {
-        roomData = await psClaim(cid, token);
-      } catch (err: any) {
-        if (role === 'paciente' && err?.response?.status === 403) {
-          console.warn('psClaim retornou 403 para paciente. Tentando fallback psCreateRoom...');
-          roomData = await psCreateRoom(token);
-        } else {
-          throw err;
-        }
-      }
-      const { roomId: rId, consultaId: cId, iceServers: ice } = roomData;
+      // Lógica bilateral unificada: Médicos e Pacientes usam o mesmo POST /ps/fila/:id/claim
+      const { roomId: rId, consultaId: cId, iceServers: ice } = await psClaim(cid, token);
 
       setRoomId(rId);
       setConsultaIdState(cId);
@@ -325,7 +327,13 @@ function AtendimentoInner() {
       });
 
       session.onSignalEvent((ev) => {
-        if (ev === 'answerSent' || ev === 'answerReceived') handleConnected();
+        if (ev === 'answerSent' || ev === 'answerReceived' || ev === 'ready' || ev === 'peer-joined') {
+          handleConnected();
+          if (ev === 'ready' || ev === 'peer-joined') {
+            hasReadySignalRef.current = true;
+            checkAndInitiateOffering();
+          }
+        }
       });
 
       session.onRemoteTrack((stream) => {
@@ -363,13 +371,16 @@ function AtendimentoInner() {
           setMessages((prev) => [...prev, { author: 'Paciente', text }]);
         });
         session.createChatChannel();
-        // createAndSendOffer agora é disparado pelo polling de participantes
-        // para garantir que o paciente já esteja na sala.
       } else {
         session.onChatMessage((text) => {
           setMessages((prev) => [...prev, { author: 'Médico', text }]);
         });
       }
+
+      // Marca a mídia local como pronta e tenta iniciar a oferta
+      isLocalReadyRef.current = true;
+      checkAndInitiateOffering();
+
       setStatusText('Conectado.');
 
     } catch (err: any) {
