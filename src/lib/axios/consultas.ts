@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 // Buscar salas em andamento (consultas ativas)
 export type PSActiveRoom = {
   consultaId: string;
@@ -13,7 +15,6 @@ export async function psListActiveRooms(token: string, userId?: string): Promise
   const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
   return res.data as PSActiveRoom[];
 }
-import axios from 'axios';
 
 export type IceServer = {
   urls: string[];
