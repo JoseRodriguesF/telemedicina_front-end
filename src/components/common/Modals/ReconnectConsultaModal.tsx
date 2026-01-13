@@ -13,153 +13,142 @@ const ReconnectConsultaModal: React.FC<ReconnectConsultaModalProps> = ({ open, o
   if (!open) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content animate-pop-in">
-        <div className="modal-header">
-          <div className="pulse-icon">
-            <div className="inner-pulse" />
+    <div className="rc-overlay">
+      <div className="rc-modal" role="dialog" aria-modal="true">
+        <div className="rc-header">
+          <div className="rc-icon-pulse">
+            <div className="rc-inner-dot" />
           </div>
-          <h2>Consulta em Andamento</h2>
+          <h3 className="rc-title">Consulta em Andamento</h3>
         </div>
 
-        <div className="modal-body">
+        <div className="rc-body">
           <p>Detectamos que você possui uma sessão ativa. Deseja retornar ao atendimento agora?</p>
 
-          <div className="info-badge">
-            <span className="info-label">ID da Sessão:</span>
-            <span className="info-value">{consultaId ? String(consultaId).slice(0, 8) : '...'}</span>
+          <div className="rc-info-row">
+            <span className="rc-info-label">ID da Sessão:</span>
+            <span className="rc-info-value">{consultaId ? String(consultaId).slice(0, 8) : '...'}</span>
           </div>
 
-          <div className="info-badge">
-            <span className="info-label">Perfil de Acesso:</span>
-            <span className="info-value">{role === 'medico' ? 'Médico' : 'Paciente'}</span>
+          <div className="rc-info-row">
+            <span className="rc-info-label">Perfil de Acesso:</span>
+            <span className="rc-info-value">{role === 'medico' ? 'Médico' : 'Paciente'}</span>
           </div>
         </div>
 
-        <div className="modal-actions">
-          <Button variant="primary" onClick={onReconnect} className="btn-reconnect">
-            Reconectar Agora
-          </Button>
-          <Button variant="ghost" onClick={onClose}>
-            Continuar no Início
-          </Button>
+        <div className="rc-actions">
+          <Button variant="ghost" onClick={onClose}>Continuar no Início</Button>
+          <Button variant="primary" onClick={onReconnect}>Reconectar Agora</Button>
         </div>
       </div>
 
       <style jsx>{`
-        .modal-overlay {
+        .rc-overlay {
           position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(15, 23, 42, 0.75);
-          backdrop-filter: blur(8px);
+          top: 0; left: 0; width: 100vw; height: 100vh;
+          background: rgba(15, 23, 42, 0.6);
+          display: flex; align-items: center; justify-content: center;
+          z-index: 1000;
+          backdrop-filter: blur(4px);
+          animation: fadeIn 0.2s ease-out;
+        }
+
+        .rc-modal {
+          background: #fff;
+          border-radius: 16px;
+          width: 90%;
+          max-width: 420px;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+          display: flex;
+          flex-direction: column;
+          animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          overflow: hidden;
+        }
+
+        .rc-header {
+          padding: 20px 24px;
+          border-bottom: 1px solid #f1f5f9;
+          background: #fff;
           display: flex;
           align-items: center;
-          justify-content: center;
-          z-index: 1000;
-          padding: 20px;
+          gap: 12px;
         }
 
-        .modal-content {
-          background: #ffffff;
-          border-radius: 20px;
-          padding: 40px;
-          width: 100%;
-          max-width: 440px;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-          text-align: center;
-        }
-
-        .animate-pop-in {
-          animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes popIn {
-          0% { transform: scale(0.95); opacity: 0; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-
-        .modal-header {
-          margin-bottom: 24px;
-        }
-
-        .pulse-icon {
-          width: 64px;
-          height: 64px;
-          background: rgba(59, 130, 246, 0.1);
-          border-radius: 50%;
-          margin: 0 auto 16px;
+        .rc-icon-pulse {
+          width: 38px;
+          height: 38px;
+          border-radius: 999px;
+          background: #e0f2fe;
           display: flex;
           align-items: center;
           justify-content: center;
           position: relative;
         }
 
-        .inner-pulse {
-          width: 12px;
-          height: 12px;
-          background: #3b82f6;
+        .rc-inner-dot {
+          width: 10px;
+          height: 10px;
           border-radius: 50%;
-          animation: pulse 2s infinite;
+          background: #0ea5e9;
+          animation: rc-pulse 2s infinite;
         }
 
-        @keyframes pulse {
-          0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-          70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        @keyframes rc-pulse {
+          0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
+          70% { box-shadow: 0 0 0 10px rgba(14, 165, 233, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
         }
 
-        h2 {
-          color: #1e293b;
-          font-size: 1.5rem;
-          font-weight: 700;
+        .rc-title {
           margin: 0;
+          font-size: 1.15rem;
+          font-weight: 700;
+          color: #0f172a;
         }
 
-        .modal-body {
-          margin-bottom: 32px;
-        }
-
-        p {
-          color: #64748b;
+        .rc-body {
+          padding: 24px;
+          color: #334155;
           font-size: 1rem;
           line-height: 1.5;
-          margin-bottom: 24px;
         }
 
-        .info-badge {
-          background: #f8fafc;
-          border: 1px solid #f1f5f9;
-          border-radius: 12px;
-          padding: 12px 16px;
+        .rc-body p {
+          margin-bottom: 20px;
+          color: #64748b;
+        }
+
+        .rc-info-row {
           display: flex;
           justify-content: space-between;
-          align-items: center;
-          margin-bottom: 8px;
+          padding: 10px 0;
+          border-bottom: 1px solid #f8fafc;
         }
 
-        .info-label {
+        .rc-info-label {
           color: #94a3b8;
-          font-size: 0.85rem;
-          font-weight: 500;
-        }
-
-        .info-value {
-          color: #334155;
           font-size: 0.9rem;
-          font-weight: 600;
         }
 
-        .modal-actions {
+        .rc-info-value {
+          color: #1e293b;
+          font-weight: 600;
+          font-size: 0.9rem;
+        }
+
+        .rc-actions {
+          padding: 16px 24px;
+          background: #f8fafc;
+          border-top: 1px solid #f1f5f9;
           display: flex;
-          flex-direction: column;
+          justify-content: flex-end;
           gap: 12px;
         }
 
-        :global(.btn-reconnect) {
-          height: 48px !important;
-          font-weight: 600 !important;
-          font-size: 1rem !important;
-          width: 100% !important;
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { 
+          from { transform: translateY(20px); opacity: 0; } 
+          to { transform: translateY(0); opacity: 1; } 
         }
       `}</style>
     </div>

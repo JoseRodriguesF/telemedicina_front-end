@@ -36,15 +36,20 @@ export default function InicioPage() {
     } catch { }
     // Se não achou no sessionStorage, busca no backend
     if (!found && token && u) {
-      psListActiveRooms(token, String(u.id)).then((rooms) => {
-        // Agora o backend já retorna o que é relevante para o usuário
-        const sala = rooms.find(r => String(r.pacienteId) === String(u.id) || String(r.medicoId) === String(u.id));
+      const currentUserId = String(u.id);
+      psListActiveRooms(token, currentUserId).then((rooms) => {
+        // Busca qualquer sala onde o usuário atual participe (seja como médico ou paciente)
+        const sala = rooms.find(r =>
+          (r.pacienteId && String(r.pacienteId) === currentUserId) ||
+          (r.medicoId && String(r.medicoId) === currentUserId)
+        );
+
         if (sala) {
           setReconnectData({
             roomId: sala.roomId,
             consultaId: sala.consultaId,
-            userId: String(u.id),
-            role: String(sala.medicoId) === String(u.id) ? 'medico' : 'paciente'
+            userId: currentUserId,
+            role: (sala.medicoId && String(sala.medicoId) === currentUserId) ? 'medico' : 'paciente'
           });
           setShowReconnect(true);
         }
