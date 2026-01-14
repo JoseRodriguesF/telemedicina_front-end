@@ -1,157 +1,228 @@
-/* Styles specific to pré-consulta chat */
-.pc-card {
-  padding: 24px;
-}
+/* Pré-consulta - Athena Design System */
 
-
-
-
-/* Bloqueia rolagem da tela inteira */
-body {
-  overflow: hidden !important;
-}
-
-.inicio-page .inicio-main {
-  min-height: calc(100vh - 64px);
-  overflow: hidden;
-}
-
-.center-card {
-  flex: 1;
+.pc-page-container {
+  display: flex;
+  height: 100%;
+  width: 100%;
   margin-left: 24px;
+  /* Adjust for main content padding in layout */
   background: transparent;
-  border-radius: 8px;
-  padding: 1rem;
-  color: #0f172a;
+  overflow: hidden;
+  position: relative;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Updated main layout: Single centered column */
+.pc-centered-layout {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Right Side: Content & Chat */
+.pc-content-side {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  max-width: 800px;
+  padding: 2rem;
+  justify-content: center;
+  align-items: center;
+  /* Center children horizontal */
+  position: relative;
+  margin: 0 auto;
+  /* Ensure centering */
+}
+
+/* Welcome Screen State */
+.pc-welcome-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Styling for generic logo/icon if any remains, otherwise kept generic */
+.pc-logo-container {
+  margin-bottom: 1rem;
+}
+
+.pc-welcome-text h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+  line-height: 1.4;
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.pc-welcome-text p {
+  font-size: 1.1rem;
+  color: var(--text-secondary, #6b7280);
+  line-height: 1.6;
+}
+
+/* Input Area (Floating at bottom for welcome, fixed for chat) */
+.pc-input-wrapper {
+  width: 100%;
+  max-width: 700px;
+  margin-top: 2rem;
+  position: relative;
+}
+
+.pc-input-container {
+  display: flex;
+  align-items: center;
+  background: var(--bg-primary, #fff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 999px;
+  /* Pill shape */
+  padding: 0.5rem 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.pc-input-container:focus-within {
+  border-color: var(--color-primary-500, #3b82f6);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.pc-input-field {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0.75rem;
+  font-size: 1rem;
+  outline: none;
+  color: var(--text-primary);
+}
+
+.pc-send-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-primary-500, #3b82f6);
+  cursor: pointer;
+  padding: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.2s;
 }
 
-.pc-card {
-  padding: 24px;
+.pc-send-btn:hover:not(:disabled) {
+  transform: scale(1.1);
+}
+
+.pc-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Disclaimer */
+.pc-disclaimer {
+  margin-top: 1.5rem;
+  font-size: 0.75rem;
+  color: var(--text-tertiary, #9ca3af);
+  text-align: center;
+  max-width: 600px;
+}
+
+/* Chat History Mode styles */
+.pc-chat-history-container {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 600px;
-  margin: 24px auto;
-  box-sizing: border-box;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
-  min-height: 420px;
-  height: auto;
-  position: relative;
-  z-index: 1;
-}
-@media (max-width: 700px) {
-  .center-card {
-    margin-left: 0;
-    padding: 0.5rem;
-  }
-  .pc-card {
-    max-width: 99vw;
-    padding: 10px;
-    max-height: 350px;
-    margin: 8px auto;
-    min-height: unset;
-  }
-  .pc-card-header .pc-title {
-    font-size: 1.1rem;
-  }
-  .pc-chat-body {
-    padding: 6px;
-    font-size: 0.97rem;
-  }
-  .pc-chat-input {
-    flex-direction: column;
-    gap: 4px;
-  }
+  max-width: 700px;
+  /* Match input width */
+  height: 100%;
+  padding-bottom: 1rem;
 }
 
-/* Header layout: title left, action near right */
-.pc-card-header {
-  display: flex;
-      max-height: 180px;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.pc-card-header .pc-title {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 800;
-}
-.pc-card-header .pc-action {
-  margin-left: auto;
-  margin-right: 6px; /* keep button close to right edge */
-}
-
-.pc-chat {
+.pc-chat-messages {
+  flex: 1;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
-  gap: 12px;
+  gap: 1.5rem;
+  padding: 1rem 0;
+  margin-bottom: 2rem;
 }
 
-.pc-chat-body {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  max-height: 50vh;
-  min-height: 120px;
-  background: #ffffff;
-  border: 1px solid #e6edf3;
-  border-radius: 10px;
-  padding: 14px;
-}
-
-.pc-chat-message { margin-bottom: 10px; }
-.pc-chat-message { display: flex; flex-direction: column; margin-bottom: 10px; }
-.pc-chat-message .pc-chat-author { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
-.pc-chat-message .pc-chat-bubble {
-  display: inline-block;
-  background: #f3f4f6;
-  color: #0f172a;
-  padding: 10px 14px;
-  border-radius: 12px;
-  max-width: 80%;
-  word-wrap: break-word;
-}
-
-/* Left-aligned (assistant/system) */
-.pc-chat-message.assistant { align-items: flex-start; }
-.pc-chat-message.assistant .pc-chat-bubble { background: #f3f4f6; color: #0f172a; }
-
-/* System messages styling */
-.pc-chat-message.system { align-items: flex-start; }
-.pc-chat-message.system .pc-chat-bubble { background: #eef2ff; color: #1e3a8a; }
-
-/* Right-aligned (user) */
-.pc-chat-message.you { align-items: flex-end; }
-.pc-chat-message.you .pc-chat-bubble { background: #e0e7ff; color: #1d4ed8; }
-
-.pc-chat-input {
+.pc-message-row {
   display: flex;
-  gap: 8px;
-  align-items: center;
+  gap: 1rem;
+  max-width: 85%;
+  animation: fadeIn 0.3s ease-out;
 }
 
-.pc-chat-input .c-input {
-  flex: 1 1 auto;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+.pc-message-row.assistant {
+  align-self: flex-start;
+}
+
+.pc-message-row.user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.pc-message-bubble {
+  padding: 1rem 1.25rem;
+  border-radius: 1.5rem;
   font-size: 1rem;
+  line-height: 1.5;
 }
 
-.pc-chat-input .c-input:focus {
-  outline: none;
-  border-color: #2563EB;
-  box-shadow: 0 0 0 4px rgba(37,99,235,0.06);
+.pc-message-row.assistant .pc-message-bubble {
+  background: var(--bg-tertiary, #f3f4f6);
+  color: var(--text-primary);
+  border-bottom-left-radius: 0.25rem;
 }
 
-/* Make system messages slightly different */
-.pc-chat-message.system .pc-chat-bubble {
-  background: #eef2ff;
-  color: #1e3a8a;
+.pc-message-row.user .pc-message-bubble {
+  background: var(--color-primary-500, #3b82f6);
+  color: white;
+  border-bottom-right-radius: 0.25rem;
+}
+
+/* Custom Scrollbar */
+.pc-chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pc-chat-messages::-webkit-scrollbar-thumb {
+  background-color: var(--color-gray-300);
+  border-radius: 3px;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 1024px) {
+  .pc-split-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+  }
+
+  .pc-avatar-side {
+    height: 200px;
+    /* Reduced specific height for mobile */
+  }
+
+  .pc-avatar-img {
+    max-height: 100%;
+    max-width: 200px;
+  }
+
+  .pc-page-container {
+    margin-left: 0;
+  }
+
+  .pc-content-side {
+    padding: 1rem;
+  }
 }

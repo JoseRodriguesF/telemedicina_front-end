@@ -37,18 +37,17 @@ type ChatHistory = Array<{ role: 'user' | 'assistant'; content: string }>;
 
 function PreConsultaInner() {
   const router = useRouter();
-  // Chat temporário para pré-consulta — substitui o formulário
+  // Chat types
   type ChatMessage = { author: 'Você' | 'Sistema' | 'Angélica'; text: string };
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  // ✅ NOVO: Histórico no formato que o backend espera
+  // Histórico para o backend
   const [history, setHistory] = useState<ChatHistory>([]);
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [iaTyping, setIaTyping] = useState(false);
   const [completed, setCompleted] = useState(false);
-  const chatBodyRef = useRef<HTMLDivElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // ✅ Função auxiliar para converter messages para history
   const messagesToHistory = (msgs: ChatMessage[]): ChatHistory => {
     return msgs
       .filter(m => m.author === 'Você' || m.author === 'Angélica')
@@ -58,54 +57,20 @@ function PreConsultaInner() {
       }));
   };
 
-  // Mensagem inicial do bot (Angélica)
+  // Only auto-scroll if we have messages
   useEffect(() => {
-    if (messages.length === 0) {
-      (async () => {
-        const token = getToken();
-        if (!token) return;
-        setIsLoading(true);
-        setIaTyping(true);
-        try {
-          // ✅ Enviar com history vazio (primeira mensagem)
-          const res = await fetch('/api/chat-ia', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ 
-              message: 'oi',
-              history: [] // ✅ Histórico vazio na primeira mensagem
-            })
-          });
-          if (!res.ok) {
-            const txt = await res.text();
-            throw new Error(txt || 'Erro ao contactar a IA');
-          }
-          const data = await res.json();
-          const answer = String(data?.answer ?? 'Olá!');
-          setMessages([{ author: 'Angélica', text: answer }]);
-          // ✅ Atualizar histórico após primeira resposta
-          setHistory([
-            { role: 'user', content: 'oi' },
-            { role: 'assistant', content: answer }
-          ]);
-        } catch (err: any) {
-          setMessages([{ author: 'Angélica', text: 'Olá! (mensagem padrão)' }]);
-        } finally {
-          setIsLoading(false);
-          setIaTyping(false);
-        }
-      })();
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, []);
+  }, [messages, iaTyping]);
 
-  async function sendMessage() {
-    const t = draft.trim();
+  async function sendMessage(textInput?: string) {
+    const t = (textInput || draft).trim();
     if (!t || isLoading || iaTyping) return;
 
-    setMessages(prev => [...prev, { author: 'Você', text: t }]);
+    // Add user message immediately
+    const newMessages = [...messages, { author: 'Você', text: t } as ChatMessage];
+    setMessages(newMessages);
     setDraft('');
 
     const token = getToken();
@@ -118,7 +83,7 @@ function PreConsultaInner() {
     setIaTyping(true);
 
     try {
-      const currentHistory = messagesToHistory(messages);
+      const currentHistory = messagesToHistory(newMessages); // Use fresh state
       const res = await fetch('/api/chat-ia', {
         method: 'POST',
         headers: {
@@ -138,6 +103,7 @@ function PreConsultaInner() {
 
       const data = await res.json();
       const answer = String(data?.answer ?? 'Sem resposta da IA.');
+
       setMessages(prev => [...prev, { author: 'Angélica', text: answer }]);
       setHistory(prev => [
         ...prev,
@@ -186,18 +152,18 @@ function PreConsultaInner() {
 
   // Scroll automático do chat
   useEffect(() => {
-    const el = chatBodyRef.current;
+    const el = messagesEndRef.current;
     if (el) {
-      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+      el.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
   // Navegação automática ao completed
   useEffect(() => {
     if (completed) {
+      // Create room automatically after completion logic
       handleEnviar();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [completed]);
 
   // ✅ Limpar histórico ao sair da tela (desmontar componente)
@@ -208,71 +174,95 @@ function PreConsultaInner() {
     };
   }, []);
 
+  const hasMessages = messages.length > 0;
+
   return (
     <div className="inicio-page">
       <Sidebar activeId="consultas" />
-      <main className="inicio-main">
-        <div className="center-card">
-          <div className="pc-card">
-            <div className="pc-card-header">
-              <h2 className="pc-title">Pré-consulta — Chat</h2>
-              <div className="pc-action">
-                {/* Botão 'Concluir' removido, navegação é automática */}
-              </div>
-            </div>
-            <div className="pc-chat">
-              <div className="pc-chat-body" ref={chatBodyRef}>
-                {messages.map((m, i) => {
-                  let roleClass = 'assistant';
-                  if (m.author === 'Você') roleClass = 'you';
-                  if (m.author === 'Angélica') roleClass = 'assistant';
-                  return (
-                    <div key={i} className={`pc-chat-message ${roleClass}`}>
-                      <div className="pc-chat-author">{m.author}</div>
-                      <div className="pc-chat-bubble">
-                        {m.author === 'Angélica' ? (
-                          <span dangerouslySetInnerHTML={{ __html: formatIaText(m.text) }} />
-                        ) : (
-                          m.text
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-                {iaTyping && (
-                  <div className="pc-chat-message assistant">
-                    <div className="pc-chat-author">Angélica</div>
-                    <div className="pc-chat-bubble"><span>...</span></div>
+      <main className="inicio-main" style={{ padding: 0 }}>
+
+        <div className="pc-page-container">
+          <div className="pc-centered-layout">
+
+            {/* Content Only - Centered */}
+            <div className="pc-content-side">
+
+              {!hasMessages ? (
+                /* Welcome State */
+                <div className="pc-welcome-container">
+                  <div className="pc-welcome-text">
+                    <h1>
+                      Bem-vindo(a)! Eu sou a Angélica, sua assistente de saúde IA.<br />
+                      Estou aqui para realizar sua triagem inicial.
+                    </h1>
+                    <p>
+                      Podemos conversar sobre seus sintomas, dores ou preocupações de saúde para
+                      que eu possa encaminhá-lo para o especialista correto.
+                    </p>
                   </div>
-                )}
+                </div>
+              ) : (
+                /* Chat Active State */
+                <div className="pc-chat-history-container">
+                  <div className="pc-chat-messages">
+                    {messages.map((m, i) => (
+                      <div key={i} className={`pc-message-row ${m.author === 'Você' ? 'user' : 'assistant'}`}>
+                        <div className="pc-message-bubble">
+                          {m.author === 'Angélica' ? (
+                            <span dangerouslySetInnerHTML={{ __html: formatIaText(m.text) }} />
+                          ) : (
+                            m.text
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {iaTyping && (
+                      <div className="pc-message-row assistant">
+                        <div className="pc-message-bubble">
+                          <span className="typing-dots">...</span>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </div>
+              )}
+
+              {/* Input Area (Shared) */}
+              <div className="pc-input-wrapper">
+                <div className="pc-input-container">
+                  <input
+                    className="pc-input-field"
+                    placeholder="Compartilhe o que está sentindo agora..."
+                    value={draft}
+                    autoComplete="off"
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !isLoading && !iaTyping) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                    disabled={isLoading || iaTyping}
+                  />
+                  <button
+                    className="pc-send-btn"
+                    onClick={() => sendMessage()}
+                    disabled={isLoading || iaTyping || !draft.trim()}
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                  </button>
+                </div>
               </div>
-              <div className="pc-chat-input" style={{ display: 'flex', width: '100%' }}>
-                <input
-                  className="c-input"
-                  placeholder="Digite aqui e pressione Enter para enviar"
-                  value={draft}
-                  autoComplete="off"
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !isLoading && !iaTyping) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
-                  disabled={isLoading || iaTyping}
-                  style={{ flex: 1 }}
-                />
-                <button
-                  type="button"
-                  className="pc-send-btn"
-                  onClick={sendMessage}
-                  disabled={isLoading || iaTyping || !draft.trim()}
-                  style={{ marginLeft: 8, padding: '0 16px', borderRadius: 8, background: '#2563EB', color: '#fff', border: 'none', fontWeight: 700, cursor: (isLoading || iaTyping || !draft.trim()) ? 'not-allowed' : 'pointer' }}
-                >Enviar</button>
-              </div>
+
             </div>
+
           </div>
         </div>
+
       </main>
     </div>
   );
