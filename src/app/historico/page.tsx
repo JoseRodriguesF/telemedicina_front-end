@@ -35,7 +35,9 @@ export default function HistoricoPage() {
           <div className="dash-card featured">
             <div className="dash-card-header">
               <h3>Consultas Anteriores</h3>
-              <div className="dash-card-icon">🕒</div>
+              <div className="dash-card-icon">
+                <Image src="/icons/icon-checklist.png" alt="Ícone Histórico" width={24} height={24} />
+              </div>
             </div>
             <div className="dash-card-body" style={{ padding: '2rem 0', textAlign: 'center' }}>
               <div className="empty-state">
@@ -51,7 +53,9 @@ export default function HistoricoPage() {
           <div className="dash-card">
             <div className="dash-card-header">
               <h3>Resumo de Saúde</h3>
-              <div className="dash-card-icon">📊</div>
+              <div className="dash-card-icon">
+                <Image src="/icons/icon-chart.png" alt="Ícone Gráfico" width={24} height={24} />
+              </div>
             </div>
             <div className="dash-card-body">
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>

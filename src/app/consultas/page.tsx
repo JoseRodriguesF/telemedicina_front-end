@@ -37,7 +37,9 @@ export default function ConsultasPage() {
           <div className="dash-card featured">
             <div className="dash-card-header">
               <h3>Agendar Nova Consulta</h3>
-              <div className="dash-card-icon">📅</div>
+              <div className="dash-card-icon">
+                <Image src="/icons/icon-calendar.png" alt="Ícone Calendário" width={24} height={24} />
+              </div>
             </div>
             <div className="dash-card-body" style={{ padding: '1rem 0' }}>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>

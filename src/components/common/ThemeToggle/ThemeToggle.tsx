@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import './ThemeToggle.css';
 
 type Props = {
@@ -50,9 +51,13 @@ export default function ThemeToggle({ minimal = false }: Props) {
                 onClick={toggleTheme}
                 aria-label={`Mudar para modo ${theme === 'light' ? 'escuro' : 'claro'}`}
                 title={`Mudar para modo ${theme === 'light' ? 'escuro' : 'claro'}`}
-                style={{ fontSize: '1.25rem', border: 'none', background: 'transparent', cursor: 'pointer' }}
+                style={{ border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-                {theme === 'light' ? '☀️' : '🌙'}
+                {theme === 'light' ? (
+                    <Image src="/icons/icon-moon.png" alt="Mudar para Escuro" width={24} height={24} />
+                ) : (
+                    <Image src="/icons/icon-sun.png" alt="Mudar para Claro" width={28} height={28} />
+                )}
             </button>
         );
     }

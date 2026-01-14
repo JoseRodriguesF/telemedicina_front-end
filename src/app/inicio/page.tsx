@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
 import { psListActiveRooms } from '@/lib/axios/consultas';
+import FrequencyChart from '@/components/dashboard/FrequencyChart';
 
 export default function InicioPage() {
   const router = useRouter();
@@ -112,7 +113,6 @@ export default function InicioPage() {
       <main className="inicio-main">
         <header className="dashboard-header">
           <h2>Bem-vindo, {displayName}!</h2>
-          <p>Seu resumo de saúde e consultas para esta semana</p>
         </header>
 
         <section className="dashboard-grid">
@@ -120,7 +120,9 @@ export default function InicioPage() {
           <div className="dash-card">
             <div className="dash-card-header">
               <h3>Consultas na plataforma</h3>
-              <div className="dash-card-icon">📋</div>
+              <div className="dash-card-icon">
+                <Image src="/icons/icon-checklist.png" alt="Ícone Consultas" width={24} height={24} />
+              </div>
             </div>
             <div className="dash-card-value">
               12
@@ -184,7 +186,9 @@ export default function InicioPage() {
           <div className="dash-card">
             <div className="dash-card-header">
               <h3>Última Consulta</h3>
-              <div className="dash-card-icon">🕒</div>
+              <div className="dash-card-icon">
+                <Image src="/icons/icon-calendar.png" alt="Ícone Calendário" width={24} height={24} />
+              </div>
             </div>
             <div className="dash-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
               <div style={{ marginBottom: 'auto' }}>
@@ -209,28 +213,27 @@ export default function InicioPage() {
           </div>
 
           {/* Activity Chart Card */}
+          {/* Activity Chart Card */}
           <div className="dash-card featured">
             <div className="dash-card-header">
               <h3>Frequência de Consultas</h3>
-              <div className="dash-card-icon">📈</div>
+              <div className="dash-card-icon">
+                <Image src="/icons/icon-chart.png" alt="Ícone Frequência" width={24} height={24} />
+              </div>
             </div>
-            <div className="dash-chart">
-              <div className="chart-bar" style={{ height: '60%' }}></div>
-              <div className="chart-bar" style={{ height: '85%' }}></div>
-              <div className="chart-bar" style={{ height: '45%' }}></div>
-              <div className="chart-bar" style={{ height: '70%' }}></div>
-              <div className="chart-bar" style={{ height: '95%' }}></div>
-              <div className="chart-bar" style={{ height: '55%' }}></div>
-              <div className="chart-bar" style={{ height: '80%' }}></div>
+            <div style={{ flex: 1, minHeight: '300px', width: '100%', padding: '1rem 0' }}>
+              <FrequencyChart />
             </div>
-            <div className="dash-card-footer" style={{ textAlign: 'center' }}>Junho / Julho 2024</div>
+            <div className="dash-card-footer" style={{ textAlign: 'center' }}>Semana atual</div>
           </div>
 
           {/* Scheduled Appointments Card */}
           <div className="dash-card">
             <div className="dash-card-header">
               <h3>Próxima Consulta</h3>
-              <div className="dash-card-icon">📅</div>
+              <div className="dash-card-icon">
+                <Image src="/icons/icon-calendar.png" alt="Ícone Calendário" width={24} height={24} />
+              </div>
             </div>
             {nextAppointment ? (
               <>

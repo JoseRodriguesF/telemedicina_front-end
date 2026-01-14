@@ -148,9 +148,17 @@
   transform: translateY(-2px);
 }
 
+.tool-btn.logout {
+  background: var(--color-error);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);
+}
+
 .tool-btn.logout:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--color-error);
+  background: #dc2626;
+  /* Darker red on hover */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px -1px rgba(239, 68, 68, 0.4);
 }
 
 /* User Avatar */
@@ -200,4 +208,14 @@
     /* Sidebar width + gap */
     padding: 2rem 3rem !important;
   }
+}
+
+/* Dark Mode Overrides for Icons */
+[data-theme='dark'] .nav-icon {
+  filter: brightness(0) invert(1) opacity(0.7);
+}
+
+[data-theme='dark'] .nav-item:hover .nav-icon,
+[data-theme='dark'] .nav-item.active .nav-icon {
+  filter: brightness(0) invert(1) opacity(1);
 }

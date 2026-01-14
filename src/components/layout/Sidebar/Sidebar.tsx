@@ -86,7 +86,9 @@ export default function Sidebar({ activeId = 'inicio' }: Props) {
             title="Sair"
             onClick={handleLogout}
           >
-            <span className="tool-icon">↪️</span>
+            <span className="tool-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Image src="/icons/icon-logout.png" alt="Sair" width={20} height={20} />
+            </span>
           </button>
         </div>
 
