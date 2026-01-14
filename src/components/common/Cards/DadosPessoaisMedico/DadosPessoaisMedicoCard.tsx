@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import './DadosPessoaisMedicoCard.css';
 import Input from '@/components/common/Inputs/Input';
@@ -65,8 +65,13 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
 
   return (
     <section className="register-card dados-pessoais-medico-card">
-      <h1 className="register-title">Crie sua conta</h1>
-      <p className="register-subtitle">Etapa 2 de 3 - Dados Pessoais</p>
+      <div className="register-brand">
+        <h1>Telemedicina</h1>
+        <p>Dados profissionais para cadastro médico</p>
+      </div>
+
+      <h1 className="register-title">Dados Pessoais</h1>
+      <p className="register-subtitle">Etapa 2 de 3</p>
 
       <form className="register-form grid-2" onSubmit={(e) => e.preventDefault()}>
         <label className="form-label full-width">

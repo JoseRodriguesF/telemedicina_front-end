@@ -1,51 +1,57 @@
 /* Styles specific to DadosConvenioCard */
 
 .register-card.dados-convenio-card {
-  max-width: 420px; /* match DadosAcesso card width */
-  padding: 2rem; /* align with register-card default */
+  max-width: 480px;
 }
 
-.dados-convenio-card .form-label { margin-bottom: 0.5rem; }
+.dados-convenio-card .form-label {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
-.dados-convenio-card .link-small {
-  color: #94a3b8;
+.dados-convenio-card .label-title {
   font-size: 0.9rem;
-  background: transparent;
+  color: var(--text-secondary);
 }
 
 /* center the skip step and give it spacing */
-.dados-convenio-card .skip-row { 
-  margin: 0.75rem 0; 
-  display: flex; 
-  justify-content: center; 
+.dados-convenio-card .skip-row {
+  margin: 1.5rem 0 0.5rem;
+  display: flex;
+  justify-content: center;
   align-items: center;
 }
+
 .dados-convenio-card .skip-step {
-  color: #64748b;
-  font-size: 0.95rem;
-}
-
-.dados-convenio-card .skip-step.c-btn--ghost {
+  color: var(--text-tertiary);
+  font-size: 0.9rem;
+  text-decoration: underline;
   background: transparent;
-  border: 1px solid transparent;
-  padding: 0.5rem 0.75rem;
+  border: none;
   cursor: pointer;
+  transition: color var(--transition-fast);
 }
 
-/* make action buttons equal width and proportional */
+.dados-convenio-card .skip-step:hover {
+  color: var(--color-primary-500);
+}
+
+/* proportional action buttons */
 .register-card.dados-convenio-card .form-actions.actions-full {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-}
-.register-card.dados-convenio-card .form-actions.actions-full .c-btn,
-.register-card.dados-convenio-card .form-actions.actions-full .btn-equal {
-  flex: 0 0 48%;
-  min-width: 120px;
+  margin-top: 1.5rem;
 }
 
-/* keep the text link (skip) visually separated on small screens */
+.register-card.dados-convenio-card .form-actions.actions-full .c-btn {
+  flex: 1;
+}
+
 @media (max-width: 640px) {
-  .dados-convenio-card .skip-row { order: 1; }
-  .dados-convenio-card .form-actions.actions-full { order: 2; }
+  .register-card.dados-convenio-card .form-actions.actions-full {
+    flex-direction: column-reverse;
+  }
 }

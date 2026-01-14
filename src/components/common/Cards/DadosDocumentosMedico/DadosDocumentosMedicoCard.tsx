@@ -108,8 +108,13 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
 
   return (
     <section className="register-card dados-documentos-medico-card">
-      <h1 className="register-title">Documentos para cadastro</h1>
-      <p className="register-subtitle">Etapa 3 de 3 - Documentos</p>
+      <div className="register-brand">
+        <h1>Telemedicina</h1>
+        <p>Documentação necessária para verificação</p>
+      </div>
+
+      <h1 className="register-title">Documentos</h1>
+      <p className="register-subtitle">Etapa 3 de 3</p>
 
       <form className="register-form" onSubmit={handleSubmit}>
         {/** Use a single consistent placeholder text for all file fields */}

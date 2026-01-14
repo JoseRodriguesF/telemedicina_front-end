@@ -3,7 +3,11 @@
 import { useEffect, useState } from 'react';
 import './ThemeToggle.css';
 
-export default function ThemeToggle() {
+type Props = {
+    minimal?: boolean;
+};
+
+export default function ThemeToggle({ minimal = false }: Props) {
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
     const [mounted, setMounted] = useState(false);
 
@@ -28,11 +32,27 @@ export default function ThemeToggle() {
 
     // Prevent flash of unstyled content
     if (!mounted) {
+        if (minimal) return <div style={{ width: 24, height: 24 }} />;
         return (
             <button className="theme-toggle" aria-label="Toggle theme" disabled>
                 <div className="theme-toggle-track">
                     <div className="theme-toggle-thumb" />
                 </div>
+            </button>
+        );
+    }
+
+    if (minimal) {
+        return (
+            <button
+                type="button"
+                className="tool-btn theme-toggle-minimal"
+                onClick={toggleTheme}
+                aria-label={`Mudar para modo ${theme === 'light' ? 'escuro' : 'claro'}`}
+                title={`Mudar para modo ${theme === 'light' ? 'escuro' : 'claro'}`}
+                style={{ fontSize: '1.25rem', border: 'none', background: 'transparent', cursor: 'pointer' }}
+            >
+                {theme === 'light' ? '☀️' : '🌙'}
             </button>
         );
     }

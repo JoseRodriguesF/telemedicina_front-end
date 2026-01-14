@@ -20,13 +20,6 @@ export default function ConsultasPage() {
     setIsMedico((u?.tipo_usuario || '').toLowerCase() === 'medico');
   }, []);
 
-  const items = [
-    { id: 'inicio', label: 'Início', icon: '/images/home-06.svg', href: '/inicio' },
-    { id: 'consultas', label: 'Consultas', icon: '/images/first-aid.svg', href: '/consultas' },
-    { id: 'historico', label: 'Histórico', icon: '/images/clock.svg', href: '/historico' },
-    { id: 'perfil', label: 'Perfil', icon: '/images/user.svg', href: '/perfil' },
-  ];
-
   return (
     <div className="inicio-page">
       <div className="inicio-mobile-header">
@@ -35,33 +28,52 @@ export default function ConsultasPage() {
       <Sidebar activeId="consultas" />
 
       <main className="inicio-main">
-        <div className="center-card">
-          <h2>Consultas de {displayName}</h2>
-          <div className="cards-row">
-            <div className="feature-card">
-              <div className="icon primary" aria-hidden>
-                <Image src="/images/calendar-check.svg" alt="Agendar consultas" width={48} height={48} />
-              </div>
-              <h3>Agendar consultas</h3>
-              <p>Agende suas consultas conforme sua disponibilidade.</p>
-              <button className="btn primary full" onClick={() => router.push('/consultas/nova')}>Agendar</button>
-            </div>
+        <header className="dashboard-header">
+          <h2>Consultas</h2>
+          <p>Gerencie seus agendamentos e atendimentos de urgência</p>
+        </header>
 
-            <div className="feature-card">
-              <div className="icon accent" aria-hidden>
-                <Image src="/images/alarm.svg" alt="Fila de atendimento" width={48} height={48} />
-              </div>
-              <h3>Pronto socorro</h3>
-              <p>Atendimento rapido para casos de urgência e emergencia.</p>
+        <section className="dashboard-grid">
+          <div className="dash-card featured">
+            <div className="dash-card-header">
+              <h3>Agendar Nova Consulta</h3>
+              <div className="dash-card-icon">📅</div>
+            </div>
+            <div className="dash-card-body" style={{ padding: '1rem 0' }}>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                Escolha a especialidade, o profissional e o melhor horário para você. Nosso sistema de agendamento é simples e rápido.
+              </p>
               <button
-                className="btn primary full"
-                onClick={() => router.push(isMedico ? '/consultas/pacientes' : '/consultas/pre-consulta')}
+                className="btn primary"
+                style={{ borderRadius: 'var(--radius-lg)', width: 'auto', padding: '0.75rem 2rem' }}
+                onClick={() => router.push('/consultas/nova')}
               >
-                {isMedico ? 'Ver pacientes' : 'Entrar na fila'}
+                Agendar Agora
               </button>
             </div>
           </div>
-        </div>
+
+          <div className="dash-card">
+            <div className="dash-card-header">
+              <h3>Pronto Socorro</h3>
+              <div className="dash-card-icon">🆘</div>
+            </div>
+            <div className="dash-card-body">
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                Precisa de atendimento imediato? Entre na nossa fila virtual para casos de urgência.
+              </p>
+              <button
+                className="btn primary"
+                style={{ borderRadius: 'var(--radius-lg)', width: '100%' }}
+                onClick={() => router.push(isMedico ? '/consultas/pacientes' : '/consultas/pre-consulta')}
+              >
+                {isMedico ? 'Ver Fila de Espera' : 'Entrar na Fila'}
+              </button>
+            </div>
+          </div>
+
+
+        </section>
       </main>
     </div>
   );

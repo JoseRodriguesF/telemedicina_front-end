@@ -59,7 +59,7 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
   const [addressNumberError, setAddressNumberError] = useState('');
   const [complementError, setComplementError] = useState('');
   const [numberError, setNumberError] = useState('');
-  
+
 
   // Determine if the entered birth date corresponds to age < 18
   function parseBirthDate(value: string): Date | null {
@@ -212,12 +212,17 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
     return { name, birthDate, cpf, gender, marital, address, addressNumber: numVal, complement: complement || undefined, number, guardian, guardianContact };
   }
 
-  
+
 
   return (
     <section className="register-card dados-pessoais-card">
-      <h1 className="register-title">Crie sua conta</h1>
-      <p className="register-subtitle">Etapa 2 de 3 - Dados Pessoais</p>
+      <div className="register-brand">
+        <h1>Telemedicina</h1>
+        <p>Complete seu perfil para um melhor atendimento</p>
+      </div>
+
+      <h1 className="register-title">Dados Pessoais</h1>
+      <p className="register-subtitle">Etapa 2 de 3</p>
 
       <form className="register-form grid-2" onSubmit={(e) => e.preventDefault()}>
         <label className="form-label full-width">
@@ -227,12 +232,12 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
             value={name}
             onChange={(e) => {
               const raw = e.target.value || '';
-                // sanitize: allow unicode letters and spaces; fallback to latin-accent range
-                let cleaned = raw;
-                try {
-                  cleaned = raw.replace(/[^\p{L} ]+/gu, '');
-                } catch (ex) {
-                  cleaned = raw.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ ]+/g, '');
+              // sanitize: allow unicode letters and spaces; fallback to latin-accent range
+              let cleaned = raw;
+              try {
+                cleaned = raw.replace(/[^\p{L} ]+/gu, '');
+              } catch (ex) {
+                cleaned = raw.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ ]+/g, '');
               }
               if (cleaned !== raw) {
                 setNameError('Caracteres inválidos removidos. Use apenas letras e espaços.');
@@ -346,7 +351,7 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
           </div>
         </label>
 
-        
+
 
         {minor && (
           <>

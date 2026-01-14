@@ -1,10 +1,9 @@
 /* Styles specific to DadosPessoaisPacienteCard to match the provided layout */
-/* layout rules (sizing for this component are handled in register.css via a specific class) */
 
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem 1rem;
+  gap: 1.25rem 1.5rem;
   align-items: start;
 }
 
@@ -13,7 +12,19 @@
   flex-direction: column;
   gap: 0.5rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
+}
+
+.label-title {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.required-asterisk {
+  color: var(--color-error);
 }
 
 .form-label.full-width {
@@ -25,100 +36,53 @@
   display: flex;
   justify-content: space-between;
   gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 .form-actions.actions-full .c-btn {
   min-width: 140px;
 }
 
-/* Smaller visual size for compact inputs like date/CPF */
-.grid-2 .form-label input[type="text"],
-.grid-2 .form-label input[type="tel"],
-.grid-2 .form-label input[type="date"] {
-  height: 40px;
-}
-
-/* Row to align Número, Complemento e Telefone em linha no desktop */
-.address-contact-row {
-  grid-column: 1 / -1;
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-end;
-  flex-wrap: wrap;
-}
-
-.address-contact-row .form-label {
-  margin: 0;
-}
-
-.address-number {
-  flex: 0 1 120px;
-}
-
-.address-complement {
-  flex: 0 1 220px;
-  min-width: 160px;
-}
-
-.address-phone {
-  flex: 1 1 240px;
-  min-width: 220px;
+.error-text {
+  color: var(--color-error);
+  font-size: 0.8rem;
+  margin-top: 4px;
 }
 
 @media (max-width: 640px) {
   .grid-2 {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
+
   .form-actions.actions-full {
     flex-direction: column-reverse;
   }
-  .address-contact-row {
-    gap: 0.5rem;
-  }
-}
-/* Specific styles for step 2 (personal data) */
-.grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem 1rem;
-}
 
-/* Allow some fields to span full width */
-.grid-2 .full-width {
-  grid-column: 1 / -1;
-}
-
-.form-actions .c-btn {
-  min-width: 120px;
-}
-
-/* Make selects and inputs consistent */
-.c-input, select {
-  height: 40px;
-}
-
-@media (max-width: 640px) {
-  .grid-2 {
-    grid-template-columns: 1fr;
-  }
-  .form-actions {
-    flex-direction: column-reverse;
-    gap: 0.5rem;
+  .form-actions.actions-full .c-btn {
+    width: 100%;
   }
 }
 
-/* Slightly smaller labels, inputs and buttons inside the Dados Pessoais card */
-.register-card.dados-pessoais-card .form-label {
-  font-size: 0.95rem; /* a bit smaller */
+/* Custom layout for address details */
+.address-details-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
 }
-.register-card.dados-pessoais-card .c-input {
-  padding: 0.6rem 0.9rem;
-  font-size: 0.92rem;
+
+/* Specific styling for selects inside the card */
+.register-card select.c-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.2rem;
+  padding-right: 3rem;
+  cursor: pointer;
 }
-.register-card.dados-pessoais-card .c-btn {
-  padding: 0.6rem 0.9rem;
-  font-size: 0.9rem;
-}
-.register-card.dados-pessoais-card .form-actions .c-btn {
-  min-width: 110px;
+
+[data-theme="dark"] .register-card select.c-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
 }

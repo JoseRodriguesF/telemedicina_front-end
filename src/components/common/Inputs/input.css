@@ -4,15 +4,34 @@
   display: block;
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  background: #fafafa;
-  color: #0f172a;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+  font-family: inherit;
+}
+
+.c-input::placeholder {
+  color: var(--text-muted);
 }
 
 .c-input:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
-  border-color: #2563EB;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+  border-color: var(--color-primary-500);
+}
+
+.c-input--error {
+  border-color: var(--color-error);
+}
+
+.c-input--error:focus {
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+/* Dark mode overrides if needed specifically */
+[data-theme="dark"] .c-input {
+  background: var(--bg-secondary);
 }

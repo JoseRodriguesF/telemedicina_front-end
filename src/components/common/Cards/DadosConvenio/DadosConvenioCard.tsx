@@ -33,8 +33,13 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
 
   return (
     <section className="register-card dados-convenio-card">
+      <div className="register-brand">
+        <h1>Telemedicina</h1>
+        <p>Informe seus dados de convênio (opcional)</p>
+      </div>
+
       <h1 className="register-title">Convênio</h1>
-      <p className="register-subtitle">Etapa 3 de 3 - Convênio</p>
+      <p className="register-subtitle">Etapa 3 de 3</p>
 
       <form className="register-form" onSubmit={handleSubmit}>
         <label className="form-label">
@@ -187,4 +192,4 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
     </section>
   );
 }
- 
+
