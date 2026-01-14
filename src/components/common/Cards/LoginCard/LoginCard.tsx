@@ -88,7 +88,11 @@ export default function LoginCard({ onLogin }: Props) {
 
   return (
     <section className="register-card dados-acesso-card">
-      <h1 className="register-title">Bem-vindo(a) de volta!</h1>
+      <div className="login-brand">
+        <h1>Telemedicina</h1>
+      </div>
+
+      <h2 className="register-title">Bem-vindo(a) de volta!</h2>
       <p className="register-subtitle">Acesse sua conta para continuar</p>
 
       <form

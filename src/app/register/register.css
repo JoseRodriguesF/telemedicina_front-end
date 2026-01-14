@@ -1,532 +1,535 @@
-/* Styles for Register page (local to src/pages/register) */
+/* ============================================
+   REGISTER PAGE - Modern & Premium Design
+   Matching Login Page Style
+   ============================================ */
+
 .register-page {
-  /* Fill the viewport and center the card both vertically and horizontally */
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F9FAFB;
-  font-family: 'AR One Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-  overflow: hidden; /* remove page scrolling by default */
+  background: var(--bg-gradient);
+  font-family: var(--font-family);
+  padding: 2rem 1rem;
+  position: relative;
+  overflow-y: auto;
+  transition: background var(--transition-base);
+}
+
+/* Decorative Background Elements */
+.register-page::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  right: -5%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: float 6s ease-in-out infinite;
+}
+
+.register-page::after {
+  content: '';
+  position: absolute;
+  bottom: -10%;
+  left: -5%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: float 8s ease-in-out infinite reverse;
+}
+
+/* Allow scrolling when showing step 2/3 */
+.register-page.dados-pessoais-active {
+  overflow-y: auto;
+  align-items: flex-start;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
 }
 
 .register-main {
   width: 100%;
-  max-width: 420px; /* default card width for step 1 */
-  margin: 0;
-  padding: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  max-width: 480px;
+  position: relative;
+  z-index: 1;
+  margin: 0 auto;
 }
 
-.register-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
+/* Wider layout for step 2/3 */
+.register-main.dados-pessoais-wide {
+  max-width: 700px;
+}
+
+/* Register Card */
+.register-card {
+  width: 100%;
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-2xl);
+  padding: 3rem 2.5rem;
+  box-shadow: var(--shadow-2xl);
+  transition: all var(--transition-base);
+  margin: 0 auto;
+}
+
+.register-card:hover {
+  box-shadow: 0 30px 60px -15px var(--shadow-color);
+}
+
+/* Card size modifiers */
+.register-card.dados-acesso-card {
+  max-width: 480px;
+}
+
+.register-card.dados-pessoais-card {
+  max-width: 700px;
+  padding: 2.5rem 2rem;
+}
+
+/* Logo/Brand */
+.register-brand {
   text-align: center;
+  margin-bottom: 2rem;
 }
 
+.register-brand h1 {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.register-brand p {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* Title & Subtitle */
+.register-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  margin: 0 0 0.75rem 0;
+  text-align: center;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  transition: color var(--transition-base);
+}
+
+.register-subtitle {
+  margin: 0 0 2rem 0;
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+  text-align: center;
+  line-height: 1.6;
+  transition: color var(--transition-base);
+}
+
+/* Form */
 .register-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
+/* Form Label */
 .form-label {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
+  transition: color var(--transition-base);
 }
 
-/* Title row inside a label (text + asterisk) */
 .form-label .label-title {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
+  font-size: var(--font-size-sm);
 }
 
-.form-input {
-  padding: 0.75rem 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.375rem;
-  font-size: 0.95rem;
+.required-asterisk {
+  color: var(--color-error);
+  font-size: 0.85em;
+  margin-left: 0;
 }
 
-.submit-btn {
-  background: #2563EB;
-  color: white;
-  padding: 0.75rem 1rem;
-  border-radius: 0.375rem;
-  border: none;
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.submit-btn:hover { background: #1d4ed8; }
-
-/* Card */
-.register-card {
+/* Input Styles */
+.form-input,
+.c-input {
   width: 100%;
-  max-width: 420px; /* default card width (step 1) */
-  margin: 0 auto;
-  padding: 2rem;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  padding: 0.875rem 1.125rem;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  font-family: var(--font-family);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: all var(--transition-base);
+  outline: none;
+}
+
+.form-input:hover,
+.c-input:hover {
+  border-color: var(--border-color-hover);
+}
+
+.form-input:focus,
+.c-input:focus {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-input::placeholder,
+.c-input::placeholder {
+  color: var(--text-muted);
+}
+
+.c-input--error {
+  border-color: var(--color-error);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.c-input--error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Select and Date inputs */
+.register-card select.c-input:invalid,
+.register-card input[type="date"]:invalid {
+  color: var(--text-muted);
+}
+
+.register-card select.c-input option[value=""] {
+  color: var(--text-muted);
+}
+
+/* Button Styles */
+.primary-btn,
+.submit-btn,
+.c-button--primary,
+.c-btn.c-btn--primary {
+  width: 100%;
+  margin-top: 0.5rem;
+  background: var(--gradient-primary);
+  color: #ffffff;
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--radius-lg);
+  border: none;
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.primary-btn::before,
+.submit-btn::before,
+.c-button--primary::before,
+.c-btn.c-btn--primary::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.primary-btn:hover,
+.submit-btn:hover,
+.c-button--primary:hover,
+.c-btn.c-btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+}
+
+.primary-btn:hover::before,
+.submit-btn:hover::before,
+.c-button--primary:hover::before,
+.c-btn.c-btn--primary:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.primary-btn:active,
+.submit-btn:active,
+.c-button--primary:active,
+.c-btn.c-btn--primary:active {
+  transform: translateY(0);
+}
+
+.primary-btn:disabled,
+.submit-btn:disabled,
+.c-button--primary:disabled,
+.c-btn.c-btn--primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Secondary Button */
+.c-btn.c-btn--secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  transition: all var(--transition-base);
+}
+
+.c-btn.c-btn--secondary:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-color-hover);
+  transform: translateY(-2px);
+}
+
+/* Form Actions */
+.form-actions {
+  margin-top: 1.5rem;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  gap: 1rem;
 }
 
-/* Responsive: keep card smaller than viewport on small screens */
-@media (max-width: 640px) {
-  .register-main,
-  .register-card {
-    max-width: 92%;
-    padding: 1rem;
-  }
-
-  /* On small screens allow page scrolling and add top/bottom padding so the card isn't cut off */
-  .register-page { overflow: auto; }   .register-card .form-actions.two-equal { flex-direction: column; }
+.form-actions.two-equal {
+  flex-direction: row;
+  gap: 1rem;
+  align-items: center;
 }
 
-.register-subtitle {
-  margin: 0 0 1rem 0;
-  color: #718096;
-  font-size: 0.95rem;
-  text-align: center;
+.form-actions.two-equal .left-actions,
+.form-actions.two-equal .right-actions {
+  flex: 1 1 0;
 }
 
-.register-form { gap: 0.75rem; }
-
-.form-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  background: #fafafa;
-}
-
-/* Make sure inputs and buttons inside the card fill available width */
-.register-card {
-  align-items: stretch;
-}
-
-/* add spacing between inputs and the action buttons */
-.register-card .form-actions {
-  margin-top: 1rem;
-}
-
-.register-card .c-input,
-.register-card input,
-.register-card textarea {
+.form-actions.two-equal .left-actions .c-btn,
+.form-actions.two-equal .right-actions .c-btn {
   width: 100%;
   box-sizing: border-box;
 }
 
-/* placeholder color for regular inputs */
-.register-card .c-input::placeholder {
-  color: #718096;
-  opacity: 1;
+/* Links */
+.forgot-row {
+  margin-top: 0.5rem;
+  text-align: center;
 }
 
-/* native controls (select / date) — style when empty using :invalid */
-.register-card select.c-input:invalid,
-.register-card input[type="date"]:invalid {
-  color: #718096;
-}
-.register-card select.c-input option[value=""] {
-  color: #718096;
-}
-
-.register-card .c-btn { width: 100%; box-sizing: border-box; }
-
-.c-input.c-input--error {
-  border-color: #f87171; /* red-400 */
-  background: #fff5f5;
+.link-small {
+  color: var(--color-primary-600);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color var(--transition-fast);
 }
 
-.error-text {
-  color: #f87171;
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
+.link-small:hover {
+  color: var(--color-primary-700);
+  text-decoration: underline;
 }
 
-/* small red asterisk for required labels */
-.required-asterisk {
-  color: #ef4444; /* red-500 */
-  font-size: 0.85em;
-  margin-left: 0; /* spacing handled by .label-title gap */
-}
-
-.primary-btn {
-  margin-top: 8px;
-  background: #2563EB;
-  color: #fff;
-  padding: 0.85rem 1rem;
-  border-radius: 8px;
-  border: 0;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.primary-btn:hover { background: #1d4ed8; }
-
-.forgot-row { margin-top: 0.6rem; text-align: center; }
-.link-small { color: #2563EB; font-size: 0.88rem; text-decoration: none; }
-
+/* Divider */
 .divider {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin: 1rem 0;
+  gap: 1rem;
+  margin: 1.5rem 0;
 }
-.divider::before, .divider::after {
+
+.divider::before,
+.divider::after {
   content: '';
   flex: 1;
   height: 1px;
-  background: #e6e6e6;
+  background: var(--border-color);
 }
-.divider span { font-size: 0.9rem; color: #94a3b8; padding: 0 0.5rem; }
 
-.google-btn {
+.divider span {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+  padding: 0 0.5rem;
+  white-space: nowrap;
+}
+
+/* Google Button */
+.google-btn,
+.c-button--google {
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
   justify-content: center;
   width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
+  padding: 0.875rem 1.5rem;
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  font-family: var(--font-family);
   cursor: pointer;
-}
-.google-btn img, .google-btn svg { display: block; }
-
-.register-footer { margin-top: 1rem; text-align: center; font-size: 0.9rem; color: #64748b; }
-.register-footer .link-small { margin-left: 4px; }
-
-/* Explicit card size modifiers per step */
-.register-card.dados-acesso-card { max-width: 420px; }
-.register-card.dados-pessoais-card {
-  max-width: 600px;
-  padding: 1rem; /* reduce vertical space so the card appears lower-height */
-  transform: translateY(-6px); /* lift slightly to look 'floating' */
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  transition: all var(--transition-base);
 }
 
-/* Make action buttons on step 2 equal width */
-.register-card .form-actions.two-equal {
+.google-btn:hover,
+.c-button--google:hover {
+  border-color: var(--border-color-hover);
+  background: var(--bg-secondary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.google-btn:active,
+.c-button--google:active {
+  transform: translateY(0);
+}
+
+.google-btn img,
+.google-btn svg,
+.c-button--google img,
+.c-button--google svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+/* Footer */
+.register-footer {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.register-footer .link-small {
+  margin-left: 0.25rem;
+}
+
+/* Error Text */
+.error-text {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  margin-top: 0.375rem;
+  font-weight: 500;
   display: flex;
-  gap: 12px;
   align-items: center;
-}
-.register-card .form-actions.two-equal .left-actions,
-.register-card .form-actions.two-equal .right-actions {
-  flex: 1 1 0;
-}
-.register-card .form-actions.two-equal .left-actions .c-btn,
-.register-card .form-actions.two-equal .right-actions .c-btn {
-  width: 100%;
-  box-sizing: border-box;
+  gap: 0.375rem;
 }
 
-/* Mobile: stack action buttons full width like DadosConvenio card */
-@media (max-width: 640px) {
-  .register-card .form-actions.two-equal {
+.error-text::before {
+  content: '⚠';
+  font-size: 1rem;
+}
+
+/* Success Message */
+.success-text {
+  color: var(--color-success);
+  font-size: var(--font-size-sm);
+  margin-top: 0.375rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.success-text::before {
+  content: '✓';
+  font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .register-page {
+    padding: 1.5rem 1rem;
+  }
+
+  .register-main,
+  .register-main.dados-pessoais-wide {
+    max-width: 100%;
+  }
+
+  .register-card,
+  .register-card.dados-acesso-card,
+  .register-card.dados-pessoais-card {
+    padding: 2rem 1.5rem;
+    max-width: 100%;
+  }
+
+  .register-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .register-subtitle {
+    font-size: var(--font-size-sm);
+  }
+
+  .register-brand h1 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .form-actions.two-equal {
     flex-direction: column;
     gap: 0.75rem;
     align-items: stretch;
   }
 
-  .register-card .form-actions.two-equal .left-actions,
-  .register-card .form-actions.two-equal .right-actions {
+  .form-actions.two-equal .left-actions,
+  .form-actions.two-equal .right-actions {
     width: 100%;
     flex: none;
   }
+}
 
-  .register-card .form-actions.two-equal .left-actions .c-btn,
-  .register-card .form-actions.two-equal .right-actions .c-btn {
-    width: 100%;
-    box-sizing: border-box;
-    display: block;
+@media (max-width: 480px) {
+
+  .register-card,
+  .register-card.dados-acesso-card,
+  .register-card.dados-pessoais-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .form-input,
+  .c-input,
+  .primary-btn,
+  .submit-btn,
+  .c-button--primary,
+  .c-btn,
+  .google-btn,
+  .c-button--google {
+    padding: 0.75rem 1rem;
+    font-size: var(--font-size-sm);
   }
 }
 
-/* When showing the Dados Pessoais step, allow the page container to be wider */
-.register-main.dados-pessoais-wide {
-  max-width: 640px;
+/* Dark Mode Specific Adjustments */
+[data-theme="dark"] .register-card {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
 }
 
-/* When showing step 2, allow a little extra scroll space (20px) on the page */
-.register-page.dados-pessoais-active {
-  overflow: auto;
-   /* reduced bottom padding while keeping top padding */
+[data-theme="dark"] .register-page::before {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%);
 }
 
-/* Ensure wide layout still collapses on small screens */
-@media (max-width: 640px) {
-  .register-main.dados-pessoais-wide {
-    max-width: 92%;
-  }
+[data-theme="dark"] .register-page::after {
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
 }
-/* Styles for Register page (local to src/pages/register) */
-.register-page {
-  /* Fill the viewport and center the card both vertically and horizontally */
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #F9FAFB;
-  font-family: 'AR One Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-  overflow: hidden; /* remove page scrolling by default */
-}
-
-.register-main {
-  width: 100%;
-  max-width: 420px; /* default card width for step 1 */
-  margin: 0;
-  padding: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.register-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
-  text-align: center;
-}
-
-.register-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.form-label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-/* Title row inside a label (text + asterisk) */
-.form-label .label-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-}
-
-.form-input {
-  padding: 0.75rem 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.375rem;
-  font-size: 0.95rem;
-}
-
-.submit-btn {
-  background: #2563EB;
-  color: white;
-  padding: 0.75rem 1rem;
-  border-radius: 0.375rem;
-  border: none;
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.submit-btn:hover { background: #1d4ed8; }
-
-/* Card */
-.register-card {
-  width: 100%;
-  max-width: 420px; /* default card width (step 1) */
-  margin: 0 auto;
-  padding: 2rem;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-/* Responsive: keep card smaller than viewport on small screens */
-@media (max-width: 640px) {
-  .register-main,
-  .register-card {
-    max-width: 92%;
-    padding: 1rem;
-  }
-
-  /* On small screens allow page scrolling and add top/bottom padding so the card isn't cut off */
-  .register-page { overflow: auto; }   .register-card .form-actions.two-equal { flex-direction: column; }
-}
-
-.register-subtitle {
-  margin: 0 0 1rem 0;
-  color: #718096;
-  font-size: 0.95rem;
-  text-align: center;
-}
-
-.register-form { gap: 0.75rem; }
-
-.form-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  background: #fafafa;
-}
-
-/* Make sure inputs and buttons inside the card fill available width */
-.register-card {
-  align-items: stretch;
-}
-
-.register-card .c-input,
-.register-card input,
-.register-card textarea {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* placeholder color for regular inputs */
-.register-card .c-input::placeholder {
-  color: #718096;
-  opacity: 1;
-}
-
-/* native controls (select / date) — style when empty using :invalid */
-.register-card select.c-input:invalid,
-.register-card input[type="date"]:invalid {
-  color: #718096;
-}
-.register-card select.c-input option[value=""] {
-  color: #718096;
-}
-
-.register-card .c-btn { width: 100%; box-sizing: border-box; }
-
-.c-input.c-input--error {
-  border-color: #f87171; /* red-400 */
-  background: #fff5f5;
-}
-
-.error-text {
-  color: #f87171;
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
-}
-
-/* small red asterisk for required labels */
-.required-asterisk {
-  color: #ef4444; /* red-500 */
-  font-size: 0.85em;
-  margin-left: 0; /* spacing handled by .label-title gap */
-}
-
-.primary-btn {
-  margin-top: 8px;
-  background: #2563EB;
-  color: #fff;
-  padding: 0.85rem 1rem;
-  border-radius: 8px;
-  border: 0;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.primary-btn:hover { background: #1d4ed8; }
-
-.forgot-row { margin-top: 0.6rem; text-align: center; }
-.link-small { color: #2563EB; font-size: 0.88rem; text-decoration: none; }
-
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 1rem 0;
-}
-.divider::before, .divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #e6e6e6;
-}
-.divider span { font-size: 0.9rem; color: #94a3b8; padding: 0 0.5rem; }
-
-.google-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  justify-content: center;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  cursor: pointer;
-}
-.google-btn img, .google-btn svg { display: block; }
-
-.register-footer { margin-top: 1rem; text-align: center; font-size: 0.9rem; color: #64748b; }
-.register-footer .link-small { margin-left: 4px; }
-
-/* Explicit card size modifiers per step */
-.register-card.dados-acesso-card { max-width: 420px; }
-.register-card.dados-pessoais-card {
-  max-width: 600px;
-  padding: 1rem; /* reduce vertical space so the card appears lower-height */
-  transform: translateY(-6px); /* lift slightly to look 'floating' */
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-}
-
-/* Make action buttons on step 2 equal width */
-.register-card .form-actions.two-equal {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-.register-card .form-actions.two-equal .left-actions,
-.register-card .form-actions.two-equal .right-actions {
-  flex: 1 1 0;
-}
-.register-card .form-actions.two-equal .left-actions .c-btn,
-.register-card .form-actions.two-equal .right-actions .c-btn {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* When showing the Dados Pessoais step, allow the page container to be wider */
-.register-main.dados-pessoais-wide {
-  max-width: 640px;
-}
-
-/* When showing step 2, allow a little extra scroll space (20px) on the page */
-.register-page.dados-pessoais-active {
-  overflow: auto;
-   /* reduced bottom padding while keeping top padding */
-}
-
-/* Ensure wide layout still collapses on small screens */
-@media (max-width: 640px) {
-  .register-main.dados-pessoais-wide {
-    max-width: 92%;
-  }
-}
-
-
-
