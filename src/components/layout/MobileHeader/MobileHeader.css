@@ -1,0 +1,15 @@
+/* MobileHeader.css */
+.mobile-app-header {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .mobile-app-header {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 50;
+    }
+}

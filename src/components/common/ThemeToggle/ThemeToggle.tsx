@@ -71,7 +71,11 @@ export default function ThemeToggle({ minimal = false }: Props) {
         >
             <div className="theme-toggle-track">
                 <div className="theme-toggle-thumb">
-                    {theme === 'light' ? '☀️' : '🌙'}
+                    {theme === 'light' ? (
+                        <Image src="/icons/icon-moon.png" alt="Dark Mode" width={14} height={14} />
+                    ) : (
+                        <Image src="/icons/icon-sun.png" alt="Light Mode" width={16} height={16} />
+                    )}
                 </div>
             </div>
         </button>

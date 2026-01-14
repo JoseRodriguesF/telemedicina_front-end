@@ -1,8 +1,8 @@
 "use client";
 
 import './atendimento.css';
-import '@/components/layout/Header/header.css';
-import Header from '@/components/layout/Header/Header';
+import '@/app/inicio/inicio.css';
+import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 import Button from '@/components/common/Buttons/Button';
 import ConfirmationModal from '@/components/common/Modals/ConfirmationModal/ConfirmationModal';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -507,154 +507,155 @@ function AtendimentoInner() {
   }
 
   return (
-    <div className="atendimento-page">
-      {role === 'medico' && (
-        <div className="medico-mobile-header">
-          <Header />
-        </div>
-      )}
-      <main className={`atendimento-main ${!showChat ? 'full-width' : ''}`}>
-        <section className="call-area">
-          <div className="call-header">
-            <span className={`status-dot ${statusColor}`} aria-label={`Status: ${statusColor}`}></span>
-            Você está em uma consulta
-          </div>
-          <div className="call-screen">
-            {/* O vídeo remoto sempre ocupa o retângulo grande (principal) */}
-            {/* O vídeo remoto sempre ocupa o retângulo grande (principal) */}
+    <div className="inicio-page">
+      <div className="inicio-mobile-header">
+        <MobileHeader />
+      </div>
 
-            <video
-              ref={remoteRef}
-              className="remote-video large"
-              playsInline
-              autoPlay
-              aria-label={role === 'medico' ? 'Vídeo do paciente' : 'Vídeo do médico'}
-              style={{ opacity: remoteHasVideo ? 1 : 0, filter: connectionFailed ? 'blur(8px)' : undefined, transition: 'filter 0.3s' }}
-            />
+      <main className="inicio-main" style={{ padding: 0, height: '100vh', overflow: 'hidden', marginLeft: 0 }}>
+        <div className={`atendimento-container ${!showChat ? 'full-width' : ''}`}>
+          <section className="call-area">
+            <div className="call-header">
+              <span className={`status-dot ${statusColor}`} aria-label={`Status: ${statusColor}`}></span>
+              Você está em uma consulta
+            </div>
+            <div className="call-screen">
+              {/* O vídeo remoto sempre ocupa o retângulo grande (principal) */}
+              {/* O vídeo remoto sempre ocupa o retângulo grande (principal) */}
 
-
-            {/* Blur e mensagem para falha de conexão */}
-            {connectionFailed && !remoteDisconnected && (
-              <div className="call-loader-overlay disconnected">
-                <div className="disconnected-icon">🌐</div>
-                <div className="call-loader-text">
-                  Falha de conexão com a internet.<br />
-                  {reconnecting ? 'Reconectando...' : 'Aguardando reconexão...'}
-                </div>
-              </div>
-            )}
-
-            {/* Blur e mensagem para câmera desligada */}
-            {remoteConnected && !remoteHasVideo && !connectionFailed && (
-              <div className="no-camera-placeholder large">
-                <div className="no-camera-icon">📷</div>
-                <div className="no-camera-text">
-                  {role === 'medico' ? 'Paciente desligou a câmera' : 'Médico desligou a câmera'}
-                </div>
-                {!remoteHasAudio && <div style={{ fontSize: '0.8rem', marginTop: 4 }}>🔇 Microfone desligado</div>}
-              </div>
-            )}
-
-            {remoteDisconnected && (
-              <div className="call-loader-overlay disconnected">
-                <div className="disconnected-icon">{showExitMessage ? '📞' : '🌐'}</div>
-                <div className="call-loader-text">
-                  {showExitMessage
-                    ? 'O outro usuário saiu da chamada.'
-                    : 'Conexão interrompida. Aguardando reconexão...'}
-                </div>
-                {showExitMessage && (
-                  <Button variant="primary" onClick={() => router.push('/consultas')} style={{ marginTop: '1rem' }}>
-                    Voltar para Consultas
-                  </Button>
-                )}
-              </div>
-            )}
-
-            {/* O vídeo local aparece em miniatura (picture-in-picture) */}
-            <div className="self-video-container pip">
               <video
-                ref={localRef}
-                className="self-video"
+                ref={remoteRef}
+                className="remote-video large"
                 playsInline
                 autoPlay
-                muted
-                aria-label="Sua câmera"
-                style={{ opacity: camEnabled ? 1 : 0 }}
+                aria-label={role === 'medico' ? 'Vídeo do paciente' : 'Vídeo do médico'}
+                style={{ opacity: remoteHasVideo ? 1 : 0, filter: connectionFailed ? 'blur(8px)' : undefined, transition: 'filter 0.3s' }}
               />
-              {!camEnabled && (
-                <div className="no-camera-placeholder pip-placeholder">
-                  <div style={{ fontSize: '1.5rem' }}>📷</div>
+
+
+              {/* Blur e mensagem para falha de conexão */}
+              {connectionFailed && !remoteDisconnected && (
+                <div className="call-loader-overlay disconnected">
+                  <div className="disconnected-icon">🌐</div>
+                  <div className="call-loader-text">
+                    Falha de conexão com a internet.<br />
+                    {reconnecting ? 'Reconectando...' : 'Aguardando reconexão...'}
+                  </div>
                 </div>
               )}
-            </div>
 
-            {/* Loading Spinner overlay if not connected */}
-            {!remoteConnected && (
-              <div className="call-loader-overlay">
-                <div className="call-spinner"></div>
-                <div className="call-loader-text">{role === 'paciente' ? 'Aguardando médico' : 'Aguardando paciente'}</div>
-              </div>
-            )}
-
-            <div className="call-controls">
-              <button
-                className={`control-btn ${!camEnabled ? 'off' : ''}`}
-                onClick={toggleCam}
-                aria-label={camEnabled ? 'Desativar câmera' : 'Ativar câmera'}
-              >
-                {camEnabled ? '📷' : '🚫'}
-              </button>
-              <button
-                className={`control-btn ${!micEnabled ? 'off' : ''}`}
-                onClick={toggleMic}
-                aria-label={micEnabled ? 'Desativar microfone' : 'Ativar microfone'}
-              >
-                {micEnabled ? '🎤' : '🔇'}
-              </button>
-              <button
-                className={`control-btn ${showChat ? 'active' : ''}`}
-                aria-label={showChat ? "Esconder chat" : "Mostrar chat"}
-                onClick={() => setShowChat(prev => !prev)}
-              >
-                💬
-              </button>
-              <button className="control-btn end" aria-label="Encerrar chamada" onClick={requestFinishCall}>📞</button>
-            </div>
-          </div>
-        </section>
-
-        {showChat && (
-          <aside className="chat-panel" aria-label="Chat da consulta">
-            <div className="chat-header">Chat da consulta</div>
-            <div className="chat-body">
-              {messages.map((m, idx) => {
-                let cls = 'chat-msg';
-                if (m.author === 'Você') cls += ' me';
-                else if (m.author === 'Médico') cls += ' doctor';
-                else cls += ' patient';
-
-                return (
-                  <div key={idx} className={cls}>
-                    <div className="chat-author">{m.author}</div>
-                    <div className="chat-bubble">{m.text}</div>
+              {/* Blur e mensagem para câmera desligada */}
+              {remoteConnected && !remoteHasVideo && !connectionFailed && (
+                <div className="no-camera-placeholder large">
+                  <div className="no-camera-icon">📷</div>
+                  <div className="no-camera-text">
+                    {role === 'medico' ? 'Paciente desligou a câmera' : 'Médico desligou a câmera'}
                   </div>
-                );
-              })}
-              <div ref={chatEndRef} />
+                  {!remoteHasAudio && <div style={{ fontSize: '0.8rem', marginTop: 4 }}>🔇 Microfone desligado</div>}
+                </div>
+              )}
+
+              {remoteDisconnected && (
+                <div className="call-loader-overlay disconnected">
+                  <div className="disconnected-icon">{showExitMessage ? '📞' : '🌐'}</div>
+                  <div className="call-loader-text">
+                    {showExitMessage
+                      ? 'O outro usuário saiu da chamada.'
+                      : 'Conexão interrompida. Aguardando reconexão...'}
+                  </div>
+                  {showExitMessage && (
+                    <Button variant="primary" onClick={() => router.push('/consultas')} style={{ marginTop: '1rem' }}>
+                      Voltar para Consultas
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {/* O vídeo local aparece em miniatura (picture-in-picture) */}
+              <div className="self-video-container pip">
+                <video
+                  ref={localRef}
+                  className="self-video"
+                  playsInline
+                  autoPlay
+                  muted
+                  aria-label="Sua câmera"
+                  style={{ opacity: camEnabled ? 1 : 0 }}
+                />
+                {!camEnabled && (
+                  <div className="no-camera-placeholder pip-placeholder">
+                    <div style={{ fontSize: '1.5rem' }}>📷</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Loading Spinner overlay if not connected */}
+              {!remoteConnected && (
+                <div className="call-loader-overlay">
+                  <div className="call-spinner"></div>
+                  <div className="call-loader-text">{role === 'paciente' ? 'Aguardando médico' : 'Aguardando paciente'}</div>
+                </div>
+              )}
+
+              <div className="call-controls">
+                <button
+                  className={`control-btn ${!camEnabled ? 'off' : ''}`}
+                  onClick={toggleCam}
+                  aria-label={camEnabled ? 'Desativar câmera' : 'Ativar câmera'}
+                >
+                  {camEnabled ? '📷' : '🚫'}
+                </button>
+                <button
+                  className={`control-btn ${!micEnabled ? 'off' : ''}`}
+                  onClick={toggleMic}
+                  aria-label={micEnabled ? 'Desativar microfone' : 'Ativar microfone'}
+                >
+                  {micEnabled ? '🎤' : '🔇'}
+                </button>
+                <button
+                  className={`control-btn ${showChat ? 'active' : ''}`}
+                  aria-label={showChat ? "Esconder chat" : "Mostrar chat"}
+                  onClick={() => setShowChat(prev => !prev)}
+                >
+                  💬
+                </button>
+                <button className="control-btn end" aria-label="Encerrar chamada" onClick={requestFinishCall}>📞</button>
+              </div>
             </div>
-            <div className="chat-input">
-              <input
-                className="c-input"
-                placeholder="Digite..."
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
-              />
-              <Button variant="primary" onClick={sendMessage} aria-label="Enviar">➤</Button>
-            </div>
-          </aside>
-        )}
+          </section>
+
+          {showChat && (
+            <aside className="chat-panel" aria-label="Chat da consulta">
+              <div className="chat-header">Chat da consulta</div>
+              <div className="chat-body">
+                {messages.map((m, idx) => {
+                  let cls = 'chat-msg';
+                  if (m.author === 'Você') cls += ' me';
+                  else if (m.author === 'Médico') cls += ' doctor';
+                  else cls += ' patient';
+
+                  return (
+                    <div key={idx} className={cls}>
+                      <div className="chat-author">{m.author}</div>
+                      <div className="chat-bubble">{m.text}</div>
+                    </div>
+                  );
+                })}
+                <div ref={chatEndRef} />
+              </div>
+              <div className="chat-input">
+                <input
+                  className="c-input"
+                  placeholder="Digite..."
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
+                />
+                <Button variant="primary" onClick={sendMessage} aria-label="Enviar">➤</Button>
+              </div>
+            </aside>
+          )}
+        </div>
       </main>
 
       <ConfirmationModal

@@ -262,14 +262,6 @@
 
 /* Responsive Breakpoints */
 @media (max-width: 768px) {
-  .header-actions {
-    display: none !important;
-  }
-
-  .hamburger {
-    display: flex;
-  }
-
   .brand {
     font-size: 1.25rem;
   }

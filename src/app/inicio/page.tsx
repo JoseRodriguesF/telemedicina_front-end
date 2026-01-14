@@ -4,10 +4,11 @@ import './inicio.css';
 import '@/components/layout/Header/header.css';
 import Image from 'next/image';
 import Link from 'next/link';
+import ThemeToggle from '@/components/common/ThemeToggle/ThemeToggle';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
-import { getUser, getUserFirstName, getToken } from '@/lib/auth';
+import { getUser, getUserFirstName, getToken, clearUser } from '@/lib/auth';
 import { psListActiveRooms } from '@/lib/axios/consultas';
 import FrequencyChart from '@/components/dashboard/FrequencyChart';
 
@@ -106,7 +107,7 @@ export default function InicioPage() {
   return (
     <div className="inicio-page">
       <div className="inicio-mobile-header">
-        <MobileInicioHeader />
+        <MobileHeader />
       </div>
       <Sidebar activeId="inicio" />
 
@@ -307,38 +308,4 @@ export default function InicioPage() {
   );
 }
 
-function MobileInicioHeader() {
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    function onResize() { if (window.innerWidth > 900 && open) setOpen(false); }
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [open]);
-
-  return (
-    <header className="site-header">
-      <div className="header-inner">
-        <h1 className="brand">Telemedicina</h1>
-        <button
-          className={`hamburger ${open ? 'is-open' : ''}`}
-          aria-label="Menu"
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <span className="bar" />
-          <span className="bar" />
-          <span className="bar" />
-        </button>
-      </div>
-
-      <nav className={`mobile-menu ${open ? 'open' : ''}`} aria-hidden={!open}>
-        <Link href="/inicio" onClick={() => setOpen(false)} className="mobile-link">Início</Link>
-        <Link href="/consultas" onClick={() => setOpen(false)} className="mobile-link">Consultas</Link>
-        <Link href="/historico" onClick={() => setOpen(false)} className="mobile-link">Histórico</Link>
-        <Link href="/perfil" onClick={() => setOpen(false)} className="mobile-link">Perfil</Link>
-        <Link href="/configuracoes" onClick={() => setOpen(false)} className="mobile-link">Configurações</Link>
-      </nav>
-    </header>
-  );
-}
+import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
