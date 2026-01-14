@@ -42,6 +42,26 @@ export function getUserId(): number | null {
   return typeof u.id === 'number' ? u.id : (u.id ? Number(u.id) : null);
 }
 
+export function getPacienteId(): number | null {
+  const u = getUser();
+  if (!u) return null;
+  const p = u.paciente || u.patient;
+  if (p && p.id) return Number(p.id);
+  // Se não houver objeto aninhado, verifica se o id principal é do tipo paciente
+  if (u.tipo_usuario === 'paciente') return typeof u.id === 'number' ? u.id : (u.id ? Number(u.id) : null);
+  return null;
+}
+
+export function getMedicoId(): number | null {
+  const u = getUser();
+  if (!u) return null;
+  const m = u.medico || u.doctor;
+  if (m && m.id) return Number(m.id);
+  // Se não houver objeto aninhado, verifica se o id principal é do tipo médico
+  if (u.tipo_usuario === 'medico') return typeof u.id === 'number' ? u.id : (u.id ? Number(u.id) : null);
+  return null;
+}
+
 export function getUserDisplayName(user?: StoredUser | null): string {
   const u = user ?? getUser();
   if (!u) return 'Usuário';
@@ -110,4 +130,4 @@ export function getToken(): string {
   return found || '';
 }
 
-export default { saveUser, getUser, clearUser, getUserId, getUserDisplayName, getUserFirstName, getToken };
+export default { saveUser, getUser, clearUser, getUserId, getPacienteId, getMedicoId, getUserDisplayName, getUserFirstName, getToken };
