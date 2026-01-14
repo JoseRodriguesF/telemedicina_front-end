@@ -37,24 +37,42 @@ export default function InicioPage() {
     // Se não achou no sessionStorage, busca no backend
     if (!found && token && u) {
       const currentUserId = String(u.id);
+      console.log("[Debug Reconnect] Verificando salas para o usuário:", currentUserId, "Tipo:", u.tipo_usuario);
+
       psListActiveRooms(token, currentUserId).then((rooms) => {
-        // Busca qualquer sala onde o usuário atual participe (seja como médico ou paciente)
-        const sala = rooms.find(r =>
-          (r.pacienteId && String(r.pacienteId) === currentUserId) ||
-          (r.medicoId && String(r.medicoId) === currentUserId)
-        );
+        console.log("[Debug Reconnect] Salas retornadas pelo backend:", rooms);
+
+        if (!Array.isArray(rooms)) {
+          console.warn("[Debug Reconnect] A resposta não é um array válido.");
+          return;
+        }
+
+        // Busca sala com detecção flexível de campos (medicoId, medico_id, id_medico, etc)
+        const sala = rooms.find(r => {
+          const rPacienteId = String(r.pacienteId || (r as any).paciente_id || (r as any).id_paciente || '');
+          const rMedicoId = String(r.medicoId || (r as any).medico_id || (r as any).id_medico || '');
+
+          return (rPacienteId === currentUserId || rMedicoId === currentUserId);
+        });
 
         if (sala) {
+          console.log("[Debug Reconnect] Sala encontrada!", sala);
+
+          const rMedicoId = String(sala.medicoId || (sala as any).medico_id || (sala as any).id_medico || '');
+          const calculatedRole = (rMedicoId === currentUserId) ? 'medico' : 'paciente';
+
           setReconnectData({
-            roomId: sala.roomId,
-            consultaId: sala.consultaId,
+            roomId: sala.roomId || (sala as any).room_id || '',
+            consultaId: sala.consultaId || (sala as any).consulta_id || '',
             userId: currentUserId,
-            role: (sala.medicoId && String(sala.medicoId) === currentUserId) ? 'medico' : 'paciente'
+            role: calculatedRole
           });
           setShowReconnect(true);
+        } else {
+          console.log("[Debug Reconnect] Nenhuma sala ativa encontrada para este usuário nos dados.");
         }
       }).catch((err) => {
-        console.error("Erro ao verificar salas ativas:", err);
+        console.error("[Debug Reconnect] Erro ao verificar salas ativas:", err);
       });
     }
   }, []);
