@@ -13,8 +13,52 @@ import { psListActiveRooms } from '@/lib/axios/consultas';
 export default function InicioPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>('');
-  const [reconnectData, setReconnectData] = useState<{ roomId: string; consultaId: string; userId: string; role: string } | null>(null);
   const [isMedico, setIsMedico] = useState<boolean>(false);
+  /* State for active session */
+  const [reconnectData, setReconnectData] = useState<{
+    roomId: string;
+    consultaId: string;
+    userId: string;
+    role: string;
+    pacienteNome?: string;
+    medicoNome?: string;
+  } | null>(null);
+
+  /* State for next appointment (Simulated) */
+  const [nextAppointment, setNextAppointment] = useState<{
+    id: string;
+    doctorName: string;
+    specialty: string;
+    date: string;
+    time: string;
+    timestamp: number;
+  } | null>({
+    id: 'simulated-appt-123',
+    doctorName: 'Dr. Carlos Silva',
+    specialty: 'Cardiologista',
+    date: '14/01/2026',
+    time: '15:30',
+    timestamp: new Date('2026-01-14T15:30:00').getTime()
+  });
+
+  /* Logic to check if "Entrar na Sala" should be enabled (e.g., 5 min before) */
+  // Using a mock current time for demonstration if needed, or real time.
+  // For now, enabling it always for easier testing or strict 5 min rule.
+  const canEnterRoom = true;
+
+  const handleCancelAppointment = () => {
+    // In a real app, call API to cancel
+    if (confirm('Tem certeza que deseja desmarcar esta consulta?')) {
+      setNextAppointment(null);
+    }
+  };
+
+  const handleEnterAppointment = () => {
+    if (nextAppointment) {
+      // In a real app, this would get the room ID from the appointment details
+      router.push(`/consultas/atendimento?id=${nextAppointment.id}&scheduled=true`);
+    }
+  };
 
   useEffect(() => {
     const u = getUser();
@@ -43,7 +87,9 @@ export default function InicioPage() {
             roomId: sala.roomId || (sala as any).room_id || '',
             consultaId: sala.consultaId || (sala as any).consulta_id || '',
             userId: currentUserId,
-            role: calculatedRole
+            role: calculatedRole,
+            pacienteNome: sala.pacienteNome,
+            medicoNome: sala.medicoNome
           });
         }
       }).catch(err => console.error(err));
@@ -101,8 +147,13 @@ export default function InicioPage() {
             <div className="dash-card-body">
               {reconnectData ? (
                 <>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                    Você possui uma consulta em andamento.
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                    Consulta em andamento.
+                  </p>
+                  <p style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>
+                    {isMedico
+                      ? (reconnectData.pacienteNome ? `Paciente: ${reconnectData.pacienteNome}` : 'Paciente conectado')
+                      : (reconnectData.medicoNome ? `Dr(a). ${reconnectData.medicoNome}` : 'Médico conectado')}
                   </p>
                   <button
                     className="btn primary"
@@ -129,7 +180,7 @@ export default function InicioPage() {
             </div>
           </div>
 
-          {/* Card 3: Última Consulta (Swapped Position with Tempo de Atendimento logic) */}
+          {/* Card 3: Última Consulta */}
           <div className="dash-card">
             <div className="dash-card-header">
               <h3>Última Consulta</h3>
@@ -174,68 +225,79 @@ export default function InicioPage() {
             </div>
             <div className="dash-card-footer" style={{ textAlign: 'center' }}>Junho / Julho 2024</div>
           </div>
+
           {/* Scheduled Appointments Card */}
           <div className="dash-card">
             <div className="dash-card-header">
               <h3>Próxima Consulta</h3>
               <div className="dash-card-icon">📅</div>
             </div>
-            <div className="dash-card-body">
-              <div className="appointment-info" style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
-                  Dr. Carlos Silva
-                </h4>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Cardiologista</p>
-              </div>
+            {nextAppointment ? (
+              <>
+                <div className="dash-card-body">
+                  <div className="appointment-info" style={{ marginBottom: '1.5rem' }}>
+                    <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
+                      {nextAppointment.doctorName}
+                    </h4>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{nextAppointment.specialty}</p>
+                  </div>
 
-              <div className="appointment-time" style={{
-                background: 'var(--bg-tertiary)',
-                padding: '1rem',
-                borderRadius: 'var(--radius-lg)',
-                marginBottom: '1.5rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.5rem'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>Data:</span>
-                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>14/01/2026</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>Horário:</span>
-                  <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>15:30</span>
-                </div>
-              </div>
-
-              <div className="appointment-actions" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <button
-                  className="btn ghost-danger"
-                  style={{
+                  <div className="appointment-time" style={{
+                    background: 'var(--bg-tertiary)',
+                    padding: '1rem',
                     borderRadius: 'var(--radius-lg)',
-                    width: '100%',
-                    padding: '0.75rem',
-                    color: 'var(--color-error)',
-                    borderColor: 'var(--color-error)',
-                    background: 'transparent',
-                    border: '1px solid var(--color-error)'
-                  }}
-                >
-                  Desmarcar Consulta
-                </button>
-                <button
-                  className="btn primary"
-                  style={{ borderRadius: 'var(--radius-lg)', width: '100%', padding: '0.75rem' }}
-                  // Logic to enable only if it's time (simulated here since it matches today's date in mock)
-                  disabled={false} // In a real app check date/time
-                >
-                  Entrar na Sala
-                </button>
+                    marginBottom: '1.5rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                      <span style={{ color: 'var(--text-secondary)' }}>Data:</span>
+                      <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{nextAppointment.date}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                      <span style={{ color: 'var(--text-secondary)' }}>Horário:</span>
+                      <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{nextAppointment.time}</span>
+                    </div>
+                  </div>
+
+                  <div className="appointment-actions" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <button
+                      className="btn ghost-danger"
+                      onClick={handleCancelAppointment}
+                      style={{
+                        borderRadius: 'var(--radius-lg)',
+                        width: '100%',
+                        padding: '0.75rem',
+                        color: 'var(--color-error)',
+                        borderColor: 'var(--color-error)',
+                        background: 'transparent',
+                        border: '1px solid var(--color-error)'
+                      }}
+                    >
+                      Desmarcar Consulta
+                    </button>
+                    <button
+                      className="btn primary"
+                      style={{ borderRadius: 'var(--radius-lg)', width: '100%', padding: '0.75rem' }}
+                      onClick={handleEnterAppointment}
+                      disabled={!canEnterRoom}
+                    >
+                      Entrar na Sala
+                    </button>
+                  </div>
+                </div>
+                <div className="dash-card-footer" style={{ textAlign: 'center', marginTop: 'auto' }}>
+                  Esteja pronto 5 min antes.
+                </div>
+              </>
+            ) : (
+              <div className="dash-card-body" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--text-secondary)' }}>
+                <p>Não há consultas agendadas.</p>
               </div>
-            </div>
-            <div className="dash-card-footer" style={{ textAlign: 'center', marginTop: 'auto' }}>
-              Esteja pronto 5 min antes.
-            </div>
+            )}
           </div>
+
         </section>
       </main>
     </div>

@@ -8,6 +8,8 @@ export type PSActiveRoom = {
   roomId: string;
   createdAt: number;
   status: 'in_progress';
+  pacienteNome?: string;
+  medicoNome?: string;
 };
 
 export async function psListActiveRooms(token: string, userId?: string): Promise<PSActiveRoom[]> {
