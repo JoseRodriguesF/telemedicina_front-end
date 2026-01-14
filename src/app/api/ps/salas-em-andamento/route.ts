@@ -6,13 +6,22 @@ export async function GET(req: NextRequest) {
 
     const token = req.headers.get('authorization') || '';
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId');
 
-    const targetUrl = userId
-        ? `${apiBase}/ps/salas-em-andamento?userId=${userId}`
+    const userId = searchParams.get('userId');
+    const pacienteId = searchParams.get('pacienteId');
+    const medicoId = searchParams.get('medicoId');
+
+    const params = new URLSearchParams();
+    if (userId) params.append('userId', userId);
+    if (pacienteId) params.append('pacienteId', pacienteId);
+    if (medicoId) params.append('medicoId', medicoId);
+
+    const targetUrl = params.toString()
+        ? `${apiBase}/ps/salas-em-andamento?${params.toString()}`
         : `${apiBase}/ps/salas-em-andamento`;
 
     try {
+        console.log(`[Proxy PS] Chamando: ${targetUrl}`);
         const res = await fetch(targetUrl, {
             method: 'GET',
             headers: { Authorization: token },
