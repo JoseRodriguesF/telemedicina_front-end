@@ -36,45 +36,43 @@ export default function InicioPage() {
     } catch { }
     // Se não achou no sessionStorage, busca no backend
     if (!found && token && u) {
-      const isMedico = u.tipo_usuario === 'medico';
-      const pacienteId = getPacienteId();
-      const medicoId = getMedicoId();
+      const currentUserId = String(u.id);
+      const profilePacienteId = getPacienteId();
+      const profileMedicoId = getMedicoId();
 
-      const filters = isMedico
-        ? (medicoId ? { medicoId: String(medicoId) } : {})
-        : (pacienteId ? { pacienteId: String(pacienteId) } : {});
+      console.log("[Debug Reconnect] Buscando salas ativas para userId:", currentUserId);
 
-      console.log("[Debug Reconnect] Buscando salas com filtro de perfil:", filters);
-
-      psListActiveRooms(token, filters).then((rooms) => {
+      // Nova lógica unificada: enviamos apenas o ID do usuário logado
+      psListActiveRooms(token, currentUserId).then((rooms) => {
         console.log("[Debug Reconnect] Salas retornadas:", rooms);
 
         if (!Array.isArray(rooms)) return;
 
-        // Busca sala com detecção flexível de campos
+        // Busca sala com detecção flexível de campos para confirmar o papel na sala
         const sala = rooms.find(r => {
           const rPacienteId = String(r.pacienteId || (r as any).paciente_id || (r as any).id_paciente || '');
           const rMedicoId = String(r.medicoId || (r as any).medico_id || (r as any).id_medico || '');
 
-          return (pacienteId && rPacienteId === String(pacienteId)) || (medicoId && rMedicoId === String(medicoId));
+          return (profilePacienteId && rPacienteId === String(profilePacienteId)) ||
+            (profileMedicoId && rMedicoId === String(profileMedicoId));
         });
 
         if (sala) {
           console.log("[Debug Reconnect] Sala ativa encontrada!", sala);
 
           const rMedicoId = String(sala.medicoId || (sala as any).medico_id || (sala as any).id_medico || '');
-          // Um usuário é médico nesta sala se o ID de médico da sala bater com o ID de médico dele
-          const calculatedRole = (medicoId && rMedicoId === String(medicoId)) ? 'medico' : 'paciente';
+          // Identifica o papel para o rótulo do modal
+          const calculatedRole = (profileMedicoId && rMedicoId === String(profileMedicoId)) ? 'medico' : 'paciente';
 
           setReconnectData({
             roomId: sala.roomId || (sala as any).room_id || '',
             consultaId: sala.consultaId || (sala as any).consulta_id || '',
-            userId: String(u.id),
+            userId: currentUserId,
             role: calculatedRole
           });
           setShowReconnect(true);
         } else {
-          console.log("[Debug Reconnect] Nenhuma sala encontrada para o filtro de perfil.");
+          console.log("[Debug Reconnect] Nenhuma sala ativa encontrada para o usuário.");
         }
       }).catch((err) => {
         console.error("[Debug Reconnect] Erro ao verificar salas ativas:", err);

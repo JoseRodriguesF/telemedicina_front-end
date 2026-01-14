@@ -10,14 +10,8 @@ export type PSActiveRoom = {
   status: 'in_progress';
 };
 
-export async function psListActiveRooms(token: string, filters?: { userId?: string, pacienteId?: string, medicoId?: string }): Promise<PSActiveRoom[]> {
-  const params = new URLSearchParams();
-  if (filters?.userId) params.append('userId', filters.userId);
-  if (filters?.pacienteId) params.append('pacienteId', filters.pacienteId);
-  if (filters?.medicoId) params.append('medicoId', filters.medicoId);
-
-  const queryString = params.toString();
-  const url = queryString ? `/api/ps/salas-em-andamento?${queryString}` : '/api/ps/salas-em-andamento';
+export async function psListActiveRooms(token: string, userId?: string): Promise<PSActiveRoom[]> {
+  const url = userId ? `/api/ps/salas-em-andamento?userId=${userId}` : '/api/ps/salas-em-andamento';
   const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
   return res.data as PSActiveRoom[];
 }
