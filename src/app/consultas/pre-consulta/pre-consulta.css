@@ -69,6 +69,41 @@
   line-height: 1.6;
 }
 
+/* Iniciar Triagem Button */
+.pc-start-btn {
+  margin-top: 2rem;
+  background: var(--color-primary-500, #3b82f6);
+  color: white;
+  padding: 1rem 2.5rem;
+  border-radius: var(--radius-full, 999px);
+  font-weight: 700;
+  font-size: 1.1rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.pc-start-btn:hover:not(:disabled) {
+  background: var(--color-primary-600, #2563eb);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+.pc-start-btn:active:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.pc-start-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+
 /* Input Area (Floating at bottom for welcome, fixed for chat) */
 .pc-input-wrapper {
   width: 100%;

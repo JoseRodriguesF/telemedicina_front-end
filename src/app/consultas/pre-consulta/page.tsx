@@ -64,13 +64,17 @@ function PreConsultaInner() {
     }
   }, [messages, iaTyping]);
 
-  async function sendMessage(textInput?: string) {
+  async function sendMessage(textInput?: string, hidden: boolean = false) {
     const t = (textInput || draft).trim();
     if (!t || isLoading || iaTyping) return;
 
-    // Add user message immediately
-    const newMessages = [...messages, { author: 'Você', text: t } as ChatMessage];
-    setMessages(newMessages);
+    let currentMessages = messages;
+    if (!hidden) {
+      const userMsg: ChatMessage = { author: 'Você', text: t };
+      setMessages(prev => [...prev, userMsg]);
+      currentMessages = [...messages, userMsg];
+    }
+
     setDraft('');
 
     const token = getToken();
@@ -83,7 +87,7 @@ function PreConsultaInner() {
     setIaTyping(true);
 
     try {
-      const currentHistory = messagesToHistory(newMessages); // Use fresh state
+      const currentHistory = messagesToHistory(currentMessages);
       const res = await fetch('/api/chat-ia', {
         method: 'POST',
         headers: {
@@ -199,6 +203,13 @@ function PreConsultaInner() {
                       Podemos conversar sobre seus sintomas, dores ou preocupações de saúde para
                       que eu possa encaminhá-lo para o especialista correto.
                     </p>
+                    <button
+                      className="pc-start-btn"
+                      onClick={() => sendMessage('oi', true)}
+                      disabled={isLoading || iaTyping}
+                    >
+                      {isLoading ? 'Iniciando...' : 'Iniciar triagem'}
+                    </button>
                   </div>
                 </div>
               ) : (
@@ -243,7 +254,6 @@ function PreConsultaInner() {
                         sendMessage();
                       }
                     }}
-                    disabled={isLoading || iaTyping}
                   />
                   <button
                     className="pc-send-btn"
