@@ -27,10 +27,11 @@
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: var(--radius-2xl);
-    padding: 1.5rem;
+    padding: 3rem 1.75rem;
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1.75rem;
+    min-height: 140px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     position: relative;
@@ -62,8 +63,8 @@
 }
 
 .history-item-icon {
-    width: 56px;
-    height: 56px;
+    width: 64px;
+    height: 64px;
     background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600));
     border-radius: 16px;
     display: flex;
@@ -143,8 +144,9 @@
 
 @media (max-width: 767px) {
     .history-item-modal {
-        padding: 1rem;
-        gap: 1rem;
+        padding: 1.5rem 1.25rem;
+        gap: 1.25rem;
+        min-height: 100px;
     }
 
     .history-item-icon {
