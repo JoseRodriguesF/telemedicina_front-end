@@ -106,6 +106,23 @@ export async function psClaim(consultaId: string, token: string): Promise<PSRoom
   return res.data as PSRoomResponse;
 }
 
+export type PSFulllHistoryItem = {
+  id: number;
+  status: string;
+  createdAt: string;
+  medico: {
+    nome_completo: string;
+  };
+  paciente: {
+    nome_completo: string;
+  };
+};
+
+export async function psGetFullHistory(token: string): Promise<PSFulllHistoryItem[]> {
+  const res = await axios.get('/api/ps/historico-completo', { headers: { Authorization: `Bearer ${token}` } });
+  return res.data as PSFulllHistoryItem[];
+}
+
 export type PSHistoryResponse = {
   count: number;
   lastConsulta: {
