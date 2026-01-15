@@ -117,7 +117,6 @@ export default function HistoricoPage() {
                           <span className="history-item-date">
                             📅 {formatDate(item.createdAt)}
                           </span>
-                          <span className="history-item-id">ID: #{item.id}</span>
                         </div>
                       </div>
                     </div>

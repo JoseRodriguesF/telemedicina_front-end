@@ -132,11 +132,7 @@
     font-weight: 500;
 }
 
-.history-item-id {
-    font-family: monospace;
-    opacity: 0.5;
-    font-size: 0.8rem;
-}
+
 
 [data-theme='dark'] .history-item-icon {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
