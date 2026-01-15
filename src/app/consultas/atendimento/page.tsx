@@ -23,6 +23,7 @@ function AtendimentoInner() {
     setStatusText('Conectado.');
     setConnectionFailed(false);
     setReconnecting(false);
+    setRemoteConnected(true);
   };
 
   const router = useRouter();
@@ -550,7 +551,7 @@ function AtendimentoInner() {
                       </div>
                     </div>
                   ) : remoteDisconnected ? (
-                    /* 2. Usuário saiu da sala */
+                    /* 2. Usuário saiu da sala ou caiu conexão */
                     <div className="call-status-content peer-disconnected">
                       <div className="overlay-icon">🔌</div>
                       <div className="overlay-content">
@@ -572,16 +573,25 @@ function AtendimentoInner() {
                         <p>A entrada pode levar alguns segundos...</p>
                       </div>
                     </div>
-                  ) : !remoteHasVideo ? (
-                    /* 4. Conectado mas sem vídeo */
-                    <div className="call-status-content no-video">
-                      <div className="overlay-icon-small">📷</div>
-                      <div className="overlay-content">
-                        <p>{role === 'medico' ? 'Paciente com câmera desligada' : 'Médico com câmera desligada'}</p>
-                        {!remoteHasAudio && <span className="mic-muted-tag">🔇 Microfone silenciado</span>}
-                      </div>
-                    </div>
-                  ) : null}
+                  ) : (
+                    /* 4. Conectado: Gerenciar notificações de Câmera e Mic separadamente */
+                    <>
+                      {!remoteHasVideo && (
+                        <div className="call-status-content no-video">
+                          <div className="overlay-icon-small">📷</div>
+                          <div className="overlay-content">
+                            <p>{role === 'medico' ? 'Paciente com câmera desligada' : 'Médico com câmera desligada'}</p>
+                          </div>
+                        </div>
+                      )}
+                      {!remoteHasAudio && (
+                        <div className="remote-mic-alert">
+                          <span>🔇</span>
+                          <span>Microfone do {role === 'medico' ? 'paciente' : 'médico'} silenciado</span>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
                 {/* O vídeo local aparece em miniatura (picture-in-picture) */}
                 <div className="self-video-container pip">

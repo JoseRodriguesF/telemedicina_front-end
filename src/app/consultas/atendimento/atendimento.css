@@ -120,8 +120,15 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .overlay-icon {
@@ -147,16 +154,44 @@
     margin-bottom: 0.5rem;
 }
 
-.mic-muted-tag {
-    display: inline-block;
-    margin-top: 1rem;
+.mic-muted-tag,
+.remote-mic-alert {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     background: rgba(239, 68, 68, 0.15);
     color: #ef4444;
-    padding: 4px 12px;
+    padding: 6px 14px;
     border-radius: 999px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 600;
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    backdrop-filter: blur(8px);
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+}
+
+.remote-mic-alert {
+    position: absolute;
+    top: 60px;
+    /* Below header */
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 0;
+    z-index: 60;
+    animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
 }
 
 .call-spinner {
@@ -220,7 +255,8 @@
     align-items: flex-end;
 }
 
-.chat-msg.patient, .chat-msg.doctor {
+.chat-msg.patient,
+.chat-msg.doctor {
     align-self: flex-start;
     align-items: flex-start;
 }
@@ -238,7 +274,8 @@
     border-bottom-right-radius: 2px;
 }
 
-.chat-msg.patient .chat-bubble, .chat-msg.doctor .chat-bubble {
+.chat-msg.patient .chat-bubble,
+.chat-msg.doctor .chat-bubble {
     background: var(--bg-secondary, #f3f4f6);
     color: var(--text-primary, #1f2937);
     border-bottom-left-radius: 2px;
@@ -285,18 +322,18 @@
     gap: 1rem;
     padding: 12px 24px;
     z-index: 100;
-    
+
     /* Premium Glassmorphism */
     background: rgba(30, 41, 59, 0.7);
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 24px;
-    box-shadow: 
-        0 20px 25px -5px rgba(0, 0, 0, 0.2), 
+    box-shadow:
+        0 20px 25px -5px rgba(0, 0, 0, 0.2),
         0 10px 10px -5px rgba(0, 0, 0, 0.1),
         inset 0 1px 1px rgba(255, 255, 255, 0.1);
-    
+
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
