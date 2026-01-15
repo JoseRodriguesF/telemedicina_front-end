@@ -208,11 +208,13 @@ export default function InicioPage() {
                     </p>
                     <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                       {isMedico
-                        ? historyData.lastConsulta.paciente.nome_completo
-                        : historyData.lastConsulta.medico.nome_completo}
+                        ? (historyData.lastConsulta.paciente?.nome_completo || 'Paciente não identificado')
+                        : (historyData.lastConsulta.medico?.nome_completo || 'Médico não identificado')}
                     </h4>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
-                      {new Date(historyData.lastConsulta.createdAt).toLocaleDateString('pt-BR')} - {new Date(historyData.lastConsulta.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      {historyData.lastConsulta.createdAt
+                        ? `${new Date(historyData.lastConsulta.createdAt).toLocaleDateString('pt-BR')} - ${new Date(historyData.lastConsulta.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+                        : 'Data não disponível'}
                     </p>
                   </>
                 ) : (
@@ -240,7 +242,7 @@ export default function InicioPage() {
                 <Image src="/icons/icon-chart.png" alt="Ícone Frequência" width={24} height={24} />
               </div>
             </div>
-            <div style={{ flex: 1, minHeight: '300px', width: '100%', padding: '1rem 0' }}>
+            <div style={{ flex: 1, minHeight: '300px', height: '100%', width: '100%', padding: '1rem 0', position: 'relative' }}>
               <FrequencyChart />
             </div>
             <div className="dash-card-footer" style={{ textAlign: 'center' }}>Semana atual</div>
