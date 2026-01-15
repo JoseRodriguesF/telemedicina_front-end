@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import { getUser, getUserFirstName, getToken, clearUser } from '@/lib/auth';
-import { psListActiveRooms } from '@/lib/axios/consultas';
+import { psListActiveRooms, psGetHistory, PSHistoryResponse } from '@/lib/axios/consultas';
 import FrequencyChart from '@/components/dashboard/FrequencyChart';
 
 export default function InicioPage() {
@@ -25,6 +25,8 @@ export default function InicioPage() {
     pacienteNome?: string;
     medicoNome?: string;
   } | null>(null);
+
+  const [historyData, setHistoryData] = useState<PSHistoryResponse | null>(null);
 
   /* State for next appointment (Simulated) */
   const [nextAppointment, setNextAppointment] = useState<{
@@ -96,6 +98,12 @@ export default function InicioPage() {
         }
       }).catch(err => console.error(err));
     }
+
+    if (token) {
+      psGetHistory(token)
+        .then(data => setHistoryData(data))
+        .catch(err => console.error('Erro ao buscar histórico:', err));
+    }
   }, []);
 
   const handleReconnect = () => {
@@ -126,7 +134,7 @@ export default function InicioPage() {
               </div>
             </div>
             <div className="dash-card-value">
-              12
+              {historyData ? historyData.count : '--'}
               <span className="dash-card-trend trend-up">↑ 15%</span>
             </div>
             <div className="dash-card-footer">
@@ -193,15 +201,25 @@ export default function InicioPage() {
             </div>
             <div className="dash-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
               <div style={{ marginBottom: 'auto' }}>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-                  {isMedico ? 'Paciente' : 'Médico'}
-                </p>
-                <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                  {isMedico ? 'João Silva' : 'Dr. House'}
-                </h4>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
-                  12/01/2026 - 14:00
-                </p>
+                {historyData?.lastConsulta ? (
+                  <>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                      {isMedico ? 'Paciente' : 'Médico'}
+                    </p>
+                    <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {isMedico
+                        ? historyData.lastConsulta.paciente.nome_completo
+                        : historyData.lastConsulta.medico.nome_completo}
+                    </h4>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
+                      {new Date(historyData.lastConsulta.createdAt).toLocaleDateString('pt-BR')} - {new Date(historyData.lastConsulta.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </>
+                ) : (
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>
+                    {historyData ? 'Nenhuma consulta realizada.' : 'Carregando...'}
+                  </p>
+                )}
               </div>
               <button
                 className="btn ghost"

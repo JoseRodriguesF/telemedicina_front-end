@@ -105,3 +105,23 @@ export async function psClaim(consultaId: string, token: string): Promise<PSRoom
   const res = await axios.post(`/api/ps/fila/${consultaId}/claim`, {}, { headers: { Authorization: `Bearer ${token}` } });
   return res.data as PSRoomResponse;
 }
+
+export type PSHistoryResponse = {
+  count: number;
+  lastConsulta: {
+    id: number;
+    status: string;
+    createdAt: string;
+    medico: {
+      nome_completo: string;
+    };
+    paciente: {
+      nome_completo: string;
+    };
+  } | null;
+};
+
+export async function psGetHistory(token: string): Promise<PSHistoryResponse> {
+  const res = await axios.get('/api/ps/historico', { headers: { Authorization: `Bearer ${token}` } });
+  return res.data as PSHistoryResponse;
+}
