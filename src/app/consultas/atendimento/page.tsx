@@ -574,22 +574,39 @@ function AtendimentoInner() {
                       </div>
                     </div>
                   ) : (
-                    /* 4. Conectado: Gerenciar notificações de Câmera e Mic separadamente */
+                    /* 4. Conectado: Gerenciar notificações Universais de Câmera e Mic */
                     <>
+                      {/* Alertas de Câmera (Sobrepostos ao vídeo) */}
                       {!remoteHasVideo && (
                         <div className="call-status-content no-video">
                           <div className="overlay-icon-small">📷</div>
                           <div className="overlay-content">
-                            <p>{role === 'medico' ? 'Paciente com câmera desligada' : 'Médico com câmera desligada'}</p>
+                            <p>{role === 'medico' ? 'O paciente desligou a câmera' : 'O médico desligou a câmera'}</p>
                           </div>
                         </div>
                       )}
-                      {!remoteHasAudio && (
-                        <div className="remote-mic-alert">
-                          <span>🔇</span>
-                          <span>Microfone do {role === 'medico' ? 'paciente' : 'médico'} silenciado</span>
-                        </div>
-                      )}
+
+                      {/* Alertas de Microfone (Barra superior flutuante) */}
+                      <div className="status-alerts-container">
+                        {!remoteHasAudio && (
+                          <div className="remote-mic-alert">
+                            <span>🔇</span>
+                            <span>{role === 'medico' ? 'Paciente' : 'Médico'} em silêncio</span>
+                          </div>
+                        )}
+                        {!micEnabled && (
+                          <div className="remote-mic-alert local">
+                            <span>🔇</span>
+                            <span>Seu microfone está desligado</span>
+                          </div>
+                        )}
+                        {!camEnabled && (
+                          <div className="remote-mic-alert local cam">
+                            <span>📷</span>
+                            <span>Sua câmera está desligada</span>
+                          </div>
+                        )}
+                      </div>
                     </>
                   )}
                 </div>
@@ -606,7 +623,8 @@ function AtendimentoInner() {
                   />
                   {!camEnabled && (
                     <div className="no-camera-placeholder pip-placeholder">
-                      <div style={{ fontSize: '1.5rem' }}>📷</div>
+                      <div className="overlay-icon-small">📷</div>
+                      <div style={{ fontSize: '0.8rem', marginTop: '4px', color: '#94a3b8' }}>Você está sem vídeo</div>
                     </div>
                   )}
                 </div>
