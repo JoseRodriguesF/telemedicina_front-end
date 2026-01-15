@@ -9,13 +9,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
-import { psGetFullHistory, PSFulllHistoryItem } from '@/lib/axios/consultas';
+import { psGetFullHistory, PSFullHistoryItem } from '@/lib/axios/consultas';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 
 export default function HistoricoPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>('');
-  const [history, setHistory] = useState<PSFulllHistoryItem[]>([]);
+  const [history, setHistory] = useState<PSFullHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [userType, setUserType] = useState<string>('');
 
@@ -56,7 +56,7 @@ export default function HistoricoPage() {
     }
   };
 
-  const getParticipantName = (item: PSFulllHistoryItem) => {
+  const getParticipantName = (item: PSFullHistoryItem) => {
     if (userType === 'paciente') {
       return item.medico?.nome_completo || 'Médico não identificado';
     } else {
