@@ -228,13 +228,13 @@ export default function InicioPage() {
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>Carregando...</p>
                 ) : fullHistory.length > 0 ? (
                   <>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0' }}>
-                      {isMedico ? 'Paciente' : 'Médico'}
-                    </p>
-                    <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', gap: '0.4rem', alignItems: 'baseline', margin: '0.25rem 0' }}>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                        {isMedico ? 'Paciente:' : 'Médico:'}
+                      </span>
                       {isMedico
-                        ? (fullHistory[0].paciente?.nome_completo || 'Paciente não identificado')
-                        : (fullHistory[0].medico?.nome_completo || 'Médico não identificado')}
+                        ? (fullHistory[0].paciente?.nome_completo?.trim().split(/\s+/)[0] || 'Paciente')
+                        : (fullHistory[0].medico?.nome_completo?.trim().split(/\s+/)[0] || 'Médico')}
                     </h4>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginTop: '0' }}>
                       {fullHistory[0].createdAt

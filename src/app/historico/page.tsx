@@ -142,12 +142,10 @@ export default function HistoricoPage() {
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
                       )}
                     </div>
+
                     <div className="history-item-main">
                       <div className="history-item-top">
                         <span className="history-item-name">{getParticipantName(item)}</span>
-                        <span className={`badge ${item.status === 'finished' ? 'success' : 'warning'}`} style={{ fontSize: '0.7rem' }}>
-                          {item.status === 'finished' ? 'Finalizada' : 'Em andamento'}
-                        </span>
                       </div>
                       <div className="history-item-meta">
                         <span>
@@ -160,9 +158,15 @@ export default function HistoricoPage() {
                         </span>
                       </div>
                     </div>
+
+                    <div className="history-item-status">
+                      <span className={`badge ${item.status === 'finished' ? 'success' : 'warning'}`}>
+                        {item.status === 'finished' ? 'Finalizada' : 'Em andamento'}
+                      </span>
+                    </div>
+
                     <div className="history-item-actions">
                       <button className="action-btn">Ver Detalhes</button>
-                      <button className="action-btn primary-action">Nova Consulta</button>
                     </div>
                   </div>
                 ))
@@ -196,7 +200,6 @@ export default function HistoricoPage() {
                 <div className="stat-value">4.9</div>
                 <div className="stat-label">Média de satisfação</div>
               </div>
-
             </aside>
           </div>
         </div>
@@ -204,4 +207,3 @@ export default function HistoricoPage() {
     </div>
   );
 }
-

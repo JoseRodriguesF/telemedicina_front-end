@@ -11,7 +11,7 @@
 .scheduling-grid {
     display: grid;
     grid-template-columns: 1.5fr 1fr;
-    gap: 1.5rem;
+    gap: 2rem;
     align-items: stretch;
 }
 
@@ -25,7 +25,7 @@
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: var(--radius-2xl);
-    padding: 1rem;
+    padding: 1.15rem;
     box-shadow: var(--shadow-xl);
 }
 
@@ -33,7 +33,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.85rem;
 }
 
 .calendar-title-group {
@@ -144,7 +144,7 @@
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: var(--radius-2xl);
-    padding: 1rem;
+    padding: 0.85rem;
     box-shadow: var(--shadow-xl);
     display: flex;
     flex-direction: column;
@@ -153,7 +153,7 @@
 }
 
 .slots-header {
-    margin-bottom: 1rem;
+    margin-bottom: 0.85rem;
 }
 
 .slots-header h4 {
@@ -170,10 +170,9 @@
 .slots-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.4rem;
-    flex: 1;
+    gap: 0.65rem;
+    max-height: 320px;
     overflow-y: auto;
-    padding-right: 0;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -183,12 +182,12 @@
 }
 
 .slot {
-    padding: 0.45rem;
+    padding: 0.5rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     text-align: center;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     cursor: pointer;
     transition: all var(--transition-base);
     color: var(--text-secondary);
