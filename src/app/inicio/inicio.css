@@ -233,3 +233,11 @@
 [data-theme='dark'] .dash-card-icon img {
 	filter: brightness(0) invert(1);
 }
+
+.frequency-chart-wrapper svg {
+	outline: none !important;
+}
+
+.frequency-chart-wrapper *:focus {
+	outline: none !important;
+}

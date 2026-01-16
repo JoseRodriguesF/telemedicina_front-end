@@ -32,7 +32,7 @@ export default function FrequencyChart({ data }: Props) {
     }
 
     return (
-        <div style={{ width: '100%', height: '100%', minHeight: '200px' }}>
+        <div className="frequency-chart-wrapper" style={{ width: '100%', height: '100%', minHeight: '200px', outline: 'none' }}>
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                     data={data}
@@ -42,15 +42,12 @@ export default function FrequencyChart({ data }: Props) {
                         left: -20,
                         bottom: 0,
                     }}
+                    style={{ outline: 'none' }}
                 >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color, #e5e7eb)" opacity={0.3} />
                     <XAxis
                         dataKey="name"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: 'var(--text-secondary, #6b7280)', fontSize: 10 }}
-                        dy={10}
-                        interval={4}
+                        hide={true}
                     />
                     <YAxis
                         axisLine={false}
@@ -64,9 +61,10 @@ export default function FrequencyChart({ data }: Props) {
                             border: '1px solid var(--border-color, #e5e7eb)',
                             boxShadow: 'var(--shadow-lg)',
                             padding: '8px 12px',
+                            outline: 'none'
                         }}
-                        itemStyle={{ color: 'var(--text-primary, #111827)', fontWeight: 600 }}
-                        labelStyle={{ color: 'var(--text-secondary, #6b7280)', marginBottom: '4px' }}
+                        itemStyle={{ color: 'var(--text-primary, #111827)', fontWeight: 600, outline: 'none' }}
+                        labelStyle={{ color: 'var(--text-secondary, #6b7280)', marginBottom: '4px', outline: 'none' }}
                     />
                     <Line
                         type="monotone"
