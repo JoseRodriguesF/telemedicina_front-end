@@ -1,0 +1,208 @@
+.agendamento-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+    animation: fadeIn 0.6s ease-out;
+}
+
+.scheduling-grid {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 2rem;
+}
+
+@media (max-width: 900px) {
+    .scheduling-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.calendar-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-2xl);
+    padding: 2rem;
+    box-shadow: var(--shadow-xl);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.calendar-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.calendar-nav {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.nav-btn {
+    background: var(--bg-secondary);
+    border: none;
+    border-radius: var(--radius-lg);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    color: var(--text-primary);
+}
+
+.nav-btn:hover:not(:disabled) {
+    background: var(--bg-tertiary);
+    transform: translateY(-2px);
+}
+
+.nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+}
+
+.dow {
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    padding: 0.5rem 0;
+    text-transform: uppercase;
+}
+
+.day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    border: 1px solid transparent;
+    color: var(--text-primary);
+}
+
+.day:hover:not(.disabled):not(.selected) {
+    background: var(--bg-secondary);
+    color: var(--color-primary-600);
+}
+
+.day.today {
+    color: var(--color-primary-500);
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.day.selected {
+    background: var(--color-primary-500);
+    color: #fff;
+    box-shadow: var(--shadow-md);
+}
+
+.day.disabled {
+    color: var(--text-muted);
+    cursor: not-allowed;
+    opacity: 0.3;
+}
+
+.slots-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-2xl);
+    padding: 2rem;
+    box-shadow: var(--shadow-xl);
+    height: fit-content;
+    position: sticky;
+    top: 2rem;
+}
+
+.slots-header {
+    margin-bottom: 1.5rem;
+}
+
+.slots-header h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.slots-header p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.slots-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.slot {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    color: var(--text-secondary);
+}
+
+.slot:hover:not(.selected) {
+    border-color: var(--color-primary-400);
+    color: var(--color-primary-600);
+    background: var(--bg-secondary);
+}
+
+.slot.selected {
+    background: var(--color-primary-500);
+    border-color: var(--color-primary-500);
+    color: white;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+}
+
+.confirm-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.confirm-btn {
+    width: 100%;
+    padding: 1rem;
+    border-radius: var(--radius-xl);
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

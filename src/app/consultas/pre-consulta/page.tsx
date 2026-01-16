@@ -6,7 +6,7 @@ import '@/components/layout/Header/header.css';
 import '@/components/common/Inputs/input.css';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import Button from '@/components/common/Buttons/Button';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState, useRef, useEffect } from 'react';
 
 // Função simples para converter markdown básico em HTML seguro
@@ -37,6 +37,10 @@ type ChatHistory = Array<{ role: 'user' | 'assistant'; content: string }>;
 
 function PreConsultaInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const flow = searchParams.get('flow'); // 'agendamento' or null (PS)
+  const dateStr = searchParams.get('date');
+  const timeStr = searchParams.get('time');
   // Chat types
   type ChatMessage = { author: 'Você' | 'Sistema' | 'Angélica'; text: string };
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -145,18 +149,26 @@ function PreConsultaInner() {
       alert('Faça login novamente para continuar.');
       return;
     }
-    try {
-      const { roomId, consultaId, iceServers } = await psCreateRoom(token);
-      sessionStorage.setItem('ps_room', JSON.stringify({ roomId, consultaId, iceServers }));
-      router.push(`/consultas/atendimento?id=${encodeURIComponent(consultaId)}`);
-    } catch (err: any) {
-      const msg = String(err?.message || 'Não foi possível criar sua consulta. Tente novamente.');
-      if (msg.includes('forbidden_only_paciente_can_create_room')) {
-        alert('Apenas pacientes podem criar consulta no pronto socorro.');
-      } else if (msg.includes('paciente_record_not_found_for_usuario')) {
-        alert('Seu usuário não está vinculado a um cadastro de Paciente. Complete o cadastro para continuar.');
-      } else {
-        alert(msg);
+    if (token) {
+      if (flow === 'agendamento') {
+        alert(`Consulta agendada com sucesso para ${dateStr} às ${timeStr}!`);
+        router.push('/inicio');
+        return;
+      }
+
+      try {
+        const { roomId, consultaId, iceServers } = await psCreateRoom(token);
+        sessionStorage.setItem('ps_room', JSON.stringify({ roomId, consultaId, iceServers }));
+        router.push(`/consultas/atendimento?id=${encodeURIComponent(consultaId)}`);
+      } catch (err: any) {
+        const msg = String(err?.message || 'Não foi possível criar sua consulta. Tente novamente.');
+        if (msg.includes('forbidden_only_paciente_can_create_room')) {
+          alert('Apenas pacientes podem criar consulta no pronto socorro.');
+        } else if (msg.includes('paciente_record_not_found_for_usuario')) {
+          alert('Seu usuário não está vinculado a um cadastro de Paciente. Complete o cadastro para continuar.');
+        } else {
+          alert(msg);
+        }
       }
     }
   }
@@ -205,12 +217,16 @@ function PreConsultaInner() {
                 <div className={`pc-welcome-container ${isTriageStarted ? 'fade-out' : ''}`}>
                   <div className="pc-welcome-text">
                     <h1>
-                      Bem-vindo(a)! Eu sou a Angélica, sua assistente de saúde IA.<br />
+                      {flow === 'agendamento'
+                        ? `Olá! Vamos realizar a triagem para seu agendamento do dia ${dateStr}.`
+                        : 'Bem-vindo(a)! Eu sou a Angélica, sua assistente de saúde IA.'}
+                      <br />
                       Estou aqui para realizar sua triagem inicial.
                     </h1>
                     <p>
-                      Vamos conversar sobre seus sintomas, dores ou preocupações para
-                      que eu possa encaminhá-lo para o especialista correto.
+                      {flow === 'agendamento'
+                        ? 'Para que o médico possa te atender melhor na data marcada, preciso coletar algumas informações sobre o que você está sentindo.'
+                        : 'Vamos conversar sobre seus sintomas, dores ou preocupações para que eu possa encaminhá-lo para o especialista correto.'}
                     </p>
                     <button
                       className="pc-start-btn"

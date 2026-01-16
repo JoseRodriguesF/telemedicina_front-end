@@ -216,7 +216,31 @@ export default function InicioPage() {
             </div>
           </div>
 
-          {/* Card 3: Última Consulta */}
+          {/* Card 3: Agendar Consulta (New) */}
+          {!isMedico && (
+            <div className="dash-card featured" style={{ background: 'var(--bg-gradient-subtle)' }}>
+              <div className="dash-card-header">
+                <h3>Agendar Consulta</h3>
+                <div className="dash-card-icon" style={{ background: 'rgba(255,255,255,0.5)', color: 'var(--color-primary-600)' }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </div>
+              </div>
+              <div className="dash-card-body">
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+                  Escolha um especialista e agende seu atendimento para os próximos 30 dias.
+                </p>
+                <button
+                  className="btn primary"
+                  style={{ width: '100%', borderRadius: 'var(--radius-lg)' }}
+                  onClick={() => router.push('/consultas/agendamento')}
+                >
+                  Agendar agora
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Card 4: Última Consulta (Shifted ID) */}
           <div className="dash-card">
             <div className="dash-card-header">
               <h3>Última Consulta</h3>

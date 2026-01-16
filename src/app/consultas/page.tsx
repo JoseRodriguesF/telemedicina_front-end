@@ -48,7 +48,7 @@ export default function ConsultasPage() {
               <button
                 className="btn primary"
                 style={{ borderRadius: 'var(--radius-lg)', width: 'auto', padding: '0.75rem 2rem' }}
-                onClick={() => router.push('/consultas/nova')}
+                onClick={() => router.push('/consultas/agendamento')}
               >
                 Agendar Agora
               </button>
