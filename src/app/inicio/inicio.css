@@ -29,6 +29,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: 2rem;
+	transition: margin-left var(--transition-base), padding var(--transition-base);
 }
 
 .dashboard-header {
@@ -161,6 +162,7 @@
 	cursor: pointer;
 	transition: all var(--transition-fast);
 	border: 1px solid transparent;
+	box-shadow: var(--shadow-sm);
 }
 
 .action-item:hover {

@@ -46,6 +46,8 @@ function PreConsultaInner() {
   const [isLoading, setIsLoading] = useState(false);
   const [iaTyping, setIaTyping] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [isTriageStarted, setIsTriageStarted] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const messagesToHistory = (msgs: ChatMessage[]): ChatHistory => {
@@ -65,6 +67,11 @@ function PreConsultaInner() {
   }, [messages, iaTyping]);
 
   async function sendMessage(textInput?: string, hidden: boolean = false) {
+    if (hidden) {
+      setIsTriageStarted(true);
+      // Aguarda a animação de fadeOut antes de remover do DOM
+      setTimeout(() => setShowWelcome(false), 500);
+    }
     const t = (textInput || draft).trim();
     if (!t || isLoading || iaTyping) return;
 
@@ -181,8 +188,11 @@ function PreConsultaInner() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div className="inicio-page">
-      <Sidebar activeId="consultas" />
+    <div className={`inicio-page ${isTriageStarted ? 'triage-mode' : ''}`}>
+      <Sidebar
+        activeId="consultas"
+        className={isTriageStarted ? 'sidebar-hidden' : ''}
+      />
       <main className="inicio-main" style={{ padding: 0 }}>
 
         <div className="pc-page-container">
@@ -190,17 +200,16 @@ function PreConsultaInner() {
 
             {/* Content Only - Centered */}
             <div className="pc-content-side">
-
-              {!hasMessages ? (
+              {showWelcome && (
                 /* Welcome State */
-                <div className="pc-welcome-container">
+                <div className={`pc-welcome-container ${isTriageStarted ? 'fade-out' : ''}`}>
                   <div className="pc-welcome-text">
                     <h1>
                       Bem-vindo(a)! Eu sou a Angélica, sua assistente de saúde IA.<br />
                       Estou aqui para realizar sua triagem inicial.
                     </h1>
                     <p>
-                      Podemos conversar sobre seus sintomas, dores ou preocupações de saúde para
+                      Vamos conversar sobre seus sintomas, dores ou preocupações para
                       que eu possa encaminhá-lo para o especialista correto.
                     </p>
                     <button
@@ -212,7 +221,9 @@ function PreConsultaInner() {
                     </button>
                   </div>
                 </div>
-              ) : (
+              )}
+
+              {isTriageStarted && (
                 /* Chat Active State */
                 <div className="pc-chat-history-container">
                   <div className="pc-chat-messages">
@@ -240,33 +251,35 @@ function PreConsultaInner() {
               )}
 
               {/* Input Area (Shared) */}
-              <div className="pc-input-wrapper">
-                <div className="pc-input-container">
-                  <input
-                    className="pc-input-field"
-                    placeholder="Compartilhe o que está sentindo agora..."
-                    value={draft}
-                    autoComplete="off"
-                    onChange={(e) => setDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !isLoading && !iaTyping) {
-                        e.preventDefault();
-                        sendMessage();
-                      }
-                    }}
-                  />
-                  <button
-                    className="pc-send-btn"
-                    onClick={() => sendMessage()}
-                    disabled={isLoading || iaTyping || !draft.trim()}
-                  >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="22" y1="2" x2="11" y2="13"></line>
-                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
-                  </button>
+              {isTriageStarted && (
+                <div className="pc-input-wrapper">
+                  <div className="pc-input-container">
+                    <input
+                      className="pc-input-field"
+                      placeholder="Compartilhe o que está sentindo agora..."
+                      value={draft}
+                      autoComplete="off"
+                      onChange={(e) => setDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !isLoading && !iaTyping) {
+                          e.preventDefault();
+                          sendMessage();
+                        }
+                      }}
+                    />
+                    <button
+                      className="pc-send-btn"
+                      onClick={() => sendMessage()}
+                      disabled={isLoading || iaTyping || !draft.trim()}
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
             </div>
 

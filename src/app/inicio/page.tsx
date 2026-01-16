@@ -9,8 +9,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import { getUser, getUserFirstName, getToken, clearUser } from '@/lib/auth';
-import { psListActiveRooms, psGetHistory, PSHistoryResponse } from '@/lib/axios/consultas';
+import { psListActiveRooms, psGetFullHistory, PSFullHistoryItem } from '@/lib/axios/consultas';
 import FrequencyChart from '@/components/dashboard/FrequencyChart';
+import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 
 export default function InicioPage() {
   const router = useRouter();
@@ -26,7 +27,9 @@ export default function InicioPage() {
     medicoNome?: string;
   } | null>(null);
 
-  const [historyData, setHistoryData] = useState<PSHistoryResponse | null>(null);
+  const [fullHistory, setFullHistory] = useState<PSFullHistoryItem[]>([]);
+  const [chartData, setChartData] = useState<Array<{ name: string; consultas: number }>>([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
 
   /* State for next appointment (Simulated) */
   const [nextAppointment, setNextAppointment] = useState<{
@@ -100,9 +103,26 @@ export default function InicioPage() {
     }
 
     if (token) {
-      psGetHistory(token)
-        .then(data => setHistoryData(data))
-        .catch(err => console.error('Erro ao buscar histórico:', err));
+      psGetFullHistory(token)
+        .then((data: PSFullHistoryItem[]) => {
+          setFullHistory(data);
+          // Processar dados para o gráfico (últimos 30 dias)
+          const processed = [];
+          const now = new Date();
+          for (let i = 29; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(now.getDate() - i);
+            const label = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+            const count = data.filter((item: PSFullHistoryItem) => {
+              const itemDate = new Date(item.createdAt);
+              return itemDate.toDateString() === d.toDateString();
+            }).length;
+            processed.push({ name: label, consultas: count });
+          }
+          setChartData(processed);
+        })
+        .catch((err: any) => console.error('Erro ao buscar histórico:', err))
+        .finally(() => setLoadingHistory(false));
     }
   }, []);
 
@@ -134,7 +154,7 @@ export default function InicioPage() {
               </div>
             </div>
             <div className="dash-card-value">
-              {historyData ? historyData.count : '--'}
+              {loadingHistory ? '--' : fullHistory.length}
               <span className="dash-card-trend trend-up">↑ 15%</span>
             </div>
             <div className="dash-card-footer">
@@ -201,25 +221,27 @@ export default function InicioPage() {
             </div>
             <div className="dash-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
               <div style={{ marginBottom: 'auto' }}>
-                {historyData?.lastConsulta ? (
+                {loadingHistory ? (
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>Carregando...</p>
+                ) : fullHistory.length > 0 ? (
                   <>
                     <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
                       {isMedico ? 'Paciente' : 'Médico'}
                     </p>
                     <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                       {isMedico
-                        ? (historyData.lastConsulta.paciente?.nome_completo || 'Paciente não identificado')
-                        : (historyData.lastConsulta.medico?.nome_completo || 'Médico não identificado')}
+                        ? (fullHistory[0].paciente?.nome_completo || 'Paciente não identificado')
+                        : (fullHistory[0].medico?.nome_completo || 'Médico não identificado')}
                     </h4>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
-                      {historyData.lastConsulta.createdAt
-                        ? `${new Date(historyData.lastConsulta.createdAt).toLocaleDateString('pt-BR')} - ${new Date(historyData.lastConsulta.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+                      {fullHistory[0].createdAt
+                        ? `${new Date(fullHistory[0].createdAt).toLocaleDateString('pt-BR')} - ${new Date(fullHistory[0].createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
                         : 'Data não disponível'}
                     </p>
                   </>
                 ) : (
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>
-                    {historyData ? 'Nenhuma consulta realizada.' : 'Carregando...'}
+                    Nenhuma consulta realizada.
                   </p>
                 )}
               </div>
@@ -237,15 +259,15 @@ export default function InicioPage() {
           {/* Activity Chart Card */}
           <div className="dash-card featured">
             <div className="dash-card-header">
-              <h3>Frequência de Consultas</h3>
+              <h3>Consultas nos ultimos 30 dias</h3>
               <div className="dash-card-icon">
                 <Image src="/icons/icon-chart.png" alt="Ícone Frequência" width={24} height={24} />
               </div>
             </div>
             <div style={{ flex: 1, minHeight: '300px', height: '100%', width: '100%', padding: '1rem 0', position: 'relative' }}>
-              <FrequencyChart />
+              <FrequencyChart data={chartData} />
             </div>
-            <div className="dash-card-footer" style={{ textAlign: 'center' }}>Semana atual</div>
+            <div className="dash-card-footer" style={{ textAlign: 'center' }}>Últimos 30 dias</div>
           </div>
 
           {/* Scheduled Appointments Card */}
@@ -327,5 +349,3 @@ export default function InicioPage() {
     </div>
   );
 }
-
-import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';

@@ -16,6 +16,7 @@ type SidebarItem = {
 
 type Props = {
   activeId?: SidebarItem['id'] | 'configuracoes';
+  className?: string;
 };
 
 const baseItems: SidebarItem[] = [
@@ -24,7 +25,7 @@ const baseItems: SidebarItem[] = [
   { id: 'historico', label: 'Histórico', icon: '/images/clock.svg', href: '/historico' },
 ];
 
-export default function Sidebar({ activeId = 'inicio' }: Props) {
+export default function Sidebar({ activeId = 'inicio', className = '' }: Props) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -46,7 +47,7 @@ export default function Sidebar({ activeId = 'inicio' }: Props) {
   if (!mounted) return null;
 
   return (
-    <aside className="inicio-sidebar" aria-label="Menu lateral">
+    <aside className={`inicio-sidebar ${className}`} aria-label="Menu lateral">
       <div className="sidebar-top">
         <div className="sidebar-logo">
           <div className="logo-inner">
