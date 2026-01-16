@@ -264,7 +264,7 @@ export default function InicioPage() {
                 <Image src="/icons/icon-chart.png" alt="Ícone Frequência" width={24} height={24} />
               </div>
             </div>
-            <div style={{ flex: 1, minHeight: '300px', height: '100%', width: '100%', padding: '1rem 0', position: 'relative' }}>
+            <div style={{ flex: 1, minHeight: '300px', height: '100%', width: '100%', padding: '1rem 0 2.5rem', position: 'relative' }}>
               <FrequencyChart data={chartData} />
             </div>
             <div className="dash-card-footer" style={{ textAlign: 'center' }}>Últimos 30 dias</div>

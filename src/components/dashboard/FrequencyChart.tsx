@@ -40,7 +40,7 @@ export default function FrequencyChart({ data }: Props) {
                         top: 10,
                         right: 20,
                         left: -20,
-                        bottom: 0,
+                        bottom: 20,
                     }}
                     style={{ outline: 'none' }}
                 >
