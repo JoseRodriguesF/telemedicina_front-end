@@ -151,8 +151,7 @@ function PreConsultaInner() {
     }
     if (token) {
       if (flow === 'agendamento') {
-        alert(`Consulta agendada com sucesso para ${dateStr} às ${timeStr}!`);
-        router.push('/inicio');
+        router.push(`/consultas/selecao-medico?date=${encodeURIComponent(dateStr || '')}&time=${encodeURIComponent(timeStr || '')}`);
         return;
       }
 
