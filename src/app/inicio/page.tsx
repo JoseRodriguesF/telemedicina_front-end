@@ -180,17 +180,17 @@ export default function InicioPage() {
             <div className="dash-card-body">
               {reconnectData ? (
                 <>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
                     Consulta em andamento.
                   </p>
-                  <p style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>
+                  <p style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
                     {isMedico
                       ? (reconnectData.pacienteNome ? `Paciente: ${reconnectData.pacienteNome}` : 'Paciente conectado')
                       : (reconnectData.medicoNome ? `Dr(a). ${reconnectData.medicoNome}` : 'Médico conectado')}
                   </p>
                   <button
                     className="btn primary"
-                    style={{ borderRadius: 'var(--radius-lg)', width: '100%', padding: '0.5rem' }}
+                    style={{ borderRadius: 'var(--radius-lg)', width: '100%', padding: '0.4rem' }}
                     onClick={handleReconnect}
                   >
                     Reconectar
@@ -198,13 +198,13 @@ export default function InicioPage() {
                 </>
               ) : (
                 <>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '1rem' }}>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.5rem' }}>
                     Nenhuma consulta ativa encontrada no momento.
                   </p>
                   <button
                     className="btn ghost"
                     disabled
-                    style={{ borderRadius: 'var(--radius-lg)', width: '100%', padding: '0.5rem', opacity: 0.5, cursor: 'not-allowed' }}
+                    style={{ borderRadius: 'var(--radius-lg)', width: '100%', padding: '0.4rem', opacity: 0.5, cursor: 'not-allowed' }}
                   >
                     Reconectar
                   </button>
@@ -222,13 +222,13 @@ export default function InicioPage() {
                 <Image src="/icons/icon-calendar.png" alt="Ícone Calendário" width={24} height={24} />
               </div>
             </div>
-            <div className="dash-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+            <div className="dash-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
               <div style={{ marginBottom: 'auto' }}>
                 {loadingHistory ? (
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>Carregando...</p>
                 ) : fullHistory.length > 0 ? (
                   <>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0' }}>
                       {isMedico ? 'Paciente' : 'Médico'}
                     </p>
                     <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
@@ -236,7 +236,7 @@ export default function InicioPage() {
                         ? (fullHistory[0].paciente?.nome_completo || 'Paciente não identificado')
                         : (fullHistory[0].medico?.nome_completo || 'Médico não identificado')}
                     </h4>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginTop: '0' }}>
                       {fullHistory[0].createdAt
                         ? `${new Date(fullHistory[0].createdAt).toLocaleDateString('pt-BR')} - ${new Date(fullHistory[0].createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
                         : 'Data não disponível'}
@@ -250,7 +250,7 @@ export default function InicioPage() {
               </div>
               <button
                 className="btn ghost"
-                style={{ borderRadius: 'var(--radius-lg)', width: '100%', padding: '0.5rem', marginTop: '1rem' }}
+                style={{ borderRadius: 'var(--radius-lg)', width: '100%', padding: '0.4rem', marginTop: '0.5rem' }}
                 onClick={() => router.push('/historico')}
               >
                 Ver Resumo
