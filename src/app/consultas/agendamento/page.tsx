@@ -86,7 +86,6 @@ export default function AgendamentoPage() {
             <main className="inicio-main">
                 <header className="dashboard-header">
                     <h2>Agendar Consulta</h2>
-                    <p>Escolha a melhor data e horário para seu atendimento.</p>
                 </header>
 
                 <div className="agendamento-container">

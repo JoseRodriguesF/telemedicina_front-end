@@ -217,14 +217,16 @@ function PreConsultaInner() {
                   <div className="pc-welcome-text">
                     <h1>
                       {flow === 'agendamento'
-                        ? `Olá! Vamos realizar a triagem para seu agendamento do dia ${dateStr}.`
+                        ? `Tudo pronto para sua consulta no dia ${dateStr}!`
                         : 'Bem-vindo(a)! Eu sou a Angélica, sua assistente de saúde IA.'}
                       <br />
-                      Estou aqui para realizar sua triagem inicial.
+                      {flow === 'agendamento'
+                        ? 'Vamos realizar sua triagem prévia para agilizar o atendimento.'
+                        : 'Estou aqui para realizar sua triagem inicial.'}
                     </h1>
                     <p>
                       {flow === 'agendamento'
-                        ? 'Para que o médico possa te atender melhor na data marcada, preciso coletar algumas informações sobre o que você está sentindo.'
+                        ? `Para que seu médico possa te atender com toda a atenção necessária na data marcada, gostaria de conhecer melhor seu quadro clínico atual.`
                         : 'Vamos conversar sobre seus sintomas, dores ou preocupações para que eu possa encaminhá-lo para o especialista correto.'}
                     </p>
                     <button
