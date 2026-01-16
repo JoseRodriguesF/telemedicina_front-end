@@ -71,7 +71,7 @@ export default function FrequencyChart({ data }: Props) {
                         dataKey="consultas"
                         stroke="var(--color-primary-500, #0ea5e9)"
                         strokeWidth={3}
-                        dot={{ r: 4, fill: "var(--color-primary-500)", strokeWidth: 2, stroke: "var(--border-color)" }}
+                        dot={{ r: 4, fill: "var(--color-primary-500)", strokeWidth: 2, stroke: "var(--chart-dot-stroke)" }}
                         activeDot={{ r: 6, strokeWidth: 0 }}
                         animationDuration={1500}
                     />

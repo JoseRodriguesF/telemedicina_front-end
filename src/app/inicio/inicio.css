@@ -241,3 +241,11 @@
 .frequency-chart-wrapper *:focus {
 	outline: none !important;
 }
+
+:root {
+	--chart-dot-stroke: var(--border-color);
+}
+
+[data-theme='dark'] {
+	--chart-dot-stroke: #ffffff;
+}
