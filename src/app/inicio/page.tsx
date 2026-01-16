@@ -169,10 +169,15 @@ export default function InicioPage() {
             <div className="dash-card-header">
               <h3>Sessão Ativa</h3>
               <div className="dash-card-icon" style={{
-                color: reconnectData ? 'var(--color-primary-500)' : 'var(--text-tertiary)',
+                color: 'var(--text-primary)',
                 background: reconnectData ? 'var(--bg-tertiary)' : 'var(--bg-secondary)'
               }}>
-                {reconnectData ? '🟢' : '⚪'}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: reconnectData ? 1 : 0.4 }}>
+                  <path d="M12 13L9 20h6l-3-7z" fill="currentColor" />
+                  <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+                  <path d="M16.5 9.5a6.5 6.5 0 0 0-9 0" />
+                  <path d="M20 6a11.5 11.5 0 0 0-16 0" />
+                </svg>
               </div>
             </div>
             <div className="dash-card-body">
