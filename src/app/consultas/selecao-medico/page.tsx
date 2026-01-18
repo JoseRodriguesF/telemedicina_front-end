@@ -11,13 +11,13 @@ import Image from 'next/image';
 
 type Doctor = {
     id: number;
-    name: string;
-    specialty: string;
-    rating: number;
-    reviews: number;
-    crm: string;
-    import React, { useState, useEffect, Suspense } from 'react';
-    image: string;
+    nome: string;
+    specialty?: string;
+    rating?: number;
+    reviews?: number;
+    crm?: string;
+    description?: string;
+    image?: string;
 };
 
 const mockDoctors: Doctor[] = [
