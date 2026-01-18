@@ -10,7 +10,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 
 type Doctor = {
-    id: number;
     nome: string;
     specialty?: string;
     rating?: number;
@@ -19,37 +18,6 @@ type Doctor = {
     description?: string;
     image?: string;
 };
-
-const mockDoctors: Doctor[] = [
-    {
-        id: 1,
-        name: "Dr. Roberto Santos",
-        specialty: "Cardiologista",
-        rating: 4.9,
-        reviews: 124,
-        nome: string;
-        description: "Especialista em cardiologia preventiva e arritmias, com mais de 15 anos de experiência clínica nos principais hospitais do país.",
-        image: "https://i.pravatar.cc/150?u=1"
-    },
-    {
-        id: 2,
-        name: "Dra. Ana Beatriz",
-        specialty: "Dermatologista",
-        rating: 4.8,
-    // Removido mockDoctors, usaremos dados da API
-    import { getToken, getUser } from '@/lib/auth';
-
-        image: "https://i.pravatar.cc/150?u=3"
-    },
-    {
-        id: 4,
-        name: "Dra. Julia Costa",
-        specialty: "Pediatra",
-        rating: 5.0,
-        reviews: 156,
-        crm: "CRM/MG 456789",
-        description: "Dedicada ao cuidado infantil desde o nascimento, com especialização em nutrição pediátrica e desenvolvimento infantil.",
-        image: "https://i.pravatar.cc/150?u=4"
         useEffect(() => {
             async function fetchDoctors() {
                 setLoading(true);
@@ -57,7 +25,7 @@ const mockDoctors: Doctor[] = [
                     const token = getToken();
                     const res = await fetch('/api/medicos', {
                         headers: { Authorization: `Bearer ${token}` }
-        // const mockDoctors: Doctor[] = [ ... ]; // Removido mockDoctors, usaremos dados da API
+        // mockDoctors removido completamente
 
     const handleViewDetails = (doc: Doctor) => {
         setSelectedDoctor(doc);
@@ -79,7 +47,7 @@ const mockDoctors: Doctor[] = [
 
                 <div className="selection-container">
                     <div className="doctors-grid">
-                        {mockDoctors.map(doc => (
+                        {/* Aqui você deve implementar a lógica para buscar médicos via API */}
                             <div key={doc.id} className="doctor-card">
                                 <div className="doctor-card-top">
                                     <img src={doc.image} alt={doc.name} className="doctor-avatar" />
