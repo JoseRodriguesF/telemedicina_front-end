@@ -57,45 +57,7 @@ const mockDoctors: Doctor[] = [
                     const token = getToken();
                     const res = await fetch('/api/medicos', {
                         headers: { Authorization: `Bearer ${token}` }
-                    });
-                    if (!res.ok) throw new Error('Erro ao buscar médicos');
-                    const data = await res.json();
-                    setDoctors(data);
-                } catch (err) {
-                    setDoctors([]);
-                } finally {
-                    setLoading(false);
-                }
-            }
-            fetchDoctors();
-        }, []);
-
-    },
-    {
-        id: 5,
-        name: "Dr. André Pereira",
-        specialty: "Ortopedista",
-        rating: 4.6,
-        reviews: 94,
-        crm: "CRM/PR 321654",
-        description: "Especialista em medicina esportiva e lesões de joelho, auxiliando na recuperação rápida de atletas e pacientes ativos.",
-        image: "https://i.pravatar.cc/150?u=5"
-    }
-];
-
-function SelecaoMedicoInner() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const date = searchParams.get('date');
-    const time = searchParams.get('time');
-
-    const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-
-    const handleSelectDoctor = (doc: Doctor) => {
-        alert(`Consulta confirmada com ${doc.name} para o dia ${date} às ${time}!`);
-        router.push('/inicio');
-    };
+        // const mockDoctors: Doctor[] = [ ... ]; // Removido mockDoctors, usaremos dados da API
 
     const handleViewDetails = (doc: Doctor) => {
         setSelectedDoctor(doc);
@@ -131,7 +93,7 @@ function SelecaoMedicoInner() {
                                 </div>
 
                                 <div className="doctor-card-footer">
-                                    <button
+                                {/* Aqui você deve implementar a lógica para buscar médicos via API */}
                                         className="btn ghost"
                                         style={{ padding: '0.6rem', fontSize: '0.85rem' }}
                                         onClick={() => handleViewDetails(doc)}
