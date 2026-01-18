@@ -1,3 +1,27 @@
+// Buscar próxima consulta agendada
+export type NextAppointment = {
+  id: string;
+  doctorName: string;
+  specialty: string;
+  date: string;
+  time: string;
+  timestamp: number;
+};
+
+export async function getNextAppointment(token: string): Promise<NextAppointment | null> {
+  const res = await axios.get('/proxy/consultas/agendadas', { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.data) return null;
+  // Ajuste conforme o backend: adapte os campos se necessário
+  const appt = res.data;
+  return {
+    id: String(appt.id),
+    doctorName: appt.doctorName || appt.medico_nome || '',
+    specialty: appt.specialty || appt.especialidade || '',
+    date: appt.date || appt.data_consulta || '',
+    time: appt.time || appt.hora_inicio || '',
+    timestamp: appt.timestamp || (appt.data_consulta && appt.hora_inicio ? new Date(`${appt.data_consulta}T${appt.hora_inicio}`).getTime() : Date.now())
+  };
+}
 import axios from 'axios';
 
 // Buscar salas em andamento (consultas ativas)

@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import { getUser, getUserFirstName, getToken, clearUser } from '@/lib/auth';
-import { psListActiveRooms, psGetFullHistory, PSFullHistoryItem } from '@/lib/axios/consultas';
+import { psListActiveRooms, psGetFullHistory, PSFullHistoryItem, getNextAppointment, NextAppointment } from '@/lib/axios/consultas';
 import FrequencyChart from '@/components/dashboard/FrequencyChart';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 
@@ -31,22 +31,8 @@ export default function InicioPage() {
   const [chartData, setChartData] = useState<Array<{ name: string; consultas: number }>>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
 
-  /* State for next appointment (Simulated) */
-  const [nextAppointment, setNextAppointment] = useState<{
-    id: string;
-    doctorName: string;
-    specialty: string;
-    date: string;
-    time: string;
-    timestamp: number;
-  } | null>({
-    id: 'simulated-appt-123',
-    doctorName: 'Dr. Carlos Silva',
-    specialty: 'Cardiologista',
-    date: '14/01/2026',
-    time: '15:30',
-    timestamp: new Date('2026-01-14T15:30:00').getTime()
-  });
+  // Próxima consulta real
+  const [nextAppointment, setNextAppointment] = useState<NextAppointment | null>(null);
 
   /* Logic to check if "Entrar na Sala" should be enabled (e.g., 5 min before) */
   // Using a mock current time for demonstration if needed, or real time.
@@ -102,7 +88,15 @@ export default function InicioPage() {
       }).catch(err => console.error(err));
     }
 
+    // Buscar próxima consulta agendada via proxy
     if (token) {
+      getNextAppointment(token)
+        .then((appt) => setNextAppointment(appt))
+        .catch((err) => {
+          setNextAppointment(null);
+          console.error('Erro ao buscar próxima consulta:', err);
+        });
+
       psGetFullHistory(token)
         .then((data: PSFullHistoryItem[]) => {
           setFullHistory(data);
