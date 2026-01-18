@@ -16,7 +16,7 @@ type Doctor = {
     rating: number;
     reviews: number;
     crm: string;
-    description: string;
+    import React, { useState, useEffect, Suspense } from 'react';
     image: string;
 };
 
@@ -27,7 +27,7 @@ const mockDoctors: Doctor[] = [
         specialty: "Cardiologista",
         rating: 4.9,
         reviews: 124,
-        crm: "CRM/SP 123456",
+        nome: string;
         description: "Especialista em cardiologia preventiva e arritmias, com mais de 15 anos de experiência clínica nos principais hospitais do país.",
         image: "https://i.pravatar.cc/150?u=1"
     },
@@ -36,19 +36,9 @@ const mockDoctors: Doctor[] = [
         name: "Dra. Ana Beatriz",
         specialty: "Dermatologista",
         rating: 4.8,
-        reviews: 89,
-        crm: "CRM/SP 654321",
-        description: "Focada em dermatologia clínica e estética, Dra. Ana preza por um atendimento humanizado e tratamentos personalizados.",
-        image: "https://i.pravatar.cc/150?u=2"
-    },
-    {
-        id: 3,
-        name: "Dr. Marcos Oliveira",
-        specialty: "Clínico Geral",
-        rating: 4.7,
-        reviews: 210,
-        crm: "CRM/RJ 987654",
-        description: "Atendimento integral à saúde do adulto, com foco em diagnóstico preciso e acompanhamento contínuo de doenças crônicas.",
+    // Removido mockDoctors, usaremos dados da API
+    import { getToken, getUser } from '@/lib/auth';
+
         image: "https://i.pravatar.cc/150?u=3"
     },
     {
@@ -60,6 +50,26 @@ const mockDoctors: Doctor[] = [
         crm: "CRM/MG 456789",
         description: "Dedicada ao cuidado infantil desde o nascimento, com especialização em nutrição pediátrica e desenvolvimento infantil.",
         image: "https://i.pravatar.cc/150?u=4"
+        useEffect(() => {
+            async function fetchDoctors() {
+                setLoading(true);
+                try {
+                    const token = getToken();
+                    const res = await fetch('/api/medicos', {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (!res.ok) throw new Error('Erro ao buscar médicos');
+                    const data = await res.json();
+                    setDoctors(data);
+                } catch (err) {
+                    setDoctors([]);
+                } finally {
+                    setLoading(false);
+                }
+            }
+            fetchDoctors();
+        }, []);
+
     },
     {
         id: 5,

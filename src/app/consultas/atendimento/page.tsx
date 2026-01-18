@@ -477,7 +477,10 @@ function AtendimentoInner() {
         // If 1 or fewer participants (myself or empty), close it.
         // Usually it includes myself before I leave.
         if (res.participants && res.participants.length <= 1) {
-          await endConsulta(cid, token);
+          // Envia hora_fim ao finalizar
+          const now = new Date();
+          const hora_fim = now.toTimeString().slice(0, 8); // formato HH:MM:SS
+          await endConsulta(cid, token, hora_fim);
         }
       } catch (err) {
         console.error('Erro ao verificar/finalizar consulta:', err);

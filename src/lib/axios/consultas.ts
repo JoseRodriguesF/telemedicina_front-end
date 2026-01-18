@@ -66,8 +66,14 @@ export async function listParticipants(consultaId: string, token: string): Promi
   return res.data as ParticipantsResponse;
 }
 
-export async function endConsulta(consultaId: string, token: string): Promise<{ ok: boolean }> {
-  const res = await axios.post(`/api/consultas/${consultaId}/end`, {}, { headers: { Authorization: `Bearer ${token}` } });
+export async function endConsulta(
+  consultaId: string,
+  token: string,
+  hora_fim?: string
+): Promise<{ ok: boolean }> {
+  const body: Record<string, any> = {};
+  if (hora_fim) body.hora_fim = hora_fim;
+  const res = await axios.post(`/api/consultas/${consultaId}/end`, body, { headers: { Authorization: `Bearer ${token}` } });
   return res.data as { ok: boolean };
 }
 
@@ -86,9 +92,20 @@ export type PSRoomResponse = {
   iceServers: IceServer[];
 };
 
-export async function psCreateRoom(token: string): Promise<PSRoomResponse> {
+export async function psCreateRoom(
+  token: string,
+  options?: {
+    data_consulta?: string;
+    hora_inicio?: string;
+    hora_fim?: string;
+  }
+): Promise<PSRoomResponse> {
   try {
-    const res = await axios.post(`/api/ps/rooms`, {}, { headers: { Authorization: `Bearer ${token}` } });
+    const body: Record<string, any> = {};
+    if (options?.data_consulta) body.data_consulta = options.data_consulta;
+    if (options?.hora_inicio) body.hora_inicio = options.hora_inicio;
+    if (options?.hora_fim) body.hora_fim = options.hora_fim;
+    const res = await axios.post(`/api/ps/rooms`, body, { headers: { Authorization: `Bearer ${token}` } });
     return res.data as PSRoomResponse;
   } catch (e: any) {
     const msg = e?.response?.data?.error || e?.message || 'Falha ao criar sala';
