@@ -96,78 +96,74 @@ function SelecaoMedicoInner() {
 
     return (
         <div className="inicio-page">
-            <div className="inicio-mobile-header">
-                <MobileHeader />
-            </div>
-            <Sidebar activeId="consultas" />
-
-            <main className="inicio-main">
-                <header className="dashboard-header">
-                    <h2>Selecione o Médico</h2>
-                    <p>Encontramos esses especialistas disponíveis para {date} às {time}.</p>
-                </header>
-
-                <div className="selection-container">
-                    <div className="doctors-grid">
-                        {/* Aqui você deve implementar a lógica para buscar médicos via API */}
-                            <div key={doc.id} className="doctor-card">
-                                <div className="doctor-card-top">
-                                    <img src={doc.image || 'https://i.pravatar.cc/150?u=' + doc.id} alt={doc.nome} className="doctor-avatar" />
-                                    <div className="doctor-info-basic">
-                                        <h3>{doc.nome}</h3>
-                                        <span className="doctor-specialty">{doc.specialty || ''}</span>
-                                        {doc.rating && (
-                                            <div className="doctor-rating">
-                                                ⭐ {doc.rating} <span>({doc.reviews || 0} avaliações)</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="doctor-card-footer">
-                                    <button
-                                        className="btn ghost"
-                                        style={{ padding: '0.6rem', fontSize: '0.85rem' }}
-                                        onClick={() => handleViewDetails(doc)}
-                                    >
-                                        Ver Detalhes
-                                    </button>
-                                    <button
-                                        className="btn primary"
-                                        style={{ padding: '0.6rem', fontSize: '0.85rem' }}
-                                        onClick={() => handleSelectDoctor(doc)}
-                                    >
-                                        Selecionar
-                                    </button>
-                                </div>
-
-                                <div className="modal-section" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <div>
-                                        <h4>Avaliação</h4>
-                                        <div className="doctor-rating" style={{ fontSize: '1.2rem' }}>
-                                            ⭐ {selectedDoctor.rating}
+            <div className="selection-container">
+                <div className="doctors-grid">
+                    {doctors.map((doc) => (
+                        <div key={doc.id} className="doctor-card">
+                            <div className="doctor-card-top">
+                                <img src={doc.image || 'https://i.pravatar.cc/150?u=' + doc.id} alt={doc.nome} className="doctor-avatar" />
+                                <div className="doctor-info-basic">
+                                    <h3>{doc.nome}</h3>
+                                    <span className="doctor-specialty">{doc.specialty || ''}</span>
+                                    {doc.rating && (
+                                        <div className="doctor-rating">
+                                            ⭐ {doc.rating} <span>({doc.reviews || 0} avaliações)</span>
                                         </div>
-                                    </div>
-                                    <div>
-                                        <h4>Consultas</h4>
-                                        <p style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '1.1rem' }}>{selectedDoctor.reviews}+ atendimentos</p>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
-
-                            <div className="modal-footer">
+                            <div className="doctor-card-footer">
+                                <button
+                                    className="btn ghost"
+                                    style={{ padding: '0.6rem', fontSize: '0.85rem' }}
+                                    onClick={() => handleViewDetails(doc)}
+                                >
+                                    Ver Detalhes
+                                </button>
                                 <button
                                     className="btn primary"
-                                    style={{ width: '100%', padding: '1rem', borderRadius: 'var(--radius-xl)' }}
-                                    onClick={() => handleSelectDoctor(selectedDoctor)}
+                                    style={{ padding: '0.6rem', fontSize: '0.85rem' }}
+                                    onClick={() => handleSelectDoctor(doc)}
                                 >
-                                    Confirmar Seleção
+                                    Selecionar
                                 </button>
                             </div>
                         </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Modal de detalhes do médico */}
+            {isModalOpen && selectedDoctor && (
+                <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div className="modal-content" style={{ background: '#fff', borderRadius: 'var(--radius-xl)', padding: '2rem', minWidth: 320, maxWidth: 400 }}>
+                        <button style={{ float: 'right', background: 'none', border: 'none', fontSize: 22, cursor: 'pointer' }} onClick={() => setIsModalOpen(false)}>&times;</button>
+                        <h3>{selectedDoctor.nome}</h3>
+                        <div className="modal-section" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: 16 }}>
+                            <div>
+                                <h4>Avaliação</h4>
+                                <div className="doctor-rating" style={{ fontSize: '1.2rem' }}>
+                                    ⭐ {selectedDoctor.rating ?? '-'}
+                                </div>
+                            </div>
+                            <div>
+                                <h4>Consultas</h4>
+                                <p style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '1.1rem' }}>{selectedDoctor.reviews ?? 0}+ atendimentos</p>
+                            </div>
+                        </div>
+                        <div className="modal-footer" style={{ marginTop: 24 }}>
+                            <button
+                                className="btn primary"
+                                style={{ width: '100%', padding: '1rem', borderRadius: 'var(--radius-xl)' }}
+                                onClick={() => handleSelectDoctor(selectedDoctor)}
+                                disabled={!selectedDoctor}
+                            >
+                                Confirmar Seleção
+                            </button>
+                        </div>
                     </div>
-                )}
-            </main>
+                </div>
+            )}
         </div>
     );
 }
