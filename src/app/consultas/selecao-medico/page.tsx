@@ -139,17 +139,6 @@ function SelecaoMedicoInner() {
                                     >
                                         Selecionar
                                     </button>
-
-                                        type Doctor = {
-                                            id: number;
-                                            nome: string;
-                                            specialty?: string;
-                                            rating?: number;
-                                            reviews?: number;
-                                            crm?: string;
-                                            description?: string;
-                                            image?: string;
-                                        };
                                 </div>
 
                                 <div className="modal-section" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
