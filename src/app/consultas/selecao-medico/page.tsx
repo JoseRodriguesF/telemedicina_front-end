@@ -125,7 +125,7 @@ function SelecaoMedicoInner() {
                                 </div>
 
                                 <div className="doctor-card-footer">
-                                {/* Aqui você deve implementar a lógica para buscar médicos via API */}
+                                    <button
                                         className="btn ghost"
                                         style={{ padding: '0.6rem', fontSize: '0.85rem' }}
                                         onClick={() => handleViewDetails(doc)}
