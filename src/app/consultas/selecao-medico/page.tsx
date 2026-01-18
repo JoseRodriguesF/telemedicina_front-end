@@ -73,35 +73,27 @@ type Doctor = {
                                         style={{ padding: '0.6rem', fontSize: '0.85rem' }}
                                         onClick={() => handleSelectDoctor(doc)}
                                     >
-                                        Selecionar
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                                        "use client";
 
-                {/* Modal de Detalhes */}
-                {isModalOpen && selectedDoctor && (
-                    <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
-                        <div className="details-modal" onClick={e => e.stopPropagation()}>
-                            <button className="modal-close" onClick={() => setIsModalOpen(false)}>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                            </button>
+                                        import React, { useState, useEffect, Suspense } from 'react';
+                                        import '../../inicio/inicio.css';
+                                        import './selecao-medico.css';
+                                        import '@/components/layout/Header/header.css';
+                                        import Sidebar from '@/components/layout/Sidebar/Sidebar';
+                                        import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
+                                        import { useRouter, useSearchParams } from 'next/navigation';
+                                        import { getToken, getUser } from '@/lib/auth';
 
-                            <div className="modal-header">
-                                <img src={selectedDoctor.image} alt={selectedDoctor.name} className="doctor-avatar" style={{ width: '80px', height: '80px' }} />
-                                <div className="modal-info">
-                                    <h2>{selectedDoctor.name}</h2>
-                                    <span className="doctor-specialty" style={{ fontSize: '1rem' }}>{selectedDoctor.specialty}</span>
-                                    <p style={{ marginTop: '0.5rem', fontWeight: 600, color: 'var(--text-tertiary)' }}>{selectedDoctor.crm}</p>
-                                </div>
-                            </div>
-
-                            <div className="modal-body">
-                                <div className="modal-section">
-                                    <h4>Sobre o Profissional</h4>
-                                    <p>{selectedDoctor.description}</p>
+                                        type Doctor = {
+                                            id: number;
+                                            nome: string;
+                                            specialty?: string;
+                                            rating?: number;
+                                            reviews?: number;
+                                            crm?: string;
+                                            description?: string;
+                                            image?: string;
+                                        };
                                 </div>
 
                                 <div className="modal-section" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
