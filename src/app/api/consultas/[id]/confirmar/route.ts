@@ -13,6 +13,7 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
                 'Content-Type': 'application/json',
                 Authorization: auth
             },
+            body: JSON.stringify({})
         });
 
         const text = await res.text();

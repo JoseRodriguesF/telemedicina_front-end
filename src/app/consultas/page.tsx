@@ -50,14 +50,27 @@ export default function ConsultasPage() {
   }, []);
 
   const getMonthAbbreviation = (dateStr: string) => {
-    const date = new Date(dateStr);
     const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
-    return months[date.getUTCMonth()];
+
+    // Se for YYYY-MM-DD, fazer parse direto
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      const [, month] = dateStr.split('-');
+      return months[parseInt(month) - 1];
+    }
+
+    const date = new Date(dateStr);
+    return months[date.getMonth()];
   };
 
   const getDay = (dateStr: string) => {
+    // Se for YYYY-MM-DD, fazer parse direto
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      const [, , day] = dateStr.split('-');
+      return day;
+    }
+
     const date = new Date(dateStr);
-    return String(date.getUTCDate()).padStart(2, '0');
+    return String(date.getDate()).padStart(2, '0');
   };
 
   const formatTime = (timeString: string) => {
