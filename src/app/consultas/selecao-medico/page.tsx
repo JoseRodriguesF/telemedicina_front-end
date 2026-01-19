@@ -32,9 +32,11 @@ function SelecaoMedicoInner() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    const [error, setError] = useState<string | null>(null);
     useEffect(() => {
         async function fetchDoctors() {
             setLoading(true);
+            setError(null);
             try {
                 const token = getToken();
                 const res = await fetch('/proxy/medicos', {
@@ -42,9 +44,17 @@ function SelecaoMedicoInner() {
                 });
                 if (!res.ok) throw new Error('Erro ao buscar médicos');
                 const data = await res.json();
-                setDoctors(data);
-            } catch (err) {
+                // Mapear nome_completo para nome
+                const mapped = Array.isArray(data)
+                  ? data.map((m) => ({
+                      ...m,
+                      nome: m.nome_completo || m.nome || '',
+                    }))
+                  : [];
+                setDoctors(mapped);
+            } catch (err: any) {
                 setDoctors([]);
+                setError('Não foi possível carregar os médicos no momento.');
             } finally {
                 setLoading(false);
             }
@@ -67,7 +77,7 @@ function SelecaoMedicoInner() {
                 data_consulta: date,
                 hora_inicio: time
             };
-            const res = await fetch('/api/consultas/agendar', {
+            const res = await fetch('/proxy/consultas/agendar', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -97,7 +107,14 @@ function SelecaoMedicoInner() {
     return (
         <div className="inicio-page">
             <div className="selection-container">
+                {error && (
+                    <div style={{ color: 'var(--color-error)', marginBottom: 16, textAlign: 'center' }}>{error}</div>
+                )}
                 <div className="doctors-grid">
+                    {loading && <div style={{ textAlign: 'center', width: '100%' }}>Carregando médicos...</div>}
+                    {!loading && doctors.length === 0 && !error && (
+                        <div style={{ textAlign: 'center', width: '100%' }}>Nenhum médico disponível.</div>
+                    )}
                     {doctors.map((doc) => (
                         <div key={doc.id} className="doctor-card">
                             <div className="doctor-card-top">
