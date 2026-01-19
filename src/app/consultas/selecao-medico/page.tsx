@@ -27,6 +27,20 @@ function SelecaoMedicoInner() {
     const date = searchParams.get('date');
     const time = searchParams.get('time');
 
+    // Função para formatar data ISO (YYYY-MM-DD) para exibição (DD/MM/YYYY)
+    const formatDateForDisplay = (dateStr: string | null): string => {
+        if (!dateStr) return '';
+
+        // Se estiver em formato ISO (YYYY-MM-DD)
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            const [year, month, day] = dateStr.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        // Se já estiver em outro formato, retorna como está
+        return dateStr;
+    };
+
     const [doctors, setDoctors] = useState<Doctor[]>([]);
     const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -83,7 +97,7 @@ function SelecaoMedicoInner() {
                 hora_inicio: time
             };
             await agendarConsulta(payload, token);
-            alert(`Consulta agendada com ${doc.nome} para o dia ${date} às ${time}!`);
+            alert(`Consulta agendada com ${doc.nome} para o dia ${formatDateForDisplay(date)} às ${time}!`);
             router.push('/consultas');
         } catch (err: any) {
             const errorMsg = err?.response?.data?.error || err?.message || 'Erro desconhecido';

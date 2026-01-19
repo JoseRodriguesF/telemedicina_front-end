@@ -71,7 +71,11 @@ export default function AgendamentoPage() {
 
     const handleContinue = () => {
         if (selectedDate && selectedTime) {
-            const dateStr = selectedDate.toLocaleDateString('pt-BR');
+            // ✅ CORRETO - Formato ISO (YYYY-MM-DD)
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
             router.push(`/consultas/pre-consulta?flow=agendamento&date=${dateStr}&time=${selectedTime}`);
         }
     };

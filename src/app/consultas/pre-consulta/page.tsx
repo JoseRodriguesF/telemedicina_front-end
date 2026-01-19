@@ -32,6 +32,20 @@ function formatIaText(text: string): string {
 import { getToken, getUser } from '@/lib/auth';
 import { psCreateRoom } from '@/lib/axios/consultas';
 
+// Função para formatar data ISO (YYYY-MM-DD) para exibição (DD/MM/YYYY)
+function formatDateForDisplay(dateStr: string | null): string {
+  if (!dateStr) return '';
+
+  // Se já estiver em formato ISO (YYYY-MM-DD)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  // Se estiver em formato brasileiro (DD/MM/YYYY), retorna como está
+  return dateStr;
+}
+
 // Tipo para o histórico que será enviado ao backend
 type ChatHistory = Array<{ role: 'user' | 'assistant'; content: string }>;
 
@@ -217,7 +231,7 @@ function PreConsultaInner() {
                   <div className="pc-welcome-text">
                     <h1>
                       {flow === 'agendamento'
-                        ? `Tudo pronto para sua consulta no dia ${dateStr}!`
+                        ? `Tudo pronto para sua consulta no dia ${formatDateForDisplay(dateStr)}!`
                         : 'Bem-vindo(a)! Eu sou a Angélica, sua assistente de saúde IA.'}
                       <br />
                       {flow === 'agendamento'
