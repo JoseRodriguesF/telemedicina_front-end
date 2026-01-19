@@ -39,7 +39,7 @@ function SelecaoMedicoInner() {
             setError(null);
             try {
                 const token = getToken();
-                const res = await fetch('/proxy/medicos', {
+                const res = await fetch('/medicos', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (!res.ok) throw new Error('Erro ao buscar médicos');
