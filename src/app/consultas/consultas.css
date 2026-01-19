@@ -172,3 +172,30 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Scheduling Card Specifics */
+.service-card.scheduling .service-icon-wrapper {
+    background: rgba(14, 165, 233, 0.1);
+    color: var(--color-primary-500);
+}
+
+.btn-scheduling {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.btn-scheduling:hover {
+    filter: brightness(0.95);
+}
+
+[data-theme="dark"] .btn-scheduling {
+    background: #ffffff;
+    color: #0f172a;
+    /* Dark slate for high contrast text on white button */
+    font-weight: 600;
+}
+
+[data-theme="dark"] .btn-scheduling:hover {
+    background: #f1f5f9;
+}

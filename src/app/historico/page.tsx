@@ -17,6 +17,8 @@ export default function HistoricoPage() {
   const [loading, setLoading] = useState(true);
   const [userType, setUserType] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     const u = getUser();
@@ -73,9 +75,39 @@ export default function HistoricoPage() {
     }
   };
 
-  const filteredHistory = history.filter(item =>
-    getParticipantName(item).toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredHistory = history.filter(item => {
+    const nameMatch = getParticipantName(item).toLowerCase().includes(searchTerm.toLowerCase());
+
+    let dateMatch = true;
+    if (startDate || endDate) {
+      const itemDate = new Date(item.createdAt);
+      itemDate.setHours(0, 0, 0, 0); // Normalize item date to midnight for comparison
+
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0); // Adjust for timezone issues if any, keeping it local midnight
+        // Instead of complex timezone handling, let's use string comparison for YYYY-MM-DD if possible or simple date obj comparison
+        // reliable approach:
+        const itemTime = itemDate.getTime();
+        const startTime = start.getTime(); // This will be local midnight
+        // Fix: creating Date(startDate) results in UTC midnight (sometimes) or local midnight depending on browser.
+        // Input type="date" returns YYYY-MM-DD.
+        // Let's rely on simple string comparison or constructing local date with adjustment.
+        const [sy, sm, sd] = startDate.split('-').map(Number);
+        const startLocal = new Date(sy, sm - 1, sd);
+        if (itemDate < startLocal) dateMatch = false;
+      }
+
+      if (endDate && dateMatch) { // Only check if still matching
+        const [ey, em, ed] = endDate.split('-').map(Number);
+        const endLocal = new Date(ey, em - 1, ed);
+        endLocal.setHours(23, 59, 59, 999); // End of the selected day
+        if (itemDate > endLocal) dateMatch = false;
+      }
+    }
+
+    return nameMatch && dateMatch;
+  });
 
   return (
     <div className="inicio-page">
@@ -114,12 +146,16 @@ export default function HistoricoPage() {
                 type="date"
                 className="date-range-input"
                 title="Data inicial"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
               />
               <span style={{ color: 'var(--text-tertiary)' }}>-</span>
               <input
                 type="date"
                 className="date-range-input"
                 title="Data final"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
               />
             </div>
           </div>

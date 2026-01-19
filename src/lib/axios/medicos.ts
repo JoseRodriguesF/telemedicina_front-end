@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { ApiError } from '@/lib/errorHandler';
 
 export type MedicoPayload = {
   usuario_id?: number | null;
@@ -29,10 +30,14 @@ export type CreateMedicoResponse = {
  * POST /api/register/medicos
  */
 export async function createMedico(payload: MedicoPayload): Promise<CreateMedicoResponse> {
-  const resp = await axios.post('/api/register/medicos', payload, {
-    headers: { 'Content-Type': 'application/json' },
-  });
-  return resp.data as CreateMedicoResponse;
+  try {
+    const resp = await axios.post('/api/register/medicos', payload, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return resp.data as CreateMedicoResponse;
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 /**
@@ -49,10 +54,15 @@ export type Medico = {
 };
 
 export async function listMedicos(token: string): Promise<Medico[]> {
-  const resp = await axios.get('/api/medicos', {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return resp.data as Medico[];
+  try {
+    const resp = await axios.get('/api/medicos', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return resp.data as Medico[];
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 export default createMedico;
+

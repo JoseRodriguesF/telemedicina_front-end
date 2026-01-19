@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { isValidDDD } from '@/lib/validation/validators';
+import { ApiError } from '@/lib/errorHandler';
 
 export type PessoaisPayload = {
   usuario_id?: number | null;
@@ -91,8 +92,12 @@ export async function createPessoais(payload: PessoaisPayload) {
     // eslint-disable-next-line no-console
     console.log('[createPessoais] sending sanitized payload:', cleaned);
   }
-  const resp = await axios.post('/api/register/pessoais', cleaned, { headers: { 'Content-Type': 'application/json' } });
-  return resp.data;
+  try {
+    const resp = await axios.post('/api/register/pessoais', cleaned, { headers: { 'Content-Type': 'application/json' } });
+    return resp.data;
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 export default createPessoais;

@@ -69,6 +69,42 @@ export default function AgendamentoPage() {
         "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"
     ];
 
+    const isSlotAvailable = (time: string, date: Date | null) => {
+        if (!date) return false;
+
+        const now = new Date();
+        const checkDate = new Date(date);
+
+        // Normalize checkDate to just the date part for comparison
+        const isToday = checkDate.getDate() === now.getDate() &&
+            checkDate.getMonth() === now.getMonth() &&
+            checkDate.getFullYear() === now.getFullYear();
+
+        // If it's a past date (shouldn't happen due to calendar logic, but safe to check), it's unavailable
+        checkDate.setHours(0, 0, 0, 0);
+        const todayZero = new Date(now);
+        todayZero.setHours(0, 0, 0, 0);
+
+        if (checkDate < todayZero) return false;
+
+        // If it's a future date, all slots are available
+        if (!isToday) return true;
+
+        // If it's today, check the time
+        const [hours, minutes] = time.split(':').map(Number);
+        const slotDate = new Date(now); // Start with now to get year/month/day right? No, use the date objects properly.
+
+        // Construct the exact slot time on "today"
+        slotDate.setFullYear(now.getFullYear(), now.getMonth(), now.getDate());
+        slotDate.setHours(hours, minutes, 0, 0);
+
+        // Calculate 1 hour from now
+        const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
+
+        // Slot must be LATER than 1 hour from now
+        return slotDate > oneHourFromNow;
+    };
+
     const handleContinue = () => {
         if (selectedDate && selectedTime) {
             // ✅ CORRETO - Formato ISO (YYYY-MM-DD)
@@ -150,15 +186,25 @@ export default function AgendamentoPage() {
                             </div>
 
                             <div className="slots-grid">
-                                {timeSlots.map(time => (
-                                    <div
-                                        key={time}
-                                        className={`slot ${selectedTime === time ? 'selected' : ''}`}
-                                        onClick={() => setSelectedTime(time)}
-                                    >
-                                        {time}
-                                    </div>
-                                ))}
+                                {timeSlots.map(time => {
+                                    const available = isSlotAvailable(time, selectedDate);
+                                    return (
+                                        <button
+                                            key={time}
+                                            className={`slot ${selectedTime === time ? 'selected' : ''}`}
+                                            onClick={() => available && setSelectedTime(time)}
+                                            disabled={!available}
+                                            style={{
+                                                opacity: available ? 1 : 0.4,
+                                                cursor: available ? 'pointer' : 'not-allowed',
+                                                border: 'none', // Reset default button border
+                                                fontFamily: 'inherit' // Inherit font
+                                            }}
+                                        >
+                                            {time}
+                                        </button>
+                                    );
+                                })}
                             </div>
 
                             <div className="confirm-section">

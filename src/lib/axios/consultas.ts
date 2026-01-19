@@ -1,6 +1,9 @@
 // Tipos de status de consulta
 export type ConsultaStatus = 'solicitada' | 'agendada' | 'in_progress' | 'finished' | 'cancelled';
 
+import axios from 'axios';
+import { ApiError } from '@/lib/errorHandler';
+
 // Buscar consultas agendadas
 export type ConsultaAgendada = {
   id: number;
@@ -23,10 +26,14 @@ export type ConsultaAgendada = {
 };
 
 export async function getConsultasAgendadas(token: string): Promise<ConsultaAgendada[]> {
-  const res = await axios.get('/api/consultas/agendadas', {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  return (res.data || []) as ConsultaAgendada[];
+  try {
+    const res = await axios.get('/api/consultas/agendadas', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return (res.data || []) as ConsultaAgendada[];
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 /**
@@ -48,27 +55,31 @@ export type AgendarConsultaResponse = {
 };
 
 export async function agendarConsulta(payload: AgendarConsultaPayload, token: string): Promise<AgendarConsultaResponse> {
-  // IMPORTANTE: Prisma espera DateTime ISO-8601, NÃO time
-  // O schema do backend define hora_inicio como DateTime
-  const { data_consulta, hora_inicio, ...rest } = payload;
+  try {
+    // IMPORTANTE: Prisma espera DateTime ISO-8601, NÃO time
+    // O schema do backend define hora_inicio como DateTime
+    const { data_consulta, hora_inicio, ...rest } = payload;
 
-  // Combinar data (YYYY-MM-DD) + hora (HH:mm) em DateTime ISO-8601
-  // Exemplo: "2026-01-30" + "14:00" = "2026-01-30T14:00:00.000Z"
-  const dateTimeString = `${data_consulta}T${hora_inicio}:00.000Z`;
+    // Combinar data (YYYY-MM-DD) + hora (HH:mm) em DateTime ISO-8601
+    // Exemplo: "2026-01-30" + "14:00" = "2026-01-30T14:00:00.000Z"
+    const dateTimeString = `${data_consulta}T${hora_inicio}:00.000Z`;
 
-  const transformedPayload = {
-    ...rest,
-    data_consulta: data_consulta,
-    hora_inicio: dateTimeString,  // DateTime ISO-8601: "2026-01-30T14:00:00.000Z"
-  };
+    const transformedPayload = {
+      ...rest,
+      data_consulta: data_consulta,
+      hora_inicio: dateTimeString,  // DateTime ISO-8601: "2026-01-30T14:00:00.000Z"
+    };
 
-  const res = await axios.post('/api/consultas/agendar', transformedPayload, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    }
-  });
-  return res.data as AgendarConsultaResponse;
+    const res = await axios.post('/api/consultas/agendar', transformedPayload, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return res.data as AgendarConsultaResponse;
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 /**
@@ -76,10 +87,14 @@ export async function agendarConsulta(payload: AgendarConsultaPayload, token: st
  * PATCH /api/consultas/:id/confirmar
  */
 export async function confirmarConsulta(consultaId: number, token: string): Promise<{ ok: boolean; message?: string }> {
-  const res = await axios.patch(`/api/consultas/${consultaId}/confirmar`, {}, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  return res.data as { ok: boolean; message?: string };
+  try {
+    const res = await axios.patch(`/api/consultas/${consultaId}/confirmar`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data as { ok: boolean; message?: string };
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 /**
@@ -87,13 +102,15 @@ export async function confirmarConsulta(consultaId: number, token: string): Prom
  * DELETE /api/consultas/:id
  */
 export async function cancelarConsulta(consultaId: number, token: string): Promise<{ ok: boolean; message?: string }> {
-  const res = await axios.delete(`/api/consultas/${consultaId}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  return res.data as { ok: boolean; message?: string };
+  try {
+    const res = await axios.delete(`/api/consultas/${consultaId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data as { ok: boolean; message?: string };
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
-
-import axios from 'axios';
 
 // Buscar salas em andamento (consultas ativas)
 export type PSActiveRoom = {
@@ -108,9 +125,13 @@ export type PSActiveRoom = {
 };
 
 export async function psListActiveRooms(token: string, userId?: string): Promise<PSActiveRoom[]> {
-  const url = userId ? `/api/ps/salas-em-andamento?userId=${userId}` : '/api/ps/salas-em-andamento';
-  const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
-  return res.data as PSActiveRoom[];
+  try {
+    const url = userId ? `/api/ps/salas-em-andamento?userId=${userId}` : '/api/ps/salas-em-andamento';
+    const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+    return res.data as PSActiveRoom[];
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 export type IceServer = {
@@ -142,23 +163,39 @@ export type WaitingConsulta = {
 };
 
 export async function listWaitingConsultas(token: string): Promise<WaitingConsulta[]> {
-  const res = await axios.get('/api/consultas/aguardando', { headers: { Authorization: `Bearer ${token}` } });
-  return res.data as WaitingConsulta[];
+  try {
+    const res = await axios.get('/api/consultas/aguardando', { headers: { Authorization: `Bearer ${token}` } });
+    return res.data as WaitingConsulta[];
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 export async function getRoom(consultaId: string, token: string): Promise<RoomResponse> {
-  const res = await axios.post(`/api/consultas/${consultaId}/room`, {}, { headers: { Authorization: `Bearer ${token}` } });
-  return res.data as RoomResponse;
+  try {
+    const res = await axios.post(`/api/consultas/${consultaId}/room`, {}, { headers: { Authorization: `Bearer ${token}` } });
+    return res.data as RoomResponse;
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 export async function joinRoom(consultaId: string, payload: JoinPayload, token: string): Promise<ParticipantsResponse> {
-  const res = await axios.post(`/api/consultas/${consultaId}/join`, payload, { headers: { Authorization: `Bearer ${token}` } });
-  return res.data as ParticipantsResponse;
+  try {
+    const res = await axios.post(`/api/consultas/${consultaId}/join`, payload, { headers: { Authorization: `Bearer ${token}` } });
+    return res.data as ParticipantsResponse;
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 export async function listParticipants(consultaId: string, token: string): Promise<ParticipantsResponse> {
-  const res = await axios.get(`/api/consultas/${consultaId}/participants`, { headers: { Authorization: `Bearer ${token}` } });
-  return res.data as ParticipantsResponse;
+  try {
+    const res = await axios.get(`/api/consultas/${consultaId}/participants`, { headers: { Authorization: `Bearer ${token}` } });
+    return res.data as ParticipantsResponse;
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 export async function endConsulta(
@@ -166,10 +203,14 @@ export async function endConsulta(
   token: string,
   hora_fim?: string
 ): Promise<{ ok: boolean }> {
-  const body: Record<string, any> = {};
-  if (hora_fim) body.hora_fim = hora_fim;
-  const res = await axios.post(`/api/consultas/${consultaId}/end`, body, { headers: { Authorization: `Bearer ${token}` } });
-  return res.data as { ok: boolean };
+  try {
+    const body: Record<string, any> = {};
+    if (hora_fim) body.hora_fim = hora_fim;
+    const res = await axios.post(`/api/consultas/${consultaId}/end`, body, { headers: { Authorization: `Bearer ${token}` } });
+    return res.data as { ok: boolean };
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 // Pronto Socorro (PS) endpoints
@@ -202,20 +243,27 @@ export async function psCreateRoom(
     if (options?.hora_fim) body.hora_fim = options.hora_fim;
     const res = await axios.post(`/api/ps/rooms`, body, { headers: { Authorization: `Bearer ${token}` } });
     return res.data as PSRoomResponse;
-  } catch (e: any) {
-    const msg = e?.response?.data?.error || e?.message || 'Falha ao criar sala';
-    throw new Error(msg);
+  } catch (err) {
+    throw new ApiError(err);
   }
 }
 
 export async function psListFila(token: string): Promise<PSFilaItem[]> {
-  const res = await axios.get(`/api/ps/fila`, { headers: { Authorization: `Bearer ${token}` } });
-  return res.data as PSFilaItem[];
+  try {
+    const res = await axios.get(`/api/ps/fila`, { headers: { Authorization: `Bearer ${token}` } });
+    return res.data as PSFilaItem[];
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 export async function psClaim(consultaId: string, token: string): Promise<PSRoomResponse> {
-  const res = await axios.post(`/api/ps/fila/${consultaId}/claim`, {}, { headers: { Authorization: `Bearer ${token}` } });
-  return res.data as PSRoomResponse;
+  try {
+    const res = await axios.post(`/api/ps/fila/${consultaId}/claim`, {}, { headers: { Authorization: `Bearer ${token}` } });
+    return res.data as PSRoomResponse;
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 export type PSFullHistoryItem = {
@@ -231,8 +279,12 @@ export type PSFullHistoryItem = {
 };
 
 export async function psGetFullHistory(token: string): Promise<PSFullHistoryItem[]> {
-  const res = await axios.get('/api/ps/historico-completo', { headers: { Authorization: `Bearer ${token}` } });
-  return res.data as PSFullHistoryItem[];
+  try {
+    const res = await axios.get('/api/ps/historico-completo', { headers: { Authorization: `Bearer ${token}` } });
+    return res.data as PSFullHistoryItem[];
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }
 
 export type PSHistoryResponse = {
@@ -251,6 +303,10 @@ export type PSHistoryResponse = {
 };
 
 export async function psGetHistory(token: string): Promise<PSHistoryResponse> {
-  const res = await axios.get('/api/ps/historico', { headers: { Authorization: `Bearer ${token}` } });
-  return res.data as PSHistoryResponse;
+  try {
+    const res = await axios.get('/api/ps/historico', { headers: { Authorization: `Bearer ${token}` } });
+    return res.data as PSHistoryResponse;
+  } catch (err) {
+    throw new ApiError(err);
+  }
 }

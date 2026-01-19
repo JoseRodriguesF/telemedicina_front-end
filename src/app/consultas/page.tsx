@@ -141,8 +141,8 @@ export default function ConsultasPage() {
                 </p>
               </div>
               <button
-                className="btn secondary"
-                style={{ marginTop: '1rem', width: 'fit-content', padding: '0.75rem 2rem', borderRadius: 'var(--radius-lg)', background: 'var(--bg-tertiary)' }}
+                className="btn secondary btn-scheduling"
+                style={{ marginTop: '1rem', width: 'fit-content', padding: '0.75rem 2rem', borderRadius: 'var(--radius-lg)' }}
                 onClick={() => router.push(isMedico ? '/consultas/meus-agendamentos' : '/consultas/agendamento')}
               >
                 {isMedico ? 'Ver Minha Agenda' : 'Agendar Consulta'}
