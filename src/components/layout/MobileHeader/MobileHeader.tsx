@@ -57,28 +57,56 @@ export default function MobileHeader() {
             </header>
 
             {/* Mobile Drawer */}
-            <nav className={`mobile-menu ${open ? 'open' : ''}`} aria-hidden={!open} style={{ paddingTop: '5rem' }}>
-                <Link href="/inicio" onClick={() => setOpen(false)} className="mobile-link">Início</Link>
-                <Link href="/consultas" onClick={() => setOpen(false)} className="mobile-link">Consultas</Link>
-                <Link href="/historico" onClick={() => setOpen(false)} className="mobile-link">Histórico</Link>
-                <Link href="/perfil" onClick={() => setOpen(false)} className="mobile-link">Perfil</Link>
-
+            <nav className={`mobile-menu ${open ? 'open' : ''}`} aria-hidden={!open} style={{ paddingTop: '1.5rem' }}>
+                {/* Close Button */}
                 <button
-                    onClick={handleLogout}
-                    className="mobile-link"
+                    className="mobile-menu-close"
+                    aria-label="Fechar menu"
+                    onClick={() => setOpen(false)}
                     style={{
-                        width: '100%',
-                        textAlign: 'left',
+                        position: 'absolute',
+                        top: '1rem',
+                        right: '1rem',
                         background: 'transparent',
                         border: 'none',
                         cursor: 'pointer',
-                        fontSize: 'var(--font-size-base)',
-                        fontFamily: 'var(--font-family)',
-                        color: 'var(--color-error)'
+                        padding: '0.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 'var(--radius-md)',
+                        transition: 'background 0.2s ease',
                     }}
                 >
-                    Sair
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-primary)' }}>
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
                 </button>
+
+                <div style={{ marginTop: '2.5rem' }}>
+                    <Link href="/inicio" onClick={() => setOpen(false)} className="mobile-link">Início</Link>
+                    <Link href="/consultas" onClick={() => setOpen(false)} className="mobile-link">Consultas</Link>
+                    <Link href="/historico" onClick={() => setOpen(false)} className="mobile-link">Histórico</Link>
+                    <Link href="/perfil" onClick={() => setOpen(false)} className="mobile-link">Perfil</Link>
+
+                    <button
+                        onClick={handleLogout}
+                        className="mobile-link"
+                        style={{
+                            width: '100%',
+                            textAlign: 'left',
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: 'var(--font-size-base)',
+                            fontFamily: 'var(--font-family)',
+                            color: 'var(--color-error)'
+                        }}
+                    >
+                        Sair
+                    </button>
+                </div>
             </nav>
 
             {/* Overlay */}

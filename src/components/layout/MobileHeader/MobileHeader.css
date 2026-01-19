@@ -13,3 +13,12 @@
         z-index: 50;
     }
 }
+
+/* Mobile Menu Close Button */
+.mobile-menu-close:hover {
+    background: var(--bg-tertiary);
+}
+
+.mobile-menu-close:active {
+    transform: scale(0.95);
+}
