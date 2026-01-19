@@ -42,17 +42,18 @@ export type AgendarConsultaResponse = {
 };
 
 export async function agendarConsulta(payload: AgendarConsultaPayload, token: string): Promise<AgendarConsultaResponse> {
-  // Backend espera time without time zone (HH:mm:ss) não DateTime
-  const { hora_inicio, ...rest } = payload;
+  // IMPORTANTE: Prisma espera DateTime ISO-8601, NÃO time
+  // O schema do backend define hora_inicio como DateTime
+  const { data_consulta, hora_inicio, ...rest } = payload;
 
-  // Converter HH:mm para HH:mm:ss (adicionar segundos)
-  const horaComSegundos = hora_inicio.includes(':') && hora_inicio.split(':').length === 2
-    ? `${hora_inicio}:00`  // "13:00" → "13:00:00"
-    : hora_inicio;
+  // Combinar data (YYYY-MM-DD) + hora (HH:mm) em DateTime ISO-8601
+  // Exemplo: "2026-01-30" + "14:00" = "2026-01-30T14:00:00.000Z"
+  const dateTimeString = `${data_consulta}T${hora_inicio}:00.000Z`;
 
   const transformedPayload = {
     ...rest,
-    hora_inicio: horaComSegundos,
+    data_consulta: data_consulta,
+    hora_inicio: dateTimeString,  // DateTime ISO-8601: "2026-01-30T14:00:00.000Z"
   };
 
   const res = await axios.post('/api/consultas/agendar', transformedPayload, {
