@@ -95,7 +95,7 @@ function SelecaoMedicoInner() {
                 hora_inicio: time
             };
             await agendarConsulta(payload, token);
-            alert(`Consulta agendada com ${doc.nome} para o dia ${formatDateForDisplay(date)} às ${time}!`);
+            alert(`Solicitação enviada com sucesso! Aguarde a confirmação do Dr(a). ${doc.nome} para o dia ${formatDateForDisplay(date)} às ${time}.`);
             router.push('/consultas');
         } catch (err: any) {
             const errorMsg = err?.response?.data?.error || err?.message || 'Erro desconhecido';

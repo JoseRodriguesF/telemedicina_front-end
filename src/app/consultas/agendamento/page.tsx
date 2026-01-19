@@ -90,6 +90,7 @@ export default function AgendamentoPage() {
             <main className="inicio-main">
                 <header className="dashboard-header">
                     <h2>Agendar Consulta</h2>
+                    <p>Escolha a data e horário desejados. Sua solicitação será enviada para confirmação do médico.</p>
                 </header>
 
                 <div className="agendamento-container">

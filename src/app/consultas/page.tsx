@@ -31,9 +31,13 @@ export default function ConsultasPage() {
           const filtered = data
             .filter(c => c.status === 'agendada')
             .sort((a, b) => {
-              const dateA = new Date(`${a.data_consulta}T${a.hora_inicio}`).getTime();
-              const dateB = new Date(`${b.data_consulta}T${b.hora_inicio}`).getTime();
-              return dateA - dateB;
+              const getTimestamp = (c: ConsultaAgendada) => {
+                if (c.hora_inicio.includes('T')) {
+                  return new Date(c.hora_inicio).getTime();
+                }
+                return new Date(`${c.data_consulta}T${c.hora_inicio}`).getTime();
+              };
+              return getTimestamp(a) - getTimestamp(b);
             })
             .slice(0, 3); // Máximo 3 cards
           setScheduledAppointments(filtered);
@@ -54,6 +58,20 @@ export default function ConsultasPage() {
   const getDay = (dateStr: string) => {
     const date = new Date(dateStr);
     return String(date.getUTCDate()).padStart(2, '0');
+  };
+
+  const formatTime = (timeString: string) => {
+    try {
+      if (timeString.includes('T')) {
+        return new Date(timeString).toLocaleTimeString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+      return timeString.substring(0, 5);
+    } catch (e) {
+      return timeString;
+    }
   };
 
   return (
@@ -140,7 +158,7 @@ export default function ConsultasPage() {
                     </div>
                     <div className="appt-details">
                       <h4>{isMedico ? appt.paciente.nome_completo : appt.medico.nome_completo}</h4>
-                      <p>{isMedico ? 'Paciente' : 'Médico'} • {appt.hora_inicio.substring(0, 5)}</p>
+                      <p>{isMedico ? 'Paciente' : 'Médico'} • {formatTime(appt.hora_inicio)}</p>
                       <span className="badge success" style={{ marginTop: '0.5rem', display: 'inline-block' }}>{appt.status.charAt(0).toUpperCase() + appt.status.slice(1)}</span>
                     </div>
                     <button

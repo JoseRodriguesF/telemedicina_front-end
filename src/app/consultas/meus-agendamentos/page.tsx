@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
-import { getConsultasAgendadas, ConsultaAgendada } from '@/lib/axios/consultas';
+import { getConsultasAgendadas, ConsultaAgendada, confirmarConsulta, cancelarConsulta, ConsultaStatus } from '@/lib/axios/consultas';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 
 export default function MeusAgendamentosPage() {
@@ -17,6 +17,8 @@ export default function MeusAgendamentosPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterPeriod, setFilterPeriod] = useState<'all' | 'today' | 'week' | 'month'>('all');
+    const [filterStatus, setFilterStatus] = useState<'all' | 'solicitada' | 'agendada'>('all');
+    const [confirmingIds, setConfirmingIds] = useState<Set<number>>(new Set());
 
     useEffect(() => {
         const u = getUser();
@@ -32,14 +34,18 @@ export default function MeusAgendamentosPage() {
                 const token = getToken();
                 if (token) {
                     const data = await getConsultasAgendadas(token);
-                    // Filtrar apenas agendadas
-                    const agendadas = data.filter(c => c.status === 'agendada');
+                    // Agora inclui tanto 'solicitada' quanto 'agendada'
+                    const consultas = data.filter(c => c.status === 'agendada' || c.status === 'solicitada');
 
                     // Ordenar por data e hora (mais próximas primeiro)
-                    const sorted = agendadas.sort((a, b) => {
-                        const dateTimeA = new Date(`${a.data_consulta}T${a.hora_inicio}`).getTime();
-                        const dateTimeB = new Date(`${b.data_consulta}T${b.hora_inicio}`).getTime();
-                        return dateTimeA - dateTimeB;
+                    const sorted = consultas.sort((a, b) => {
+                        const getTimestamp = (c: ConsultaAgendada) => {
+                            if (c.hora_inicio.includes('T')) {
+                                return new Date(c.hora_inicio).getTime();
+                            }
+                            return new Date(`${c.data_consulta}T${c.hora_inicio}`).getTime();
+                        };
+                        return getTimestamp(a) - getTimestamp(b);
                     });
 
                     setAppointments(sorted);
@@ -56,6 +62,10 @@ export default function MeusAgendamentosPage() {
 
     const formatDate = (dateString: string) => {
         try {
+            if (dateString.includes('-') && !dateString.includes('T')) {
+                const [year, month, day] = dateString.split('-').map(Number);
+                return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
+            }
             const date = new Date(dateString);
             return new Intl.DateTimeFormat('pt-BR', {
                 day: '2-digit',
@@ -64,6 +74,20 @@ export default function MeusAgendamentosPage() {
             }).format(date);
         } catch (e) {
             return dateString;
+        }
+    };
+
+    const formatTime = (timeString: string) => {
+        try {
+            if (timeString.includes('T')) {
+                return new Date(timeString).toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+            return timeString.substring(0, 5);
+        } catch (e) {
+            return timeString;
         }
     };
 
@@ -100,8 +124,72 @@ export default function MeusAgendamentosPage() {
         else if (filterPeriod === 'week') matchesPeriod = isThisWeek(item.data_consulta);
         else if (filterPeriod === 'month') matchesPeriod = isThisMonth(item.data_consulta);
 
-        return matchesSearch && matchesPeriod;
+        // Filtro por status
+        let matchesStatus = true;
+        if (filterStatus === 'solicitada') matchesStatus = item.status === 'solicitada';
+        else if (filterStatus === 'agendada') matchesStatus = item.status === 'agendada';
+
+        return matchesSearch && matchesPeriod && matchesStatus;
     });
+
+    const handleConfirmarConsulta = async (consultaId: number) => {
+        setConfirmingIds(prev => new Set(prev).add(consultaId));
+        try {
+            const token = getToken();
+            if (!token) return;
+
+            await confirmarConsulta(consultaId, token);
+
+            // Atualizar a consulta no estado local
+            setAppointments(prev => prev.map(appt =>
+                appt.id === consultaId ? { ...appt, status: 'agendada' as ConsultaStatus } : appt
+            ));
+        } catch (error) {
+            console.error('Erro ao confirmar consulta:', error);
+            alert('Erro ao confirmar consulta. Tente novamente.');
+        } finally {
+            setConfirmingIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(consultaId);
+                return newSet;
+            });
+        }
+    };
+
+    const handleCancelarConsulta = async (consultaId: number, pacienteNome: string) => {
+        if (!confirm(`Tem certeza que deseja cancelar a consulta com ${pacienteNome}?`)) {
+            return;
+        }
+
+        setConfirmingIds(prev => new Set(prev).add(consultaId));
+        try {
+            const token = getToken();
+            if (!token) return;
+
+            await cancelarConsulta(consultaId, token);
+
+            // Remover a consulta do estado local
+            setAppointments(prev => prev.filter(appt => appt.id !== consultaId));
+            alert('Consulta cancelada com sucesso!');
+        } catch (error: any) {
+            console.error('Erro ao cancelar consulta:', error);
+            const errorMsg = error?.response?.data?.error;
+
+            if (errorMsg === 'cannot_cancel_finished_consultation') {
+                alert('Não é possível cancelar consultas finalizadas.');
+            } else if (error?.response?.status === 403) {
+                alert('Você não tem permissão para cancelar esta consulta.');
+            } else {
+                alert('Erro ao cancelar consulta. Tente novamente.');
+            }
+        } finally {
+            setConfirmingIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(consultaId);
+                return newSet;
+            });
+        }
+    };
 
     return (
         <div className="inicio-page">
@@ -132,7 +220,7 @@ export default function MeusAgendamentosPage() {
                             />
                         </div>
 
-                        <div className="period-filters" style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div className="period-filters" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                             <button
                                 className={`btn ${filterPeriod === 'all' ? 'primary' : 'ghost'}`}
                                 style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-lg)' }}
@@ -153,6 +241,24 @@ export default function MeusAgendamentosPage() {
                                 style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-lg)' }}
                                 onClick={() => setFilterPeriod('month')}
                             >Mês</button>
+                        </div>
+
+                        <div className="status-filters" style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                                className={`btn ${filterStatus === 'all' ? 'primary' : 'ghost'}`}
+                                style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-lg)' }}
+                                onClick={() => setFilterStatus('all')}
+                            >Todas</button>
+                            <button
+                                className={`btn ${filterStatus === 'solicitada' ? 'primary' : 'ghost'}`}
+                                style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-lg)' }}
+                                onClick={() => setFilterStatus('solicitada')}
+                            >Solicitadas</button>
+                            <button
+                                className={`btn ${filterStatus === 'agendada' ? 'primary' : 'ghost'}`}
+                                style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-lg)' }}
+                                onClick={() => setFilterStatus('agendada')}
+                            >Confirmadas</button>
                         </div>
                     </div>
 
@@ -182,23 +288,52 @@ export default function MeusAgendamentosPage() {
                                                 </span>
                                                 <span>
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                                                    {item.hora_inicio.substring(0, 5)}
+                                                    {formatTime(item.hora_inicio)}
                                                 </span>
                                             </div>
                                         </div>
 
                                         <div className="history-item-status">
-                                            <span className="badge success">Agendada</span>
+                                            <span className={`badge ${item.status === 'agendada' ? 'success' : 'warning'}`}>
+                                                {item.status === 'agendada' ? 'Confirmada' : 'Solicitada'}
+                                            </span>
                                         </div>
 
-                                        <div className="history-item-actions">
-                                            <button
-                                                className="btn primary"
-                                                style={{ padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', fontSize: '0.9rem' }}
-                                                onClick={() => router.push(`/consultas/atendimento?id=${item.id}&scheduled=true`)}
-                                            >
-                                                Atender
-                                            </button>
+                                        <div className="history-item-actions" style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
+                                            {item.status === 'solicitada' && (
+                                                <button
+                                                    className="btn primary"
+                                                    style={{ padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', fontSize: '0.9rem' }}
+                                                    onClick={() => handleConfirmarConsulta(item.id)}
+                                                    disabled={confirmingIds.has(item.id)}
+                                                >
+                                                    {confirmingIds.has(item.id) ? 'Confirmando...' : 'Confirmar'}
+                                                </button>
+                                            )}
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <button
+                                                    className={`btn ${item.status === 'solicitada' ? 'ghost' : 'primary'}`}
+                                                    style={{ padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', fontSize: '0.9rem', flex: 1 }}
+                                                    onClick={() => router.push(`/consultas/atendimento?id=${item.id}&scheduled=true`)}
+                                                    disabled={item.status === 'solicitada'}
+                                                >
+                                                    Atender
+                                                </button>
+                                                <button
+                                                    className="btn ghost"
+                                                    style={{
+                                                        padding: '0.4rem 1rem',
+                                                        borderRadius: 'var(--radius-md)',
+                                                        fontSize: '0.9rem',
+                                                        color: 'var(--color-error)',
+                                                        borderColor: 'var(--color-error)'
+                                                    }}
+                                                    onClick={() => handleCancelarConsulta(item.id, item.paciente.nome_completo)}
+                                                    disabled={confirmingIds.has(item.id)}
+                                                >
+                                                    Cancelar
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))

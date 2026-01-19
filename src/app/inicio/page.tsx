@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import { getUser, getUserFirstName, getToken, clearUser } from '@/lib/auth';
-import { psListActiveRooms, psGetFullHistory, PSFullHistoryItem, getConsultasAgendadas, ConsultaAgendada } from '@/lib/axios/consultas';
+import { psListActiveRooms, psGetFullHistory, PSFullHistoryItem, getConsultasAgendadas, ConsultaAgendada, cancelarConsulta } from '@/lib/axios/consultas';
 import FrequencyChart from '@/components/dashboard/FrequencyChart';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 
@@ -35,16 +35,44 @@ export default function InicioPage() {
 
   // Próxima consulta agendada real
   const [nextAppointment, setNextAppointment] = useState<ConsultaAgendada | null>(null);
+  const [cancelingAppointment, setCancelingAppointment] = useState(false);
 
   /* Logic to check if "Entrar na Sala" should be enabled (e.g., 5 min before) */
   // Using a mock current time for demonstration if needed, or real time.
   // For now, enabling it always for easier testing or strict 5 min rule.
   const canEnterRoom = true;
 
-  const handleCancelAppointment = () => {
-    // In a real app, call API to cancel
-    if (confirm('Tem certeza que deseja desmarcar esta consulta?')) {
+  const handleCancelAppointment = async () => {
+    if (!nextAppointment) return;
+
+    if (!confirm('Tem certeza que deseja desmarcar esta consulta?')) {
+      return;
+    }
+
+    setCancelingAppointment(true);
+    try {
+      const token = getToken();
+      if (!token) {
+        alert('Sessão expirada. Faça login novamente.');
+        return;
+      }
+
+      await cancelarConsulta(nextAppointment.id, token);
       setNextAppointment(null);
+      alert('Consulta desmarcada com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao cancelar consulta:', error);
+      const errorMsg = error?.response?.data?.error;
+
+      if (errorMsg === 'cannot_cancel_finished_consultation') {
+        alert('Não é possível cancelar consultas finalizadas.');
+      } else if (error?.response?.status === 403) {
+        alert('Você não tem permissão para cancelar esta consulta.');
+      } else {
+        alert('Erro ao cancelar consulta. Tente novamente.');
+      }
+    } finally {
+      setCancelingAppointment(false);
     }
   };
 
@@ -101,11 +129,15 @@ export default function InicioPage() {
             const agendadas = consultas.filter(c => c.status === 'agendada');
 
             // Ordenar por data e hora mais próxima
-            const agora = new Date().getTime();
             const sorted = agendadas.sort((a, b) => {
-              const dateTimeA = new Date(`${a.data_consulta}T${a.hora_inicio}`).getTime();
-              const dateTimeB = new Date(`${b.data_consulta}T${b.hora_inicio}`).getTime();
-              return dateTimeA - dateTimeB;
+              const getTimestamp = (c: ConsultaAgendada) => {
+                if (c.hora_inicio.includes('T')) {
+                  return new Date(c.hora_inicio).getTime();
+                }
+                // Se for apenas HH:mm ou HH:mm:ss, combina com a data
+                return new Date(`${c.data_consulta}T${c.hora_inicio}`).getTime();
+              };
+              return getTimestamp(a) - getTimestamp(b);
             });
 
             // Pegar a primeira (mais próxima)
@@ -320,13 +352,35 @@ export default function InicioPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                       <span style={{ color: 'var(--text-secondary)' }}>Data:</span>
                       <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {new Date(nextAppointment.data_consulta).toLocaleDateString('pt-BR')}
+                        {(() => {
+                          try {
+                            if (nextAppointment.data_consulta.includes('-') && !nextAppointment.data_consulta.includes('T')) {
+                              const [year, month, day] = nextAppointment.data_consulta.split('-').map(Number);
+                              return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
+                            }
+                            return new Date(nextAppointment.data_consulta).toLocaleDateString('pt-BR');
+                          } catch {
+                            return nextAppointment.data_consulta;
+                          }
+                        })()}
                       </span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                       <span style={{ color: 'var(--text-secondary)' }}>Horário:</span>
                       <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {nextAppointment.hora_inicio.substring(0, 5)}
+                        {(() => {
+                          try {
+                            if (nextAppointment.hora_inicio.includes('T')) {
+                              return new Date(nextAppointment.hora_inicio).toLocaleTimeString('pt-BR', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              });
+                            }
+                            return nextAppointment.hora_inicio.substring(0, 5);
+                          } catch {
+                            return nextAppointment.hora_inicio;
+                          }
+                        })()}
                       </span>
                     </div>
                   </div>
@@ -335,6 +389,7 @@ export default function InicioPage() {
                     <button
                       className="btn ghost-danger"
                       onClick={handleCancelAppointment}
+                      disabled={cancelingAppointment}
                       style={{
                         borderRadius: 'var(--radius-lg)',
                         width: '100%',
@@ -342,10 +397,12 @@ export default function InicioPage() {
                         color: 'var(--color-error)',
                         borderColor: 'var(--color-error)',
                         background: 'transparent',
-                        border: '1px solid var(--color-error)'
+                        border: '1px solid var(--color-error)',
+                        opacity: cancelingAppointment ? 0.6 : 1,
+                        cursor: cancelingAppointment ? 'not-allowed' : 'pointer'
                       }}
                     >
-                      Desmarcar Consulta
+                      {cancelingAppointment ? 'Cancelando...' : 'Desmarcar Consulta'}
                     </button>
                     <button
                       className="btn primary"

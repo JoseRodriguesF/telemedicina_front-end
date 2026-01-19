@@ -1,11 +1,14 @@
+// Tipos de status de consulta
+export type ConsultaStatus = 'solicitada' | 'agendada' | 'in_progress' | 'finished' | 'cancelled';
+
 // Buscar consultas agendadas
 export type ConsultaAgendada = {
   id: number;
   medicoId: number;
   pacienteId: number;
-  status: string;
+  status: ConsultaStatus;
   data_consulta: string; // YYYY-MM-DD
-  hora_inicio: string; // HH:mm:ss
+  hora_inicio: string; // HH:mm:ss ou ISO
   hora_fim: string | null;
   createdAt: string;
   updatedAt: string;
@@ -66,6 +69,28 @@ export async function agendarConsulta(payload: AgendarConsultaPayload, token: st
     }
   });
   return res.data as AgendarConsultaResponse;
+}
+
+/**
+ * Confirm a requested appointment (change status from 'solicitada' to 'agendada')
+ * PATCH /api/consultas/:id/confirmar
+ */
+export async function confirmarConsulta(consultaId: number, token: string): Promise<{ ok: boolean; message?: string }> {
+  const res = await axios.patch(`/api/consultas/${consultaId}/confirmar`, {}, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.data as { ok: boolean; message?: string };
+}
+
+/**
+ * Cancel an appointment
+ * DELETE /api/consultas/:id
+ */
+export async function cancelarConsulta(consultaId: number, token: string): Promise<{ ok: boolean; message?: string }> {
+  const res = await axios.delete(`/api/consultas/${consultaId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.data as { ok: boolean; message?: string };
 }
 
 import axios from 'axios';
