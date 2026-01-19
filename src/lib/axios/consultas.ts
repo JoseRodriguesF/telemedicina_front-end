@@ -1,26 +1,29 @@
-// Buscar próxima consulta agendada
-export type NextAppointment = {
-  id: string;
-  doctorName: string;
-  specialty: string;
-  date: string;
-  time: string;
-  timestamp: number;
+// Buscar consultas agendadas
+export type ConsultaAgendada = {
+  id: number;
+  medicoId: number;
+  pacienteId: number;
+  status: string;
+  data_consulta: string; // YYYY-MM-DD
+  hora_inicio: string; // HH:mm:ss
+  hora_fim: string | null;
+  createdAt: string;
+  updatedAt: string;
+  medico: {
+    id: number;
+    nome_completo: string;
+  };
+  paciente: {
+    id: number;
+    nome_completo: string;
+  };
 };
 
-export async function getNextAppointment(token: string): Promise<NextAppointment | null> {
-  const res = await axios.get('/api/consultas/agendadas', { headers: { Authorization: `Bearer ${token}` } });
-  if (!res.data) return null;
-  // Ajuste conforme o backend: adapte os campos se necessário
-  const appt = res.data;
-  return {
-    id: String(appt.id),
-    doctorName: appt.doctorName || appt.medico_nome || '',
-    specialty: appt.specialty || appt.especialidade || '',
-    date: appt.date || appt.data_consulta || '',
-    time: appt.time || appt.hora_inicio || '',
-    timestamp: appt.timestamp || (appt.data_consulta && appt.hora_inicio ? new Date(`${appt.data_consulta}T${appt.hora_inicio}`).getTime() : Date.now())
-  };
+export async function getConsultasAgendadas(token: string): Promise<ConsultaAgendada[]> {
+  const res = await axios.get('/api/consultas/agendadas', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return (res.data || []) as ConsultaAgendada[];
 }
 
 /**

@@ -7,40 +7,54 @@ import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getUser, getUserFirstName } from '@/lib/auth';
+import { getUser, getUserFirstName, getToken } from '@/lib/auth';
+import { getConsultasAgendadas, ConsultaAgendada } from '@/lib/axios/consultas';
 
 export default function ConsultasPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>('');
   const [isMedico, setIsMedico] = useState<boolean>(false);
-
-  // Simulated Appointments (In a real app, fetch from API)
-  const scheduledAppointments = [
-    {
-      id: '1',
-      doctor: 'Dr. Carlos Silva',
-      specialty: 'Cardiologia',
-      date: '20',
-      month: 'JAN',
-      time: '14:30',
-      status: 'Confirmado'
-    },
-    {
-      id: '2',
-      doctor: 'Dra. Ana Martha',
-      specialty: 'Dermatologia',
-      date: '25',
-      month: 'JAN',
-      time: '09:00',
-      status: 'Aguardando'
-    }
-  ];
+  const [scheduledAppointments, setScheduledAppointments] = useState<ConsultaAgendada[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const u = getUser();
+    const token = getToken();
     setDisplayName(getUserFirstName(u));
-    setIsMedico((u?.tipo_usuario || '').toLowerCase() === 'medico');
+    const isMed = (u?.tipo_usuario || '').toLowerCase() === 'medico';
+    setIsMedico(isMed);
+
+    if (token) {
+      getConsultasAgendadas(token)
+        .then((data) => {
+          // Filtrar apenas agendadas e ordenar por data mais próxima
+          const filtered = data
+            .filter(c => c.status === 'agendada')
+            .sort((a, b) => {
+              const dateA = new Date(`${a.data_consulta}T${a.hora_inicio}`).getTime();
+              const dateB = new Date(`${b.data_consulta}T${b.hora_inicio}`).getTime();
+              return dateA - dateB;
+            })
+            .slice(0, 3); // Máximo 3 cards
+          setScheduledAppointments(filtered);
+        })
+        .catch(err => console.error('Erro ao buscar consultas:', err))
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
   }, []);
+
+  const getMonthAbbreviation = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+    return months[date.getUTCMonth()];
+  };
+
+  const getDay = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return String(date.getUTCDate()).padStart(2, '0');
+  };
 
   return (
     <div className="inicio-page">
@@ -88,15 +102,19 @@ export default function ConsultasPage() {
                 </svg>
               </div>
               <div className="service-info">
-                <h3>Agendamento</h3>
-                <p>Marque uma consulta com especialistas para a data e horário de sua preferência.</p>
+                <h3>{isMedico ? 'Meus Agendamentos' : 'Agendamento'}</h3>
+                <p>
+                  {isMedico
+                    ? 'Veja sua agenda completa de atendimentos confirmados com pacientes.'
+                    : 'Marque uma consulta com especialistas para a data e horário de sua preferência.'}
+                </p>
               </div>
               <button
                 className="btn secondary"
                 style={{ marginTop: '1rem', width: 'fit-content', padding: '0.75rem 2rem', borderRadius: 'var(--radius-lg)', background: 'var(--bg-tertiary)' }}
-                onClick={() => router.push('/consultas/agendamento')}
+                onClick={() => router.push(isMedico ? '/consultas/meus-agendamentos' : '/consultas/agendamento')}
               >
-                Agendar Consulta
+                {isMedico ? 'Ver Minha Agenda' : 'Agendar Consulta'}
               </button>
             </div>
           </section>
@@ -107,25 +125,35 @@ export default function ConsultasPage() {
               {isMedico ? 'Seus Próximos Atendimentos' : 'Suas Próximas Consultas'}
             </h3>
             <div className="appointments-list">
-              {scheduledAppointments.length > 0 ? (
+              {loading ? (
+                <div className="appointment-mini-card">
+                  <div className="appt-details">
+                    <p>Carregando informações...</p>
+                  </div>
+                </div>
+              ) : scheduledAppointments.length > 0 ? (
                 scheduledAppointments.map(appt => (
                   <div key={appt.id} className="appointment-mini-card">
                     <div className="appt-date-box">
-                      <span className="day">{appt.date}</span>
-                      <span className="month">{appt.month}</span>
+                      <span className="day">{getDay(appt.data_consulta)}</span>
+                      <span className="month">{getMonthAbbreviation(appt.data_consulta)}</span>
                     </div>
                     <div className="appt-details">
-                      <h4>{appt.doctor}</h4>
-                      <p>{appt.specialty} • {appt.time}</p>
-                      <span className="badge success" style={{ marginTop: '0.5rem', display: 'inline-block' }}>{appt.status}</span>
+                      <h4>{isMedico ? appt.paciente.nome_completo : appt.medico.nome_completo}</h4>
+                      <p>{isMedico ? 'Paciente' : 'Médico'} • {appt.hora_inicio.substring(0, 5)}</p>
+                      <span className="badge success" style={{ marginTop: '0.5rem', display: 'inline-block' }}>{appt.status.charAt(0).toUpperCase() + appt.status.slice(1)}</span>
                     </div>
-                    <button className="btn ghost" style={{ fontSize: '1.2rem', padding: '0.5rem' }}>→</button>
+                    <button
+                      className="btn ghost"
+                      style={{ fontSize: '1.2rem', padding: '0.5rem' }}
+                      onClick={() => router.push(`/consultas/atendimento?id=${appt.id}&scheduled=true`)}
+                    >→</button>
                   </div>
                 ))
               ) : (
                 <div className="appointment-mini-card">
                   <div className="appt-details">
-                    <p>Nenhuma consulta agendada no momento.</p>
+                    <p>Nenhum agendamento encontrado no momento.</p>
                   </div>
                 </div>
               )}
@@ -136,4 +164,3 @@ export default function ConsultasPage() {
     </div>
   );
 }
-

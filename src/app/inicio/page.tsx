@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import { getUser, getUserFirstName, getToken, clearUser } from '@/lib/auth';
-import { psListActiveRooms, psGetFullHistory, PSFullHistoryItem, getNextAppointment, NextAppointment } from '@/lib/axios/consultas';
+import { psListActiveRooms, psGetFullHistory, PSFullHistoryItem, getConsultasAgendadas, ConsultaAgendada } from '@/lib/axios/consultas';
 import FrequencyChart from '@/components/dashboard/FrequencyChart';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 
@@ -17,6 +17,8 @@ export default function InicioPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>('');
   const [isMedico, setIsMedico] = useState<boolean>(false);
+  const [userId, setUserId] = useState<number | null>(null);
+
   /* State for active session */
   const [reconnectData, setReconnectData] = useState<{
     roomId: string;
@@ -31,8 +33,8 @@ export default function InicioPage() {
   const [chartData, setChartData] = useState<Array<{ name: string; consultas: number }>>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
 
-  // Próxima consulta real
-  const [nextAppointment, setNextAppointment] = useState<NextAppointment | null>(null);
+  // Próxima consulta agendada real
+  const [nextAppointment, setNextAppointment] = useState<ConsultaAgendada | null>(null);
 
   /* Logic to check if "Entrar na Sala" should be enabled (e.g., 5 min before) */
   // Using a mock current time for demonstration if needed, or real time.
@@ -56,7 +58,9 @@ export default function InicioPage() {
   useEffect(() => {
     const u = getUser();
     setDisplayName(getUserFirstName(u));
-    setIsMedico((u?.tipo_usuario || '').toLowerCase() === 'medico');
+    const isMed = (u?.tipo_usuario || '').toLowerCase() === 'medico';
+    setIsMedico(isMed);
+    setUserId(u?.id || null);
 
     const token = getToken();
     let found = false;
@@ -88,13 +92,30 @@ export default function InicioPage() {
       }).catch(err => console.error(err));
     }
 
-    // Buscar próxima consulta agendada via proxy
+    // Buscar consultas agendadas e pegar a mais próxima
     if (token) {
-      getNextAppointment(token)
-        .then((appt) => setNextAppointment(appt))
-        .catch((err) => {
-          setNextAppointment(null);
-          console.error('Erro ao buscar próxima consulta:', err);
+      getConsultasAgendadas(token)
+        .then((consultas: ConsultaAgendada[]) => {
+          if (consultas && consultas.length > 0) {
+            // Filtrar apenas consultas agendadas
+            const agendadas = consultas.filter(c => c.status === 'agendada');
+
+            // Ordenar por data e hora mais próxima
+            const agora = new Date().getTime();
+            const sorted = agendadas.sort((a, b) => {
+              const dateTimeA = new Date(`${a.data_consulta}T${a.hora_inicio}`).getTime();
+              const dateTimeB = new Date(`${b.data_consulta}T${b.hora_inicio}`).getTime();
+              return dateTimeA - dateTimeB;
+            });
+
+            // Pegar a primeira (mais próxima)
+            if (sorted.length > 0) {
+              setNextAppointment(sorted[0]);
+            }
+          }
+        })
+        .catch((err: any) => {
+          console.error('Erro ao buscar consultas agendadas:', err);
         });
 
       psGetFullHistory(token)
@@ -280,9 +301,11 @@ export default function InicioPage() {
                 <div className="dash-card-body">
                   <div className="appointment-info" style={{ marginBottom: '1.5rem' }}>
                     <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
-                      {nextAppointment.doctorName}
+                      {isMedico ? nextAppointment.paciente.nome_completo : nextAppointment.medico.nome_completo}
                     </h4>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{nextAppointment.specialty}</p>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                      {isMedico ? 'Paciente' : 'Médico'}
+                    </p>
                   </div>
 
                   <div className="appointment-time" style={{
@@ -296,11 +319,15 @@ export default function InicioPage() {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                       <span style={{ color: 'var(--text-secondary)' }}>Data:</span>
-                      <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{nextAppointment.date}</span>
+                      <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {new Date(nextAppointment.data_consulta).toLocaleDateString('pt-BR')}
+                      </span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                       <span style={{ color: 'var(--text-secondary)' }}>Horário:</span>
-                      <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{nextAppointment.time}</span>
+                      <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                        {nextAppointment.hora_inicio.substring(0, 5)}
+                      </span>
                     </div>
                   </div>
 
