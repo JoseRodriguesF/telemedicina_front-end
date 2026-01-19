@@ -144,9 +144,11 @@ export default function MeusAgendamentosPage() {
             setAppointments(prev => prev.map(appt =>
                 appt.id === consultaId ? { ...appt, status: 'agendada' as ConsultaStatus } : appt
             ));
-        } catch (error) {
+            alert('Consulta confirmada com sucesso!');
+        } catch (error: any) {
             console.error('Erro ao confirmar consulta:', error);
-            alert('Erro ao confirmar consulta. Tente novamente.');
+            const errorMsg = error?.response?.data?.error || error?.response?.data?.message || error?.message;
+            alert(`Erro ao confirmar consulta: ${errorMsg || 'Tente novamente.'}`);
         } finally {
             setConfirmingIds(prev => {
                 const newSet = new Set(prev);

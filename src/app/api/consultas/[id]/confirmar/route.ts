@@ -19,10 +19,13 @@ export async function PATCH(req: NextRequest, context: { params: Promise<{ id: s
         const contentType = res.headers.get('content-type') || '';
 
         if (!res.ok) {
-            return NextResponse.json(
-                contentType.includes('application/json') ? JSON.parse(text) : { error: text || 'Erro ao confirmar consulta' },
-                { status: res.status }
-            );
+            const errorData = contentType.includes('application/json') ? JSON.parse(text) : { error: text || 'Erro ao confirmar consulta' };
+            console.error('[Proxy] Erro do backend ao confirmar consulta:', {
+                status: res.status,
+                url: url,
+                error: errorData
+            });
+            return NextResponse.json(errorData, { status: res.status });
         }
 
         return NextResponse.json(contentType.includes('application/json') ? JSON.parse(text) : { ok: true });
