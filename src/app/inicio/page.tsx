@@ -13,8 +13,13 @@ import { psListActiveRooms, psGetFullHistory, PSFullHistoryItem, getConsultasAge
 import FrequencyChart from '@/components/dashboard/FrequencyChart';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 
+import { Modal } from '@/components/common/Modal/Modal';
+import { useModal } from '@/components/common/Modal/useModal';
+import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
+
 export default function InicioPage() {
   const router = useRouter();
+  const modal = useModal();
   const [displayName, setDisplayName] = useState<string>('');
   const [isMedico, setIsMedico] = useState<boolean>(false);
   const [userId, setUserId] = useState<number | null>(null);
@@ -38,47 +43,46 @@ export default function InicioPage() {
   const [cancelingAppointment, setCancelingAppointment] = useState(false);
 
   /* Logic to check if "Entrar na Sala" should be enabled (e.g., 5 min before) */
-  // Using a mock current time for demonstration if needed, or real time.
-  // For now, enabling it always for easier testing or strict 5 min rule.
   const canEnterRoom = true;
 
-  const handleCancelAppointment = async () => {
+  const handleCancelAppointment = () => {
     if (!nextAppointment) return;
 
-    if (!confirm('Tem certeza que deseja desmarcar esta consulta?')) {
-      return;
-    }
+    modal.confirm(
+      'Desmarcar Consulta',
+      'Tem certeza que deseja desmarcar esta consulta?',
+      async () => {
+        setCancelingAppointment(true);
+        try {
+          const token = getToken();
+          if (!token) {
+            modal.error('Erro de Sessão', 'Sessão expirada. Faça login novamente.');
+            return;
+          }
 
-    setCancelingAppointment(true);
-    try {
-      const token = getToken();
-      if (!token) {
-        alert('Sessão expirada. Faça login novamente.');
-        return;
+          await cancelarConsulta(nextAppointment.id, token);
+          setNextAppointment(null);
+          modal.success('Sucesso', 'Consulta desmarcada com sucesso!');
+        } catch (error: any) {
+          console.error('Erro ao cancelar consulta:', error);
+          const errorMsg = error?.response?.data?.error;
+
+          if (errorMsg === 'cannot_cancel_finished_consultation') {
+            modal.error('Erro', 'Não é possível cancelar consultas finalizadas.');
+          } else if (error?.response?.status === 403) {
+            modal.error('Permissão Negada', 'Você não tem permissão para cancelar esta consulta.');
+          } else {
+            modal.error('Erro', 'Erro ao cancelar consulta. Tente novamente.');
+          }
+        } finally {
+          setCancelingAppointment(false);
+        }
       }
-
-      await cancelarConsulta(nextAppointment.id, token);
-      setNextAppointment(null);
-      alert('Consulta desmarcada com sucesso!');
-    } catch (error: any) {
-      console.error('Erro ao cancelar consulta:', error);
-      const errorMsg = error?.response?.data?.error;
-
-      if (errorMsg === 'cannot_cancel_finished_consultation') {
-        alert('Não é possível cancelar consultas finalizadas.');
-      } else if (error?.response?.status === 403) {
-        alert('Você não tem permissão para cancelar esta consulta.');
-      } else {
-        alert('Erro ao cancelar consulta. Tente novamente.');
-      }
-    } finally {
-      setCancelingAppointment(false);
-    }
+    );
   };
 
   const handleEnterAppointment = () => {
     if (nextAppointment) {
-      // In a real app, this would get the room ID from the appointment details
       router.push(`/consultas/atendimento?id=${nextAppointment.id}&scheduled=true`);
     }
   };
@@ -132,37 +136,17 @@ export default function InicioPage() {
             const sorted = agendadas.sort((a, b) => {
               const getTimestamp = (c: ConsultaAgendada) => {
                 if (c.hora_inicio.includes('T')) {
-                  // Se já é ISO string completa
                   return new Date(c.hora_inicio).getTime();
                 }
-                // Combinar data YYYY-MM-DD com hora HH:mm:ss
-                // Importante: isso cria um timestamp em hora local
                 const dateTimeStr = `${c.data_consulta}T${c.hora_inicio}`;
                 return new Date(dateTimeStr).getTime();
               };
-
-              const timestampA = getTimestamp(a);
-              const timestampB = getTimestamp(b);
-
-              return timestampA - timestampB; // Crescente = mais próxima primeiro
+              return getTimestamp(a) - getTimestamp(b);
             });
-
-            // Debug: mostrar ordenação
-            console.log('Consultas agendadas ordenadas:', sorted.map(c => ({
-              id: c.id,
-              data: c.data_consulta,
-              hora: c.hora_inicio,
-              paciente: c.paciente.nome_completo,
-              medico: c.medico.nome_completo
-            })));
 
             // Pegar a primeira (mais próxima)
             if (sorted.length > 0) {
               setNextAppointment(sorted[0]);
-              console.log('Próxima consulta selecionada:', {
-                data: sorted[0].data_consulta,
-                hora: sorted[0].hora_inicio
-              });
             }
           }
         })
@@ -231,7 +215,7 @@ export default function InicioPage() {
             </div>
           </div>
 
-          {/* Card 2: Sessão Ativa (Swapped Position) */}
+          {/* Card 2: Sessão Ativa */}
           <div className="dash-card">
             <div className="dash-card-header">
               <h3>Sessão Ativa</h3>
@@ -281,7 +265,7 @@ export default function InicioPage() {
           </div>
 
 
-          {/* Card 4: Última Consulta (Shifted ID) */}
+          {/* Card 4: Última Consulta */}
           <div className="dash-card">
             <div className="dash-card-header">
               <h3>Última Consulta</h3>
@@ -305,7 +289,7 @@ export default function InicioPage() {
                     </h4>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginTop: '0' }}>
                       {fullHistory[0].createdAt
-                        ? `${new Date(fullHistory[0].createdAt).toLocaleDateString('pt-BR')} - ${new Date(fullHistory[0].createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+                        ? `${formatDate(fullHistory[0].createdAt)} - ${formatTime(fullHistory[0].createdAt)}`
                         : 'Data não disponível'}
                     </p>
                   </>
@@ -325,7 +309,6 @@ export default function InicioPage() {
             </div>
           </div>
 
-          {/* Activity Chart Card */}
           {/* Activity Chart Card */}
           <div className="dash-card featured">
             <div className="dash-card-header">
@@ -372,35 +355,13 @@ export default function InicioPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                       <span style={{ color: 'var(--text-secondary)' }}>Data:</span>
                       <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {(() => {
-                          try {
-                            if (nextAppointment.data_consulta.includes('-') && !nextAppointment.data_consulta.includes('T')) {
-                              const [year, month, day] = nextAppointment.data_consulta.split('-').map(Number);
-                              return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
-                            }
-                            return new Date(nextAppointment.data_consulta).toLocaleDateString('pt-BR');
-                          } catch {
-                            return nextAppointment.data_consulta;
-                          }
-                        })()}
+                        {formatDate(nextAppointment.data_consulta)}
                       </span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                       <span style={{ color: 'var(--text-secondary)' }}>Horário:</span>
                       <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {(() => {
-                          try {
-                            if (nextAppointment.hora_inicio.includes('T')) {
-                              return new Date(nextAppointment.hora_inicio).toLocaleTimeString('pt-BR', {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              });
-                            }
-                            return nextAppointment.hora_inicio.substring(0, 5);
-                          } catch {
-                            return nextAppointment.hora_inicio;
-                          }
-                        })()}
+                        {formatTime(nextAppointment.hora_inicio)}
                       </span>
                     </div>
                   </div>
@@ -447,6 +408,12 @@ export default function InicioPage() {
 
         </section>
       </main>
+      <Modal
+        isOpen={modal.isOpen}
+        config={modal.config}
+        onConfirm={modal.onConfirm}
+        onCancel={modal.onCancel}
+      />
     </div>
   );
 }

@@ -4,22 +4,24 @@ import './atendimento.css';
 import '@/app/inicio/inicio.css';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 import Button from '@/components/common/Buttons/Button';
-import ConfirmationModal from '@/components/common/Modals/ConfirmationModal/ConfirmationModal';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
 import { psCreateRoom, psClaim, listParticipants, endConsulta } from '@/lib/axios/consultas';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
+import { Modal } from '@/components/common/Modal/Modal';
+import { useModal } from '@/components/common/Modal/useModal';
 
 type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
 
 function AtendimentoInner() {
   const [connectionFailed, setConnectionFailed] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
+  const modal = useModal();
 
   const handleConnected = () => {
-    console.log('[UI] Connection established/recharged.');
+
     setStatusText('Conectado.');
     setConnectionFailed(false);
     setReconnecting(false);
@@ -50,7 +52,6 @@ function AtendimentoInner() {
   const claimingRef = useRef(false);
   const startedRef = useRef(false);
   const [showChat, setShowChat] = useState(true);
-  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
   const hasReadySignalRef = useRef(false);
   const isLocalReadyRef = useRef(false);
   const offeringInitiatedRef = useRef(false);
@@ -270,19 +271,19 @@ function AtendimentoInner() {
     if (role === 'medico' && hasReadySignalRef.current && isLocalReadyRef.current) {
       if (!offeringInitiatedRef.current && sessionRef.current) {
         offeringInitiatedRef.current = true;
-        console.log('[UI] 🚀 All conditions met. Doctor initiating WebRTC offer...');
+
         try {
           await sessionRef.current.createAndSendOffer();
-          console.log('[UI] ✅ Offer sent successfully.');
+
         } catch (err) {
           console.error('[UI] ❌ Error sending offer:', err);
           offeringInitiatedRef.current = false;
         }
       } else {
-        console.log('[UI] Conditions met but offering already initiated or session missing.');
+
       }
     } else {
-      console.log('[UI] Delaying offer. Role:', role, 'ReadySignal:', hasReadySignalRef.current, 'LocalReady:', isLocalReadyRef.current);
+
     }
   };
 
@@ -314,9 +315,7 @@ function AtendimentoInner() {
     claimingRef.current = true;
 
     try {
-      console.log('[UI] 🚀 Starting flow. CID from URL:', cid);
       const { roomId: rId, consultaId: cId, iceServers: ice } = await psClaim(cid, token);
-      console.log('[UI] psClaim success. Room:', rId, 'Consulta:', cId);
 
       setRoomId(rId);
       setConsultaIdState(cId);
@@ -338,12 +337,12 @@ function AtendimentoInner() {
 
       // 1. Configurar listeners IMEDIATAMENTE após criar a sessão para não perder sinais
       session.onConnectionStateChange((state) => {
-        console.log('[UI] Connection state:', state);
+
         if (state === 'connected') handleConnected();
       });
 
       session.onIceConnectionStateChange((state) => {
-        console.log('[UI] ICE state:', state);
+
         if (state === 'connected' || state === 'completed') {
           handleConnected();
         } else if (state === 'disconnected') {
@@ -356,25 +355,25 @@ function AtendimentoInner() {
       });
 
       session.onSignalEvent((ev, payload) => {
-        console.log('[UI] Signal event received:', ev, payload);
+
 
         // Se recebermos 'joined' e já houver 2 pessoas, agimos como se fosse 'ready'
         const participants = payload?.participants || [];
         const isJoinedReady = ev === 'joined' && Array.isArray(participants) && participants.length >= 2;
 
-        if (isJoinedReady) console.log('[UI] "joined" signal has 2+ participants. Treating as ready.');
+
 
         if (ev === 'answerSent' || ev === 'answerReceived' || ev === 'ready' || ev === 'peer-joined' || isJoinedReady) {
           handleConnected();
           if (ev === 'ready' || ev === 'peer-joined' || isJoinedReady) {
-            console.log(`[UI] Signal "${ev}" indicates room is ready. Marked hasReadySignalRef.`);
+
             hasReadySignalRef.current = true;
             checkAndInitiateOffering();
           }
         }
 
         if (ev === 'peer-left') {
-          console.log('[UI] Peer left the room.');
+
           setRemoteDisconnected(true);
           setRemoteConnected(false);
           setStatusText('O outro usuário saiu da sala.');
@@ -382,7 +381,7 @@ function AtendimentoInner() {
       });
 
       session.onRemoteTrack((stream) => {
-        console.log('[UI] Remote track received. Tracks:', stream.getTracks().length);
+
         if (remoteRef.current) {
           remoteRef.current.srcObject = stream;
           remoteRef.current.play().catch(e => console.warn('[UI] Error playing remote video:', e));
@@ -432,14 +431,14 @@ function AtendimentoInner() {
       session.sendMediaState(camEnabled, micEnabled);
 
       // Marca a mídia local como pronta e tenta iniciar a oferta
-      console.log('[UI] Local setup finished. Role:', role);
+
       isLocalReadyRef.current = true;
       checkAndInitiateOffering();
 
       // Failsafe: se nada aconteceu em 8 segundos, tenta forçar uma oferta se for médico
       setTimeout(() => {
         if (role === 'medico' && !offeringInitiatedRef.current && isLocalReadyRef.current) {
-          console.log('[UI] Failsafe: No signal received after 8s. Forcing offer as doctor.');
+
           hasReadySignalRef.current = true;
           checkAndInitiateOffering();
         }
@@ -450,11 +449,9 @@ function AtendimentoInner() {
     } catch (err: any) {
       const msg = String(err?.message || 'Falha ao entrar na sala.');
       if (msg.includes('already_claimed')) {
-        alert('Esta consulta já está sendo atendida por outro médico.');
-        router.push('/consultas/pacientes');
+        modal.error('Consulta Indisponível', 'Esta consulta já está sendo atendida por outro médico.', () => router.push('/consultas/pacientes'));
       } else if (msg.includes('consulta_not_found')) {
-        alert('Consulta não encontrada.');
-        router.push('/consultas');
+        modal.error('Erro', 'Consulta não encontrada.', () => router.push('/consultas'));
       } else {
         console.error('Erro no flow de atendimento:', err);
         setStatusText('Erro ao conectar: ' + msg);
@@ -465,7 +462,11 @@ function AtendimentoInner() {
   }
 
   function requestFinishCall() {
-    setShowLeaveConfirmation(true);
+    modal.confirm(
+      'Encerrar atendimento',
+      'Tem certeza que deseja deixar o atendimento?',
+      confirmFinishCall
+    );
   }
 
   async function confirmFinishCall() {
@@ -487,7 +488,6 @@ function AtendimentoInner() {
       }
     }
 
-    setShowLeaveConfirmation(false);
     try { sessionRef.current?.end(); } catch { }
     try { sessionStorage.removeItem('ps_room'); } catch { }
     // Remove dados de reconexão ao sair normalmente
@@ -704,14 +704,11 @@ function AtendimentoInner() {
         </div>
       </main>
 
-      <ConfirmationModal
-        open={showLeaveConfirmation}
-        title="Encerrar atendimento"
-        message="Tem certeza que deseja deixar o atendimento?"
-        onConfirm={confirmFinishCall}
-        onCancel={() => setShowLeaveConfirmation(false)}
-        variant="danger"
-        confirmLabel="Sair"
+      <Modal
+        isOpen={modal.isOpen}
+        config={modal.config}
+        onConfirm={modal.onConfirm}
+        onCancel={modal.onCancel}
       />
     </div>
   );

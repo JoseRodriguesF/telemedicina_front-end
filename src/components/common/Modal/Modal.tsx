@@ -1,131 +1,129 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { ModalConfig } from './useModal'
+import { ModalConfig } from './useModal' // Assuming useModal exports ModalConfig
 import './Modal.css'
 
 interface ModalProps {
-    isOpen: boolean
-    config: ModalConfig | null
-    onConfirm: () => void | Promise\u003cvoid\u003e
-onCancel: () => void | Promise\u003cvoid\u003e
+  isOpen: boolean
+  config: ModalConfig | null
+  onConfirm: () => void | Promise<void>
+  onCancel: () => void | Promise<void>
 }
 
 export function Modal({ isOpen, config, onConfirm, onCancel }: ModalProps) {
-    const modalRef = useRef\u003cHTMLDivElement\u003e(null)
+  const modalRef = useRef<HTMLDivElement>(null)
 
-    // Handle ESC key
-    useEffect(() =\u003e {
-        if(!isOpen) return
+  // Handle ESC key
+  useEffect(() => {
+    if (!isOpen) return
 
-    const handleEsc = (e: KeyboardEvent) =\u003e {
-        if(e.key === 'Escape') {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
         onCancel()
+      }
     }
-}
 
-document.addEventListener('keydown', handleEsc)
-return () =\u003e document.removeEventListener('keydown', handleEsc)
+    document.addEventListener('keydown', handleEsc)
+    return () => document.removeEventListener('keydown', handleEsc)
   }, [isOpen, onCancel])
 
-// Handle click outside
-const handleBackdropClick = (e: React.MouseEvent\u003cHTMLDivElement\u003e) =\u003e {
+  // Handle click outside
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === modalRef.current) {
-    onCancel()
-}
+      onCancel()
+    }
   }
 
-// Prevent body scroll when modal is open
-useEffect(() =\u003e {
-    if(isOpen) {
-        document.body.style.overflow = 'hidden'
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
     } else {
-        document.body.style.overflow = ''
+      document.body.style.overflow = ''
     }
-    return() =\u003e {
-    document.body.style.overflow = ''
-}
+    return () => {
+      document.body.style.overflow = ''
+    }
   }, [isOpen])
 
-if (!isOpen || !config) return null
+  if (!isOpen || !config) return null
 
-const getIcon = () =\u003e {
+  const getIcon = () => {
     switch (config.type) {
       case 'success':
-    return (
-    \u003csvg className = "modal-icon" viewBox = "0 0 24 24" fill = "none" xmlns = "http://www.w3.org/2000/svg"\u003e
-    \u003ccircle cx = "12" cy = "12" r = "10" fill = "currentColor" fillOpacity = "0.1" /\u003e
-    \u003cpath d = "M7 13l3 3 7-7" stroke = "currentColor" strokeWidth = "2" strokeLinecap = "round" strokeLinejoin = "round" /\u003e
-    \u003c / svg\u003e
+        return (
+          <svg className="modal-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.1" />
+            <path d="M7 13l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         )
       case 'error':
-    return (
-    \u003csvg className = "modal-icon" viewBox = "0 0 24 24" fill = "none" xmlns = "http://www.w3.org/2000/svg"\u003e
-    \u003ccircle cx = "12" cy = "12" r = "10" fill = "currentColor" fillOpacity = "0.1" /\u003e
-    \u003cpath d = "M15 9l-6 6M9 9l6 6" stroke = "currentColor" strokeWidth = "2" strokeLinecap = "round" /\u003e
-    \u003c / svg\u003e
+        return (
+          <svg className="modal-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.1" />
+            <path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
         )
       case 'warning':
-    return (
-    \u003csvg className = "modal-icon" viewBox = "0 0 24 24" fill = "none" xmlns = "http://www.w3.org/2000/svg"\u003e
-    \u003cpath d = "M12 2L2 20h20L12 2z" fill = "currentColor" fillOpacity = "0.1" /\u003e
-    \u003cpath d = "M12 9v4M12 17h.01" stroke = "currentColor" strokeWidth = "2" strokeLinecap = "round" /\u003e
-    \u003c / svg\u003e
+        return (
+          <svg className="modal-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 20h20L12 2z" fill="currentColor" fillOpacity="0.1" />
+            <path d="M12 9v4M12 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
         )
       case 'info':
       default:
-    return (
-    \u003csvg className = "modal-icon" viewBox = "0 0 24 24" fill = "none" xmlns = "http://www.w3.org/2000/svg"\u003e
-    \u003ccircle cx = "12" cy = "12" r = "10" fill = "currentColor" fillOpacity = "0.1" /\u003e
-    \u003cpath d = "M12 16v-4M12 8h.01" stroke = "currentColor" strokeWidth = "2" strokeLinecap = "round" /\u003e
-    \u003c / svg\u003e
+        return (
+          <svg className="modal-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity="0.1" />
+            <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
         )
-}
+    }
   }
 
-return (
-\u003cdiv
-ref = { modalRef }
-className = {`modal-backdrop ${isOpen ? 'modal-open' : ''}`}
-onClick = { handleBackdropClick }
-role = "dialog"
-aria - modal="true"
-aria - labelledby="modal-title"
-aria - describedby="modal-description"
-\u003e
-\u003cdiv className = {`modal-container modal-${config.type}`}\u003e
-\u003cdiv className = "modal-header"\u003e
-\u003cdiv className = "modal-icon-wrapper"\u003e
-{ getIcon() }
-\u003c / div\u003e
-\u003ch3 id = "modal-title" className = "modal-title"\u003e{ config.title } \u003c / h3\u003e
-\u003c / div\u003e
+  return (
+    <div
+      ref={modalRef}
+      className={`modal-backdrop ${isOpen ? 'modal-open' : ''}`}
+      onClick={handleBackdropClick}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      aria-describedby="modal-description"
+    >
+      <div className={`modal-container modal-${config.type}`}>
+        <div className="modal-header">
+          <div className="modal-icon-wrapper">
+            {getIcon()}
+          </div>
+          <h3 id="modal-title" className="modal-title">{config.title}</h3>
+        </div>
 
-\u003cdiv className = "modal-body"\u003e
-\u003cp id = "modal-description" className = "modal-message"\u003e{ config.message } \u003c / p\u003e
-\u003c / div\u003e
+        <div className="modal-body">
+          <p id="modal-description" className="modal-message">{config.message}</p>
+        </div>
 
-\u003cdiv className = "modal-footer"\u003e
-{
-    config.showCancel && (
-    \u003cbutton
-    className = "modal-button modal-button-secondary"
-    onClick = { onCancel }
-    type = "button"
-    \u003e
-    { config.cancelText || 'Cancelar' }
-    \u003c / button\u003e
-          )
-}
-\u003cbutton
-className = {`modal-button modal-button-primary modal-button-${config.type}`}
-onClick = { onConfirm }
-type = "button"
-\u003e
-{ config.confirmText || 'Ok' }
-\u003c / button\u003e
-\u003c / div\u003e
-\u003c / div\u003e
-\u003c / div\u003e
+        <div className="modal-footer">
+          {config.showCancel && (
+            <button
+              className="modal-button modal-button-secondary"
+              onClick={onCancel}
+              type="button"
+            >
+              {config.cancelText || 'Cancelar'}
+            </button>
+          )}
+          <button
+            className={`modal-button modal-button-primary modal-button-${config.type}`}
+            onClick={onConfirm}
+            type="button"
+          >
+            {config.confirmText || 'Ok'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }

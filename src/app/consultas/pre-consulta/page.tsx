@@ -32,25 +32,16 @@ function formatIaText(text: string): string {
 import { getToken, getUser } from '@/lib/auth';
 import { psCreateRoom } from '@/lib/axios/consultas';
 
-// Função para formatar data ISO (YYYY-MM-DD) para exibição (DD/MM/YYYY)
-function formatDateForDisplay(dateStr: string | null): string {
-  if (!dateStr) return '';
-
-  // Se já estiver em formato ISO (YYYY-MM-DD)
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    const [year, month, day] = dateStr.split('-');
-    return `${day}/${month}/${year}`;
-  }
-
-  // Se estiver em formato brasileiro (DD/MM/YYYY), retorna como está
-  return dateStr;
-}
+import { Modal } from '@/components/common/Modal/Modal';
+import { useModal } from '@/components/common/Modal/useModal';
+import { formatDate } from '@/lib/utils/dateFormatters';
 
 // Tipo para o histórico que será enviado ao backend
 type ChatHistory = Array<{ role: 'user' | 'assistant'; content: string }>;
 
 function PreConsultaInner() {
   const router = useRouter();
+  const modal = useModal();
   const searchParams = useSearchParams();
   const flow = searchParams.get('flow'); // 'agendamento' or null (PS)
   const dateStr = searchParams.get('date');
@@ -156,11 +147,11 @@ function PreConsultaInner() {
     const token = getToken();
     const user = getUser();
     if (user?.tipo_usuario !== 'paciente') {
-      alert('Apenas pacientes podem iniciar consultas no pronto socorro. (forbidden_only_paciente_can_create_room)');
+      modal.error('Acesso Negado', 'Apenas pacientes podem iniciar consultas no pronto socorro. (forbidden_only_paciente_can_create_room)');
       return;
     }
     if (!token) {
-      alert('Faça login novamente para continuar.');
+      modal.warning('Login Expirado', 'Faça login novamente para continuar.');
       return;
     }
     if (token) {
@@ -176,11 +167,11 @@ function PreConsultaInner() {
       } catch (err: any) {
         const msg = String(err?.message || 'Não foi possível criar sua consulta. Tente novamente.');
         if (msg.includes('forbidden_only_paciente_can_create_room')) {
-          alert('Apenas pacientes podem criar consulta no pronto socorro.');
+          modal.error('Acesso Negado', 'Apenas pacientes podem criar consulta no pronto socorro.');
         } else if (msg.includes('paciente_record_not_found_for_usuario')) {
-          alert('Seu usuário não está vinculado a um cadastro de Paciente. Complete o cadastro para continuar.');
+          modal.error('Cadastro Incompleto', 'Seu usuário não está vinculado a um cadastro de Paciente. Complete o cadastro para continuar.');
         } else {
-          alert(msg);
+          modal.error('Erro', msg);
         }
       }
     }
@@ -231,7 +222,7 @@ function PreConsultaInner() {
                   <div className="pc-welcome-text">
                     <h1>
                       {flow === 'agendamento'
-                        ? `Tudo pronto para sua consulta no dia ${formatDateForDisplay(dateStr)}!`
+                        ? `Tudo pronto para sua consulta no dia ${formatDate(dateStr || '')}!`
                         : 'Bem-vindo(a)! Eu sou a Angélica, sua assistente de saúde IA.'}
                       <br />
                       {flow === 'agendamento'
@@ -318,6 +309,12 @@ function PreConsultaInner() {
         </div>
 
       </main>
+      <Modal
+        isOpen={modal.isOpen}
+        config={modal.config}
+        onConfirm={modal.onConfirm}
+        onCancel={modal.onCancel}
+      />
     </div>
   );
 }

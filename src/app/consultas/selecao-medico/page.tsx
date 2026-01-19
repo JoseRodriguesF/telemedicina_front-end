@@ -8,6 +8,9 @@ import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getToken, getUser } from '@/lib/auth';
+import { Modal } from '@/components/common/Modal/Modal';
+import { useModal } from '@/components/common/Modal/useModal';
+import { formatDate } from '@/lib/utils/dateFormatters';
 
 type Doctor = {
     id: number;
@@ -25,6 +28,7 @@ function SelecaoMedicoInner() {
     const searchParams = useSearchParams();
     const date = searchParams.get('date');
     const time = searchParams.get('time');
+    const modal = useModal();
 
     const [doctors, setDoctors] = useState<Doctor[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -32,16 +36,6 @@ function SelecaoMedicoInner() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    // Formatar data ISO (YYYY-MM-DD) para exibição (DD/MM/YYYY)
-    const formatDateForDisplay = (dateStr: string | null): string => {
-        if (!dateStr) return '';
-        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-            const [year, month, day] = dateStr.split('-');
-            return `${day}/${month}/${year}`;
-        }
-        return dateStr;
-    };
 
     useEffect(() => {
         async function fetchDoctors() {
@@ -78,11 +72,11 @@ function SelecaoMedicoInner() {
         const token = getToken();
         const user = getUser();
         if (!token || !user || !user.id) {
-            alert('Faça login para agendar.');
+            modal.warning('Login Necessário', 'Faça login para agendar.');
             return;
         }
         if (!date || !time) {
-            alert('Data e horário devem ser selecionados.');
+            modal.warning('Dados Incompletos', 'Data e horário devem ser selecionados.');
             return;
         }
         setLoading(true);
@@ -95,11 +89,15 @@ function SelecaoMedicoInner() {
                 hora_inicio: time
             };
             await agendarConsulta(payload, token);
-            alert(`Solicitação enviada com sucesso! Aguarde a confirmação do Dr(a). ${doc.nome} para o dia ${formatDateForDisplay(date)} às ${time}.`);
-            router.push('/consultas');
+
+            modal.success(
+                'Solicitação Enviada',
+                `Solicitação enviada com sucesso! Aguarde a confirmação do Dr(a). ${doc.nome} para o dia ${formatDate(date)} às ${time}.`,
+                () => router.push('/consultas')
+            );
         } catch (err: any) {
             const errorMsg = err?.response?.data?.error || err?.message || 'Erro desconhecido';
-            alert('Erro ao agendar: ' + errorMsg);
+            modal.error('Erro ao Agendar', errorMsg);
         } finally {
             setLoading(false);
         }
@@ -131,7 +129,7 @@ function SelecaoMedicoInner() {
                         <div className="selection-context-bar">
                             <div className="context-chip">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
-                                {formatDateForDisplay(date)}
+                                {formatDate(date || '')}
                             </div>
                             <div className="context-chip">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
@@ -254,7 +252,10 @@ function SelecaoMedicoInner() {
                             <button
                                 className="btn primary"
                                 style={{ width: '100%', height: '56px', borderRadius: 'var(--radius-2xl)', fontSize: '1.1rem' }}
-                                onClick={() => handleSelectDoctor(selectedDoctor)}
+                                onClick={() => {
+                                    handleSelectDoctor(selectedDoctor);
+                                    setIsModalOpen(false); // Fecha este modal para mostrar o de sucesso/erro
+                                }}
                             >
                                 Confirmar Agendamento
                             </button>
@@ -262,6 +263,13 @@ function SelecaoMedicoInner() {
                     </div>
                 </div>
             )}
+
+            <Modal
+                isOpen={modal.isOpen}
+                config={modal.config}
+                onConfirm={modal.onConfirm}
+                onCancel={modal.onCancel}
+            />
         </div>
     );
 }

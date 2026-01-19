@@ -10,8 +10,13 @@ import { getUser, getUserFirstName, getToken } from '@/lib/auth';
 import { getConsultasAgendadas, ConsultaAgendada, confirmarConsulta, cancelarConsulta, ConsultaStatus } from '@/lib/axios/consultas';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 
+import { Modal } from '@/components/common/Modal/Modal';
+import { useModal } from '@/components/common/Modal/useModal';
+import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
+
 export default function MeusAgendamentosPage() {
     const router = useRouter();
+    const modal = useModal();
     const [displayName, setDisplayName] = useState<string>('');
     const [appointments, setAppointments] = useState<ConsultaAgendada[]>([]);
     const [loading, setLoading] = useState(true);
@@ -34,10 +39,8 @@ export default function MeusAgendamentosPage() {
                 const token = getToken();
                 if (token) {
                     const data = await getConsultasAgendadas(token);
-                    // Agora inclui tanto 'solicitada' quanto 'agendada'
                     const consultas = data.filter(c => c.status === 'agendada' || c.status === 'solicitada');
 
-                    // Ordenar por data e hora (mais próximas primeiro)
                     const sorted = consultas.sort((a, b) => {
                         const getTimestamp = (c: ConsultaAgendada) => {
                             if (c.hora_inicio.includes('T')) {
@@ -59,37 +62,6 @@ export default function MeusAgendamentosPage() {
 
         fetchAppointments();
     }, [router]);
-
-    const formatDate = (dateString: string) => {
-        try {
-            if (dateString.includes('-') && !dateString.includes('T')) {
-                const [year, month, day] = dateString.split('-').map(Number);
-                return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
-            }
-            const date = new Date(dateString);
-            return new Intl.DateTimeFormat('pt-BR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            }).format(date);
-        } catch (e) {
-            return dateString;
-        }
-    };
-
-    const formatTime = (timeString: string) => {
-        try {
-            if (timeString.includes('T')) {
-                return new Date(timeString).toLocaleTimeString('pt-BR', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            }
-            return timeString.substring(0, 5);
-        } catch (e) {
-            return timeString;
-        }
-    };
 
     const isToday = (dateStr: string) => {
         const today = new Date();
@@ -115,16 +87,12 @@ export default function MeusAgendamentosPage() {
     };
 
     const filteredAppointments = appointments.filter(item => {
-        // Busca por nome do paciente
         const matchesSearch = item.paciente?.nome_completo?.toLowerCase().includes(searchTerm.toLowerCase());
-
-        // Filtro por período
         let matchesPeriod = true;
         if (filterPeriod === 'today') matchesPeriod = isToday(item.data_consulta);
         else if (filterPeriod === 'week') matchesPeriod = isThisWeek(item.data_consulta);
         else if (filterPeriod === 'month') matchesPeriod = isThisMonth(item.data_consulta);
 
-        // Filtro por status
         let matchesStatus = true;
         if (filterStatus === 'solicitada') matchesStatus = item.status === 'solicitada';
         else if (filterStatus === 'agendada') matchesStatus = item.status === 'agendada';
@@ -140,15 +108,14 @@ export default function MeusAgendamentosPage() {
 
             await confirmarConsulta(consultaId, token);
 
-            // Atualizar a consulta no estado local
             setAppointments(prev => prev.map(appt =>
                 appt.id === consultaId ? { ...appt, status: 'agendada' as ConsultaStatus } : appt
             ));
-            alert('Consulta confirmada com sucesso!');
+            modal.success('Sucesso', 'Consulta confirmada com sucesso!');
         } catch (error: any) {
             console.error('Erro ao confirmar consulta:', error);
             const errorMsg = error?.response?.data?.error || error?.response?.data?.message || error?.message;
-            alert(`Erro ao confirmar consulta: ${errorMsg || 'Tente novamente.'}`);
+            modal.error('Erro', `Erro ao confirmar consulta: ${errorMsg || 'Tente novamente.'}`);
         } finally {
             setConfirmingIds(prev => {
                 const newSet = new Set(prev);
@@ -158,39 +125,40 @@ export default function MeusAgendamentosPage() {
         }
     };
 
-    const handleCancelarConsulta = async (consultaId: number, pacienteNome: string) => {
-        if (!confirm(`Tem certeza que deseja cancelar a consulta com ${pacienteNome}?`)) {
-            return;
-        }
+    const handleCancelarConsulta = (consultaId: number, pacienteNome: string) => {
+        modal.confirm(
+            'Confirmar Cancelamento',
+            `Tem certeza que deseja cancelar a consulta com ${pacienteNome}?`,
+            async () => {
+                setConfirmingIds(prev => new Set(prev).add(consultaId));
+                try {
+                    const token = getToken();
+                    if (!token) return;
 
-        setConfirmingIds(prev => new Set(prev).add(consultaId));
-        try {
-            const token = getToken();
-            if (!token) return;
+                    await cancelarConsulta(consultaId, token);
 
-            await cancelarConsulta(consultaId, token);
+                    setAppointments(prev => prev.filter(appt => appt.id !== consultaId));
+                    modal.success('Sucesso', 'Consulta cancelada com sucesso!');
+                } catch (error: any) {
+                    console.error('Erro ao cancelar consulta:', error);
+                    const errorMsg = error?.response?.data?.error;
 
-            // Remover a consulta do estado local
-            setAppointments(prev => prev.filter(appt => appt.id !== consultaId));
-            alert('Consulta cancelada com sucesso!');
-        } catch (error: any) {
-            console.error('Erro ao cancelar consulta:', error);
-            const errorMsg = error?.response?.data?.error;
-
-            if (errorMsg === 'cannot_cancel_finished_consultation') {
-                alert('Não é possível cancelar consultas finalizadas.');
-            } else if (error?.response?.status === 403) {
-                alert('Você não tem permissão para cancelar esta consulta.');
-            } else {
-                alert('Erro ao cancelar consulta. Tente novamente.');
+                    if (errorMsg === 'cannot_cancel_finished_consultation') {
+                        modal.error('Ação Inválida', 'Não é possível cancelar consultas finalizadas.');
+                    } else if (error?.response?.status === 403) {
+                        modal.error('Acesso Negado', 'Você não tem permissão para cancelar esta consulta.');
+                    } else {
+                        modal.error('Erro', 'Erro ao cancelar consulta. Tente novamente.');
+                    }
+                } finally {
+                    setConfirmingIds(prev => {
+                        const newSet = new Set(prev);
+                        newSet.delete(consultaId);
+                        return newSet;
+                    });
+                }
             }
-        } finally {
-            setConfirmingIds(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(consultaId);
-                return newSet;
-            });
-        }
+        );
     };
 
     return (
@@ -375,6 +343,12 @@ export default function MeusAgendamentosPage() {
                     </div>
                 </div>
             </main>
+            <Modal
+                isOpen={modal.isOpen}
+                config={modal.config}
+                onConfirm={modal.onConfirm}
+                onCancel={modal.onCancel}
+            />
         </div>
     );
 }

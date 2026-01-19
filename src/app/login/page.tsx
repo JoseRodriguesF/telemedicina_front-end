@@ -9,7 +9,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   function handleLogin(data?: { email: string; password: string }) {
-    console.log('Login solicitado:', data);
+
     const user = (data as any)?.user || null;
     // if the user exists and didn't finish registration, redirect to register
     if (user && user.registro_full === false) {
