@@ -125,18 +125,8 @@ export default function InicioPage() {
       getConsultasAgendadas(token)
         .then((consultas: ConsultaAgendada[]) => {
           if (consultas && consultas.length > 0) {
-            // Filtrar apenas consultas agendadas e futuras
-            const agora = new Date().getTime();
-            const agendadas = consultas.filter(c => {
-              if (c.status !== 'agendada') return false;
-
-              // Calcular timestamp da consulta
-              const consultaTimestamp = c.hora_inicio.includes('T')
-                ? new Date(c.hora_inicio).getTime()
-                : new Date(`${c.data_consulta}T${c.hora_inicio}`).getTime();
-
-              return consultaTimestamp > agora;
-            });
+            // Filtrar apenas consultas agendadas
+            const agendadas = consultas.filter(c => c.status === 'agendada');
 
             // Ordenar por data e hora mais próxima (crescente)
             const sorted = agendadas.sort((a, b) => {
