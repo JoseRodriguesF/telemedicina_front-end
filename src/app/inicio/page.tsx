@@ -132,16 +132,37 @@ export default function InicioPage() {
             const sorted = agendadas.sort((a, b) => {
               const getTimestamp = (c: ConsultaAgendada) => {
                 if (c.hora_inicio.includes('T')) {
+                  // Se já é ISO string completa
                   return new Date(c.hora_inicio).getTime();
                 }
-                return new Date(`${c.data_consulta}T${c.hora_inicio}`).getTime();
+                // Combinar data YYYY-MM-DD com hora HH:mm:ss
+                // Importante: isso cria um timestamp em hora local
+                const dateTimeStr = `${c.data_consulta}T${c.hora_inicio}`;
+                return new Date(dateTimeStr).getTime();
               };
-              return getTimestamp(a) - getTimestamp(b);
+
+              const timestampA = getTimestamp(a);
+              const timestampB = getTimestamp(b);
+
+              return timestampA - timestampB; // Crescente = mais próxima primeiro
             });
+
+            // Debug: mostrar ordenação
+            console.log('Consultas agendadas ordenadas:', sorted.map(c => ({
+              id: c.id,
+              data: c.data_consulta,
+              hora: c.hora_inicio,
+              paciente: c.paciente.nome_completo,
+              medico: c.medico.nome_completo
+            })));
 
             // Pegar a primeira (mais próxima)
             if (sorted.length > 0) {
               setNextAppointment(sorted[0]);
+              console.log('Próxima consulta selecionada:', {
+                data: sorted[0].data_consulta,
+                hora: sorted[0].hora_inicio
+              });
             }
           }
         })
