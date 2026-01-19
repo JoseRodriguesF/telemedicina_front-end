@@ -35,4 +35,24 @@ export async function createMedico(payload: MedicoPayload): Promise<CreateMedico
   return resp.data as CreateMedicoResponse;
 }
 
+/**
+ * List available medicos
+ * GET /api/medicos
+ */
+export type Medico = {
+  id: number;
+  nome_completo: string;
+  crm: string;
+  especialidade?: string;
+  rating?: number;
+  reviews?: number;
+};
+
+export async function listMedicos(token: string): Promise<Medico[]> {
+  const resp = await axios.get('/api/medicos', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return resp.data as Medico[];
+}
+
 export default createMedico;

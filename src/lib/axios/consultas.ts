@@ -9,7 +9,7 @@ export type NextAppointment = {
 };
 
 export async function getNextAppointment(token: string): Promise<NextAppointment | null> {
-  const res = await axios.get('/proxy/consultas/agendadas', { headers: { Authorization: `Bearer ${token}` } });
+  const res = await axios.get('/api/consultas/agendadas', { headers: { Authorization: `Bearer ${token}` } });
   if (!res.data) return null;
   // Ajuste conforme o backend: adapte os campos se necessário
   const appt = res.data;
@@ -22,6 +22,35 @@ export async function getNextAppointment(token: string): Promise<NextAppointment
     timestamp: appt.timestamp || (appt.data_consulta && appt.hora_inicio ? new Date(`${appt.data_consulta}T${appt.hora_inicio}`).getTime() : Date.now())
   };
 }
+
+/**
+ * Schedule a new appointment
+ * POST /api/consultas/agendar
+ */
+export type AgendarConsultaPayload = {
+  medico_id: number;
+  paciente_id: number;
+  data_consulta: string; // format: YYYY-MM-DD or DD/MM/YYYY
+  hora_inicio: string; // format: HH:mm
+};
+
+export type AgendarConsultaResponse = {
+  message?: string;
+  consultaId?: number;
+  id?: number;
+  ok?: boolean;
+};
+
+export async function agendarConsulta(payload: AgendarConsultaPayload, token: string): Promise<AgendarConsultaResponse> {
+  const res = await axios.post('/api/consultas/agendar', payload, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    }
+  });
+  return res.data as AgendarConsultaResponse;
+}
+
 import axios from 'axios';
 
 // Buscar salas em andamento (consultas ativas)

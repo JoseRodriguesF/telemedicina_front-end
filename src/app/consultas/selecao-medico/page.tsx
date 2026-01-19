@@ -39,18 +39,18 @@ function SelecaoMedicoInner() {
             setError(null);
             try {
                 const token = getToken();
-                const res = await fetch('/medicos', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                if (!res.ok) throw new Error('Erro ao buscar médicos');
-                const data = await res.json();
+                if (!token) {
+                    throw new Error('Token não encontrado');
+                }
+                const { listMedicos } = await import('@/lib/axios/medicos');
+                const data = await listMedicos(token);
                 // Mapear nome_completo para nome
                 const mapped = Array.isArray(data)
-                  ? data.map((m) => ({
-                      ...m,
-                      nome: m.nome_completo || m.nome || '',
+                    ? data.map((m) => ({
+                        ...m,
+                        nome: m.nome_completo || '',
                     }))
-                  : [];
+                    : [];
                 setDoctors(mapped);
             } catch (err: any) {
                 setDoctors([]);
@@ -65,35 +65,29 @@ function SelecaoMedicoInner() {
     const handleSelectDoctor = async (doc: Doctor) => {
         const token = getToken();
         const user = getUser();
-        if (!token || !user) {
+        if (!token || !user || !user.id) {
             alert('Faça login para agendar.');
+            return;
+        }
+        if (!date || !time) {
+            alert('Data e horário devem ser selecionados.');
             return;
         }
         setLoading(true);
         try {
-            const body = {
+            const { agendarConsulta } = await import('@/lib/axios/consultas');
+            const payload = {
                 medico_id: doc.id,
                 paciente_id: user.id,
                 data_consulta: date,
                 hora_inicio: time
             };
-            const res = await fetch('/proxy/consultas/agendar', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify(body)
-            });
-            if (!res.ok) {
-                const err = await res.text();
-                throw new Error(err || 'Erro ao agendar consulta');
-            }
-            const data = await res.json();
+            await agendarConsulta(payload, token);
             alert(`Consulta agendada com ${doc.nome} para o dia ${date} às ${time}!`);
             router.push('/consultas');
         } catch (err: any) {
-            alert('Erro ao agendar: ' + (err?.message || ''));
+            const errorMsg = err?.response?.data?.error || err?.message || 'Erro desconhecido';
+            alert('Erro ao agendar: ' + errorMsg);
         } finally {
             setLoading(false);
         }
