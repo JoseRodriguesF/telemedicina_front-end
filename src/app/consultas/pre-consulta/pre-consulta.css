@@ -142,11 +142,11 @@
 .pc-input-wrapper {
   width: 100%;
   max-width: 700px;
-  margin: 0 auto;
   position: fixed;
   bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  margin: 0 auto;
   z-index: 100;
   animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   padding: 0 1rem;
@@ -304,14 +304,17 @@
   border-bottom-right-radius: 0.25rem;
 }
 
-/* Custom Scrollbar */
-.pc-chat-messages::-webkit-scrollbar {
-  width: 6px;
+/* Custom Scrollbar - Esconder mas manter funcionalidade */
+.pc-chat-messages {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
 }
 
-.pc-chat-messages::-webkit-scrollbar-thumb {
-  background-color: var(--color-gray-300);
-  border-radius: 3px;
+.pc-chat-messages::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
 }
 
 /* Mobile Adjustments */
@@ -349,10 +352,4 @@
     padding-bottom: 6rem;
     /* Reduce space on mobile */
   }
-}
-
-/* Adjustments when sidebar is hidden (triage mode) */
-.triage-mode .pc-input-wrapper {
-  /* Input stays centered even when sidebar animates out */
-  left: 50%;
 }
