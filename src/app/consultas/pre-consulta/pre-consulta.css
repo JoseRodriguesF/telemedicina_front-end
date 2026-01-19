@@ -35,6 +35,8 @@
   position: relative;
   margin: 0 auto;
   /* Ensure centering */
+  overflow: hidden;
+  /* Prevent double scroll */
 }
 
 /* Welcome Screen State */
@@ -136,13 +138,18 @@
   filter: grayscale(0.5);
 }
 
-/* Input Area (Floating at bottom for welcome, fixed for chat) */
+/* Input Area (Fixed at bottom when chat is active) */
 .pc-input-wrapper {
   width: 100%;
   max-width: 700px;
-  margin-top: 2rem;
-  position: relative;
+  margin: 0 auto;
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
   animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  padding: 0 1rem;
 }
 
 @keyframes slideInUp {
@@ -243,19 +250,23 @@
   width: 100%;
   max-width: 700px;
   /* Match input width */
-  height: 100%;
-  padding-bottom: 1rem;
+  height: calc(100vh - 8rem);
+  /* Full height minus padding and space for input */
+  max-height: 100%;
   animation: fadeIn 0.8s ease-out forwards;
+  overflow: hidden;
 }
 
 .pc-chat-messages {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 1rem 0;
-  margin-bottom: 2rem;
+  padding: 1rem;
+  padding-bottom: 8rem;
+  /* Space for fixed input */
 }
 
 .pc-message-row {
@@ -328,4 +339,20 @@
   .pc-content-side {
     padding: 1rem;
   }
+
+  .pc-input-wrapper {
+    max-width: calc(100% - 2rem);
+    bottom: 1rem;
+  }
+
+  .pc-chat-messages {
+    padding-bottom: 6rem;
+    /* Reduce space on mobile */
+  }
+}
+
+/* Adjustments when sidebar is hidden (triage mode) */
+.triage-mode .pc-input-wrapper {
+  /* Input stays centered even when sidebar animates out */
+  left: 50%;
 }

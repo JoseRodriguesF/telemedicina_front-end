@@ -42,7 +42,20 @@ export type AgendarConsultaResponse = {
 };
 
 export async function agendarConsulta(payload: AgendarConsultaPayload, token: string): Promise<AgendarConsultaResponse> {
-  const res = await axios.post('/api/consultas/agendar', payload, {
+  // Combinar data_consulta e hora_inicio em um DateTime ISO-8601 completo
+  // Prisma espera DateTime, não apenas hora
+  const { data_consulta, hora_inicio, ...rest } = payload;
+
+  // Combinar data (YYYY-MM-DD) com hora (HH:mm) para criar DateTime ISO
+  const dateTimeString = `${data_consulta}T${hora_inicio}:00.000Z`;
+
+  const transformedPayload = {
+    ...rest,
+    data_consulta: data_consulta, // Mantém a data
+    hora_inicio: dateTimeString,  // ✅ Agora é DateTime completo: "2026-01-23T13:00:00.000Z"
+  };
+
+  const res = await axios.post('/api/consultas/agendar', transformedPayload, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`
