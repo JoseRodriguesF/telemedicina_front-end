@@ -12,6 +12,7 @@ import { getUser, getUserFirstName, getToken, clearUser } from '@/lib/auth';
 import { psListActiveRooms, psGetFullHistory, PSFullHistoryItem, getConsultasAgendadas, ConsultaAgendada, cancelarConsulta } from '@/lib/axios/consultas';
 import FrequencyChart from '@/components/dashboard/FrequencyChart';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
+import { useConsultationTimer } from '@/hooks/useConsultationTimer';
 
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
@@ -43,7 +44,10 @@ export default function InicioPage() {
   const [cancelingAppointment, setCancelingAppointment] = useState(false);
 
   /* Logic to check if "Entrar na Sala" should be enabled (e.g., 5 min before) */
-  const canEnterRoom = true;
+  const { canJoin: canEnterRoom, timeRemaining: timerText } = useConsultationTimer(
+    nextAppointment?.data_consulta || '',
+    nextAppointment?.hora_inicio || ''
+  );
 
   const handleCancelAppointment = () => {
     if (!nextAppointment) return;
@@ -395,8 +399,8 @@ export default function InicioPage() {
                     </button>
                   </div>
                 </div>
-                <div className="dash-card-footer" style={{ textAlign: 'center', marginTop: 'auto' }}>
-                  Esteja pronto 5 min antes.
+                <div className="dash-card-footer" style={{ textAlign: 'center', marginTop: 'auto', fontWeight: 500 }}>
+                  {timerText}
                 </div>
               </>
             ) : (

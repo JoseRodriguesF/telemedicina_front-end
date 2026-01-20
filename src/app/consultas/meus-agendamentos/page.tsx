@@ -13,6 +13,7 @@ import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
+import { AppointmentActionButtons } from '@/components/appointments/AppointmentActionButtons';
 
 export default function MeusAgendamentosPage() {
     const router = useRouter();
@@ -269,42 +270,17 @@ export default function MeusAgendamentosPage() {
                                             </span>
                                         </div>
 
-                                        <div className="history-item-actions" style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
-                                            {item.status === 'solicitada' && (
-                                                <button
-                                                    className="btn primary"
-                                                    style={{ padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', fontSize: '0.9rem' }}
-                                                    onClick={() => handleConfirmarConsulta(item.id)}
-                                                    disabled={confirmingIds.has(item.id)}
-                                                >
-                                                    {confirmingIds.has(item.id) ? 'Confirmando...' : 'Confirmar'}
-                                                </button>
-                                            )}
-                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                <button
-                                                    className={`btn ${item.status === 'solicitada' ? 'ghost' : 'primary'}`}
-                                                    style={{ padding: '0.4rem 1rem', borderRadius: 'var(--radius-md)', fontSize: '0.9rem', flex: 1 }}
-                                                    onClick={() => router.push(`/consultas/atendimento?id=${item.id}&scheduled=true`)}
-                                                    disabled={item.status === 'solicitada'}
-                                                >
-                                                    Atender
-                                                </button>
-                                                <button
-                                                    className="btn ghost"
-                                                    style={{
-                                                        padding: '0.4rem 1rem',
-                                                        borderRadius: 'var(--radius-md)',
-                                                        fontSize: '0.9rem',
-                                                        color: 'var(--color-error)',
-                                                        borderColor: 'var(--color-error)'
-                                                    }}
-                                                    onClick={() => handleCancelarConsulta(item.id, item.paciente.nome_completo)}
-                                                    disabled={confirmingIds.has(item.id)}
-                                                >
-                                                    Cancelar
-                                                </button>
-                                            </div>
-                                        </div>
+                                        <AppointmentActionButtons
+                                            id={item.id}
+                                            data={item.data_consulta}
+                                            hora={item.hora_inicio}
+                                            status={item.status}
+                                            pacienteNome={item.paciente.nome_completo}
+                                            isConfirming={confirmingIds.has(item.id)}
+                                            onConfirm={handleConfirmarConsulta}
+                                            onCancel={handleCancelarConsulta}
+                                            onAttend={(id) => router.push(`/consultas/atendimento?id=${id}&scheduled=true`)}
+                                        />
                                     </div>
                                 ))
                             ) : (

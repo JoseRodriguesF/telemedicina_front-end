@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
 import { getConsultasAgendadas, ConsultaAgendada } from '@/lib/axios/consultas';
+import { MiniAppointmentCard } from '@/components/appointments/MiniAppointmentCard';
 
 export default function ConsultasPage() {
   const router = useRouter();
@@ -49,43 +50,7 @@ export default function ConsultasPage() {
     }
   }, []);
 
-  const getMonthAbbreviation = (dateStr: string) => {
-    const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 
-    // Se for YYYY-MM-DD, fazer parse direto
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      const [, month] = dateStr.split('-');
-      return months[parseInt(month) - 1];
-    }
-
-    const date = new Date(dateStr);
-    return months[date.getMonth()];
-  };
-
-  const getDay = (dateStr: string) => {
-    // Se for YYYY-MM-DD, fazer parse direto
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      const [, , day] = dateStr.split('-');
-      return day;
-    }
-
-    const date = new Date(dateStr);
-    return String(date.getDate()).padStart(2, '0');
-  };
-
-  const formatTime = (timeString: string) => {
-    try {
-      if (timeString.includes('T')) {
-        return new Date(timeString).toLocaleTimeString('pt-BR', {
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-      }
-      return timeString.substring(0, 5);
-    } catch (e) {
-      return timeString;
-    }
-  };
 
   return (
     <div className="inicio-page">
@@ -164,22 +129,12 @@ export default function ConsultasPage() {
                 </div>
               ) : scheduledAppointments.length > 0 ? (
                 scheduledAppointments.map(appt => (
-                  <div key={appt.id} className="appointment-mini-card">
-                    <div className="appt-date-box">
-                      <span className="day">{getDay(appt.data_consulta)}</span>
-                      <span className="month">{getMonthAbbreviation(appt.data_consulta)}</span>
-                    </div>
-                    <div className="appt-details">
-                      <h4>{isMedico ? appt.paciente.nome_completo : appt.medico.nome_completo}</h4>
-                      <p>{isMedico ? 'Paciente' : 'Médico'} • {formatTime(appt.hora_inicio)}</p>
-                      <span className="badge success" style={{ marginTop: '0.5rem', display: 'inline-block' }}>{appt.status.charAt(0).toUpperCase() + appt.status.slice(1)}</span>
-                    </div>
-                    <button
-                      className="btn ghost"
-                      style={{ fontSize: '1.2rem', padding: '0.5rem' }}
-                      onClick={() => router.push(`/consultas/atendimento?id=${appt.id}&scheduled=true`)}
-                    >→</button>
-                  </div>
+                  <MiniAppointmentCard
+                    key={appt.id}
+                    appointment={appt}
+                    isMedico={isMedico}
+                    onAttend={(id) => router.push(`/consultas/atendimento?id=${id}&scheduled=true`)}
+                  />
                 ))
               ) : (
                 <div className="appointment-mini-card">
