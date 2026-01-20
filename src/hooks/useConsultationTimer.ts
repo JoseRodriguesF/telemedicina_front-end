@@ -153,8 +153,17 @@ export function useConsultationTimer(dateStr: string, timeStr: string) {
                         const ss = String(seconds).padStart(2, '0');
                         setTimeRemaining(`Libera em: ${hh}:${mm}:${ss}`);
                     } else {
-                        const days = Math.ceil(diffToUnlock / (1000 * 60 * 60 * 24));
-                        setTimeRemaining(days === 1 ? 'Amanhã' : `Faltam ${days} dias`);
+                        // Calcular dias até a consulta (não até o unlock)
+                        // Usar minutesUntilStart que é a diferença até o início da consulta
+                        const daysUntilConsultation = Math.floor(minutesUntilStart / (60 * 24));
+
+                        if (daysUntilConsultation === 0) {
+                            setTimeRemaining('Amanhã');
+                        } else if (daysUntilConsultation === 1) {
+                            setTimeRemaining('Amanhã');
+                        } else {
+                            setTimeRemaining(`Faltam ${daysUntilConsultation} dias`);
+                        }
                     }
                 } else {
                     // Caso edge: diffToUnlock <= 0 significa que já passou do unlock time
