@@ -82,12 +82,22 @@ export function useConsultationTimer(dateStr: string, timeStr: string) {
             // Minutos até o inicio
             const minutesUntilStart = diffMs / (1000 * 60);
 
+            // Debug: Log para verificar valores
+            console.log('🔍 Timer Debug:', {
+                dateStr,
+                timeStr,
+                targetDate: targetDate.toISOString(),
+                now: now.toISOString(),
+                minutesUntilStart: minutesUntilStart.toFixed(2),
+                diffMs
+            });
+
             // A sala abre 5 minutos antes
             const UNLOCK_MINUTES = 5;
 
             // Permitir entrar se:
             // 1. Faltam 5 minutos ou menos para começar (minutesUntilStart <= 5)
-            // 2. A consulta já começou (minutesUntilStart < 0) mas não passou muito tempo (ex: até 2h depois)
+            // 2. A consulta já começou (minutesUntilStart < 0) mas não passou muito tempo (ex: até 15 min depois)
             const MAX_MINUTES_AFTER_START = 15; // 15 minutos
             const isAvailable = minutesUntilStart <= UNLOCK_MINUTES && minutesUntilStart >= -MAX_MINUTES_AFTER_START;
 
@@ -98,15 +108,21 @@ export function useConsultationTimer(dateStr: string, timeStr: string) {
             const isSameDay = today.toDateString() === targetDate.toDateString();
             setIsToday(isSameDay);
 
+            // Lógica de mensagem:
+            // 1. Se está disponível para entrar (5 min antes até 15 min depois)
             if (isAvailable) {
                 if (minutesUntilStart <= 0) {
                     setTimeRemaining('Consulta em andamento');
                 } else {
                     setTimeRemaining('Consulta liberada');
                 }
-            } else if (minutesUntilStart < -MAX_MINUTES_AFTER_START) {
+            }
+            // 2. Se a consulta JÁ PASSOU e expirou (mais de 15 min depois)
+            else if (minutesUntilStart < -MAX_MINUTES_AFTER_START) {
                 setTimeRemaining('Consulta expirada');
-            } else {
+            }
+            // 3. Se é uma consulta FUTURA (ainda não está na janela de 5 min antes)
+            else {
                 // Calcular tempo para LIBERAR (Start - 5 min)
                 const unlockDate = new Date(targetDate.getTime() - (UNLOCK_MINUTES * 60 * 1000));
                 const diffToUnlock = unlockDate.getTime() - now.getTime();
@@ -127,6 +143,8 @@ export function useConsultationTimer(dateStr: string, timeStr: string) {
                         setTimeRemaining(days === 1 ? 'Amanhã' : `Faltam ${days} dias`);
                     }
                 } else {
+                    // Caso edge: diffToUnlock <= 0 significa que já passou do unlock time
+                    // mas minutesUntilStart > UNLOCK_MINUTES (não deveria acontecer)
                     setTimeRemaining('Aguarde...');
                 }
             }
