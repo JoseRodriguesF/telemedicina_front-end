@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/styles/globals.css";
 
@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://telemedicina-jj.com.br"),
   title: {
     default: "Telemedicina JJ - Consultas Online com Especialistas",
     template: "%s | Telemedicina JJ"
@@ -48,12 +49,13 @@ export const metadata: Metadata = {
     description: "Consultas médicas online rápidas e seguras.",
     images: ["/twitter-image.jpg"],
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-  },
-  themeColor: "#007bff", // Cor primária da marca
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#007bff",
 };
 
 export default function RootLayout({
