@@ -88,7 +88,7 @@ export function useConsultationTimer(dateStr: string, timeStr: string) {
             // Permitir entrar se:
             // 1. Faltam 5 minutos ou menos para começar (minutesUntilStart <= 5)
             // 2. A consulta já começou (minutesUntilStart < 0) mas não passou muito tempo (ex: até 2h depois)
-            const MAX_MINUTES_AFTER_START = 120; // 2 horas
+            const MAX_MINUTES_AFTER_START = 15; // 15 minutos
             const isAvailable = minutesUntilStart <= UNLOCK_MINUTES && minutesUntilStart >= -MAX_MINUTES_AFTER_START;
 
             setCanJoin(isAvailable);
