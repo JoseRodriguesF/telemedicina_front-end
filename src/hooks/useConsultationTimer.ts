@@ -23,41 +23,55 @@ export function useConsultationTimer(dateStr: string, timeStr: string) {
         // Função auxiliar para criar data seguramente
         const getTargetDate = () => {
             try {
-                // Se timeStr já for ISO completo (contém 'T')
-                if (timeStr.includes('T')) {
-                    const date = new Date(timeStr);
-                    if (isNaN(date.getTime())) {
-                        console.error('Data inválida (ISO):', timeStr);
-                        return null;
-                    }
-                    return date;
+                // Variáveis para armazenar data e hora extraídas
+                let finalDateStr = dateStr;
+                let finalTimeStr = timeStr;
+
+                // Se dateStr é uma string ISO completa (contém 'T'), extrair apenas a parte da data
+                if (dateStr.includes('T')) {
+                    const datePart = dateStr.split('T')[0];
+                    finalDateStr = datePart; // Ex: "2026-01-23"
+                    console.log('📅 Extraída data de ISO:', { original: dateStr, extracted: finalDateStr });
                 }
 
-                // Garantir que dateStr está no formato YYYY-MM-DD
-                if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                    console.error('Formato de data inválido:', dateStr);
+                // Se timeStr é uma string ISO completa (contém 'T'), extrair apenas a parte da hora
+                if (timeStr.includes('T')) {
+                    // Ex: "1970-01-01T15:00:00.000Z" -> pegar "15:00:00"
+                    const timePart = timeStr.split('T')[1]?.split('.')[0] || timeStr.split('T')[1];
+                    finalTimeStr = timePart.replace('Z', ''); // Ex: "15:00:00"
+                    console.log('⏰ Extraída hora de ISO:', { original: timeStr, extracted: finalTimeStr });
+                }
+
+                // Garantir que finalDateStr está no formato YYYY-MM-DD
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(finalDateStr)) {
+                    console.error('Formato de data inválido:', finalDateStr);
                     return null;
                 }
 
-                // timeStr pode ser "HH:mm", "HH:mm:ss" ou "HH:mm:ss.sss"
-                // Normalizar para HH:mm:ss
-                let normalizedTime = timeStr;
-                if (timeStr.length === 5) {
+                // Normalizar hora para HH:mm:ss
+                let normalizedTime = finalTimeStr;
+                if (finalTimeStr.length === 5) {
                     // HH:mm -> HH:mm:00
-                    normalizedTime = `${timeStr}:00`;
-                } else if (timeStr.includes('.')) {
+                    normalizedTime = `${finalTimeStr}:00`;
+                } else if (finalTimeStr.includes('.')) {
                     // HH:mm:ss.sss -> HH:mm:ss
-                    normalizedTime = timeStr.split('.')[0];
+                    normalizedTime = finalTimeStr.split('.')[0];
                 }
 
                 // Combinar data e hora em formato ISO local
-                const dateTimeStr = `${dateStr}T${normalizedTime}`;
+                const dateTimeStr = `${finalDateStr}T${normalizedTime}`;
                 const date = new Date(dateTimeStr);
 
                 if (isNaN(date.getTime())) {
-                    console.error('Data combinada inválida:', { dateStr, timeStr, dateTimeStr });
+                    console.error('Data combinada inválida:', { finalDateStr, finalTimeStr, dateTimeStr });
                     return null;
                 }
+
+                console.log('✅ Data processada com sucesso:', {
+                    input: { dateStr, timeStr },
+                    processed: { finalDateStr, normalizedTime },
+                    result: date.toISOString()
+                });
 
                 return date;
             } catch (e) {
