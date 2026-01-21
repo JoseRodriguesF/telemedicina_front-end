@@ -7,7 +7,9 @@ import '@/components/common/Inputs/input.css';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import Button from '@/components/common/Buttons/Button';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useState, useRef, useEffect } from 'react';
+import { Suspense, useState, useRef, useEffect, useCallback } from 'react';
+import type { ChatIAResponse, ChatHistory, ChatMessage as ChatMsg } from '@/types/chat';
+
 
 // Função simples para converter markdown básico em HTML seguro
 function formatIaText(text: string): string {
@@ -36,8 +38,6 @@ import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate } from '@/lib/utils/dateFormatters';
 
-// Tipo para o histórico que será enviado ao backend
-type ChatHistory = Array<{ role: 'user' | 'assistant'; content: string }>;
 
 function PreConsultaInner() {
   const router = useRouter();
@@ -46,9 +46,9 @@ function PreConsultaInner() {
   const flow = searchParams.get('flow'); // 'agendamento' or null (PS)
   const dateStr = searchParams.get('date');
   const timeStr = searchParams.get('time');
-  // Chat types
-  type ChatMessage = { author: 'Você' | 'Sistema' | 'Angélica'; text: string };
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  // Estados do chat (usando tipos importados de @/types/chat)
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
   // Histórico para o backend
   const [history, setHistory] = useState<ChatHistory>([]);
   const [draft, setDraft] = useState('');
@@ -59,7 +59,7 @@ function PreConsultaInner() {
   const [showWelcome, setShowWelcome] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const messagesToHistory = (msgs: ChatMessage[]): ChatHistory => {
+  const messagesToHistory = (msgs: ChatMsg[]): ChatHistory => {
     return msgs
       .filter(m => m.author === 'Você' || m.author === 'Angélica')
       .map(m => ({
@@ -86,7 +86,7 @@ function PreConsultaInner() {
 
     let currentMessages = messages;
     if (!hidden) {
-      const userMsg: ChatMessage = { author: 'Você', text: t };
+      const userMsg: ChatMsg = { author: 'Você', text: t };
       setMessages(prev => [...prev, userMsg]);
       currentMessages = [...messages, userMsg];
     }
@@ -121,7 +121,7 @@ function PreConsultaInner() {
         throw new Error(txt || 'Erro ao contactar a IA');
       }
 
-      const data = await res.json();
+      const data: ChatIAResponse = await res.json();
       const answer = String(data?.answer ?? 'Sem resposta da IA.');
 
       setMessages(prev => [...prev, { author: 'Angélica', text: answer }]);
@@ -133,6 +133,13 @@ function PreConsultaInner() {
 
       if (data?.completed === true) {
         setCompleted(true);
+
+        // Log informações sobre o salvamento da história clínica
+        if (data?.historiaClinicaSalva) {
+          console.log('História clínica salva com sucesso. ID:', data?.historiaClinicaId);
+        } else if (data?.erro) {
+          console.warn('Aviso: Triagem concluída mas história clínica não foi salva:', data?.erro);
+        }
       }
     } catch (err: any) {
       const msg = String(err?.message ?? 'Erro desconhecido ao chamar a IA');
@@ -143,7 +150,7 @@ function PreConsultaInner() {
     }
   }
 
-  async function handleEnviar() {
+  const handleEnviar = useCallback(async () => {
     const token = getToken();
     const user = getUser();
     if (user?.tipo_usuario !== 'paciente') {
@@ -175,7 +182,7 @@ function PreConsultaInner() {
         }
       }
     }
-  }
+  }, [flow, dateStr, timeStr, modal, router]);
 
   // Scroll automático do chat
   useEffect(() => {
@@ -191,7 +198,7 @@ function PreConsultaInner() {
       // Create room automatically after completion logic
       handleEnviar();
     }
-  }, [completed]);
+  }, [completed, handleEnviar]);
 
   // ✅ Limpar histórico ao sair da tela (desmontar componente)
   useEffect(() => {
