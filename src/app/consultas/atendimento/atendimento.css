@@ -547,13 +547,12 @@
    ============================================ */
 
 .atendimento-container.medico-layout {
-    grid-template-columns: 300px minmax(400px, 600px) 300px;
+    grid-template-columns: 1fr minmax(350px, 500px) 1fr;
     gap: 1rem;
-    justify-content: center;
 }
 
 .atendimento-container.medico-layout.full-width {
-    grid-template-columns: 300px minmax(400px, 600px) 300px;
+    grid-template-columns: 1fr minmax(350px, 500px) 1fr;
 }
 
 /* Painéis Laterais */
