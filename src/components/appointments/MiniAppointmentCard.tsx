@@ -43,8 +43,11 @@ export function MiniAppointmentCard({ appointment: appt, isMedico, onAttend }: M
         }
     };
 
+    const isSolicitada = appt.status === 'solicitada';
+    const effectiveCanJoin = canJoin && !isSolicitada;
+
     return (
-        <div className="appointment-mini-card" style={{ opacity: (!canJoin && isToday) ? 0.9 : 1 }}>
+        <div className="appointment-mini-card" style={{ opacity: (!effectiveCanJoin && isToday && !isSolicitada) ? 0.9 : 1 }}>
             <div className="appt-date-box">
                 <span className="day">{getDay(appt.data_consulta)}</span>
                 <span className="month">{getMonthAbbreviation(appt.data_consulta)}</span>
@@ -53,7 +56,7 @@ export function MiniAppointmentCard({ appointment: appt, isMedico, onAttend }: M
                 <h4>{isMedico ? appt.paciente.nome_completo : appt.medico.nome_completo}</h4>
                 <p>
                     {isMedico ? 'Paciente' : 'Médico'} • {formatTime(appt.hora_inicio)}
-                    {!canJoin && isToday && (
+                    {!effectiveCanJoin && isToday && !isSolicitada && (
                         <span style={{
                             display: 'block',
                             fontSize: '0.75rem',
@@ -64,24 +67,30 @@ export function MiniAppointmentCard({ appointment: appt, isMedico, onAttend }: M
                             {timeRemaining}
                         </span>
                     )}
+                    {isSolicitada && (
+                        <span style={{
+                            display: 'block',
+                            fontSize: '0.75rem',
+                            color: 'var(--color-warning)', // Assumindo var de warning
+                            fontWeight: 600,
+                            marginTop: '2px'
+                        }}>
+                            Aguardando confirmação
+                        </span>
+                    )}
                 </p>
-                <span className="badge success" style={{ marginTop: '0.5rem', display: 'inline-block' }}>
+                <span
+                    className={`badge ${isSolicitada ? 'warning' : 'success'}`}
+                    style={{
+                        marginTop: '0.5rem',
+                        display: 'inline-block',
+                        backgroundColor: isSolicitada ? 'var(--color-warning-100, #fef3c7)' : undefined,
+                        color: isSolicitada ? 'var(--color-warning-800, #92400e)' : undefined
+                    }}
+                >
                     {appt.status.charAt(0).toUpperCase() + appt.status.slice(1)}
                 </span>
             </div>
-            <button
-                className={`btn ${canJoin ? 'primary' : 'ghost'}`}
-                style={{
-                    fontSize: canJoin ? '0.9rem' : '1.2rem',
-                    padding: canJoin ? '0.5rem 1rem' : '0.5rem',
-                    minWidth: canJoin ? '80px' : 'auto'
-                }}
-                onClick={() => onAttend(appt.id)}
-                disabled={!canJoin}
-                title={!canJoin ? timeRemaining : 'Entrar na sala'}
-            >
-                {canJoin ? 'Entrar' : '→'}
-            </button>
         </div>
     );
 }

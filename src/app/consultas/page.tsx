@@ -30,7 +30,7 @@ export default function ConsultasPage() {
         .then((data) => {
           // Filtrar apenas agendadas e ordenar por data mais próxima
           const filtered = data
-            .filter(c => c.status === 'agendada')
+            .filter(c => c.status === 'agendada' || c.status === 'solicitada')
             .sort((a, b) => {
               const getTimestamp = (c: ConsultaAgendada) => {
                 if (c.hora_inicio.includes('T')) {
