@@ -94,12 +94,22 @@
 }
 
 .appointments-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    display: flex;
+    overflow-x: auto;
     gap: 1.25rem;
+    padding-bottom: 0.5rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.appointments-list::-webkit-scrollbar {
+    display: none;
 }
 
 .appointment-mini-card {
+    min-width: 350px;
+    flex-shrink: 0;
+    /* ... existing styles below ... */
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: var(--radius-xl);
