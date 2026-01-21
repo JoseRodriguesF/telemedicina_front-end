@@ -132,6 +132,7 @@ function PreConsultaInner() {
       ]);
 
       if (data?.completed === true) {
+        console.log('[DEBUG] Triagem concluída! Setando completed=true');
         setCompleted(true);
       }
     } catch (err: any) {
@@ -144,9 +145,13 @@ function PreConsultaInner() {
   }
 
   async function handleEnviar() {
+    console.log('[DEBUG] handleEnviar chamado!');
     const token = getToken();
     const user = getUser();
+    console.log('[DEBUG] User:', user);
+    console.log('[DEBUG] Token:', token ? 'Presente' : 'Ausente');
     if (user?.tipo_usuario !== 'paciente') {
+      console.log('[DEBUG] Usuário não é paciente:', user?.tipo_usuario);
       modal.error('Acesso Negado', 'Apenas pacientes podem iniciar consultas no pronto socorro. (forbidden_only_paciente_can_create_room)');
       return;
     }
@@ -187,7 +192,9 @@ function PreConsultaInner() {
 
   // Navegação automática ao completed
   useEffect(() => {
+    console.log('[DEBUG] useEffect completed disparado. completed=', completed);
     if (completed) {
+      console.log('[DEBUG] Completed é true! Chamando handleEnviar...');
       // Create room automatically after completion logic
       handleEnviar();
     }
