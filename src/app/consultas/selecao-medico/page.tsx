@@ -28,6 +28,7 @@ function SelecaoMedicoInner() {
     const searchParams = useSearchParams();
     const date = searchParams.get('date');
     const time = searchParams.get('time');
+    const historiaId = searchParams.get('historiaId');
     const modal = useModal();
 
     const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -86,7 +87,8 @@ function SelecaoMedicoInner() {
                 medico_id: doc.id,
                 paciente_id: user.id,
                 data_consulta: date,
-                hora_inicio: time
+                hora_inicio: time,
+                historiaClinicaId: historiaId ? Number(historiaId) : undefined
             };
             await agendarConsulta(payload, token);
 

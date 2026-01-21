@@ -45,6 +45,7 @@ export type AgendarConsultaPayload = {
   paciente_id: number;
   data_consulta: string; // format: YYYY-MM-DD or DD/MM/YYYY
   hora_inicio: string; // format: HH:mm
+  historiaClinicaId?: number;
 };
 
 export type AgendarConsultaResponse = {
@@ -81,139 +82,13 @@ export async function agendarConsulta(payload: AgendarConsultaPayload, token: st
     throw new ApiError(err);
   }
 }
-
-/**
- * Confirm a requested appointment (change status from 'solicitada' to 'agendada')
- * PATCH /api/consultas/:id/confirmar
- */
-export async function confirmarConsulta(consultaId: number, token: string): Promise<{ ok: boolean; message?: string }> {
-  try {
-    const res = await axios.patch(`/api/consultas/${consultaId}/confirmar`, {}, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return res.data as { ok: boolean; message?: string };
-  } catch (err) {
-    throw new ApiError(err);
-  }
-}
-
-/**
- * Cancel an appointment
- * DELETE /api/consultas/:id
- */
-export async function cancelarConsulta(consultaId: number, token: string): Promise<{ ok: boolean; message?: string }> {
-  try {
-    const res = await axios.delete(`/api/consultas/${consultaId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return res.data as { ok: boolean; message?: string };
-  } catch (err) {
-    throw new ApiError(err);
-  }
-}
-
-// Buscar salas em andamento (consultas ativas)
-export type PSActiveRoom = {
-  consultaId: string;
-  pacienteId: string;
-  medicoId: string;
-  roomId: string;
-  createdAt: number;
-  status: 'in_progress';
-  pacienteNome?: string;
-  medicoNome?: string;
-};
-
-export async function psListActiveRooms(token: string, userId?: string): Promise<PSActiveRoom[]> {
-  try {
-    const url = userId ? `/api/ps/salas-em-andamento?userId=${userId}` : '/api/ps/salas-em-andamento';
-    const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
-    return res.data as PSActiveRoom[];
-  } catch (err) {
-    throw new ApiError(err);
-  }
-}
-
+// Pronto Socorro (PS) endpoints
 export type IceServer = {
   urls: string[];
   username?: string;
   credential?: string;
 };
 
-export type RoomResponse = {
-  roomId: string;
-  iceServers: IceServer[];
-};
-
-export type JoinPayload = {
-  userId: number;
-  role: 'medico' | 'paciente';
-};
-
-export type ParticipantsResponse = {
-  roomId: string;
-  participants: Array<JoinPayload>;
-};
-
-export type WaitingConsulta = {
-  id: string; // consultaId
-  nome: string; // nome do paciente
-  status: 'aguardando' | 'em_consulta' | 'concluido' | 'cancelado';
-  prioridade?: 'alta' | 'normal' | 'baixa';
-};
-
-export async function listWaitingConsultas(token: string): Promise<WaitingConsulta[]> {
-  try {
-    const res = await axios.get('/api/consultas/aguardando', { headers: { Authorization: `Bearer ${token}` } });
-    return res.data as WaitingConsulta[];
-  } catch (err) {
-    throw new ApiError(err);
-  }
-}
-
-export async function getRoom(consultaId: string, token: string): Promise<RoomResponse> {
-  try {
-    const res = await axios.post(`/api/consultas/${consultaId}/room`, {}, { headers: { Authorization: `Bearer ${token}` } });
-    return res.data as RoomResponse;
-  } catch (err) {
-    throw new ApiError(err);
-  }
-}
-
-export async function joinRoom(consultaId: string, payload: JoinPayload, token: string): Promise<ParticipantsResponse> {
-  try {
-    const res = await axios.post(`/api/consultas/${consultaId}/join`, payload, { headers: { Authorization: `Bearer ${token}` } });
-    return res.data as ParticipantsResponse;
-  } catch (err) {
-    throw new ApiError(err);
-  }
-}
-
-export async function listParticipants(consultaId: string, token: string): Promise<ParticipantsResponse> {
-  try {
-    const res = await axios.get(`/api/consultas/${consultaId}/participants`, { headers: { Authorization: `Bearer ${token}` } });
-    return res.data as ParticipantsResponse;
-  } catch (err) {
-    throw new ApiError(err);
-  }
-}
-
-export async function endConsulta(
-  consultaId: string,
-  token: string,
-  hora_fim?: string
-): Promise<{ ok: boolean }> {
-  try {
-    const body: Record<string, any> = {};
-    if (hora_fim) body.hora_fim = hora_fim;
-    const res = await axios.post(`/api/consultas/${consultaId}/end`, body, { headers: { Authorization: `Bearer ${token}` } });
-    return res.data as { ok: boolean };
-  } catch (err) {
-    throw new ApiError(err);
-  }
-}
-
-// Pronto Socorro (PS) endpoints
 export type PSFilaItem = {
   consultaId: string;
   pacienteId: string;
@@ -234,6 +109,7 @@ export async function psCreateRoom(
     data_consulta?: string;
     hora_inicio?: string;
     hora_fim?: string;
+    historiaClinicaId?: number;
   }
 ): Promise<PSRoomResponse> {
   try {
@@ -241,6 +117,7 @@ export async function psCreateRoom(
     if (options?.data_consulta) body.data_consulta = options.data_consulta;
     if (options?.hora_inicio) body.hora_inicio = options.hora_inicio;
     if (options?.hora_fim) body.hora_fim = options.hora_fim;
+    if (options?.historiaClinicaId) body.historiaClinicaId = options.historiaClinicaId;
     const res = await axios.post(`/api/ps/rooms`, body, { headers: { Authorization: `Bearer ${token}` } });
     return res.data as PSRoomResponse;
   } catch (err) {

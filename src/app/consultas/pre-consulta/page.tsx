@@ -55,6 +55,7 @@ function PreConsultaInner() {
   const [isLoading, setIsLoading] = useState(false);
   const [iaTyping, setIaTyping] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [historiaClinicaId, setHistoriaClinicaId] = useState<number | undefined>(undefined);
   const [isTriageStarted, setIsTriageStarted] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -122,11 +123,11 @@ function PreConsultaInner() {
       }
 
       const data: ChatIAResponse = await res.json();
-      console.log('[DEBUG] Resposta completa da API:', data);
-      console.log('[DEBUG] data.completed:', data?.completed, 'tipo:', typeof data?.completed);
-      console.log('[DEBUG] data.answer:', data?.answer);
-
       const answer = String(data?.answer ?? 'Sem resposta da IA.');
+
+      if (data.historiaClinicaId) {
+        setHistoriaClinicaId(data.historiaClinicaId);
+      }
 
       setMessages(prev => [...prev, { author: 'Angélica', text: answer }]);
       setHistory(prev => [
@@ -136,10 +137,7 @@ function PreConsultaInner() {
       ]);
 
       if (data?.completed === true) {
-        console.log('[DEBUG] Triagem concluída! Setando completed=true');
         setCompleted(true);
-      } else {
-        console.log('[DEBUG] Triagem NÃO concluída. completed=', data?.completed);
       }
     } catch (err: any) {
       const msg = String(err?.message ?? 'Erro desconhecido ao chamar a IA');
@@ -151,13 +149,9 @@ function PreConsultaInner() {
   }
 
   async function handleEnviar() {
-    console.log('[DEBUG] handleEnviar chamado!');
     const token = getToken();
     const user = getUser();
-    console.log('[DEBUG] User:', user);
-    console.log('[DEBUG] Token:', token ? 'Presente' : 'Ausente');
     if (user?.tipo_usuario !== 'paciente') {
-      console.log('[DEBUG] Usuário não é paciente:', user?.tipo_usuario);
       modal.error('Acesso Negado', 'Apenas pacientes podem iniciar consultas no pronto socorro. (forbidden_only_paciente_can_create_room)');
       return;
     }
@@ -167,12 +161,21 @@ function PreConsultaInner() {
     }
     if (token) {
       if (flow === 'agendamento') {
-        router.push(`/consultas/selecao-medico?date=${encodeURIComponent(dateStr || '')}&time=${encodeURIComponent(timeStr || '')}`);
+        const queryParams = new URLSearchParams({
+          date: dateStr || '',
+          time: timeStr || ''
+        });
+        if (historiaClinicaId) {
+          queryParams.append('historiaId', String(historiaClinicaId));
+        }
+        router.push(`/consultas/selecao-medico?${queryParams.toString()}`);
         return;
       }
 
       try {
-        const { roomId, consultaId, iceServers } = await psCreateRoom(token);
+        const { roomId, consultaId, iceServers } = await psCreateRoom(token, {
+          historiaClinicaId
+        });
         sessionStorage.setItem('ps_room', JSON.stringify({ roomId, consultaId, iceServers }));
         router.push(`/consultas/atendimento?id=${encodeURIComponent(consultaId)}`);
       } catch (err: any) {
@@ -198,9 +201,7 @@ function PreConsultaInner() {
 
   // Navegação automática ao completed
   useEffect(() => {
-    console.log('[DEBUG] useEffect completed disparado. completed=', completed);
     if (completed) {
-      console.log('[DEBUG] Completed é true! Chamando handleEnviar...');
       // Create room automatically after completion logic
       handleEnviar();
     }
