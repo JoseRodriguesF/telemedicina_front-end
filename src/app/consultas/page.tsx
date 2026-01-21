@@ -31,15 +31,6 @@ export default function ConsultasPage() {
           // Filtrar apenas agendadas e ordenar por data mais próxima
           const filtered = data
             .filter(c => c.status === 'agendada' || c.status === 'solicitada')
-            .sort((a, b) => {
-              const getTimestamp = (c: ConsultaAgendada) => {
-                if (c.hora_inicio.includes('T')) {
-                  return new Date(c.hora_inicio).getTime();
-                }
-                return new Date(`${c.data_consulta}T${c.hora_inicio}`).getTime();
-              };
-              return getTimestamp(a) - getTimestamp(b);
-            })
             .slice(0, 3); // Máximo 3 cards
           setScheduledAppointments(filtered);
         })
