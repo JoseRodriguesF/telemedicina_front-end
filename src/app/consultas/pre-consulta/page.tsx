@@ -7,7 +7,7 @@ import '@/components/common/Inputs/input.css';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import Button from '@/components/common/Buttons/Button';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useState, useRef, useEffect, useCallback } from 'react';
+import { Suspense, useState, useRef, useEffect } from 'react';
 import type { ChatIAResponse, ChatHistory, ChatMessage as ChatMsg } from '@/types/chat';
 
 
@@ -133,13 +133,6 @@ function PreConsultaInner() {
 
       if (data?.completed === true) {
         setCompleted(true);
-
-        // Log informações sobre o salvamento da história clínica
-        if (data?.historiaClinicaSalva) {
-          console.log('História clínica salva com sucesso. ID:', data?.historiaClinicaId);
-        } else if (data?.erro) {
-          console.warn('Aviso: Triagem concluída mas história clínica não foi salva:', data?.erro);
-        }
       }
     } catch (err: any) {
       const msg = String(err?.message ?? 'Erro desconhecido ao chamar a IA');
@@ -150,7 +143,7 @@ function PreConsultaInner() {
     }
   }
 
-  const handleEnviar = useCallback(async () => {
+  async function handleEnviar() {
     const token = getToken();
     const user = getUser();
     if (user?.tipo_usuario !== 'paciente') {
@@ -182,7 +175,7 @@ function PreConsultaInner() {
         }
       }
     }
-  }, [flow, dateStr, timeStr, modal, router]);
+  }
 
   // Scroll automático do chat
   useEffect(() => {
@@ -198,7 +191,8 @@ function PreConsultaInner() {
       // Create room automatically after completion logic
       handleEnviar();
     }
-  }, [completed, handleEnviar]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completed]);
 
   // ✅ Limpar histórico ao sair da tela (desmontar componente)
   useEffect(() => {
