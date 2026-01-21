@@ -93,6 +93,13 @@
     animation: fadeIn 0.8s ease-out;
 }
 
+/* Wrapper para posicionamento relativo das setas */
+.appointments-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
 .appointments-list {
     display: flex;
     overflow-x: auto;
@@ -100,6 +107,51 @@
     padding-bottom: 0.5rem;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    scroll-behavior: smooth;
+    /* Rolagem suave */
+    width: 100%;
+    /* Garantir que ocupe o espaço */
+}
+
+.scroll-btn {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-primary);
+    /* Fundo sólido para cobrir cards */
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    opacity: 0.9;
+}
+
+.scroll-btn:hover {
+    background: var(--bg-secondary);
+    transform: scale(1.05);
+    opacity: 1;
+}
+
+.scroll-btn.left {
+    left: -20px;
+}
+
+.scroll-btn.right {
+    right: -20px;
+}
+
+/* Ocultar setas em mobile se preferir, ou ajustar posição */
+@media (max-width: 768px) {
+    .scroll-btn {
+        display: none;
+        /* Em mobile o touch scroll é nativo e melhor */
+    }
 }
 
 .appointments-list::-webkit-scrollbar {

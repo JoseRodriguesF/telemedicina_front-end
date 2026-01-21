@@ -5,7 +5,7 @@ import './consultas.css';
 import '@/components/layout/Header/header.css';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
 import { getConsultasAgendadas, ConsultaAgendada } from '@/lib/axios/consultas';
@@ -50,6 +50,44 @@ export default function ConsultasPage() {
   }, []);
 
 
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+
+  useEffect(() => {
+    const checkScroll = () => {
+      if (scrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        setShowLeftArrow(scrollLeft > 0);
+        setShowRightArrow(scrollWidth > clientWidth && scrollLeft < scrollWidth - clientWidth - 5);
+      }
+    };
+
+    const el = scrollRef.current;
+    if (el) {
+      // Check after render/update
+      setTimeout(checkScroll, 100);
+      el.addEventListener('scroll', checkScroll);
+      window.addEventListener('resize', checkScroll);
+    }
+    return () => {
+      if (el) {
+        el.removeEventListener('scroll', checkScroll);
+      }
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [scheduledAppointments]);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = 380;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   return (
     <div className="inicio-page">
@@ -119,28 +157,40 @@ export default function ConsultasPage() {
             <h3 className="section-title">
               {isMedico ? 'Seus Próximos Atendimentos' : 'Suas Próximas Consultas'}
             </h3>
-            <div className="appointments-list">
-              {loading ? (
-                <div className="appointment-mini-card">
-                  <div className="appt-details">
-                    <p>Carregando informações...</p>
+            <div className="appointments-wrapper">
+              {showLeftArrow && (
+                <button className="scroll-btn left" onClick={() => scroll('left')} aria-label="Anterior">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+                </button>
+              )}
+              <div className="appointments-list" ref={scrollRef}>
+                {loading ? (
+                  <div className="appointment-mini-card">
+                    <div className="appt-details">
+                      <p>Carregando informações...</p>
+                    </div>
                   </div>
-                </div>
-              ) : scheduledAppointments.length > 0 ? (
-                scheduledAppointments.map(appt => (
-                  <MiniAppointmentCard
-                    key={appt.id}
-                    appointment={appt}
-                    isMedico={isMedico}
-                    onAttend={(id) => router.push(`/consultas/atendimento?id=${id}&scheduled=true`)}
-                  />
-                ))
-              ) : (
-                <div className="appointment-mini-card">
-                  <div className="appt-details">
-                    <p>Nenhum agendamento encontrado no momento.</p>
+                ) : scheduledAppointments.length > 0 ? (
+                  scheduledAppointments.map(appt => (
+                    <MiniAppointmentCard
+                      key={appt.id}
+                      appointment={appt}
+                      isMedico={isMedico}
+                      onAttend={(id) => router.push(`/consultas/atendimento?id=${id}&scheduled=true`)}
+                    />
+                  ))
+                ) : (
+                  <div className="appointment-mini-card">
+                    <div className="appt-details">
+                      <p>Nenhum agendamento encontrado no momento.</p>
+                    </div>
                   </div>
-                </div>
+                )}
+              </div>
+              {showRightArrow && (
+                <button className="scroll-btn right" onClick={() => scroll('right')} aria-label="Próximo">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                </button>
               )}
             </div>
           </section>
