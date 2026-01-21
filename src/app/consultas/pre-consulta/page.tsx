@@ -122,6 +122,10 @@ function PreConsultaInner() {
       }
 
       const data: ChatIAResponse = await res.json();
+      console.log('[DEBUG] Resposta completa da API:', data);
+      console.log('[DEBUG] data.completed:', data?.completed, 'tipo:', typeof data?.completed);
+      console.log('[DEBUG] data.answer:', data?.answer);
+
       const answer = String(data?.answer ?? 'Sem resposta da IA.');
 
       setMessages(prev => [...prev, { author: 'Angélica', text: answer }]);
@@ -134,6 +138,8 @@ function PreConsultaInner() {
       if (data?.completed === true) {
         console.log('[DEBUG] Triagem concluída! Setando completed=true');
         setCompleted(true);
+      } else {
+        console.log('[DEBUG] Triagem NÃO concluída. completed=', data?.completed);
       }
     } catch (err: any) {
       const msg = String(err?.message ?? 'Erro desconhecido ao chamar a IA');
