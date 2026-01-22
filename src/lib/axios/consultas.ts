@@ -120,6 +120,36 @@ export async function listWaitingConsultas(token: string): Promise<WaitingConsul
   }
 }
 
+export type ConsultaDetails = {
+  id: number;
+  medicoId: number | null;
+  pacienteId: number;
+  status: ConsultaStatus;
+  data_consulta?: string;
+  hora_inicio?: string;
+  hora_fim?: string;
+  createdAt: string;
+  updatedAt: string;
+  paciente: {
+    id: number;
+    nome_completo: string;
+    cpf: string;
+    sexo: string;
+    data_nascimento: string;
+    telefone: string;
+    // outros campos se necessário
+  };
+};
+
+export async function getConsulta(consultaId: string, token: string): Promise<ConsultaDetails> {
+  try {
+    const res = await axios.get(`/api/consultas/${consultaId}`, { headers: { Authorization: `Bearer ${token}` } });
+    return res.data as ConsultaDetails;
+  } catch (err) {
+    throw new ApiError(err);
+  }
+}
+
 // Salas
 export type RoomResponse = {
   roomId: string;

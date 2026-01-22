@@ -8,17 +8,44 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
-import { psCreateRoom, psClaim, listParticipants, endConsulta } from '@/lib/axios/consultas';
+import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails } from '@/lib/axios/consultas';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
+import { formatDate } from '@/lib/utils/dateFormatters';
 
 type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
+
+function calculateAge(birthDate: string | Date | undefined): string {
+  if (!birthDate) return '-';
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return String(age);
+}
 
 function AtendimentoInner() {
   const [connectionFailed, setConnectionFailed] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const modal = useModal();
+  const [consultaDetails, setConsultaDetails] = useState<ConsultaDetails | null>(null);
+
+  // Buscar detalhes do paciente se for médico
+  useEffect(() => {
+    const cid = getConsultaIdFromUrl() || search.get('id');
+    const token = getToken();
+    const user = getUser();
+
+    if (cid && token && user?.tipo_usuario === 'medico') {
+      getConsulta(cid, token)
+        .then(data => setConsultaDetails(data))
+        .catch(err => console.error('Erro ao buscar detalhes da consulta:', err));
+    }
+  }, []); // Executa uma vez
 
   const handleConnected = () => {
 
@@ -707,30 +734,32 @@ function AtendimentoInner() {
               <aside className="side-panel right-panel">
                 <div className="panel-header">Informações pessoais do paciente</div>
                 <div className="patient-info">
-                  <div className="patient-info-row">
-                    <span className="patient-info-label">Nome:</span>
-                    <span className="patient-info-value">(Nome do paciente)</span>
-                  </div>
-                  <div className="patient-info-row">
-                    <span className="patient-info-label">Genero:</span>
-                    <span className="patient-info-value">Masculino</span>
-                  </div>
-                  <div className="patient-info-row">
-                    <span className="patient-info-label">Idade:</span>
-                    <span className="patient-info-value">18</span>
-                  </div>
-                  <div className="patient-info-row">
-                    <span className="patient-info-label">Convênio:</span>
-                    <span className="patient-info-value">(Nome)</span>
-                  </div>
-                  <div className="patient-info-row">
-                    <span className="patient-info-label">Nº Carteirinha:</span>
-                    <span className="patient-info-value">0000000000</span>
-                  </div>
-                  <div className="patient-info-row">
-                    <span className="patient-info-label">CPF:</span>
-                    <span className="patient-info-value">000.000.000-00</span>
-                  </div>
+                  {consultaDetails ? (
+                    <>
+                      <div className="patient-info-row">
+                        <span className="patient-info-label">Nome:</span>
+                        <span className="patient-info-value">{consultaDetails.paciente.nome_completo}</span>
+                      </div>
+                      <div className="patient-info-row">
+                        <span className="patient-info-label">Gênero:</span>
+                        <span className="patient-info-value" style={{ textTransform: 'capitalize' }}>{consultaDetails.paciente.sexo || '-'}</span>
+                      </div>
+                      <div className="patient-info-row">
+                        <span className="patient-info-label">Idade:</span>
+                        <span className="patient-info-value">{calculateAge(consultaDetails.paciente.data_nascimento)} anos</span>
+                      </div>
+                      <div className="patient-info-row">
+                        <span className="patient-info-label">CPF:</span>
+                        <span className="patient-info-value">{consultaDetails.paciente.cpf}</span>
+                      </div>
+                      <div className="patient-info-row">
+                        <span className="patient-info-label">Telefone:</span>
+                        <span className="patient-info-value">{consultaDetails.paciente.telefone || '-'}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>Carregando dados...</div>
+                  )}
                 </div>
                 <div className="panel-header">Ficha de atendimento</div>
                 <div className="panel-content">
