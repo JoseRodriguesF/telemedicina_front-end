@@ -28,6 +28,10 @@ export async function POST(req: NextRequest) {
       },
       body
     });
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[proxy] /api/ps/rooms -> backend status:', res.status);
+    }
     const contentType = res.headers.get('content-type') || 'application/json';
     const text = await res.text();
     // Passar resposta do backend tal como veio
