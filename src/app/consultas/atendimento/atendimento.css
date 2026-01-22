@@ -723,10 +723,61 @@
     border-radius: var(--radius-xl, 16px) var(--radius-xl, 16px) 0 0;
 }
 
-.medico-video-column .video-action-buttons {
-    border-radius: 0 0 var(--radius-xl, 16px) var(--radius-xl, 16px);
+.medico-actions-toolbar {
+    background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-top: none;
+    border-radius: 0 0 var(--radius-xl, 16px) var(--radius-xl, 16px);
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+    gap: 1rem;
+}
+
+.medico-actions-toolbar .call-controls {
+    position: static;
+    transform: none;
+    background: var(--bg-secondary, #f3f4f6);
+    border: 1px solid var(--border-color, #e5e7eb);
+    width: 100%;
+    justify-content: center;
+    box-shadow: none;
+    padding: 8px;
+    border-radius: 16px;
+}
+
+.medico-actions-toolbar .call-controls .control-btn {
+    color: #1e293b;
+}
+
+.medico-actions-toolbar .call-controls .control-btn.active {
+    background: var(--color-primary-600, #2563EB);
+    color: white;
+}
+
+.medico-actions-toolbar .call-controls .control-btn.off {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.medico-actions-toolbar .call-controls .control-btn.end {
+    background: #ef4444;
+    color: white;
+}
+
+.medico-actions-toolbar .video-action-buttons {
+    padding: 0;
+    border: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    background: transparent;
+}
+
+.medico-actions-toolbar .action-btn {
+    padding: 10px;
+    font-size: 0.85rem;
+    white-space: nowrap;
 }
 
 /* Responsive - Médico Layout */
