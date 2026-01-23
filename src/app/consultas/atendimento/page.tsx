@@ -32,28 +32,6 @@ function AtendimentoInner() {
   const [connectionFailed, setConnectionFailed] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const modal = useModal();
-  const [consultaDetails, setConsultaDetails] = useState<ConsultaDetails | null>(null);
-
-  // Buscar detalhes do paciente se for médico
-  useEffect(() => {
-    const cid = getConsultaIdFromUrl() || search.get('id');
-    const token = getToken();
-    const user = getUser();
-
-    if (cid && token && user?.tipo_usuario === 'medico') {
-      getConsulta(cid, token)
-        .then(data => setConsultaDetails(data))
-        .catch(err => console.error('Erro ao buscar detalhes da consulta:', err));
-    }
-  }, []); // Executa uma vez
-
-  const handleConnected = () => {
-
-    setStatusText('Conectado.');
-    setConnectionFailed(false);
-    setReconnecting(false);
-    setRemoteConnected(true);
-  };
 
   const router = useRouter();
   const search = useSearchParams();
@@ -63,6 +41,32 @@ function AtendimentoInner() {
   const role = (user?.tipo_usuario === 'medico' ? 'medico' : 'paciente') as 'medico' | 'paciente';
   const apiUrl = (process.env.NEXT_PUBLIC_API_URL || '').trim();
   const wsBaseUrl = getSignalUrl(apiUrl);
+
+  const [consultaDetails, setConsultaDetails] = useState<ConsultaDetails | null>(null);
+
+  // Buscar detalhes do paciente se for médico
+  useEffect(() => {
+    const cid = getConsultaIdFromUrl() || consultaId;
+
+    if (cid && token && user?.tipo_usuario === 'medico') {
+      console.log('[AtendimentoInner] Buscando dados do paciente, consultaId:', cid);
+      getConsulta(cid, token)
+        .then(data => {
+          console.log('[AtendimentoInner] Dados do paciente recebidos:', data);
+          setConsultaDetails(data);
+        })
+        .catch(err => console.error('[AtendimentoInner] Erro ao buscar detalhes da consulta:', err));
+    }
+  }, [consultaId, token, user?.tipo_usuario]); // Dependências corretas
+
+  const handleConnected = () => {
+
+    setStatusText('Conectado.');
+    setConnectionFailed(false);
+    setReconnecting(false);
+    setRemoteConnected(true);
+  };
+
   // Modo UI: organizar telas/estilo sem lógica de API/signaling.
 
   const localRef = useRef<HTMLVideoElement | null>(null);
