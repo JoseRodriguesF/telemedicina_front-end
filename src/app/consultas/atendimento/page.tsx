@@ -742,7 +742,7 @@ function AtendimentoInner() {
                     <>
                       <div className="patient-info-row">
                         <span className="patient-info-label">Nome:</span>
-                        <span className="patient-info-value">{consultaDetails.paciente.nome_completo}</span>
+                        <span className="patient-info-value">{consultaDetails.paciente.nome_completo || '-'}</span>
                       </div>
                       <div className="patient-info-row">
                         <span className="patient-info-label">Gênero:</span>
@@ -754,7 +754,7 @@ function AtendimentoInner() {
                       </div>
                       <div className="patient-info-row">
                         <span className="patient-info-label">CPF:</span>
-                        <span className="patient-info-value">{consultaDetails.paciente.cpf}</span>
+                        <span className="patient-info-value">{consultaDetails.paciente.cpf || '-'}</span>
                       </div>
                       <div className="patient-info-row">
                         <span className="patient-info-label">Telefone:</span>

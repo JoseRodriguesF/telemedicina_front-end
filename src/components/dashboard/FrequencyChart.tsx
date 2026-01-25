@@ -53,6 +53,7 @@ export default function FrequencyChart({ data }: Props) {
                         axisLine={false}
                         tickLine={false}
                         tick={{ fill: 'var(--text-secondary, #6b7280)', fontSize: 10 }}
+                        allowDecimals={false}
                     />
                     <Tooltip
                         contentStyle={{
