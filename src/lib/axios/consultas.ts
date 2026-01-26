@@ -289,6 +289,11 @@ export type PSFullHistoryItem = {
   id: number;
   status: string;
   createdAt: string;
+  pacienteId?: number;
+  medicoId?: number;
+  data_consulta?: string;
+  hora_inicio?: string;
+  hora_fim?: string;
   medico: {
     nome_completo: string;
   } | null;
@@ -325,6 +330,26 @@ export async function psGetHistory(token: string): Promise<PSHistoryResponse> {
   try {
     const res = await axios.get('/api/ps/historico', { headers: { Authorization: `Bearer ${token}` } });
     return res.data as PSHistoryResponse;
+  } catch (err) {
+    throw new ApiError(err);
+  }
+}
+
+/**
+ * Busca o histórico de consultas de um paciente específico
+ */
+export async function getHistoricoConsultasPaciente(pacienteId: number, token: string): Promise<PSFullHistoryItem[]> {
+  try {
+    const res = await axios.get('/api/ps/historico-completo', { headers: { Authorization: `Bearer ${token}` } });
+    const historico = res.data as PSFullHistoryItem[];
+
+    // Filtrar apenas consultas finalizadas deste paciente
+    return historico.filter(consulta =>
+      consulta.paciente &&
+      consulta.status === 'finished' &&
+      // Assumindo que o backend retorna o pacienteId
+      (consulta as any).pacienteId === pacienteId
+    );
   } catch (err) {
     throw new ApiError(err);
   }

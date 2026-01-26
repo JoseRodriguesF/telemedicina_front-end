@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
-import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails } from '@/lib/axios/consultas';
+import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem } from '@/lib/axios/consultas';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
@@ -59,6 +59,27 @@ function AtendimentoInner() {
     }
   }, [consultaId, token, user?.tipo_usuario]); // Dependências corretas
 
+  // Buscar histórico de consultas do paciente se for médico
+  useEffect(() => {
+    if (consultaDetails && token && user?.tipo_usuario === 'medico') {
+      const pacienteId = consultaDetails.pacienteId;
+      if (pacienteId) {
+        console.log('[AtendimentoInner] Buscando histórico do paciente:', pacienteId);
+        setLoadingHistorico(true);
+        getHistoricoConsultasPaciente(pacienteId, token)
+          .then(historico => {
+            console.log('[AtendimentoInner] Histórico recebido:', historico);
+            setHistoricoConsultas(historico);
+          })
+          .catch(err => {
+            console.error('[AtendimentoInner] Erro ao buscar histórico:', err);
+          })
+          .finally(() => setLoadingHistorico(false));
+      }
+    }
+  }, [consultaDetails, token, user?.tipo_usuario]);
+
+
   const handleConnected = () => {
 
     setStatusText('Conectado.');
@@ -100,6 +121,11 @@ function AtendimentoInner() {
 
   // Estados para accordions do layout de médico
   const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({});
+
+  // Estados para histórico de consultas
+  const [historicoConsultas, setHistoricoConsultas] = useState<PSFullHistoryItem[]>([]);
+  const [loadingHistorico, setLoadingHistorico] = useState(false);
+  const [consultaSelecionada, setConsultaSelecionada] = useState<PSFullHistoryItem | null>(null);
 
   // Helper para toggle de accordions
   const toggleAccordion = (id: string) => {
@@ -581,7 +607,32 @@ function AtendimentoInner() {
                 <div className="panel-header">Ficha de atendimento</div>
                 <div className="panel-content">
                   <Accordion id="historico-consultas" title="Histórico de consultas">
-                    <p className="accordion-placeholder">Nenhuma consulta anterior registrada.</p>
+                    {loadingHistorico ? (
+                      <p className="accordion-placeholder">Carregando histórico...</p>
+                    ) : historicoConsultas.length === 0 ? (
+                      <p className="accordion-placeholder">Nenhuma consulta anterior registrada.</p>
+                    ) : (
+                      <div className="historico-list">
+                        {historicoConsultas.map((consulta) => (
+                          <div key={consulta.id} className="historico-item">
+                            <div className="historico-item-info">
+                              <div className="historico-item-date">
+                                📅 {formatDate(consulta.data_consulta || consulta.createdAt)}
+                              </div>
+                              <div className="historico-item-status">
+                                Status: {consulta.status === 'finished' ? 'Finalizada' : consulta.status}
+                              </div>
+                            </div>
+                            <button
+                              className="historico-item-button"
+                              onClick={() => setConsultaSelecionada(consulta)}
+                            >
+                              Ver Detalhes
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </Accordion>
                   <Accordion id="historico-prescricoes" title="Histórico de prescrições">
                     <p className="accordion-placeholder">Nenhuma prescrição anterior registrada.</p>
@@ -993,6 +1044,81 @@ function AtendimentoInner() {
           </div>
         )}
       </main>
+
+      {/* Modal de Detalhes da Consulta */}
+      {consultaSelecionada && (
+        <div className="consulta-modal-overlay" onClick={() => setConsultaSelecionada(null)}>
+          <div className="consulta-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="consulta-modal-header">
+              <h3>Detalhes da Consulta</h3>
+              <button
+                className="consulta-modal-close"
+                onClick={() => setConsultaSelecionada(null)}
+                aria-label="Fechar"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div className="consulta-modal-body">
+              <div className="consulta-detail-row">
+                <span className="consulta-detail-label">ID da Consulta:</span>
+                <span className="consulta-detail-value">#{consultaSelecionada.id}</span>
+              </div>
+              <div className="consulta-detail-row">
+                <span className="consulta-detail-label">Data da Consulta:</span>
+                <span className="consulta-detail-value">
+                  {formatDate(consultaSelecionada.data_consulta || consultaSelecionada.createdAt)}
+                </span>
+              </div>
+              {consultaSelecionada.medico && (
+                <div className="consulta-detail-row">
+                  <span className="consulta-detail-label">Médico Responsável:</span>
+                  <span className="consulta-detail-value">{consultaSelecionada.medico.nome_completo}</span>
+                </div>
+              )}
+              {consultaSelecionada.hora_inicio && (
+                <div className="consulta-detail-row">
+                  <span className="consulta-detail-label">Horário de Início:</span>
+                  <span className="consulta-detail-value">
+                    {new Date(consultaSelecionada.hora_inicio).toLocaleTimeString('pt-BR', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+              )}
+              {consultaSelecionada.hora_fim && (
+                <div className="consulta-detail-row">
+                  <span className="consulta-detail-label">Horário de Término:</span>
+                  <span className="consulta-detail-value">
+                    {new Date(consultaSelecionada.hora_fim).toLocaleTimeString('pt-BR', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+              )}
+              <div className="consulta-detail-row">
+                <span className="consulta-detail-label">Status:</span>
+                <span className="consulta-detail-value consulta-status-badge">
+                  {consultaSelecionada.status === 'finished' ? 'Finalizada' : consultaSelecionada.status}
+                </span>
+              </div>
+            </div>
+            <div className="consulta-modal-footer">
+              <button
+                className="consulta-modal-button-close"
+                onClick={() => setConsultaSelecionada(null)}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Modal
         isOpen={modal.isOpen}
