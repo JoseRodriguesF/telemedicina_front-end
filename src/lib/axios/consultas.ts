@@ -341,14 +341,7 @@ export async function psGetHistory(token: string): Promise<PSHistoryResponse> {
 export async function getHistoricoConsultasPaciente(pacienteId: number, token: string): Promise<PSFullHistoryItem[]> {
   try {
     const res = await axios.get(`/api/ps/historico-completo?pacienteId=${pacienteId}`, { headers: { Authorization: `Bearer ${token}` } });
-    const historico = res.data as PSFullHistoryItem[];
-
-    // Filtrar apenas consultas finalizadas deste paciente
-    return historico.filter(consulta =>
-      consulta.paciente &&
-      consulta.status === 'finished' &&
-      (consulta as any).pacienteId === pacienteId
-    );
+    return res.data as PSFullHistoryItem[];
   } catch (err) {
     throw new ApiError(err);
   }
