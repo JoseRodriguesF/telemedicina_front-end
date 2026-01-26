@@ -127,6 +127,15 @@ function AtendimentoInner() {
   const [loadingHistorico, setLoadingHistorico] = useState(false);
   const [consultaSelecionada, setConsultaSelecionada] = useState<PSFullHistoryItem | null>(null);
 
+  // Estados para a ficha de atendimento (médico)
+  const [atendimentoData, setAtendimentoData] = useState({
+    evolucao: '',
+    plano_terapeutico: '',
+    diagnostico: '',
+    repouso: '',
+    destino_final: ''
+  });
+
   // Helper para toggle de accordions
   const toggleAccordion = (id: string) => {
     setOpenAccordions(prev => ({ ...prev, [id]: !prev[id] }));
@@ -562,7 +571,7 @@ function AtendimentoInner() {
           // Envia hora_fim ao finalizar
           const now = new Date();
           const hora_fim = now.toTimeString().slice(0, 8); // formato HH:MM:SS
-          await endConsulta(cid, token, hora_fim);
+          await endConsulta(cid, token, hora_fim, atendimentoData);
         }
       } catch (err) {
         console.error('Erro ao verificar/finalizar consulta:', err);
@@ -819,19 +828,44 @@ function AtendimentoInner() {
                 <div className="panel-header">Ficha de atendimento</div>
                 <div className="panel-content">
                   <Accordion id="evolucao" title="Evolução">
-                    <p className="accordion-placeholder">Registre a evolução do paciente.</p>
+                    <textarea
+                      className="atendimento-textarea"
+                      placeholder="Registre a evolução do paciente..."
+                      value={atendimentoData.evolucao}
+                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, evolucao: e.target.value }))}
+                    ></textarea>
                   </Accordion>
                   <Accordion id="plano-terapeutico" title="Plano Terapêutico">
-                    <p className="accordion-placeholder">Defina o plano terapêutico.</p>
+                    <textarea
+                      className="atendimento-textarea"
+                      placeholder="Defina o plano terapêutico..."
+                      value={atendimentoData.plano_terapeutico}
+                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, plano_terapeutico: e.target.value }))}
+                    ></textarea>
                   </Accordion>
                   <Accordion id="diagnostico" title="Diagnóstico">
-                    <p className="accordion-placeholder">Adicione o diagnóstico.</p>
+                    <textarea
+                      className="atendimento-textarea"
+                      placeholder="Adicione o diagnóstico..."
+                      value={atendimentoData.diagnostico}
+                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, diagnostico: e.target.value }))}
+                    ></textarea>
                   </Accordion>
                   <Accordion id="repouso" title="Repouso">
-                    <p className="accordion-placeholder">Defina período de repouso se necessário.</p>
+                    <textarea
+                      className="atendimento-textarea"
+                      placeholder="Defina período de repouso se necessário..."
+                      value={atendimentoData.repouso}
+                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, repouso: e.target.value }))}
+                    ></textarea>
                   </Accordion>
                   <Accordion id="destino-final" title="Destino Final">
-                    <p className="accordion-placeholder">Defina o destino do paciente.</p>
+                    <textarea
+                      className="atendimento-textarea"
+                      placeholder="Defina o destino do paciente..."
+                      value={atendimentoData.destino_final}
+                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, destino_final: e.target.value }))}
+                    ></textarea>
                   </Accordion>
                 </div>
               </aside>

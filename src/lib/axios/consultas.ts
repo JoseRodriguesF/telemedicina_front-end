@@ -196,11 +196,13 @@ export async function listParticipants(consultaId: string, token: string): Promi
 export async function endConsulta(
   consultaId: string,
   token: string,
-  hora_fim?: string
+  hora_fim?: string,
+  data?: { repouso?: string; destino_final?: string; diagnostico?: string }
 ): Promise<{ ok: boolean }> {
   try {
     const body: Record<string, any> = {};
     if (hora_fim) body.hora_fim = hora_fim;
+    if (data) Object.assign(body, data);
     const res = await axios.post(`/api/consultas/${consultaId}/end`, body, { headers: { Authorization: `Bearer ${token}` } });
     return res.data as { ok: boolean };
   } catch (err) {

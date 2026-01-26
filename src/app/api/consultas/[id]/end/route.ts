@@ -5,10 +5,17 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
   const { id } = await context.params;
   const auth = req.headers.get('authorization') || '';
   const url = `${apiBase.replace(/\/$/, '')}/consultas/${encodeURIComponent(id)}/end`;
+  let body = {};
+  try {
+    body = await req.json();
+  } catch (e) {
+    // ignore empty body
+  }
+
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: auth },
-    body: JSON.stringify({}),
+    body: JSON.stringify(body),
   });
   const text = await res.text();
   const contentType = res.headers.get('content-type') || '';

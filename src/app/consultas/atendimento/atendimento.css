@@ -669,6 +669,32 @@
     font-style: italic;
 }
 
+.atendimento-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: var(--radius-md, 8px);
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    resize: vertical;
+    background: var(--bg-primary, #ffffff);
+    color: var(--text-primary, #1f2937);
+    transition: all 0.2s ease;
+}
+
+.atendimento-textarea:focus {
+    outline: none;
+    border-color: var(--color-primary-500, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.atendimento-textarea::placeholder {
+    color: var(--text-tertiary, #9ca3af);
+    font-style: italic;
+}
+
 /* Informações do Paciente */
 .patient-info {
     padding: 16px;
