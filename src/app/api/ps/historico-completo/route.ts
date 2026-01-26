@@ -6,7 +6,8 @@ export async function GET(req: NextRequest) {
 
     const token = req.headers.get('authorization') || '';
 
-    const targetUrl = `${apiBase}/ps/historico-completo`;
+    const { searchParams } = new URL(req.url);
+    const targetUrl = `${apiBase}/ps/historico-completo?${searchParams.toString()}`;
 
     try {
         console.log(`[Proxy PS Full History] Chamando: ${targetUrl}`);
