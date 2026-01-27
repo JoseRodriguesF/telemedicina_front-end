@@ -29,6 +29,27 @@ function calculateAge(birthDate: string | Date | undefined): string {
   return String(age);
 }
 
+// Componente Accordion fora para evitar perder o foco nos inputs ao re-renderizar
+const Accordion = ({ id, title, isOpen, onToggle, children }: {
+  id: string;
+  title: string;
+  isOpen: boolean;
+  onToggle: (id: string) => void;
+  children: React.ReactNode
+}) => (
+  <div className={`accordion-item ${isOpen ? 'open' : ''}`}>
+    <button className="accordion-trigger" onClick={() => onToggle(id)} type="button">
+      <span>{title}</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </button>
+    <div className="accordion-content">
+      {children}
+    </div>
+  </div>
+);
+
 function AtendimentoInner() {
   const [connectionFailed, setConnectionFailed] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
@@ -207,20 +228,6 @@ function AtendimentoInner() {
     setOpenAccordions(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Componente Accordion inline
-  const Accordion = ({ id, title, children }: { id: string; title: string; children: React.ReactNode }) => (
-    <div className={`accordion-item ${openAccordions[id] ? 'open' : ''}`}>
-      <button className="accordion-trigger" onClick={() => toggleAccordion(id)}>
-        <span>{title}</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="m6 9 6 6 6-6" />
-        </svg>
-      </button>
-      <div className="accordion-content">
-        {children}
-      </div>
-    </div>
-  );
 
   // Médico entra e compartilha sua mídia ao chegar.
   // Ao entrar, paciente cria sala + mídia; médico apenas abre mídia e faz claim.
@@ -681,7 +688,12 @@ function AtendimentoInner() {
               <aside className="side-panel left-panel">
                 <div className="panel-header">Ficha de atendimento</div>
                 <div className="panel-content">
-                  <Accordion id="historico-consultas" title="Histórico de consultas">
+                  <Accordion
+                    id="historico-consultas"
+                    title="Histórico de consultas"
+                    isOpen={!!openAccordions['historico-consultas']}
+                    onToggle={toggleAccordion}
+                  >
                     {loadingHistorico ? (
                       <p className="accordion-placeholder">Carregando histórico...</p>
                     ) : historicoConsultas.length === 0 ? (
@@ -709,13 +721,28 @@ function AtendimentoInner() {
                       </div>
                     )}
                   </Accordion>
-                  <Accordion id="historico-prescricoes" title="Histórico de prescrições">
+                  <Accordion
+                    id="historico-prescricoes"
+                    title="Histórico de prescrições"
+                    isOpen={!!openAccordions['historico-prescricoes']}
+                    onToggle={toggleAccordion}
+                  >
                     <p className="accordion-placeholder">Nenhuma prescrição anterior registrada.</p>
                   </Accordion>
-                  <Accordion id="prescricoes" title="Prescrições">
+                  <Accordion
+                    id="prescricoes"
+                    title="Prescrições"
+                    isOpen={!!openAccordions['prescricoes']}
+                    onToggle={toggleAccordion}
+                  >
                     <p className="accordion-placeholder">Adicione prescrições durante a consulta.</p>
                   </Accordion>
-                  <Accordion id="notas" title="Notas">
+                  <Accordion
+                    id="notas"
+                    title="Notas"
+                    isOpen={!!openAccordions['notas']}
+                    onToggle={toggleAccordion}
+                  >
                     <p className="accordion-placeholder">Adicione notas sobre o atendimento.</p>
                   </Accordion>
                 </div>
@@ -893,7 +920,12 @@ function AtendimentoInner() {
                 </div>
                 <div className="panel-header">Ficha de atendimento</div>
                 <div className="panel-content">
-                  <Accordion id="evolucao" title="Evolução">
+                  <Accordion
+                    id="evolucao"
+                    title="Evolução"
+                    isOpen={!!openAccordions['evolucao']}
+                    onToggle={toggleAccordion}
+                  >
                     <textarea
                       className="atendimento-textarea"
                       placeholder="Registre a evolução do paciente..."
@@ -901,7 +933,12 @@ function AtendimentoInner() {
                       onChange={(e) => setAtendimentoData(prev => ({ ...prev, evolucao: e.target.value }))}
                     ></textarea>
                   </Accordion>
-                  <Accordion id="plano-terapeutico" title="Plano Terapêutico">
+                  <Accordion
+                    id="plano-terapeutico"
+                    title="Plano Terapêutico"
+                    isOpen={!!openAccordions['plano-terapeutico']}
+                    onToggle={toggleAccordion}
+                  >
                     <textarea
                       className="atendimento-textarea"
                       placeholder="Defina o plano terapêutico..."
@@ -909,7 +946,12 @@ function AtendimentoInner() {
                       onChange={(e) => setAtendimentoData(prev => ({ ...prev, plano_terapeutico: e.target.value }))}
                     ></textarea>
                   </Accordion>
-                  <Accordion id="diagnostico" title="Diagnóstico">
+                  <Accordion
+                    id="diagnostico"
+                    title="Diagnóstico"
+                    isOpen={!!openAccordions['diagnostico']}
+                    onToggle={toggleAccordion}
+                  >
                     <input
                       type="text"
                       className="atendimento-input-small"
@@ -918,7 +960,12 @@ function AtendimentoInner() {
                       onChange={(e) => setAtendimentoData(prev => ({ ...prev, diagnostico: e.target.value }))}
                     />
                   </Accordion>
-                  <Accordion id="repouso" title="Repouso">
+                  <Accordion
+                    id="repouso"
+                    title="Repouso"
+                    isOpen={!!openAccordions['repouso']}
+                    onToggle={toggleAccordion}
+                  >
                     <div className="options-grid">
                       {repousoOptions.map(option => (
                         <label key={option} className={`option-card ${atendimentoData.repouso === option ? 'selected' : ''}`}>
@@ -934,7 +981,12 @@ function AtendimentoInner() {
                       ))}
                     </div>
                   </Accordion>
-                  <Accordion id="destino-final" title="Destino Final">
+                  <Accordion
+                    id="destino-final"
+                    title="Destino Final"
+                    isOpen={!!openAccordions['destino-final']}
+                    onToggle={toggleAccordion}
+                  >
                     <div className="options-grid">
                       {destinoFinalOptions.map(option => (
                         <div key={option} className="option-container">
@@ -952,23 +1004,27 @@ function AtendimentoInner() {
                           {/* Se for ambulância e estiver selecionado, mostra formulário de endereço */}
                           {atendimentoData.destino_final === option && option.toLowerCase().includes('ambulância') && (
                             <div className="ambulance-address-form">
-                              <div className="address-row full">
-                                <AddressAutocomplete
-                                  placeholder="Buscar endereço"
-                                  className="atendimento-input-small address-search"
-                                  value={atendimentoData.endereco_ambulancia.endereco}
-                                  onChange={(v) => setAtendimentoData(prev => ({
-                                    ...prev,
-                                    endereco_ambulancia: { ...prev.endereco_ambulancia, endereco: v }
-                                  }))}
-                                />
-                                <span className="search-icon-inside">🔍</span>
+                              <div className="address-row">
+                                <span className="input-label-text">Buscar endereço</span>
+                                <div className="address-search-wrapper">
+                                  <AddressAutocomplete
+                                    placeholder="Ex: Av. Paulista, 1000"
+                                    className="atendimento-input-small"
+                                    value={atendimentoData.endereco_ambulancia.endereco}
+                                    onChange={(v) => setAtendimentoData(prev => ({
+                                      ...prev,
+                                      endereco_ambulancia: { ...prev.endereco_ambulancia, endereco: v }
+                                    }))}
+                                  />
+                                  <span className="search-icon-inside">🔍</span>
+                                </div>
                               </div>
 
-                              <div className="address-row full">
+                              <div className="address-row">
+                                <span className="input-label-text">Complemento</span>
                                 <input
                                   type="text"
-                                  placeholder="Complemento"
+                                  placeholder="Ex: Bloco B, Apto 101"
                                   className="atendimento-input-small"
                                   value={atendimentoData.endereco_ambulancia.complemento}
                                   onChange={(e) => setAtendimentoData(prev => ({
@@ -978,10 +1034,11 @@ function AtendimentoInner() {
                                 />
                               </div>
 
-                              <div className="address-row full">
+                              <div className="address-row">
+                                <span className="input-label-text">Informações adicionais</span>
                                 <input
                                   type="text"
-                                  placeholder="Informações adicionais"
+                                  placeholder="Ponto de referência, observações..."
                                   className="atendimento-input-small"
                                   value={atendimentoData.endereco_ambulancia.informacoes_adicionais}
                                   onChange={(e) => setAtendimentoData(prev => ({
@@ -991,11 +1048,12 @@ function AtendimentoInner() {
                                 />
                               </div>
 
-                              <div className="address-row full">
+                              <div className="address-row">
                                 <div className="input-with-label">
-                                  <span>Telefone:</span>
+                                  <span className="input-label-text">Telefone de contato</span>
                                   <input
                                     type="text"
+                                    placeholder="(00) 00000-0000"
                                     className="atendimento-input-small"
                                     value={atendimentoData.endereco_ambulancia.telefone}
                                     onChange={(e) => setAtendimentoData(prev => ({
