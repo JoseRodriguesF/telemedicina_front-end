@@ -49,7 +49,7 @@ export default function ContentModal({ isOpen, onClose, title, children, size = 
 
     if (!isOpen) return null;
 
-    const maxWidthStyle = size === 'lg' ? '800px' : size === 'xl' ? '1200px' : size === 'sm' ? '320px' : '440px';
+    const maxWidthStyle = size === 'lg' ? '800px' : size === 'xl' ? '1200px' : size === 'sm' ? '380px' : '500px';
 
     return (
         <div

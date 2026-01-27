@@ -257,7 +257,7 @@ export default function HistoricoPage() {
         isOpen={showDetails}
         onClose={() => setShowDetails(false)}
         title="Detalhes do Atendimento"
-        size="lg"
+        size="md"
       >
         {selectedItem && (
           <div className="history-details-modal">
