@@ -41,7 +41,7 @@
   box-shadow: var(--shadow-2xl);
   max-width: 400px;
   width: 100%;
-  padding: var(--spacing-xl);
+  padding: var(--spacing-lg);
   transform: scale(0.95);
   opacity: 0;
   transition: all var(--transition-base);
@@ -59,14 +59,14 @@
 /* Modal Header */
 .modal-header {
   text-align: center;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
 }
 
 .modal-icon-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
 }
 
 .modal-icon {
@@ -102,7 +102,7 @@
 
 /* Modal Body */
 .modal-body {
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
 }
 
 .modal-message {
@@ -123,7 +123,7 @@
 
 /* Modal Buttons */
 .modal-button {
-  padding: 0.875rem 2rem;
+  padding: 0.5rem 1.5rem;
   border-radius: var(--radius-lg);
   font-size: var(--font-size-base);
   font-weight: 600;
