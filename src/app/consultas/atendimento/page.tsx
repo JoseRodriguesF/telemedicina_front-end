@@ -13,6 +13,7 @@ import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate } from '@/lib/utils/dateFormatters';
+import AddressAutocomplete from '@/components/common/Inputs/AddressAutocomplete';
 
 type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
 
@@ -46,37 +47,45 @@ function AtendimentoInner() {
 
   // Buscar detalhes do paciente se for médico
   useEffect(() => {
-    const cid = getConsultaIdFromUrl() || consultaId;
+    async function fetchPatientDetails() {
+      const cid = getConsultaIdFromUrl() || consultaIdState || consultaId;
+      if (!cid || !token || user?.tipo_usuario !== 'medico') return;
 
-    if (cid && token && user?.tipo_usuario === 'medico') {
-      console.log('[AtendimentoInner] Buscando dados do paciente, consultaId:', cid);
-      getConsulta(cid, token)
-        .then(data => {
-          console.log('[AtendimentoInner] Dados do paciente recebidos:', data);
-          setConsultaDetails(data);
-        })
-        .catch(err => console.error('[AtendimentoInner] Erro ao buscar detalhes da consulta:', err));
+      try {
+        console.log('[AtendimentoInner] Buscando dados do paciente, consultaId:', cid);
+        const data = await getConsulta(cid, token);
+        console.log('[AtendimentoInner] Dados do paciente recebidos:', data);
+        setConsultaDetails(data);
+      } catch (err) {
+        console.error('[AtendimentoInner] Erro ao buscar detalhes da consulta:', err);
+      }
     }
-  }, [consultaId, token, user?.tipo_usuario]); // Dependências corretas
+
+    fetchPatientDetails();
+  }, [consultaId, consultaIdState, token, user?.tipo_usuario]); // Incluído consultaIdState
 
   // Buscar histórico de consultas do paciente se for médico
   useEffect(() => {
-    if (consultaDetails && token && user?.tipo_usuario === 'medico') {
-      const pacienteId = consultaDetails.pacienteId;
-      if (pacienteId) {
-        console.log('[AtendimentoInner] Buscando histórico do paciente:', pacienteId);
-        setLoadingHistorico(true);
-        getHistoricoConsultasPaciente(pacienteId, token)
-          .then(historico => {
+    async function fetchHistory() {
+      if (consultaDetails && token && user?.tipo_usuario === 'medico') {
+        const pacienteId = consultaDetails.pacienteId;
+        if (pacienteId) {
+          try {
+            console.log('[AtendimentoInner] Buscando histórico do paciente:', pacienteId);
+            setLoadingHistorico(true);
+            const historico = await getHistoricoConsultasPaciente(pacienteId, token);
             console.log('[AtendimentoInner] Histórico recebido:', historico);
             setHistoricoConsultas(historico);
-          })
-          .catch(err => {
+          } catch (err) {
             console.error('[AtendimentoInner] Erro ao buscar histórico:', err);
-          })
-          .finally(() => setLoadingHistorico(false));
+          } finally {
+            setLoadingHistorico(false);
+          }
+        }
       }
     }
+
+    fetchHistory();
   }, [consultaDetails, token, user?.tipo_usuario]);
 
 
@@ -133,8 +142,40 @@ function AtendimentoInner() {
     plano_terapeutico: '',
     diagnostico: '',
     repouso: '',
-    destino_final: ''
+    destino_final: '',
+    endereco_ambulancia: {
+      endereco: '',
+      complemento: '',
+      informacoes_adicionais: '',
+      telefone: ''
+    }
   });
+
+  // Pre-fill address if ambulance is selected
+  useEffect(() => {
+    if ((atendimentoData.destino_final.includes('ambulância') || atendimentoData.destino_final.includes('ambulancia')) && consultaDetails?.paciente) {
+      // Only pre-fill if it's currently empty to avoid overwriting edits
+      if (!atendimentoData.endereco_ambulancia.endereco) {
+        const p = consultaDetails.paciente as any;
+        const patientAddr = typeof p.endereco === 'string'
+          ? p.endereco
+          : (p.endereco?.endereco || '');
+
+        const patientComplement = typeof p.endereco === 'object' ? p.endereco?.complemento || '' : '';
+        const patientNumber = typeof p.endereco === 'object' ? p.endereco?.numero || '' : '';
+
+        setAtendimentoData(prev => ({
+          ...prev,
+          endereco_ambulancia: {
+            ...prev.endereco_ambulancia,
+            endereco: patientAddr + (patientNumber ? `, ${patientNumber}` : ''),
+            complemento: patientComplement,
+            telefone: p.telefone || ''
+          }
+        }));
+      }
+    }
+  }, [atendimentoData.destino_final, consultaDetails]);
 
   const destinoFinalOptions = [
     "Em domicílio com orientações médicas",
@@ -870,12 +911,13 @@ function AtendimentoInner() {
                     ></textarea>
                   </Accordion>
                   <Accordion id="diagnostico" title="Diagnóstico">
-                    <textarea
-                      className="atendimento-textarea"
-                      placeholder="Adicione o diagnóstico..."
+                    <input
+                      type="text"
+                      className="atendimento-input-small"
+                      placeholder="Buscar ou digitar diagnóstico..."
                       value={atendimentoData.diagnostico}
                       onChange={(e) => setAtendimentoData(prev => ({ ...prev, diagnostico: e.target.value }))}
-                    ></textarea>
+                    />
                   </Accordion>
                   <Accordion id="repouso" title="Repouso">
                     <div className="options-grid">
@@ -896,16 +938,77 @@ function AtendimentoInner() {
                   <Accordion id="destino-final" title="Destino Final">
                     <div className="options-grid">
                       {destinoFinalOptions.map(option => (
-                        <label key={option} className={`option-card ${atendimentoData.destino_final === option ? 'selected' : ''}`}>
-                          <input
-                            type="checkbox"
-                            className="hidden-checkbox"
-                            checked={atendimentoData.destino_final === option}
-                            onChange={() => handleOptionToggle('destino_final', option)}
-                          />
-                          <div className="option-indicator"></div>
-                          <span className="option-text">{option}</span>
-                        </label>
+                        <div key={option} className="option-container">
+                          <label className={`option-card ${atendimentoData.destino_final === option ? 'selected' : ''}`}>
+                            <input
+                              type="checkbox"
+                              className="hidden-checkbox"
+                              checked={atendimentoData.destino_final === option}
+                              onChange={() => handleOptionToggle('destino_final', option)}
+                            />
+                            <div className="option-indicator"></div>
+                            <span className="option-text">{option}</span>
+                          </label>
+
+                          {/* Se for ambulância e estiver selecionado, mostra formulário de endereço */}
+                          {atendimentoData.destino_final === option && option.toLowerCase().includes('ambulância') && (
+                            <div className="ambulance-address-form">
+                              <div className="address-row full">
+                                <AddressAutocomplete
+                                  placeholder="Buscar endereço"
+                                  className="atendimento-input-small address-search"
+                                  value={atendimentoData.endereco_ambulancia.endereco}
+                                  onChange={(v) => setAtendimentoData(prev => ({
+                                    ...prev,
+                                    endereco_ambulancia: { ...prev.endereco_ambulancia, endereco: v }
+                                  }))}
+                                />
+                                <span className="search-icon-inside">🔍</span>
+                              </div>
+
+                              <div className="address-row full">
+                                <input
+                                  type="text"
+                                  placeholder="Complemento"
+                                  className="atendimento-input-small"
+                                  value={atendimentoData.endereco_ambulancia.complemento}
+                                  onChange={(e) => setAtendimentoData(prev => ({
+                                    ...prev,
+                                    endereco_ambulancia: { ...prev.endereco_ambulancia, complemento: e.target.value }
+                                  }))}
+                                />
+                              </div>
+
+                              <div className="address-row full">
+                                <input
+                                  type="text"
+                                  placeholder="Informações adicionais"
+                                  className="atendimento-input-small"
+                                  value={atendimentoData.endereco_ambulancia.informacoes_adicionais}
+                                  onChange={(e) => setAtendimentoData(prev => ({
+                                    ...prev,
+                                    endereco_ambulancia: { ...prev.endereco_ambulancia, informacoes_adicionais: e.target.value }
+                                  }))}
+                                />
+                              </div>
+
+                              <div className="address-row full">
+                                <div className="input-with-label">
+                                  <span>Telefone:</span>
+                                  <input
+                                    type="text"
+                                    className="atendimento-input-small"
+                                    value={atendimentoData.endereco_ambulancia.telefone}
+                                    onChange={(e) => setAtendimentoData(prev => ({
+                                      ...prev,
+                                      endereco_ambulancia: { ...prev.endereco_ambulancia, telefone: e.target.value }
+                                    }))}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </Accordion>
