@@ -81,7 +81,7 @@ function AtendimentoInner() {
   const [statusText, setStatusText] = useState<string | null>(null);
   const claimingRef = useRef(false);
   const startedRef = useRef(false);
-  const [showChat, setShowChat] = useState(true);
+  const [showChat, setShowChat] = useState(false);
   const hasReadySignalRef = useRef(false);
   const isLocalReadyRef = useRef(false);
   const offeringInitiatedRef = useRef(false);
