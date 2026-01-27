@@ -930,7 +930,11 @@ function AtendimentoInner() {
                       className="atendimento-textarea"
                       placeholder="Registre a evolução do paciente..."
                       value={atendimentoData.evolucao}
-                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, evolucao: e.target.value }))}
+                      onChange={(e) => {
+                        setAtendimentoData(prev => ({ ...prev, evolucao: e.target.value }));
+                        e.target.style.height = 'inherit';
+                        e.target.style.height = `${e.target.scrollHeight}px`;
+                      }}
                     ></textarea>
                   </Accordion>
                   <Accordion
@@ -943,7 +947,11 @@ function AtendimentoInner() {
                       className="atendimento-textarea"
                       placeholder="Defina o plano terapêutico..."
                       value={atendimentoData.plano_terapeutico}
-                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, plano_terapeutico: e.target.value }))}
+                      onChange={(e) => {
+                        setAtendimentoData(prev => ({ ...prev, plano_terapeutico: e.target.value }));
+                        e.target.style.height = 'inherit';
+                        e.target.style.height = `${e.target.scrollHeight}px`;
+                      }}
                     ></textarea>
                   </Accordion>
                   <Accordion
@@ -952,13 +960,18 @@ function AtendimentoInner() {
                     isOpen={!!openAccordions['diagnostico']}
                     onToggle={toggleAccordion}
                   >
-                    <input
-                      type="text"
-                      className="atendimento-input-small"
-                      placeholder="Buscar ou digitar diagnóstico..."
-                      value={atendimentoData.diagnostico}
-                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, diagnostico: e.target.value }))}
-                    />
+                    <div className="address-search-wrapper">
+                      <input
+                        type="text"
+                        className="atendimento-input-small"
+                        placeholder="Buscar ou digitar diagnóstico..."
+                        value={atendimentoData.diagnostico}
+                        onChange={(e) => setAtendimentoData(prev => ({ ...prev, diagnostico: e.target.value }))}
+                      />
+                      <span className="search-icon-inside">
+                        <img src="/icons/Search.png" alt="Buscar" width="16" height="16" />
+                      </span>
+                    </div>
                   </Accordion>
                   <Accordion
                     id="repouso"
@@ -1016,7 +1029,9 @@ function AtendimentoInner() {
                                       endereco_ambulancia: { ...prev.endereco_ambulancia, endereco: v }
                                     }))}
                                   />
-                                  <span className="search-icon-inside">🔍</span>
+                                  <span className="search-icon-inside">
+                                    <img src="/icons/Search.png" alt="Buscar" width="16" height="16" />
+                                  </span>
                                 </div>
                               </div>
 
