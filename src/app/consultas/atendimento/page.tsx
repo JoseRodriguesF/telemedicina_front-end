@@ -927,7 +927,7 @@ function AtendimentoInner() {
                     onToggle={toggleAccordion}
                   >
                     <textarea
-                      className="atendimento-textarea"
+                      className={`atendimento-textarea ${atendimentoData.evolucao ? 'is-filled' : ''}`}
                       placeholder="Registre a evolução do paciente..."
                       value={atendimentoData.evolucao}
                       onChange={(e) => {
@@ -944,7 +944,7 @@ function AtendimentoInner() {
                     onToggle={toggleAccordion}
                   >
                     <textarea
-                      className="atendimento-textarea"
+                      className={`atendimento-textarea ${atendimentoData.plano_terapeutico ? 'is-filled' : ''}`}
                       placeholder="Defina o plano terapêutico..."
                       value={atendimentoData.plano_terapeutico}
                       onChange={(e) => {
@@ -963,7 +963,7 @@ function AtendimentoInner() {
                     <div className="address-search-wrapper">
                       <input
                         type="text"
-                        className="atendimento-input-small"
+                        className={`atendimento-input-small ${atendimentoData.diagnostico ? 'is-filled' : ''}`}
                         placeholder="Buscar ou digitar diagnóstico..."
                         value={atendimentoData.diagnostico}
                         onChange={(e) => setAtendimentoData(prev => ({ ...prev, diagnostico: e.target.value }))}
@@ -1022,7 +1022,7 @@ function AtendimentoInner() {
                                 <div className="address-search-wrapper">
                                   <AddressAutocomplete
                                     placeholder="Ex: Av. Paulista, 1000"
-                                    className="atendimento-input-small"
+                                    className={`atendimento-input-small ${atendimentoData.endereco_ambulancia.endereco ? 'is-filled' : ''}`}
                                     value={atendimentoData.endereco_ambulancia.endereco}
                                     onChange={(v) => setAtendimentoData(prev => ({
                                       ...prev,
@@ -1040,7 +1040,7 @@ function AtendimentoInner() {
                                 <input
                                   type="text"
                                   placeholder="Ex: Bloco B, Apto 101"
-                                  className="atendimento-input-small"
+                                  className={`atendimento-input-small ${atendimentoData.endereco_ambulancia.complemento ? 'is-filled' : ''}`}
                                   value={atendimentoData.endereco_ambulancia.complemento}
                                   onChange={(e) => setAtendimentoData(prev => ({
                                     ...prev,
@@ -1054,7 +1054,7 @@ function AtendimentoInner() {
                                 <input
                                   type="text"
                                   placeholder="Ponto de referência, observações..."
-                                  className="atendimento-input-small"
+                                  className={`atendimento-input-small ${atendimentoData.endereco_ambulancia.informacoes_adicionais ? 'is-filled' : ''}`}
                                   value={atendimentoData.endereco_ambulancia.informacoes_adicionais}
                                   onChange={(e) => setAtendimentoData(prev => ({
                                     ...prev,
@@ -1069,7 +1069,7 @@ function AtendimentoInner() {
                                   <input
                                     type="text"
                                     placeholder="(00) 00000-0000"
-                                    className="atendimento-input-small"
+                                    className={`atendimento-input-small ${atendimentoData.endereco_ambulancia.telefone ? 'is-filled' : ''}`}
                                     value={atendimentoData.endereco_ambulancia.telefone}
                                     onChange={(e) => setAtendimentoData(prev => ({
                                       ...prev,
