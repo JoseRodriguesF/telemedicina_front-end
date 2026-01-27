@@ -45,15 +45,52 @@ function AtendimentoInner() {
 
   const [consultaDetails, setConsultaDetails] = useState<ConsultaDetails | null>(null);
 
+  // States and Refs moved to top
+  const localRef = useRef<HTMLVideoElement | null>(null);
+  const remoteRef = useRef<HTMLVideoElement | null>(null);
+  const [connecting, setConnecting] = useState(false);
+  const sessionRef = useRef<ReturnType<typeof createWebRTCSession> | null>(null);
+  const pollingRef = useRef<number | null>(null);
+  const [roomId, setRoomId] = useState<string>('');
+  const [consultaIdState, setConsultaIdState] = useState<string>('');
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [draft, setDraft] = useState('');
+  const [chatReady, setChatReady] = useState(false);
+  const [statusText, setStatusText] = useState<string | null>(null);
+  const claimingRef = useRef(false);
+  const startedRef = useRef(false);
+  const [showChat, setShowChat] = useState(true);
+  const hasReadySignalRef = useRef(false);
+  const isLocalReadyRef = useRef(false);
+  const offeringInitiatedRef = useRef(false);
+
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [camEnabled, setCamEnabled] = useState(true);
+  const [micEnabled, setMicEnabled] = useState(true);
+  const [remoteConnected, setRemoteConnected] = useState(false);
+  const [remoteHasVideo, setRemoteHasVideo] = useState(false);
+  const [remoteHasAudio, setRemoteHasAudio] = useState(false);
+  const [remoteDisconnected, setRemoteDisconnected] = useState(false);
+  const [showExitMessage, setShowExitMessage] = useState(false);
+
+  // Estados para accordions do layout de médico
+  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({});
+
+  // Estados para histórico de consultas
+  const [historicoConsultas, setHistoricoConsultas] = useState<PSFullHistoryItem[]>([]);
+  const [loadingHistorico, setLoadingHistorico] = useState(false);
+  const [consultaSelecionada, setConsultaSelecionada] = useState<PSFullHistoryItem | null>(null);
+
   // Buscar detalhes do paciente se for médico
   useEffect(() => {
     async function fetchPatientDetails() {
-      const cid = getConsultaIdFromUrl() || consultaIdState || consultaId;
-      if (!cid || !token || user?.tipo_usuario !== 'medico') return;
+      const curCid = getConsultaIdFromUrl() || consultaIdState || consultaId;
+      if (!curCid || !token || user?.tipo_usuario !== 'medico') return;
 
       try {
-        console.log('[AtendimentoInner] Buscando dados do paciente, consultaId:', cid);
-        const data = await getConsulta(cid, token);
+        console.log('[AtendimentoInner] Buscando dados do paciente, consultaId:', curCid);
+        const data = await getConsulta(curCid, token);
         console.log('[AtendimentoInner] Dados do paciente recebidos:', data);
         setConsultaDetails(data);
       } catch (err) {
@@ -62,7 +99,7 @@ function AtendimentoInner() {
     }
 
     fetchPatientDetails();
-  }, [consultaId, consultaIdState, token, user?.tipo_usuario]); // Incluído consultaIdState
+  }, [consultaId, consultaIdState, token, user?.tipo_usuario]);
 
   // Buscar histórico de consultas do paciente se for médico
   useEffect(() => {
@@ -98,44 +135,6 @@ function AtendimentoInner() {
   };
 
   // Modo UI: organizar telas/estilo sem lógica de API/signaling.
-
-  const localRef = useRef<HTMLVideoElement | null>(null);
-  const remoteRef = useRef<HTMLVideoElement | null>(null);
-  const [connecting, setConnecting] = useState(false);
-  const sessionRef = useRef<ReturnType<typeof createWebRTCSession> | null>(null);
-  const pollingRef = useRef<number | null>(null);
-  const [roomId, setRoomId] = useState<string>('');
-  const [consultaIdState, setConsultaIdState] = useState<string>('');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [draft, setDraft] = useState('');
-  const [chatReady, setChatReady] = useState(false);
-  const [statusText, setStatusText] = useState<string | null>(null);
-  const claimingRef = useRef(false);
-  const startedRef = useRef(false);
-  const [showChat, setShowChat] = useState(true);
-  const hasReadySignalRef = useRef(false);
-  const isLocalReadyRef = useRef(false);
-  const offeringInitiatedRef = useRef(false);
-
-  // Mídia controls
-  const localStreamRef = useRef<MediaStream | null>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const [camEnabled, setCamEnabled] = useState(true);
-  const [micEnabled, setMicEnabled] = useState(true);
-  const [remoteConnected, setRemoteConnected] = useState(false);
-  const [remoteHasVideo, setRemoteHasVideo] = useState(false);
-  const [remoteHasAudio, setRemoteHasAudio] = useState(false);
-  const [remoteDisconnected, setRemoteDisconnected] = useState(false);
-  const [showExitMessage, setShowExitMessage] = useState(false);
-
-  // Estados para accordions do layout de médico
-  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({});
-
-  // Estados para histórico de consultas
-  const [historicoConsultas, setHistoricoConsultas] = useState<PSFullHistoryItem[]>([]);
-  const [loadingHistorico, setLoadingHistorico] = useState(false);
-  const [consultaSelecionada, setConsultaSelecionada] = useState<PSFullHistoryItem | null>(null);
-
   // Estados para a ficha de atendimento (médico)
   const [atendimentoData, setAtendimentoData] = useState({
     evolucao: '',

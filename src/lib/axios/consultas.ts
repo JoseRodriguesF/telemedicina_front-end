@@ -197,7 +197,7 @@ export async function endConsulta(
   consultaId: string,
   token: string,
   hora_fim?: string,
-  data?: { repouso?: string; destino_final?: string; diagnostico?: string }
+  data?: { repouso?: string; destino_final?: string; diagnostico?: string; evolucao?: string; plano_terapeutico?: string }
 ): Promise<{ ok: boolean }> {
   try {
     const body: Record<string, any> = {};
