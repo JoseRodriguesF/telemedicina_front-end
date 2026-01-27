@@ -520,3 +520,15 @@ svg {
 	background-color: var(--color-primary-200);
 	color: var(--color-primary-900);
 }
+
+/* Hide scrollbar utility */
+.no-scrollbar {
+	-ms-overflow-style: none !important;
+	/* IE and Edge */
+	scrollbar-width: none !important;
+	/* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+	display: none !important;
+}

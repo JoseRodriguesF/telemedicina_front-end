@@ -49,7 +49,7 @@ export default function ContentModal({ isOpen, onClose, title, children, size = 
 
     if (!isOpen) return null;
 
-    const maxWidthStyle = size === 'lg' ? '800px' : size === 'xl' ? '1200px' : size === 'sm' ? '380px' : '500px';
+    const maxWidthStyle = size === 'lg' ? '800px' : size === 'xl' ? '1200px' : size === 'sm' ? '380px' : '600px';
 
     return (
         <div
@@ -60,8 +60,8 @@ export default function ContentModal({ isOpen, onClose, title, children, size = 
             aria-modal="true"
         >
             <div
-                className="modal-container"
-                style={{ maxWidth: maxWidthStyle, maxHeight: '90vh', overflowY: 'auto' }}
+                className="modal-container modal-scroll-hidden"
+                style={{ maxWidth: maxWidthStyle }}
             >
                 <div className="modal-header" style={{ marginBottom: '1.5rem', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h3 className="modal-title">{title}</h3>
