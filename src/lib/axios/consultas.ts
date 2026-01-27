@@ -296,6 +296,11 @@ export type PSFullHistoryItem = {
   data_consulta?: string;
   hora_inicio?: string;
   hora_fim?: string;
+  diagnostico?: string;
+  evolucao?: string;
+  plano_terapeutico?: string;
+  destino_final?: string;
+  repouso?: string;
   medico: {
     nome_completo: string;
   } | null;

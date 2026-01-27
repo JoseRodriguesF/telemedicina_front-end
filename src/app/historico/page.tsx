@@ -9,6 +9,7 @@ import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
 import { psGetFullHistory, PSFullHistoryItem } from '@/lib/axios/consultas';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
+import ContentModal from '@/components/common/Modal/ContentModal';
 
 export default function HistoricoPage() {
   const router = useRouter();
@@ -19,6 +20,8 @@ export default function HistoricoPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [selectedItem, setSelectedItem] = useState<PSFullHistoryItem | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     const u = getUser();
@@ -202,7 +205,16 @@ export default function HistoricoPage() {
                     </div>
 
                     <div className="history-item-actions">
-                      <button className="action-btn">Ver Detalhes</button>
+                      <button
+                        className="action-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedItem(item);
+                          setShowDetails(true);
+                        }}
+                      >
+                        Ver Detalhes
+                      </button>
                     </div>
                   </div>
                 ))
@@ -240,6 +252,65 @@ export default function HistoricoPage() {
           </div>
         </div>
       </main>
+      {/* Modal de Detalhes da Consulta */}
+      <ContentModal
+        isOpen={showDetails}
+        onClose={() => setShowDetails(false)}
+        title="Detalhes do Atendimento"
+        size="lg"
+      >
+        {selectedItem && (
+          <div className="history-details-modal">
+            <div className="details-section">
+              <h4>Informações Gerais</h4>
+              <div className="details-grid">
+                <div className="detail-item">
+                  <label>Data:</label>
+                  <span>{selectedItem.data_consulta ? formatDate(selectedItem.data_consulta) : formatDate(selectedItem.createdAt)}</span>
+                </div>
+                <div className="detail-item">
+                  <label>{userType === 'paciente' ? 'Médico:' : 'Paciente:'}</label>
+                  <span>{getParticipantName(selectedItem)}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Hora Início:</label>
+                  <span>{selectedItem.hora_inicio ? formatTime(selectedItem.hora_inicio) : '-'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Hora Fim:</label>
+                  <span>{selectedItem.hora_fim ? formatTime(selectedItem.hora_fim) : '-'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="details-section">
+              <h4>Diagnóstico</h4>
+              <p className="detail-text">{selectedItem.diagnostico || 'Não registrado'}</p>
+            </div>
+
+            <div className="details-section">
+              <h4>Evolução</h4>
+              <p className="detail-text">{selectedItem.evolucao || 'Não registrada'}</p>
+            </div>
+
+            <div className="details-section">
+              <h4>Plano Terapêutico</h4>
+              <p className="detail-text">{selectedItem.plano_terapeutico || 'Não registrado'}</p>
+            </div>
+
+            <div className="details-grid-bottom">
+              <div className="details-section">
+                <h4>Repouso</h4>
+                <p className="detail-text">{selectedItem.repouso || 'Não registrado'}</p>
+              </div>
+              <div className="details-section">
+                <h4>Destino Final</h4>
+                <p className="detail-text">{selectedItem.destino_final || 'Não registrado'}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </ContentModal>
     </div>
   );
 }

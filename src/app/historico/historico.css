@@ -17,6 +17,78 @@
     margin-bottom: 0.5rem;
 }
 
+/* Modal de Detalhes da Consulta */
+.history-details-modal {
+    padding: 1rem 0;
+}
+
+.details-section {
+    margin-bottom: 2rem;
+    background: transparent;
+}
+
+.details-section h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detail-item label {
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+    font-weight: 500;
+}
+
+.detail-item span {
+    font-size: 1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.detail-text {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    white-space: pre-wrap;
+    /* Preserves line breaks */
+    margin: 0;
+}
+
+.details-grid-bottom {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+
+    .details-grid,
+    .details-grid-bottom {
+        grid-template-columns: 1fr;
+    }
+}
+
 .search-input-wrapper {
     position: relative;
     display: flex;
