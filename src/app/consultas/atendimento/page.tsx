@@ -30,14 +30,15 @@ function calculateAge(birthDate: string | Date | undefined): string {
 }
 
 // Componente Accordion fora para evitar perder o foco nos inputs ao re-renderizar
-const Accordion = ({ id, title, isOpen, onToggle, children }: {
+const Accordion = ({ id, title, isOpen, onToggle, isFilled, children }: {
   id: string;
   title: string;
   isOpen: boolean;
   onToggle: (id: string) => void;
+  isFilled?: boolean;
   children: React.ReactNode
 }) => (
-  <div className={`accordion-item ${isOpen ? 'open' : ''}`}>
+  <div className={`accordion-item ${isOpen ? 'open' : ''} ${isFilled ? 'is-filled' : ''}`}>
     <button className="accordion-trigger" onClick={() => onToggle(id)} type="button">
       <span>{title}</span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -925,9 +926,10 @@ function AtendimentoInner() {
                     title="Evolução"
                     isOpen={!!openAccordions['evolucao']}
                     onToggle={toggleAccordion}
+                    isFilled={!!atendimentoData.evolucao}
                   >
                     <textarea
-                      className={`atendimento-textarea ${atendimentoData.evolucao ? 'is-filled' : ''}`}
+                      className="atendimento-textarea"
                       placeholder="Registre a evolução do paciente..."
                       value={atendimentoData.evolucao}
                       onChange={(e) => {
@@ -942,9 +944,10 @@ function AtendimentoInner() {
                     title="Plano Terapêutico"
                     isOpen={!!openAccordions['plano-terapeutico']}
                     onToggle={toggleAccordion}
+                    isFilled={!!atendimentoData.plano_terapeutico}
                   >
                     <textarea
-                      className={`atendimento-textarea ${atendimentoData.plano_terapeutico ? 'is-filled' : ''}`}
+                      className="atendimento-textarea"
                       placeholder="Defina o plano terapêutico..."
                       value={atendimentoData.plano_terapeutico}
                       onChange={(e) => {
@@ -959,11 +962,12 @@ function AtendimentoInner() {
                     title="Diagnóstico"
                     isOpen={!!openAccordions['diagnostico']}
                     onToggle={toggleAccordion}
+                    isFilled={!!atendimentoData.diagnostico}
                   >
                     <div className="address-search-wrapper">
                       <input
                         type="text"
-                        className={`atendimento-input-small ${atendimentoData.diagnostico ? 'is-filled' : ''}`}
+                        className="atendimento-input-small"
                         placeholder="Buscar ou digitar diagnóstico..."
                         value={atendimentoData.diagnostico}
                         onChange={(e) => setAtendimentoData(prev => ({ ...prev, diagnostico: e.target.value }))}
@@ -978,6 +982,7 @@ function AtendimentoInner() {
                     title="Repouso"
                     isOpen={!!openAccordions['repouso']}
                     onToggle={toggleAccordion}
+                    isFilled={!!atendimentoData.repouso}
                   >
                     <div className="options-grid">
                       {repousoOptions.map(option => (
@@ -999,6 +1004,7 @@ function AtendimentoInner() {
                     title="Destino Final"
                     isOpen={!!openAccordions['destino-final']}
                     onToggle={toggleAccordion}
+                    isFilled={!!atendimentoData.destino_final}
                   >
                     <div className="options-grid">
                       {destinoFinalOptions.map(option => (
@@ -1022,7 +1028,7 @@ function AtendimentoInner() {
                                 <div className="address-search-wrapper">
                                   <AddressAutocomplete
                                     placeholder="Ex: Av. Paulista, 1000"
-                                    className={`atendimento-input-small ${atendimentoData.endereco_ambulancia.endereco ? 'is-filled' : ''}`}
+                                    className="atendimento-input-small"
                                     value={atendimentoData.endereco_ambulancia.endereco}
                                     onChange={(v) => setAtendimentoData(prev => ({
                                       ...prev,
@@ -1040,7 +1046,7 @@ function AtendimentoInner() {
                                 <input
                                   type="text"
                                   placeholder="Ex: Bloco B, Apto 101"
-                                  className={`atendimento-input-small ${atendimentoData.endereco_ambulancia.complemento ? 'is-filled' : ''}`}
+                                  className="atendimento-input-small"
                                   value={atendimentoData.endereco_ambulancia.complemento}
                                   onChange={(e) => setAtendimentoData(prev => ({
                                     ...prev,
@@ -1054,7 +1060,7 @@ function AtendimentoInner() {
                                 <input
                                   type="text"
                                   placeholder="Ponto de referência, observações..."
-                                  className={`atendimento-input-small ${atendimentoData.endereco_ambulancia.informacoes_adicionais ? 'is-filled' : ''}`}
+                                  className="atendimento-input-small"
                                   value={atendimentoData.endereco_ambulancia.informacoes_adicionais}
                                   onChange={(e) => setAtendimentoData(prev => ({
                                     ...prev,
@@ -1069,7 +1075,7 @@ function AtendimentoInner() {
                                   <input
                                     type="text"
                                     placeholder="(00) 00000-0000"
-                                    className={`atendimento-input-small ${atendimentoData.endereco_ambulancia.telefone ? 'is-filled' : ''}`}
+                                    className="atendimento-input-small"
                                     value={atendimentoData.endereco_ambulancia.telefone}
                                     onChange={(e) => setAtendimentoData(prev => ({
                                       ...prev,
