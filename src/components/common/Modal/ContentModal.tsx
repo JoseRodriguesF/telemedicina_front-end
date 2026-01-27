@@ -61,7 +61,7 @@ export default function ContentModal({ isOpen, onClose, title, children, size = 
         >
             <div
                 className="modal-container"
-                style={{ maxWidth: maxWidthStyle }}
+                style={{ maxWidth: maxWidthStyle, maxHeight: '90vh', overflowY: 'auto' }}
             >
                 <div className="modal-header" style={{ marginBottom: '1.5rem', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h3 className="modal-title">{title}</h3>
