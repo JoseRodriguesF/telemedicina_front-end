@@ -39,9 +39,9 @@
   background: var(--card-bg);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-2xl);
-  max-width: 440px;
+  max-width: 400px;
   width: 100%;
-  padding: var(--spacing-2xl);
+  padding: var(--spacing-xl);
   transform: scale(0.95);
   opacity: 0;
   transition: all var(--transition-base);
@@ -59,19 +59,19 @@
 /* Modal Header */
 .modal-header {
   text-align: center;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
 }
 
 .modal-icon-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
 }
 
 .modal-icon {
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   animation: scaleIn 0.4s var(--transition-base);
 }
 
@@ -93,7 +93,7 @@
 }
 
 .modal-title {
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
@@ -102,13 +102,13 @@
 
 /* Modal Body */
 .modal-body {
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
 }
 
 .modal-message {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
-  line-height: 1.7;
+  line-height: 1.6;
   text-align: center;
   margin: 0;
 }
@@ -215,6 +215,7 @@
     opacity: 0;
     transform: scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -253,6 +254,7 @@
 
 /* Accessibility - Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
+
   .modal-backdrop,
   .modal-container,
   .modal-button,
