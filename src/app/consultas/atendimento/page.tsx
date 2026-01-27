@@ -136,6 +136,32 @@ function AtendimentoInner() {
     destino_final: ''
   });
 
+  const destinoFinalOptions = [
+    "Em domicílio com orientações médicas",
+    "Indico seguimento externo",
+    "Indico seguimento externo no consultório ou ambulatório",
+    "Paciente ausente",
+    "Anular paciente",
+    "Anular por falta de conexão",
+    "Envio de ambulância (código amarelo)",
+    "Envio de ambulância (código vermelho)"
+  ];
+
+  const repousoOptions = [
+    "Alta",
+    "Repouso 24h",
+    "Repouso 48h",
+    "Repouso 72h",
+    "Consulta não justifica repouso"
+  ];
+
+  const handleOptionToggle = (field: 'repouso' | 'destino_final', option: string) => {
+    setAtendimentoData(prev => ({
+      ...prev,
+      [field]: prev[field] === option ? '' : option
+    }));
+  };
+
   // Helper para toggle de accordions
   const toggleAccordion = (id: string) => {
     setOpenAccordions(prev => ({ ...prev, [id]: !prev[id] }));
@@ -852,20 +878,36 @@ function AtendimentoInner() {
                     ></textarea>
                   </Accordion>
                   <Accordion id="repouso" title="Repouso">
-                    <textarea
-                      className="atendimento-textarea"
-                      placeholder="Defina período de repouso se necessário..."
-                      value={atendimentoData.repouso}
-                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, repouso: e.target.value }))}
-                    ></textarea>
+                    <div className="options-grid">
+                      {repousoOptions.map(option => (
+                        <label key={option} className={`option-card ${atendimentoData.repouso === option ? 'selected' : ''}`}>
+                          <input
+                            type="checkbox"
+                            className="hidden-checkbox"
+                            checked={atendimentoData.repouso === option}
+                            onChange={() => handleOptionToggle('repouso', option)}
+                          />
+                          <div className="option-indicator"></div>
+                          <span className="option-text">{option}</span>
+                        </label>
+                      ))}
+                    </div>
                   </Accordion>
                   <Accordion id="destino-final" title="Destino Final">
-                    <textarea
-                      className="atendimento-textarea"
-                      placeholder="Defina o destino do paciente..."
-                      value={atendimentoData.destino_final}
-                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, destino_final: e.target.value }))}
-                    ></textarea>
+                    <div className="options-grid">
+                      {destinoFinalOptions.map(option => (
+                        <label key={option} className={`option-card ${atendimentoData.destino_final === option ? 'selected' : ''}`}>
+                          <input
+                            type="checkbox"
+                            className="hidden-checkbox"
+                            checked={atendimentoData.destino_final === option}
+                            onChange={() => handleOptionToggle('destino_final', option)}
+                          />
+                          <div className="option-indicator"></div>
+                          <span className="option-text">{option}</span>
+                        </label>
+                      ))}
+                    </div>
                   </Accordion>
                 </div>
               </aside>
