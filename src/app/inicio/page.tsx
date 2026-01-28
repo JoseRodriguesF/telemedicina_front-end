@@ -190,6 +190,15 @@ export default function InicioPage() {
             }).length;
             processed.push({ name: label, consultas: count });
           }
+
+          // Injetar ponto inicial para efeito de subida (50% do valor da primeira consulta)
+          if (processed.length > 0 && processed[0].consultas > 0) {
+            processed.unshift({
+              name: '',
+              consultas: processed[0].consultas / 2
+            });
+          }
+
           setChartData(processed);
         })
         .catch((err: any) => console.error('Erro ao buscar histórico:', err))
@@ -337,7 +346,7 @@ export default function InicioPage() {
                 <Image src="/icons/icon-chart.png" alt="Ícone Frequência" width={24} height={24} />
               </div>
             </div>
-            <div style={{ flex: 1, minHeight: '300px', height: '100%', width: '100%', padding: '1rem 0 2.5rem', position: 'relative' }}>
+            <div style={{ flex: 1, minHeight: '275px', height: '100%', width: '100%', padding: '1rem 0 2.5rem', position: 'relative' }}>
               <FrequencyChart data={chartData} />
             </div>
             <div className="dash-card-footer" style={{ textAlign: 'center' }}>Últimos 30 dias</div>
@@ -365,7 +374,7 @@ export default function InicioPage() {
 
                   <div className="appointment-time" style={{
                     background: 'var(--bg-tertiary)',
-                    padding: '1rem',
+                    padding: '0.75rem',
                     borderRadius: 'var(--radius-lg)',
                     marginBottom: '1.5rem',
                     display: 'flex',
@@ -394,7 +403,7 @@ export default function InicioPage() {
                       style={{
                         borderRadius: 'var(--radius-lg)',
                         width: '100%',
-                        padding: '0.75rem',
+                        padding: '0.5rem',
                         color: 'var(--color-error)',
                         borderColor: 'var(--color-error)',
                         background: 'transparent',
@@ -407,7 +416,7 @@ export default function InicioPage() {
                     </button>
                     <button
                       className="btn primary"
-                      style={{ borderRadius: 'var(--radius-lg)', width: '100%', padding: '0.75rem' }}
+                      style={{ borderRadius: 'var(--radius-lg)', width: '100%', padding: '0.5rem' }}
                       onClick={handleEnterAppointment}
                       disabled={!canEnterRoom}
                     >

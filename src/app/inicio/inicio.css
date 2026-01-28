@@ -22,7 +22,8 @@
 
 .inicio-main {
 	flex: 1;
-	padding: 2rem 3rem;
+	padding: 2rem 2rem;
+	/* Reduced padding slightly */
 	margin-left: 112px;
 	/* Adjusted to fit the new sidebar + gap */
 	max-width: 1400px;
@@ -37,7 +38,8 @@
 }
 
 .dashboard-header h2 {
-	font-size: 1.6rem;
+	font-size: 1.4rem;
+	/* Reduced from 1.6rem */
 	font-weight: 800;
 	color: var(--text-primary);
 	margin-bottom: 0.25rem;
@@ -46,7 +48,8 @@
 
 .dashboard-header p {
 	color: var(--text-secondary);
-	font-size: 1.1rem;
+	font-size: 1rem;
+	/* Reduced from 1.1rem */
 }
 
 /* Dashboard Grid */
@@ -63,7 +66,8 @@
 	-webkit-backdrop-filter: blur(20px);
 	border: 1px solid var(--card-border);
 	border-radius: var(--radius-xl);
-	padding: 0.85rem;
+	padding: 0.75rem;
+	/* Reduced from 0.85rem */
 	box-shadow: var(--shadow-md);
 	transition: all var(--transition-base);
 	display: flex;
@@ -84,25 +88,30 @@
 }
 
 .dash-card-header h3 {
-	font-size: 0.85rem;
+	font-size: 0.8rem;
+	/* Reduced from 0.85rem */
 	font-weight: 700;
 	color: var(--text-secondary);
 }
 
 .dash-card-icon {
-	width: 28px;
-	height: 28px;
+	width: 26px;
+	/* Reduced from 28px */
+	height: 26px;
+	/* Reduced from 28px */
 	background: var(--bg-tertiary);
 	border-radius: var(--radius-md);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 0.9rem;
+	font-size: 0.85rem;
+	/* Reduced from 0.9rem */
 	color: var(--text-primary);
 }
 
 .dash-card-value {
-	font-size: 1.25rem;
+	font-size: 1.15rem;
+	/* Reduced from 1.25rem */
 	font-weight: 800;
 	color: var(--text-primary);
 	display: flex;
@@ -111,9 +120,11 @@
 }
 
 .dash-card-trend {
-	font-size: 0.875rem;
+	font-size: 0.8rem;
+	/* Reduced from 0.875rem */
 	font-weight: 600;
-	padding: 0.25rem 0.625rem;
+	padding: 0.2rem 0.5rem;
+	/* Reduced padding */
 	border-radius: var(--radius-full);
 }
 
@@ -129,14 +140,16 @@
 
 .dash-card-footer {
 	margin-top: auto;
-	font-size: 0.8rem;
+	font-size: 0.75rem;
+	/* Reduced from 0.8rem */
 	color: var(--text-tertiary);
 }
 
 /* Featured Card (Spans 2 columns or larger height) */
 .dash-card.featured {
 	grid-column: span 2;
-	min-height: 290px;
+	min-height: 250px;
+	/* Reduced from 290px */
 }
 
 .dash-card.tall {
@@ -191,8 +204,10 @@
 @media (max-width: 767px) {
 	.inicio-main {
 		margin-left: 0 !important;
-		padding: 1.5rem !important;
-		padding-top: 5rem !important;
+		padding: 1rem !important;
+		/* Reduced padding from 1.5rem */
+		padding-top: 4.5rem !important;
+		/* Reduced from 5rem */
 	}
 
 	.dashboard-grid {
