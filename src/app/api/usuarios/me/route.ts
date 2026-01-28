@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const getApiUrl = () => {
-    // Fallback to the known API URL if env var is missing, matching next.config.ts behavior
-    const base = (process.env.NEXT_PUBLIC_API_URL || 'https://telemedicina-api-774w.onrender.com').replace(/\/$/, '');
-    return `${base}/usuarios/me`;
-};
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://telemedicina-api-774w.onrender.com';
 
 export async function GET(req: NextRequest) {
-    const url = getApiUrl();
     const auth = req.headers.get('authorization') || '';
 
+    // Se não houver token, retorna 401 imediatamente sem chamar o backend
+    if (!auth || !auth.startsWith('Bearer ')) {
+        console.warn('[Proxy] GET /usuarios/me - No valid authorization header');
+        return NextResponse.json({ error: 'Token de autenticação não fornecido ou inválido' }, { status: 401 });
+    }
+
+    const url = `${API_BASE.replace(/\/$/, '')}/usuarios/me`;
+
     try {
-        console.log(`[Proxy] GET ${url}`);
+        console.log(`[Proxy] fetching: ${url}`);
         const res = await fetch(url, {
             method: 'GET',
             headers: {
@@ -21,14 +24,17 @@ export async function GET(req: NextRequest) {
         });
 
         const text = await res.text();
+        const contentType = res.headers.get('content-type') || '';
         let data;
+
         try {
-            data = JSON.parse(text);
+            data = contentType.includes('application/json') ? JSON.parse(text) : { message: text };
         } catch {
             data = { message: text };
         }
 
         if (!res.ok) {
+            console.error(`[Proxy] Backend returned ${res.status}:`, data);
             return NextResponse.json(data, { status: res.status });
         }
 
@@ -40,12 +46,17 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-    const url = getApiUrl();
     const auth = req.headers.get('authorization') || '';
+
+    if (!auth) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const url = `${API_BASE.replace(/\/$/, '')}/usuarios/me`;
 
     try {
         const body = await req.json();
-        console.log(`[Proxy] PATCH ${url}`);
+        console.log(`[Proxy] patching: ${url}`);
 
         const res = await fetch(url, {
             method: 'PATCH',
@@ -57,14 +68,17 @@ export async function PATCH(req: NextRequest) {
         });
 
         const text = await res.text();
+        const contentType = res.headers.get('content-type') || '';
         let data;
+
         try {
-            data = JSON.parse(text);
+            data = contentType.includes('application/json') ? JSON.parse(text) : { message: text };
         } catch {
             data = { message: text };
         }
 
         if (!res.ok) {
+            console.error(`[Proxy] Backend PATCH returned ${res.status}:`, data);
             return NextResponse.json(data, { status: res.status });
         }
 
