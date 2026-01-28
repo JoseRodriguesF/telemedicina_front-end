@@ -56,16 +56,27 @@ export default function FrequencyChart({ data }: Props) {
                         allowDecimals={false}
                     />
                     <Tooltip
-                        contentStyle={{
-                            backgroundColor: 'var(--bg-primary, #ffffff)',
-                            borderRadius: '12px',
-                            border: '1px solid var(--border-color, #e5e7eb)',
-                            boxShadow: 'var(--shadow-lg)',
-                            padding: '8px 12px',
-                            outline: 'none'
+                        content={({ active, payload, label }) => {
+                            if (active && payload && payload.length) {
+                                if (payload[0].payload.name === 'hidden_point') return null;
+                                return (
+                                    <div style={{
+                                        backgroundColor: 'var(--bg-primary, #ffffff)',
+                                        borderRadius: '12px',
+                                        border: '1px solid var(--border-color, #e5e7eb)',
+                                        boxShadow: 'var(--shadow-lg)',
+                                        padding: '8px 12px',
+                                        outline: 'none'
+                                    }}>
+                                        <p style={{ color: 'var(--text-secondary, #6b7280)', marginBottom: '4px', fontSize: '0.85rem' }}>{label}</p>
+                                        <p style={{ color: 'var(--text-primary, #111827)', fontWeight: 600 }}>
+                                            {payload[0].value} consultas
+                                        </p>
+                                    </div>
+                                );
+                            }
+                            return null;
                         }}
-                        itemStyle={{ color: 'var(--text-primary, #111827)', fontWeight: 600, outline: 'none' }}
-                        labelStyle={{ color: 'var(--text-secondary, #6b7280)', marginBottom: '4px', outline: 'none' }}
                     />
                     <Line
                         type="monotone"

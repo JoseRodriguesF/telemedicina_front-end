@@ -191,11 +191,11 @@ export default function InicioPage() {
             processed.push({ name: label, consultas: count });
           }
 
-          // Injetar ponto inicial para efeito de subida (50% do valor da primeira consulta)
+          // Injetar ponto inicial para efeito de subida (começa do zero)
           if (processed.length > 0 && processed[0].consultas > 0) {
             processed.unshift({
-              name: '',
-              consultas: processed[0].consultas / 2
+              name: 'hidden_point',
+              consultas: 0
             });
           }
 

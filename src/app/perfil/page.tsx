@@ -12,6 +12,7 @@ import { getMyProfile, updateMyProfile, UserProfile } from '@/lib/axios/perfil';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate } from '@/lib/utils/dateFormatters';
+import AddressAutocomplete from '@/components/common/Inputs/AddressAutocomplete';
 
 export default function PerfilPage() {
   const router = useRouter();
@@ -264,15 +265,7 @@ export default function PerfilPage() {
               onChange={(e) => setEditData({ ...editData, nome_completo: e.target.value })}
             />
           </div>
-          <div className="field-group">
-            <label>Email</label>
-            <input
-              className="field-value"
-              style={{ width: '100%', background: 'var(--bg-tertiary)' }}
-              value={editData.email}
-              onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-            />
-          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="field-group">
               <label>Telefone</label>
@@ -299,11 +292,11 @@ export default function PerfilPage() {
           </div>
           <div className="field-group">
             <label>Rua / Logradouro</label>
-            <input
+            <AddressAutocomplete
               className="field-value"
-              style={{ width: '100%', background: 'var(--bg-tertiary)' }}
-              value={editData.endereco?.endereco}
-              onChange={(e) => setEditData({ ...editData, endereco: { ...editData.endereco, endereco: e.target.value } })}
+              placeholder=""
+              value={editData.endereco?.endereco || ''}
+              onChange={(val) => setEditData({ ...editData, endereco: { ...editData.endereco, endereco: val } })}
             />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
