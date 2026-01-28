@@ -161,11 +161,27 @@ export default function InicioPage() {
       psGetFullHistory(token)
         .then((data: PSFullHistoryItem[]) => {
           setFullHistory(data);
-          // Processar dados para o gráfico (últimos 30 dias)
+          // Processar dados para o gráfico (da primeira consulta até hoje, máx 30 dias)
           const processed = [];
           const now = new Date();
-          for (let i = 29; i >= 0; i--) {
-            const d = new Date();
+          now.setHours(0, 0, 0, 0);
+
+          let daysToShow = 30;
+          if (data.length > 0) {
+            const timestamps = data.map(item => new Date(item.createdAt || '').getTime());
+            const earliestTimestamp = Math.min(...timestamps);
+            const earliestDate = new Date(earliestTimestamp);
+            earliestDate.setHours(0, 0, 0, 0);
+
+            const diffTime = Math.abs(now.getTime() - earliestDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            daysToShow = Math.min(diffDays, 30);
+          } else {
+            daysToShow = 1; // Se não tem histórico, mostra apenas o dia atual
+          }
+
+          for (let i = daysToShow - 1; i >= 0; i--) {
+            const d = new Date(now);
             d.setDate(now.getDate() - i);
             const label = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
             const count = data.filter((item: PSFullHistoryItem) => {

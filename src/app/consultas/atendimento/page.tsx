@@ -14,6 +14,7 @@ import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate } from '@/lib/utils/dateFormatters';
 import AddressAutocomplete from '@/components/common/Inputs/AddressAutocomplete';
+import ContentModal from '@/components/common/Modal/ContentModal';
 
 type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
 
@@ -85,6 +86,7 @@ function AtendimentoInner() {
   const hasReadySignalRef = useRef(false);
   const isLocalReadyRef = useRef(false);
   const offeringInitiatedRef = useRef(false);
+  const bypassBeforeUnloadRef = useRef(false);
 
   const localStreamRef = useRef<MediaStream | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -149,11 +151,13 @@ function AtendimentoInner() {
 
 
   const handleConnected = () => {
-
-    setStatusText('Conectado.');
+    setConnecting(false);
     setConnectionFailed(false);
     setReconnecting(false);
+    setRemoteDisconnected(false);
+    setShowExitMessage(false);
     setRemoteConnected(true);
+    setStatusText('Em consulta');
   };
 
   // Modo UI: organizar telas/estilo sem lógica de API/signaling.
@@ -241,6 +245,7 @@ function AtendimentoInner() {
 
     // Warn on close/reload
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (bypassBeforeUnloadRef.current) return;
       e.preventDefault();
       e.returnValue = ''; // Required for Chrome
     };
@@ -432,22 +437,18 @@ function AtendimentoInner() {
    * 2. O navegador local já abriu a câmera e o canal de chat.
    */
   const checkAndInitiateOffering = async () => {
+    // medico é sempre o responsável por iniciar a oferta inicial
     if (role === 'medico' && hasReadySignalRef.current && isLocalReadyRef.current) {
       if (!offeringInitiatedRef.current && sessionRef.current) {
         offeringInitiatedRef.current = true;
-
         try {
+          console.log('[UI] Iniciando oferta para o outro par...');
           await sessionRef.current.createAndSendOffer();
-
         } catch (err) {
-          console.error('[UI] ❌ Error sending offer:', err);
+          console.error('[UI] ❌ Erro ao enviar oferta:', err);
           offeringInitiatedRef.current = false;
         }
-      } else {
-
       }
-    } else {
-
     }
   };
 
@@ -513,8 +514,10 @@ function AtendimentoInner() {
           setStatusText('Conexão perdida. Tentando reconectar...');
           setConnectionFailed(true);
         } else if (state === 'failed') {
-          setStatusText('Falha de conexão.');
+          setStatusText('Falha de conexão grave. Tentando reiniciar...');
           setConnectionFailed(true);
+          // Tentar um ICE Restart suave antes de forçar o refresh
+          session.restartIce();
         }
       });
 
@@ -527,20 +530,22 @@ function AtendimentoInner() {
 
 
 
-        if (ev === 'answerSent' || ev === 'answerReceived' || ev === 'ready' || ev === 'peer-joined' || isJoinedReady) {
-          handleConnected();
-          if (ev === 'ready' || ev === 'peer-joined' || isJoinedReady) {
-
-            hasReadySignalRef.current = true;
-            checkAndInitiateOffering();
-          }
+        if (ev === 'ready' || ev === 'peer-joined' || isJoinedReady) {
+          setStatusText('O outro usuário entrou. Estabelecendo conexão...');
+          hasReadySignalRef.current = true;
+          checkAndInitiateOffering();
+        }
+        if (ev === 'answerSent' || ev === 'answerReceived') {
+          setStatusText('Finalizando handshake...');
         }
 
         if (ev === 'peer-left') {
-
           setRemoteDisconnected(true);
           setRemoteConnected(false);
           setStatusText('O outro usuário saiu da sala.');
+          // Reset para permitir nova oferta se ele voltar
+          hasReadySignalRef.current = false;
+          offeringInitiatedRef.current = false;
         }
       });
 
@@ -599,14 +604,14 @@ function AtendimentoInner() {
       isLocalReadyRef.current = true;
       checkAndInitiateOffering();
 
-      // Failsafe: se nada aconteceu em 8 segundos, tenta forçar uma oferta se for médico
+      // Failsafe: se nada aconteceu em 5 segundos, tenta forçar
       setTimeout(() => {
         if (role === 'medico' && !offeringInitiatedRef.current && isLocalReadyRef.current) {
-
+          console.log('[UI] Failsafe: Forçando sinal de pronto e nova tentativa de oferta.');
           hasReadySignalRef.current = true;
           checkAndInitiateOffering();
         }
-      }, 8000);
+      }, 5000);
 
       setStatusText('Conectado.');
 
@@ -634,6 +639,9 @@ function AtendimentoInner() {
   }
 
   async function confirmFinishCall() {
+    // Permitir navegação sem disparar o aviso do navegador (beforeunload)
+    bypassBeforeUnloadRef.current = true;
+
     // 1. Check if I am the last one
     const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
     if (cid && token) {
@@ -754,7 +762,7 @@ function AtendimentoInner() {
                 <section className="call-area">
                   <div className="call-header">
                     <span className={`status-dot ${statusColor}`} aria-label={`Status: ${statusColor}`}></span>
-                    Você está em uma consulta
+                    {statusText || 'Em consulta'}
                   </div>
                   <div className="call-screen">
                     <div className="call-screen">
@@ -1303,79 +1311,64 @@ function AtendimentoInner() {
       </main>
 
       {/* Modal de Detalhes da Consulta */}
-      {consultaSelecionada && (
-        <div className="consulta-modal-overlay" onClick={() => setConsultaSelecionada(null)}>
-          <div className="consulta-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="consulta-modal-header">
-              <h3>Detalhes da Consulta</h3>
-              <button
-                className="consulta-modal-close"
-                onClick={() => setConsultaSelecionada(null)}
-                aria-label="Fechar"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-            <div className="consulta-modal-body">
-              <div className="consulta-detail-row">
-                <span className="consulta-detail-label">ID da Consulta:</span>
-                <span className="consulta-detail-value">#{consultaSelecionada.id}</span>
-              </div>
-              <div className="consulta-detail-row">
-                <span className="consulta-detail-label">Data da Consulta:</span>
-                <span className="consulta-detail-value">
-                  {formatDate(consultaSelecionada.data_consulta || consultaSelecionada.createdAt)}
-                </span>
-              </div>
-              {consultaSelecionada.medico && (
-                <div className="consulta-detail-row">
-                  <span className="consulta-detail-label">Médico Responsável:</span>
-                  <span className="consulta-detail-value">{consultaSelecionada.medico.nome_completo}</span>
+      <ContentModal
+        isOpen={!!consultaSelecionada}
+        onClose={() => setConsultaSelecionada(null)}
+        title="Detalhes do Atendimento"
+        size="md"
+      >
+        {consultaSelecionada && (
+          <div className="history-details-modal">
+            <div className="details-section">
+              <h4>Informações Gerais</h4>
+              <div className="details-grid">
+                <div className="detail-item">
+                  <label>Data:</label>
+                  <span>{consultaSelecionada.data_consulta ? formatDate(consultaSelecionada.data_consulta) : formatDate(consultaSelecionada.createdAt)}</span>
                 </div>
-              )}
-              {consultaSelecionada.hora_inicio && (
-                <div className="consulta-detail-row">
-                  <span className="consulta-detail-label">Horário de Início:</span>
-                  <span className="consulta-detail-value">
-                    {new Date(consultaSelecionada.hora_inicio).toLocaleTimeString('pt-BR', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
+                <div className="detail-item">
+                  <label>Médico:</label>
+                  <span>{consultaSelecionada.medico?.nome_completo || '-'}</span>
                 </div>
-              )}
-              {consultaSelecionada.hora_fim && (
-                <div className="consulta-detail-row">
-                  <span className="consulta-detail-label">Horário de Término:</span>
-                  <span className="consulta-detail-value">
-                    {new Date(consultaSelecionada.hora_fim).toLocaleTimeString('pt-BR', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
+                <div className="detail-item">
+                  <label>Hora Início:</label>
+                  <span>{consultaSelecionada.hora_inicio ? new Date(consultaSelecionada.hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
                 </div>
-              )}
-              <div className="consulta-detail-row">
-                <span className="consulta-detail-label">Status:</span>
-                <span className="consulta-detail-value consulta-status-badge">
-                  {consultaSelecionada.status === 'finished' ? 'Finalizada' : consultaSelecionada.status}
-                </span>
+                <div className="detail-item">
+                  <label>Hora Fim:</label>
+                  <span>{consultaSelecionada.hora_fim ? new Date(consultaSelecionada.hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
+                </div>
               </div>
             </div>
-            <div className="consulta-modal-footer">
-              <button
-                className="consulta-modal-button-close"
-                onClick={() => setConsultaSelecionada(null)}
-              >
-                Fechar
-              </button>
+
+            <div className="details-section">
+              <h4>Diagnóstico</h4>
+              <p className="detail-text">{consultaSelecionada.diagnostico || 'Não registrado'}</p>
+            </div>
+
+            <div className="details-section">
+              <h4>Evolução</h4>
+              <p className="detail-text">{consultaSelecionada.evolucao || 'Não registrada'}</p>
+            </div>
+
+            <div className="details-section">
+              <h4>Plano Terapêutico</h4>
+              <p className="detail-text">{consultaSelecionada.plano_terapeutico || 'Não registrado'}</p>
+            </div>
+
+            <div className="details-grid-bottom">
+              <div className="details-section">
+                <h4>Repouso</h4>
+                <p className="detail-text">{consultaSelecionada.repouso || 'Não registrado'}</p>
+              </div>
+              <div className="details-section">
+                <h4>Destino Final</h4>
+                <p className="detail-text">{consultaSelecionada.destino_final || 'Não registrado'}</p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </ContentModal>
 
       <Modal
         isOpen={modal.isOpen}

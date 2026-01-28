@@ -9,9 +9,10 @@ interface ModalProps {
   config: ModalConfig | null
   onConfirm: () => void | Promise<void>
   onCancel: () => void | Promise<void>
+  children?: React.ReactNode
 }
 
-export function Modal({ isOpen, config, onConfirm, onCancel }: ModalProps) {
+export function Modal({ isOpen, config, onConfirm, onCancel, children }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
 
   // Handle ESC key
@@ -103,6 +104,7 @@ export function Modal({ isOpen, config, onConfirm, onCancel }: ModalProps) {
 
         <div className="modal-body">
           <p id="modal-description" className="modal-message">{config.message}</p>
+          {children}
         </div>
 
         <div className="modal-footer">
