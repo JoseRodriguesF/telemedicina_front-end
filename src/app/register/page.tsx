@@ -179,7 +179,20 @@ export default function RegisterPage() {
 
               const resp = await createPessoais(payload);
               if (resp?.user) {
-                try { saveUser(resp.user); } catch (_) { }
+                try {
+                  const user = resp.user || {};
+                  const token = resp.token || user.token;
+                  if (token && !user.token) {
+                    user.token = token;
+                  }
+
+                  // Clear stale tokens
+                  localStorage.removeItem('telemedicina_token');
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('auth_token');
+
+                  saveUser(user);
+                } catch (_) { }
               }
               setShowTerms(false);
               router.push('/inicio');

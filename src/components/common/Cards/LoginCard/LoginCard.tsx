@@ -45,8 +45,21 @@ export default function LoginCard({ onLogin }: Props) {
       setLoading(true);
       try {
         const resp = await doLogin({ email, senha: password });
-        // resp expected: { message, user }
-        const user = resp?.user || null;
+        // resp expected: { message, user, token? }
+
+        // Ensure token is captured and associated with user
+        const token = resp.token || resp.user?.token;
+        const user = resp.user || {};
+
+        if (token) {
+          user.token = token;
+        }
+
+        // Clear standalone tokens to avoid conflicts in getToken
+        localStorage.removeItem('telemedicina_token');
+        localStorage.removeItem('token');
+        localStorage.removeItem('auth_token');
+
         // save user to localStorage
         saveUser(user);
         onLogin?.({ email, password, user, raw: resp });

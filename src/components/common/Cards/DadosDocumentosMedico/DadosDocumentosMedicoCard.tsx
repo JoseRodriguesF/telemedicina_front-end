@@ -93,7 +93,19 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
 
       try {
         const { saveUser } = await import('@/lib/auth');
-        if (resp?.user) saveUser(resp.user);
+        if (resp?.user) {
+          const user = resp.user || {};
+          const token = (resp as any).token || user.token;
+          if (token && !user.token) {
+            user.token = token;
+          }
+          // Clear stale tokens
+          localStorage.removeItem('telemedicina_token');
+          localStorage.removeItem('token');
+          localStorage.removeItem('auth_token');
+
+          saveUser(user);
+        }
       } catch (e) {
         // ignore save failures
       }
