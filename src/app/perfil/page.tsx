@@ -37,8 +37,12 @@ export default function PerfilPage() {
       }
       const data = await getMyProfile(token);
       setProfile(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao buscar perfil:', error);
+      // Handle Unauthorized
+      if (error?.response?.status === 401 || error?.status === 401 || error?.message?.includes('401')) {
+        router.push('/login');
+      }
     } finally {
       setLoading(false);
     }

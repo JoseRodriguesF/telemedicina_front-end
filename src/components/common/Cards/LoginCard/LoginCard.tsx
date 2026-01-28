@@ -48,7 +48,7 @@ export default function LoginCard({ onLogin }: Props) {
         // resp expected: { message, user, token? }
 
         // Ensure token is captured and associated with user
-        const token = resp.token || resp.user?.token;
+        const token = resp.token || resp.user?.token || resp.accessToken || resp.access_token || resp.jwt || resp.id_token;
         const user = resp.user || {};
 
         if (token) {
@@ -113,6 +113,7 @@ export default function LoginCard({ onLogin }: Props) {
         onSubmit={(e) => {
           handleSubmit(e);
         }}
+        autoComplete="new-password"
       >
         <Input
           name="email"

@@ -124,6 +124,7 @@ export function getToken(): string {
     tryStr((u as any)?.jwt),
     tryStr((u as any)?.id_token),
     tryStr((u as any)?.accessToken),
+    tryStr((u as any)?.access_token),
     tryStr((u as any)?.auth?.token),
   ];
   const found = candidates.find((s) => s && s.length > 0);

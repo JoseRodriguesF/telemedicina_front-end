@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
                 'Authorization': auth,
                 'Content-Type': 'application/json'
             },
+            cache: 'no-store'
         });
 
         const text = await res.text();
@@ -34,7 +35,10 @@ export async function GET(req: NextRequest) {
         }
 
         if (!res.ok) {
-            console.error(`[Proxy] Backend returned ${res.status}:`, data);
+            console.error(`[Proxy] CHANGE_ME debug: Backend returned ${res.status} for ${url}. Auth len: ${auth.length}`);
+            if (res.status === 401) {
+                console.error('[Proxy] 401 Body:', JSON.stringify(data));
+            }
             return NextResponse.json(data, { status: res.status });
         }
 
