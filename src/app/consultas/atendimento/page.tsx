@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
-import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem } from '@/lib/axios/consultas';
+import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta } from '@/lib/axios/consultas';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
@@ -105,6 +105,12 @@ function AtendimentoInner() {
   const [historicoConsultas, setHistoricoConsultas] = useState<PSFullHistoryItem[]>([]);
   const [loadingHistorico, setLoadingHistorico] = useState(false);
   const [consultaSelecionada, setConsultaSelecionada] = useState<PSFullHistoryItem | null>(null);
+
+  // Estados para avaliação da consulta (paciente)
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingStars, setRatingStars] = useState(0);
+  const [ratingJustification, setRatingJustification] = useState('');
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
 
   // Buscar detalhes do paciente se for médico
   useEffect(() => {
@@ -664,8 +670,49 @@ function AtendimentoInner() {
     try { sessionStorage.removeItem('ps_room'); } catch { }
     // Remove dados de reconexão ao sair normalmente
     try { sessionStorage.removeItem('consulta_reconnect'); } catch { }
-    // Removido alert, apenas modal de confirmação será exibido
-    router.push('/consultas');
+
+    // Se for paciente, mostra modal de avaliação antes de sair
+    if (role === 'paciente') {
+      setShowRatingModal(true);
+    } else {
+      router.push('/consultas');
+    }
+  }
+
+  async function handleRatingSubmit() {
+    if (ratingStars === 0) {
+      modal.error('Erro', 'Por favor, selecione uma nota de 1 a 5 estrelas.');
+      return;
+    }
+
+    if (ratingStars < 5 && !ratingJustification.trim()) {
+      modal.error('Justificativa Necessária', 'Por favor, informe uma justificativa para a sua nota.');
+      return;
+    }
+
+    const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
+    if (!cid || !token) {
+      router.push('/consultas');
+      return;
+    }
+
+    setIsSubmittingRating(true);
+    try {
+      await avaliarConsulta(cid, token, {
+        estrelas: ratingStars,
+        avaliacao: ratingJustification
+      });
+      setShowRatingModal(false);
+      modal.success('Obrigado!', 'Sua avaliação foi registrada com sucesso.', () => {
+        router.push('/consultas');
+      });
+    } catch (err: any) {
+      console.error('Erro ao enviar avaliação:', err);
+      modal.error('Erro', 'Não foi possível enviar sua avaliação no momento. Você será redirecionado.');
+      setTimeout(() => router.push('/consultas'), 2000);
+    } finally {
+      setIsSubmittingRating(false);
+    }
   }
 
   // Determine status color:
@@ -1183,7 +1230,7 @@ function AtendimentoInner() {
                           <h3>Usuário desconectado</h3>
                           <p>{showExitMessage ? 'A consulta foi encerrada pelo outro participante.' : 'O sinal do outro participante caiu. Aguardando volta...'}</p>
                           {showExitMessage && (
-                            <Button variant="primary" onClick={() => router.push('/consultas')} style={{ marginTop: '1.5rem' }}>
+                            <Button variant="primary" onClick={() => role === 'paciente' ? setShowRatingModal(true) : router.push('/consultas')} style={{ marginTop: '1.5rem' }}>
                               Voltar para Consultas
                             </Button>
                           )}
@@ -1376,6 +1423,62 @@ function AtendimentoInner() {
         onConfirm={modal.onConfirm}
         onCancel={modal.onCancel}
       />
+
+      {/* Modal de Avaliação do Médico */}
+      <ContentModal
+        isOpen={showRatingModal}
+        onClose={() => { }} // Não permite fechar sem avaliar ou carregar fallback
+        title="Avalie o seu atendimento"
+        size="sm"
+      >
+        <div className="rating-modal-content">
+          <p className="rating-description">Como você avalia o atendimento do médico?</p>
+
+          <div className="star-rating">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                className={`star-btn ${ratingStars >= star ? 'active' : ''}`}
+                onClick={() => setRatingStars(star)}
+                aria-label={`${star} estrelas`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+
+          {ratingStars > 0 && ratingStars < 5 && (
+            <div className="rating-justification">
+              <label htmlFor="justification">O que podemos melhorar? (Obrigatório)</label>
+              <textarea
+                id="justification"
+                className="atendimento-textarea"
+                placeholder="Conte-nos o motivo da sua nota..."
+                value={ratingJustification}
+                onChange={(e) => setRatingJustification(e.target.value)}
+              ></textarea>
+            </div>
+          )}
+
+          <div className="rating-actions">
+            <Button
+              variant="primary"
+              onClick={handleRatingSubmit}
+              disabled={isSubmittingRating || (ratingStars < 5 && !ratingJustification.trim()) || ratingStars === 0}
+              style={{ width: '100%' }}
+            >
+              {isSubmittingRating ? 'Enviando...' : 'Enviar Avaliação'}
+            </Button>
+            <button
+              className="skip-rating-btn"
+              onClick={() => router.push('/consultas')}
+              disabled={isSubmittingRating}
+            >
+              Agora não
+            </button>
+          </div>
+        </div>
+      </ContentModal>
     </div>
   );
 }

@@ -353,3 +353,20 @@ export async function getHistoricoConsultasPaciente(pacienteId: number, token: s
     throw new ApiError(err);
   }
 }
+/**
+ * Registra a avaliação de uma consulta pelo paciente
+ */
+export async function avaliarConsulta(
+  consultaId: string,
+  token: string,
+  payload: { estrelas: number; avaliacao?: string }
+): Promise<{ ok: boolean; message?: string }> {
+  try {
+    const res = await axios.post(`/api/consultas/${consultaId}/avaliacao`, payload, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  } catch (err) {
+    throw new ApiError(err);
+  }
+}
