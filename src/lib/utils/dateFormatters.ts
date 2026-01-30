@@ -5,22 +5,46 @@
 
 /**
  * Formata uma data no formato DD/MM/YYYY
- * @param dateString - Data em formato ISO (YYYY-MM-DD) ou ISO completo
+ * @param dateString - Data em formato ISO (YYYY-MM-DD), ISO completo ou Date object
  * @returns String formatada DD/MM/YYYY
  */
-export function formatDate(dateString: string): string {
+export function formatDate(dateString: string | Date | null | undefined): string {
     if (!dateString) return '';
     try {
-        // Se for YYYY-MM-DD, evita problemas de timezone tratando como local
+        if (dateString instanceof Date) {
+            return dateString.toLocaleDateString('pt-BR');
+        }
+
+        // Caso 1: Formato puro YYYY-MM-DD (ex: vindo de um input type="date")
         if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
             const [year, month, day] = dateString.split('-').map(Number);
             return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
         }
-        // Se for ISO completo ou outro formato, converte para local do dispositivo
+
+        // Caso 2: Formato ISO Completo (YYYY-MM-DDTHH:mm:ss.sssZ) vindo do Banco
+        if (dateString.includes('T')) {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString;
+
+            // Se a hora for exatamente meia-noite UTC (como o Prisma salva datas de nascimento),
+            // tratamos como "Wall Clock Date" (data de calendário) e ignoramos o fuso horário
+            // para evitar que o dia mude (ex: 30/01 00:00 UTC -> 29/01 21:00 GMT-3)
+            const timePart = dateString.split('T')[1];
+            if (timePart && timePart.startsWith('00:00:00')) {
+                const datePart = dateString.split('T')[0];
+                const [year, month, day] = datePart.split('-').map(Number);
+                return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
+            }
+
+            // Para todos os outros casos (datas com hora específica como agendamentos, registros),
+            // mostramos o dia correspondente no fuso horário do dispositivo do usuário.
+            return date.toLocaleDateString('pt-BR');
+        }
+
         const date = new Date(dateString);
-        return date.toLocaleDateString('pt-BR');
+        return isNaN(date.getTime()) ? dateString : date.toLocaleDateString('pt-BR');
     } catch (e) {
-        return dateString;
+        return typeof dateString === 'string' ? dateString : '';
     }
 }
 
@@ -34,7 +58,7 @@ export function formatTime(timeString: string | null | undefined): string {
     try {
         if (timeString.includes('T')) {
             // Se for ISO string completa (ex: 2026-01-30T13:00:00Z), 
-            // extrai a hora local do dispositivo (ex: 10:00 se GMT-3)
+            // converte para o horário local do dispositivo corretamente
             return new Date(timeString).toLocaleTimeString('pt-BR', {
                 hour: '2-digit',
                 minute: '2-digit'

@@ -9,6 +9,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
 import { psGetFullHistory, PSFullHistoryItem } from '@/lib/axios/consultas';
 import ContentModal from '@/components/common/Modal/ContentModal';
+import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
 
 export default function HistoricoPage() {
   const router = useRouter();
@@ -43,31 +44,6 @@ export default function HistoricoPage() {
 
     fetchHistory();
   }, []);
-
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      }).format(date);
-    } catch (e) {
-      return dateString;
-    }
-  };
-
-  const formatTime = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date);
-    } catch (e) {
-      return '';
-    }
-  };
 
   const getParticipantName = (item: PSFullHistoryItem) => {
     if (userType === 'paciente') {

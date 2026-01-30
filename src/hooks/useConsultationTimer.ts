@@ -23,59 +23,48 @@ export function useConsultationTimer(dateStr: string, timeStr: string) {
         // Função auxiliar para criar data seguramente
         const getTargetDate = () => {
             try {
-                // Variáveis para armazenar data e hora extraídas
+                // Se timeStr já for uma string ISO completa vinda do banco (UTC), use-a diretamente
+                if (timeStr.includes('T') && timeStr.endsWith('Z')) {
+                    return new Date(timeStr);
+                }
+
+                // Se dateStr for ISO completo, use tbm
+                if (dateStr.includes('T') && dateStr.endsWith('Z')) {
+                    return new Date(dateStr);
+                }
+
+                // Variáveis para extração
                 let finalDateStr = dateStr;
                 let finalTimeStr = timeStr;
 
-                // Se dateStr é uma string ISO completa (contém 'T'), extrair apenas a parte da data
+                // Extração de partes se necessário
                 if (dateStr.includes('T')) {
-                    const datePart = dateStr.split('T')[0];
-                    finalDateStr = datePart; // Ex: "2026-01-23"
-                    console.log('📅 Extraída data de ISO:', { original: dateStr, extracted: finalDateStr });
+                    finalDateStr = dateStr.split('T')[0];
                 }
 
-                // Se timeStr é uma string ISO completa (contém 'T'), extrair apenas a parte da hora
                 if (timeStr.includes('T')) {
-                    // Ex: "1970-01-01T15:00:00.000Z" -> pegar "15:00:00"
-                    const timePart = timeStr.split('T')[1]?.split('.')[0] || timeStr.split('T')[1];
-                    finalTimeStr = timePart.replace('Z', ''); // Ex: "15:00:00"
-                    console.log('⏰ Extraída hora de ISO:', { original: timeStr, extracted: finalTimeStr });
+                    // Extrai "15:00:00" de "1970-01-01T15:00:00.000Z"
+                    const parts = timeStr.split('T');
+                    finalTimeStr = parts[1].split('.')[0].replace('Z', '');
                 }
 
-                // Garantir que finalDateStr está no formato YYYY-MM-DD
-                if (!/^\d{4}-\d{2}-\d{2}$/.test(finalDateStr)) {
-                    console.error('Formato de data inválido:', finalDateStr);
-                    return null;
-                }
+                // Limpar data
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(finalDateStr)) return null;
 
                 // Normalizar hora para HH:mm:ss
                 let normalizedTime = finalTimeStr;
-                if (finalTimeStr.length === 5) {
-                    // HH:mm -> HH:mm:00
-                    normalizedTime = `${finalTimeStr}:00`;
-                } else if (finalTimeStr.includes('.')) {
-                    // HH:mm:ss.sss -> HH:mm:ss
-                    normalizedTime = finalTimeStr.split('.')[0];
-                }
+                if (finalTimeStr.length === 5) normalizedTime = `${finalTimeStr}:00`;
+                else if (finalTimeStr.includes('.')) normalizedTime = finalTimeStr.split('.')[0];
 
-                // Combinar data e hora em formato ISO local
-                const dateTimeStr = `${finalDateStr}T${normalizedTime}`;
-                const date = new Date(dateTimeStr);
+                // Re-combinar. Se a intenção for UTC (como é no nosso back), append 'Z'
+                // Se a intenção for local (picker do front), não append 'Z'
+                // Como nosso backend salva ISO UTC em hora_inicio, vamos assumir UTC se veio de ISO
+                const isOriginalUTC = timeStr.includes('T') || dateStr.includes('T');
+                const dateTimeStr = `${finalDateStr}T${normalizedTime}${isOriginalUTC ? 'Z' : ''}`;
 
-                if (isNaN(date.getTime())) {
-                    console.error('Data combinada inválida:', { finalDateStr, finalTimeStr, dateTimeStr });
-                    return null;
-                }
-
-                console.log('✅ Data processada com sucesso:', {
-                    input: { dateStr, timeStr },
-                    processed: { finalDateStr, normalizedTime },
-                    result: date.toISOString()
-                });
-
-                return date;
+                return new Date(dateTimeStr);
             } catch (e) {
-                console.error('Erro ao processar data:', e, { dateStr, timeStr });
+                console.error('Erro ao processar data no Timer:', e);
                 return null;
             }
         };

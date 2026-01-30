@@ -1,5 +1,6 @@
 import { ConsultaAgendada } from '@/lib/axios/consultas';
 import { useConsultationTimer } from '@/hooks/useConsultationTimer';
+import { getMonthAbbreviation, getDay, formatTime } from '@/lib/utils/dateFormatters';
 
 interface MiniAppointmentCardProps {
     appointment: ConsultaAgendada;
@@ -9,39 +10,6 @@ interface MiniAppointmentCardProps {
 
 export function MiniAppointmentCard({ appointment: appt, isMedico, onAttend }: MiniAppointmentCardProps) {
     const { canJoin, timeRemaining, isToday } = useConsultationTimer(appt.data_consulta, appt.hora_inicio);
-
-    const getMonthAbbreviation = (dateStr: string) => {
-        const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
-        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-            const [, month] = dateStr.split('-');
-            return months[parseInt(month) - 1];
-        }
-        const date = new Date(dateStr);
-        return months[date.getMonth()];
-    };
-
-    const getDay = (dateStr: string) => {
-        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-            const [, , day] = dateStr.split('-');
-            return day;
-        }
-        const date = new Date(dateStr);
-        return String(date.getDate()).padStart(2, '0');
-    };
-
-    const formatTime = (timeString: string) => {
-        try {
-            if (timeString.includes('T')) {
-                return new Date(timeString).toLocaleTimeString('pt-BR', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            }
-            return timeString.substring(0, 5);
-        } catch (e) {
-            return timeString;
-        }
-    };
 
     const isSolicitada = appt.status === 'solicitada';
     const effectiveCanJoin = canJoin && !isSolicitada;
