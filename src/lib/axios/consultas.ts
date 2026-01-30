@@ -2,7 +2,7 @@ import axios from 'axios';
 import { ApiError } from '@/lib/errorHandler';
 
 // Tipos de status de consulta
-export type ConsultaStatus = 'solicitada' | 'agendada' | 'in_progress' | 'finished' | 'cancelled';
+export type ConsultaStatus = 'solicitada' | 'agendada' | 'scheduled' | 'in_progress' | 'finished' | 'cancelled';
 
 // Comuns
 export type IceServer = {
@@ -232,10 +232,15 @@ export type PSFilaItem = {
   consultaId: string;
   pacienteId: string;
   pacienteNome?: string;
-  queixaPrincipal?: string;
   roomId?: string;
   createdAt: string;
-  status: 'scheduled' | 'in_progress' | 'finished';
+  status: ConsultaStatus;
+  historiaClinica?: {
+    queixaPrincipal?: string;
+    sintomas?: string;
+    tempoSintomas?: string;
+    historico?: string;
+  };
 };
 
 export type PSRoomResponse = {

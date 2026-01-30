@@ -27,19 +27,52 @@ export default function PacientesPage() {
   }, []);
 
   const handleViewDetails = async (paciente: PSFilaItem) => {
-    setSelectedPaciente(paciente);
+    // O endpoint getConsulta retorna 403 se o médico não tiver aceitado a consulta ainda.
+    // Como workaround sem mexer no back, vamos usar os dados que já vieram na lista da fila (PSFilaItem).
+    // Se o backend futuramente retornar 'queixaPrincipal' na lista, já funcionará.
+
+    // Constrói objeto parcial com o que temos
+    const details: ConsultaDetails = {
+      id: Number(paciente.consultaId),
+      pacienteId: Number(paciente.pacienteId),
+      medicoId: null,
+      status: paciente.status,
+      createdAt: paciente.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      paciente: {
+        id: Number(paciente.pacienteId),
+        nome_completo: paciente.pacienteNome || 'Paciente #' + paciente.pacienteId,
+        cpf: '',
+        sexo: '',
+        data_nascimento: '',
+        telefone: ''
+      },
+      historiaClinica: {
+        queixaPrincipal: paciente.historiaClinica?.queixaPrincipal,
+        sintomas: paciente.historiaClinica?.sintomas,
+        tempoSintomas: paciente.historiaClinica?.tempoSintomas,
+        historico: paciente.historiaClinica?.historico,
+      }
+    };
+
+    setConsultaDetails(details);
+    setLoadingDetails(false);
+
+    // Tentativa legada (desabilitada para evitar erro 403 no console)
+    /*
     setLoadingDetails(true);
     try {
-      const token = getToken();
-      if (token) {
-        const data = await getConsulta(paciente.consultaId, token);
-        setConsultaDetails(data);
-      }
+        const token = getToken();
+        if (token) {
+            const data = await getConsulta(paciente.consultaId, token);
+            setConsultaDetails(data);
+        }
     } catch (error) {
-      console.error("Erro ao buscar detalhes da consulta:", error);
+        console.error("Erro ao buscar detalhes da consulta:", error);
     } finally {
-      setLoadingDetails(false);
+        setLoadingDetails(false);
     }
+    */
   };
 
   const handleCloseDetails = () => {
