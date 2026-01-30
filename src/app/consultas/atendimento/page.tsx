@@ -114,6 +114,29 @@ function AtendimentoInner() {
   const [ratingJustification, setRatingJustification] = useState('');
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
 
+  const isScheduled = search.get('scheduled') === 'true';
+
+  // Redirecionamento de segurança para pacientes em Pronto Atendimento
+  // Se entrar na sala e não houver médico, volta para a tela de espera
+  useEffect(() => {
+    async function checkSecurityRedirect() {
+      if (role === 'paciente' && !isScheduled && consultaId && token) {
+        try {
+          const data = await getConsulta(consultaId, token);
+          if (!data.medicoId) {
+            console.log('[Atendimento] Sem médico atribuído. Redirecionando para espera.');
+            router.replace(`/consultas/aguardando?id=${consultaId}`);
+          } else {
+            setConsultaDetails(data);
+          }
+        } catch (err) {
+          console.error('[Atendimento] Erro na verificação de segurança:', err);
+        }
+      }
+    }
+    checkSecurityRedirect();
+  }, [role, isScheduled, consultaId, token, router]);
+
   // Buscar detalhes do paciente se for médico
   useEffect(() => {
     async function fetchPatientDetails() {
@@ -483,6 +506,21 @@ function AtendimentoInner() {
     if (!cid) {
       setStatusText('ID da consulta não encontrado.');
       return;
+    }
+
+    // Se for paciente em Pronto Atendimento, verifica se já existe um médico
+    // antes de iniciar a captura de mídia e o signaling.
+    if (role === 'paciente' && !isScheduled) {
+      try {
+        const data = await getConsulta(cid, token);
+        if (!data.medicoId) {
+          console.log('[Atendimento] Redirecionando para aguardando: médico ainda não aceitou.');
+          router.replace(`/consultas/aguardando?id=${cid}`);
+          return;
+        }
+      } catch (e) {
+        console.error('[Atendimento] Falha ao verificar médico antes de iniciar flow:', e);
+      }
     }
 
     claimingRef.current = true;

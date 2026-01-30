@@ -177,7 +177,7 @@ function PreConsultaInner() {
           historiaClinicaId
         });
         sessionStorage.setItem('ps_room', JSON.stringify({ roomId, consultaId, iceServers }));
-        router.push(`/consultas/atendimento?id=${encodeURIComponent(consultaId)}`);
+        router.push(`/consultas/aguardando?id=${encodeURIComponent(consultaId)}`);
       } catch (err: any) {
         const msg = String(err?.message || 'Não foi possível criar sua consulta. Tente novamente.');
         if (msg.includes('forbidden_only_paciente_can_create_room')) {
