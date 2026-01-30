@@ -1,7 +1,10 @@
 /**
  * Utilitários de formatação de data e hora
  * Centraliza todas as funções de formatação para evitar duplicação
+ * PADRÃO: HORÁRIO DE BRASÍLIA (America/Sao_Paulo)
  */
+
+const TIMEZONE = 'America/Sao_Paulo';
 
 /**
  * Formata uma data no formato DD/MM/YYYY
@@ -12,10 +15,11 @@ export function formatDate(dateString: string | Date | null | undefined): string
     if (!dateString) return '';
     try {
         if (dateString instanceof Date) {
-            return dateString.toLocaleDateString('pt-BR');
+            return new Intl.DateTimeFormat('pt-BR', { timeZone: TIMEZONE }).format(dateString);
         }
 
         // Caso 1: Formato puro YYYY-MM-DD (ex: vindo de um input type="date")
+        // Tratamos como "Wall Clock", ou seja, a data exata que está escrita, sem conversão
         if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
             const [year, month, day] = dateString.split('-').map(Number);
             return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
@@ -28,7 +32,6 @@ export function formatDate(dateString: string | Date | null | undefined): string
 
             // Se a hora for exatamente meia-noite UTC (como o Prisma salva datas de nascimento),
             // tratamos como "Wall Clock Date" (data de calendário) e ignoramos o fuso horário
-            // para evitar que o dia mude (ex: 30/01 00:00 UTC -> 29/01 21:00 GMT-3)
             const timePart = dateString.split('T')[1];
             if (timePart && timePart.startsWith('00:00:00')) {
                 const datePart = dateString.split('T')[0];
@@ -36,32 +39,30 @@ export function formatDate(dateString: string | Date | null | undefined): string
                 return new Date(year, month - 1, day).toLocaleDateString('pt-BR');
             }
 
-            // Para todos os outros casos (datas com hora específica como agendamentos, registros),
-            // mostramos o dia correspondente no fuso horário do dispositivo do usuário.
-            return date.toLocaleDateString('pt-BR');
+            // Para todos os outros casos, converte para Brasília
+            return new Intl.DateTimeFormat('pt-BR', { timeZone: TIMEZONE }).format(date);
         }
 
         const date = new Date(dateString);
-        return isNaN(date.getTime()) ? dateString : date.toLocaleDateString('pt-BR');
+        return isNaN(date.getTime()) ? dateString : new Intl.DateTimeFormat('pt-BR', { timeZone: TIMEZONE }).format(date);
     } catch (e) {
         return typeof dateString === 'string' ? dateString : '';
     }
 }
 
 /**
- * Formata uma hora para HH:mm local
+ * Formata uma hora para HH:mm (Brasília)
  * @param timeString - Hora em formato HH:mm:ss ou ISO completo
- * @returns String formatada HH:mm (fuso horário local)
+ * @returns String formatada HH:mm
  */
 export function formatTime(timeString: string | null | undefined): string {
     if (!timeString) return '';
     try {
         if (timeString.includes('T')) {
-            // Se for ISO string completa (ex: 2026-01-30T13:00:00Z), 
-            // converte para o horário local do dispositivo corretamente
             return new Date(timeString).toLocaleTimeString('pt-BR', {
                 hour: '2-digit',
-                minute: '2-digit'
+                minute: '2-digit',
+                timeZone: TIMEZONE
             });
         }
         // Se for HH:mm:ss sem T, assume que já é o valor que se deseja mostrar
@@ -72,53 +73,71 @@ export function formatTime(timeString: string | null | undefined): string {
 }
 
 /**
- * Obtém abreviação do mês (JAN, FEV, etc)
+ * Obtém abreviação do mês (JAN, FEV, etc) em Brasília
  * @param dateStr - Data em formato YYYY-MM-DD ou ISO completo
  * @returns Abreviação do mês em maiúsculas
  */
 export function getMonthAbbreviation(dateStr: string): string {
     const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 
-    // Se for YYYY-MM-DD, fazer parse direto como local
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
         const [, month] = dateStr.split('-');
         return months[parseInt(month) - 1];
     }
 
-    const date = new Date(dateStr);
-    return months[date.getMonth()];
+    try {
+        const date = new Date(dateStr);
+        // Usar Intl para extrair o mês corretamente no fuso de SP
+        const parts = new Intl.DateTimeFormat('pt-BR', { month: '2-digit', timeZone: TIMEZONE }).formatToParts(date);
+        const monthPart = parts.find(p => p.type === 'month');
+        if (monthPart) {
+            return months[parseInt(monthPart.value) - 1];
+        }
+        return months[date.getMonth()]; // Fallback
+    } catch {
+        return '';
+    }
 }
 
 /**
- * Obtém o dia do mês (com zero à esquerda)
+ * Obtém o dia do mês (com zero à esquerda) em Brasília
  * @param dateStr - Data em formato YYYY-MM-DD ou ISO completo
  * @returns Dia formatado com 2 dígitos (ex: "05", "23")
  */
 export function getDay(dateStr: string): string {
-    // Se for YYYY-MM-DD, fazer parse direto
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
         const [, , day] = dateStr.split('-');
         return day;
     }
 
-    const date = new Date(dateStr);
-    return String(date.getDate()).padStart(2, '0');
+    try {
+        const date = new Date(dateStr);
+        // Usar Intl para extrair o dia corretamente no fuso de SP
+        const parts = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', timeZone: TIMEZONE }).formatToParts(date);
+        const dayPart = parts.find(p => p.type === 'day');
+        return dayPart ? dayPart.value : String(date.getDate()).padStart(2, '0');
+    } catch {
+        return '';
+    }
 }
 
 /**
- * Calcula timestamp de uma consulta
+ * Calcula timestamp de uma consulta assumindo inputs em Brasília
  * @param dataConsulta - Data em formato YYYY-MM-DD
  * @param horaInicio - Hora em formato HH:mm:ss ou ISO completo
  * @returns Timestamp em milissegundos
  */
 export function getConsultaTimestamp(dataConsulta: string, horaInicio: string): number {
+    // Se a hora já vier com timezone (ISO), confia nela
     if (horaInicio.includes('T')) {
         return new Date(horaInicio).getTime();
     }
-    // Combinar data YYYY-MM-DD com hora HH:mm:ss e tratar como local
-    const [y, m, d] = dataConsulta.split('-').map(Number);
-    const [hh, mm, ss] = (horaInicio || '00:00:00').split(':').map(Number);
-    return new Date(y, m - 1, d, hh, mm, ss || 0).getTime();
+
+    // Combina YYYY-MM-DD e HH:mm:ss e adiciona offset -03:00 forçado
+    // Isso garante que estamos criando um momento específico no tempo (Brasília)
+    // independentemente do fuso do navegador.
+    const isoString = `${dataConsulta}T${horaInicio.length === 5 ? horaInicio + ':00' : horaInicio}-03:00`;
+    return new Date(isoString).getTime();
 }
 
 /**
@@ -136,50 +155,64 @@ export function formatDateForDisplay(dateStr: string | null): string {
 }
 
 /**
- * Verifica se uma data é hoje (comparando com o calendário local do dispositivo)
- * @param dateStr - Data em formato YYYY-MM-DD
- * @returns true se for hoje
+ * Verifica se uma data é hoje (comparando com Brasília)
+ * @param dateStr - Data em formato YYYY-MM-DD (assumida como data da consulta)
+ * @returns true se for hoje em Brasília
  */
 export function isToday(dateStr: string): boolean {
-    const today = new Date();
-    const [y, m, d] = dateStr.split('-').map(Number);
+    const todayBrasiliaStr = new Intl.DateTimeFormat('pt-BR', {
+        year: 'numeric', month: '2-digit', day: '2-digit', timeZone: TIMEZONE
+    }).format(new Date());
 
-    return d === today.getDate() &&
-        (m - 1) === today.getMonth() &&
-        y === today.getFullYear();
+    // todayBrasiliaStr vem formato DD/MM/YYYY
+    const [d, m, y] = todayBrasiliaStr.split('/');
+    const todayFormattedInverse = `${y}-${m}-${d}`;
+
+    return dateStr === todayFormattedInverse;
 }
 
 /**
- * Verifica se uma data está nesta semana (próximos 7 dias)
+ * Verifica se uma data está nesta semana (comparando com Brasília)
  * @param dateStr - Data em formato YYYY-MM-DD
  * @returns true se estiver nos próximos 7 dias
  */
 export function isThisWeek(dateStr: string): boolean {
     const [y, m, d] = dateStr.split('-').map(Number);
-    const date = new Date(y, m - 1, d);
-    date.setHours(0, 0, 0, 0);
+    const targetDate = new Date(y, m - 1, d); // Objeto Date local (aprox) para comparação numérica simples
+    targetDate.setHours(0, 0, 0, 0);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Hoje em Brasília
+    const todayBrasiliaStr = new Intl.DateTimeFormat('pt-BR', {
+        year: 'numeric', month: '2-digit', day: '2-digit', timeZone: TIMEZONE
+    }).format(new Date());
+    const [dNow, mNow, yNow] = todayBrasiliaStr.split('/');
+    const todayDate = new Date(Number(yNow), Number(mNow) - 1, Number(dNow));
+    todayDate.setHours(0, 0, 0, 0);
 
-    const nextWeek = new Date(today);
-    nextWeek.setDate(today.getDate() + 7);
+    const nextWeek = new Date(todayDate);
+    nextWeek.setDate(todayDate.getDate() + 7);
 
-    return date >= today && date <= nextWeek;
+    return targetDate >= todayDate && targetDate <= nextWeek;
 }
 
 /**
- * Verifica se uma data está neste mês
+ * Verifica se uma data está neste mês (Brasília)
  * @param dateStr - Data em formato YYYY-MM-DD
  * @returns true se for do mês atual
  */
 export function isThisMonth(dateStr: string): boolean {
-    const today = new Date();
+    const todayBrasiliaParts = new Intl.DateTimeFormat('en-US', {
+        year: 'numeric', month: 'numeric', timeZone: TIMEZONE
+    }).formatToParts(new Date());
+
+    const currentMonth = Number(todayBrasiliaParts.find(p => p.type === 'month')?.value);
+    const currentYear = Number(todayBrasiliaParts.find(p => p.type === 'year')?.value);
+
     const [y, m] = dateStr.split('-').map(Number);
 
-    return (m - 1) === today.getMonth() &&
-        y === today.getFullYear();
+    return m === currentMonth && y === currentYear;
 }
+
 /**
  * Calcula o tempo de espera desde uma data de criação
  * @param createdAt - Data em formato ISO
@@ -187,7 +220,7 @@ export function isThisMonth(dateStr: string): boolean {
  */
 export function getTimeWaiting(createdAt: string): string {
     const start = new Date(createdAt).getTime();
-    const now = new Date().getTime();
+    const now = new Date().getTime(); // UTC vs UTC diff is safe
     const diffMins = Math.floor((now - start) / 60000);
 
     if (diffMins < 1) return 'Agora mesmo';

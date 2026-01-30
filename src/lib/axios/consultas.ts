@@ -31,14 +31,22 @@ export async function agendarConsulta(payload: AgendarConsultaPayload, token: st
   try {
     // IMPORTANTE: Prisma espera DateTime ISO-8601
     const { data_consulta, hora_inicio, ...rest } = payload;
-    const [year, month, day] = data_consulta.split('-').map(Number);
-    const [hours, minutes] = hora_inicio.split(':').map(Number);
-    const localDate = new Date(year, month - 1, day, hours, minutes);
+
+    // Constrói a data assumindo que o input do usuário É em horário de Brasília (-03:00)
+    // independentemente de onde o navegador esteja rodando.
+    const isoBrasilia = `${data_consulta}T${hora_inicio}:00-03:00`;
+    const dateObj = new Date(isoBrasilia);
+
+    // Se a data for inválida (ex: input mal formatado), fallback para local (não ideal, mas seguro contra crash)
+    // mas teoricamente os validators já garantiram YYYY-MM-DD e HH:mm
+    const finalDate = isNaN(dateObj.getTime())
+      ? new Date(`${data_consulta}T${hora_inicio}:00`)
+      : dateObj;
 
     const transformedPayload = {
       ...rest,
       data_consulta: data_consulta, // Mantém YYYY-MM-DD
-      hora_inicio: localDate.toISOString(), // Envia o ponto exato no tempo em UTC
+      hora_inicio: finalDate.toISOString(), // Envia o ponto exato no tempo em UTC (Ex: 10:00 BRT -> 13:00 UTC)
     };
 
     const res = await axios.post('/api/consultas/agendar', transformedPayload, {

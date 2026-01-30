@@ -56,11 +56,19 @@ export function useConsultationTimer(dateStr: string, timeStr: string) {
                 if (finalTimeStr.length === 5) normalizedTime = `${finalTimeStr}:00`;
                 else if (finalTimeStr.includes('.')) normalizedTime = finalTimeStr.split('.')[0];
 
-                // Re-combinar. Se a intenção for UTC (como é no nosso back), append 'Z'
-                // Se a intenção for local (picker do front), não append 'Z'
-                // Como nosso backend salva ISO UTC em hora_inicio, vamos assumir UTC se veio de ISO
+                // Re-combinar.
+                // Se era UTC (veio com T), append 'Z' se não tiver.
+                // Se NÃO era UTC (veio raw "10:00"), append '-03:00' para forçar Brasília.
                 const isOriginalUTC = timeStr.includes('T') || dateStr.includes('T');
-                const dateTimeStr = `${finalDateStr}T${normalizedTime}${isOriginalUTC ? 'Z' : ''}`;
+                let dateTimeStr = '';
+
+                if (isOriginalUTC) {
+                    // Mantém tratamento UTC
+                    dateTimeStr = `${finalDateStr}T${normalizedTime}Z`;
+                } else {
+                    // Força Brasília para inputs manuais (YYYY-MM-DD + HH:mm)
+                    dateTimeStr = `${finalDateStr}T${normalizedTime}-03:00`;
+                }
 
                 return new Date(dateTimeStr);
             } catch (e) {
@@ -106,9 +114,16 @@ export function useConsultationTimer(dateStr: string, timeStr: string) {
 
             setCanJoin(isAvailable);
 
-            // Verificar se é hoje
-            const today = new Date();
-            const isSameDay = today.toDateString() === targetDate.toDateString();
+            // Verificar se é hoje EM BRASÍLIA
+            // Usamos Intl para extrair YYYY-MM-DD em SP tanto para Hoje quanto para a Data Alvo
+            const fmt = new Intl.DateTimeFormat('pt-BR', {
+                year: 'numeric', month: 'numeric', day: 'numeric', timeZone: 'America/Sao_Paulo'
+            });
+
+            const todayStr = fmt.format(now);
+            const targetStr = fmt.format(targetDate);
+            const isSameDay = todayStr === targetStr;
+
             setIsToday(isSameDay);
 
             // Lógica de mensagem:
