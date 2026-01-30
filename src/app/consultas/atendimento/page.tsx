@@ -31,15 +31,16 @@ function calculateAge(birthDate: string | Date | undefined): string {
 }
 
 // Componente Accordion fora para evitar perder o foco nos inputs ao re-renderizar
-const Accordion = ({ id, title, isOpen, onToggle, isFilled, children }: {
+const Accordion = ({ id, title, isOpen, onToggle, isFilled, isMissing, children }: {
   id: string;
   title: string;
   isOpen: boolean;
   onToggle: (id: string) => void;
   isFilled?: boolean;
+  isMissing?: boolean;
   children: React.ReactNode
 }) => (
-  <div className={`accordion-item ${isOpen ? 'open' : ''} ${isFilled ? 'is-filled' : ''}`}>
+  <div className={`accordion-item ${isOpen ? 'open' : ''} ${isFilled ? 'is-filled' : ''} ${isMissing ? 'is-missing' : ''}`}>
     <button className="accordion-trigger" onClick={() => onToggle(id)} type="button">
       <span>{title}</span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -55,6 +56,7 @@ const Accordion = ({ id, title, isOpen, onToggle, isFilled, children }: {
 function AtendimentoInner() {
   const [connectionFailed, setConnectionFailed] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
   const modal = useModal();
 
   const router = useRouter();
@@ -637,6 +639,24 @@ function AtendimentoInner() {
   }
 
   function requestFinishCall() {
+    if (role === 'medico') {
+      const missing = [];
+      if (!atendimentoData.evolucao.trim()) missing.push('Evolução');
+      if (!atendimentoData.plano_terapeutico.trim()) missing.push('Plano Terapêutico');
+      if (!atendimentoData.diagnostico.trim()) missing.push('Diagnóstico');
+      if (!atendimentoData.repouso) missing.push('Repouso');
+      if (!atendimentoData.destino_final) missing.push('Destino Final');
+
+      if (missing.length > 0) {
+        setShowValidation(true);
+        modal.error(
+          'Campos pendentes',
+          `Por favor, preencha os seguintes campos antes de finalizar: ${missing.join(', ')}.`
+        );
+        return;
+      }
+    }
+
     modal.confirm(
       'Encerrar atendimento',
       'Tem certeza que deseja deixar o atendimento?',
@@ -982,6 +1002,7 @@ function AtendimentoInner() {
                     isOpen={!!openAccordions['evolucao']}
                     onToggle={toggleAccordion}
                     isFilled={!!atendimentoData.evolucao}
+                    isMissing={showValidation && !atendimentoData.evolucao.trim()}
                   >
                     <textarea
                       className="atendimento-textarea"
@@ -1000,6 +1021,7 @@ function AtendimentoInner() {
                     isOpen={!!openAccordions['plano-terapeutico']}
                     onToggle={toggleAccordion}
                     isFilled={!!atendimentoData.plano_terapeutico}
+                    isMissing={showValidation && !atendimentoData.plano_terapeutico.trim()}
                   >
                     <textarea
                       className="atendimento-textarea"
@@ -1018,6 +1040,7 @@ function AtendimentoInner() {
                     isOpen={!!openAccordions['diagnostico']}
                     onToggle={toggleAccordion}
                     isFilled={!!atendimentoData.diagnostico}
+                    isMissing={showValidation && !atendimentoData.diagnostico.trim()}
                   >
                     <div className="address-search-wrapper">
                       <input
@@ -1038,6 +1061,7 @@ function AtendimentoInner() {
                     isOpen={!!openAccordions['repouso']}
                     onToggle={toggleAccordion}
                     isFilled={!!atendimentoData.repouso}
+                    isMissing={showValidation && !atendimentoData.repouso}
                   >
                     <div className="options-grid">
                       {repousoOptions.map(option => (
@@ -1060,6 +1084,7 @@ function AtendimentoInner() {
                     isOpen={!!openAccordions['destino-final']}
                     onToggle={toggleAccordion}
                     isFilled={!!atendimentoData.destino_final}
+                    isMissing={showValidation && !atendimentoData.destino_final}
                   >
                     <div className="options-grid">
                       {destinoFinalOptions.map(option => (

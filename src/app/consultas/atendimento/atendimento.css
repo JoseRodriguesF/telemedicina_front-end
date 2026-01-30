@@ -666,6 +666,20 @@
     font-weight: 600;
 }
 
+.accordion-item.is-missing {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.1);
+}
+
+.accordion-item.is-missing .accordion-trigger {
+    background: rgba(245, 158, 11, 0.03);
+}
+
+.accordion-item.is-missing .accordion-trigger span {
+    color: #b45309;
+    font-weight: 600;
+}
+
 .accordion-item:hover {
     border-color: var(--color-primary-200, #bfdbfe);
 }
