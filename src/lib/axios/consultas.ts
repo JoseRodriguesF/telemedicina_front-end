@@ -149,6 +149,13 @@ export type ConsultaDetails = {
     telefone: string;
     // outros campos se necessário
   };
+  historiaClinica?: {
+    queixaPrincipal?: string;
+    sintomas?: string;
+    tempoSintomas?: string;
+    historico?: string;
+    [key: string]: any;
+  };
 };
 
 export async function getConsulta(consultaId: string, token: string): Promise<ConsultaDetails> {
@@ -224,6 +231,8 @@ export async function endConsulta(
 export type PSFilaItem = {
   consultaId: string;
   pacienteId: string;
+  pacienteNome?: string;
+  queixaPrincipal?: string;
   roomId?: string;
   createdAt: string;
   status: 'scheduled' | 'in_progress' | 'finished';
