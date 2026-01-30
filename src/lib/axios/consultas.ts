@@ -31,12 +31,14 @@ export async function agendarConsulta(payload: AgendarConsultaPayload, token: st
   try {
     // IMPORTANTE: Prisma espera DateTime ISO-8601
     const { data_consulta, hora_inicio, ...rest } = payload;
-    const dateTimeString = `${data_consulta}T${hora_inicio}:00.000Z`;
+    const [year, month, day] = data_consulta.split('-').map(Number);
+    const [hours, minutes] = hora_inicio.split(':').map(Number);
+    const localDate = new Date(year, month - 1, day, hours, minutes);
 
     const transformedPayload = {
       ...rest,
-      data_consulta: data_consulta,
-      hora_inicio: dateTimeString,
+      data_consulta: data_consulta, // Mantém YYYY-MM-DD
+      hora_inicio: localDate.toISOString(), // Envia o ponto exato no tempo em UTC
     };
 
     const res = await axios.post('/api/consultas/agendar', transformedPayload, {
