@@ -235,6 +235,7 @@ export type PSFilaItem = {
   roomId?: string;
   createdAt: string;
   status: ConsultaStatus;
+  historiaClinicaId?: number;
   historiaClinica?: {
     queixaPrincipal?: string;
     sintomas?: string;
@@ -306,6 +307,26 @@ export async function psListActiveRooms(token: string, userId?: string): Promise
     const url = userId ? `/api/ps/salas-em-andamento?userId=${userId}` : '/api/ps/salas-em-andamento';
     const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
     return res.data as PSActiveRoom[];
+  } catch (err) {
+    throw new ApiError(err);
+  }
+}
+
+// História Clínica
+export type HistoriaClinicaDetails = {
+  id: number;
+  queixaPrincipal?: string;
+  sintomas?: string;
+  tempoSintomas?: string;
+  historico?: string;
+  medicamentos?: string;
+  alergias?: string;
+};
+
+export async function getHistoriaClinica(id: number, token: string): Promise<HistoriaClinicaDetails> {
+  try {
+    const res = await axios.get(`/api/historias-clinicas/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+    return res.data as HistoriaClinicaDetails;
   } catch (err) {
     throw new ApiError(err);
   }
