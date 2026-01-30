@@ -27,6 +27,7 @@ export default function PacientesPage() {
   }, []);
 
   const handleViewDetails = async (paciente: PSFilaItem) => {
+    setSelectedPaciente(paciente);
     // O endpoint getConsulta retorna 403 se o médico não tiver aceitado a consulta ainda.
     // Como workaround sem mexer no back, vamos usar os dados que já vieram na lista da fila (PSFilaItem).
     // Se o backend futuramente retornar 'queixaPrincipal' na lista, já funcionará.
