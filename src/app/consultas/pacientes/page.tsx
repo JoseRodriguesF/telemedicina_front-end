@@ -28,11 +28,8 @@ export default function PacientesPage() {
 
   const handleViewDetails = async (paciente: PSFilaItem) => {
     setSelectedPaciente(paciente);
-    // O endpoint getConsulta retorna 403 se o médico não tiver aceitado a consulta ainda.
-    // Como workaround sem mexer no back, vamos usar os dados que já vieram na lista da fila (PSFilaItem).
-    // Se o backend futuramente retornar 'queixaPrincipal' na lista, já funcionará.
 
-    // Constrói objeto parcial com o que temos
+    // Objeto parcial inicial
     const details: ConsultaDetails = {
       id: Number(paciente.consultaId),
       pacienteId: Number(paciente.pacienteId),
@@ -51,13 +48,10 @@ export default function PacientesPage() {
       historiaClinica: {
         queixaPrincipal: paciente.historiaClinica?.queixaPrincipal,
         sintomas: paciente.historiaClinica?.sintomas,
-        tempoSintomas: paciente.historiaClinica?.tempoSintomas,
-        historico: paciente.historiaClinica?.historico,
       }
     };
 
-    // Se não veio historiaClinica completa na lista, mas temos o ID, tentamos buscar individualmente
-    // Isso contorna o bloqueio do getConsulta (403) se o endpoint de história for acessível
+    // Se não veio historiaClinica completa na lista, mas temos o ID, buscamos individualmente
     if (!details.historiaClinica?.queixaPrincipal && paciente.historiaClinicaId) {
       setLoadingDetails(true);
       try {
@@ -65,18 +59,16 @@ export default function PacientesPage() {
         if (token) {
           const historyData = await getHistoriaClinica(paciente.historiaClinicaId, token);
           if (historyData) {
+            // Suporte para snake_case vindo do back
+            const raw = historyData as any;
             details.historiaClinica = {
-              queixaPrincipal: historyData.queixaPrincipal,
-              sintomas: historyData.sintomas,
-              tempoSintomas: historyData.tempoSintomas,
-              historico: historyData.historico,
-              // Outros campos se necessário
+              queixaPrincipal: historyData.queixaPrincipal || raw.queixa_principal,
+              sintomas: historyData.sintomas || raw.sintomas,
             };
           }
         }
       } catch (error) {
         console.error("Erro ao buscar história clínica detalhada:", error);
-        // Mantém os detalhes parciais
       } finally {
         setLoadingDetails(false);
       }
@@ -85,22 +77,6 @@ export default function PacientesPage() {
     }
 
     setConsultaDetails(details);
-
-    // Tentativa legada (desabilitada para evitar erro 403 no console)
-    /*
-    setLoadingDetails(true);
-    try {
-        const token = getToken();
-        if (token) {
-            const data = await getConsulta(paciente.consultaId, token);
-            setConsultaDetails(data);
-        }
-    } catch (error) {
-        console.error("Erro ao buscar detalhes da consulta:", error);
-    } finally {
-        setLoadingDetails(false);
-    }
-    */
   };
 
   const handleCloseDetails = () => {
@@ -223,73 +199,69 @@ export default function PacientesPage() {
         <ContentModal
           isOpen={!!selectedPaciente}
           onClose={handleCloseDetails}
-          title={`Detalhes do Paciente #${selectedPaciente?.pacienteId}`}
+          title="Ficha de Pré-Atendimento"
           size="md"
         >
           {loadingDetails ? (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
               <div className="spinner"></div>
             </div>
           ) : consultaDetails ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {consultaDetails.paciente && (
-                <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-lg)' }}>
-                  <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem', textTransform: 'uppercase' }}>Paciente</h4>
-                  <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600 }}>{consultaDetails.paciente.nome_completo || 'Nome não disponível'}</p>
-                </div>
-              )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '0.5rem' }}>
+              <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)' }}>
+                <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-tertiary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Paciente</h4>
+                <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>{consultaDetails.paciente.nome_completo || 'Paciente'}</p>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>ID: #{consultaDetails.pacienteId}</span>
+              </div>
 
               {consultaDetails.historiaClinica ? (
-                <>
-                  <div>
-                    <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem', textTransform: 'uppercase' }}>Queixa Principal</h4>
-                    <p style={{ margin: 0, fontSize: '1rem', lineHeight: 1.6 }}>{consultaDetails.historiaClinica.queixaPrincipal || '-'}</p>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div>
-                      <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem', textTransform: 'uppercase' }}>Sintomas</h4>
-                      <p style={{ margin: 0, fontSize: '1rem' }}>{consultaDetails.historiaClinica.sintomas || '-'}</p>
-                    </div>
-                    <div>
-                      <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem', textTransform: 'uppercase' }}>Duração</h4>
-                      <p style={{ margin: 0, fontSize: '1rem' }}>{consultaDetails.historiaClinica.tempoSintomas || '-'}</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '0.5rem' }}>
+                  <div className="detail-group">
+                    <h4 style={{ margin: '0 0 0.75rem', color: 'var(--color-primary-600)', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4l3 3" /><circle cx="12" cy="12" r="10" /></svg>
+                      Queixa Principal
+                    </h4>
+                    <div style={{ padding: '1rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', fontSize: '1rem', color: 'var(--text-primary)', lineHeight: 1.6 }}>
+                      {consultaDetails.historiaClinica.queixaPrincipal || 'Não informada'}
                     </div>
                   </div>
 
-                  {consultaDetails.historiaClinica.historico && (
-                    <div>
-                      <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem', textTransform: 'uppercase' }}>Histórico / Observações</h4>
-                      <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{consultaDetails.historiaClinica.historico}</p>
+                  <div className="detail-group">
+                    <h4 style={{ margin: '0 0 0.75rem', color: 'var(--color-primary-600)', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 14 4-4" /><path d="m3.34 19 8.66-8.66L20.66 19" /><path d="m3.34 5 8.66 8.66L20.66 5" /></svg>
+                      Sintomas Relatados
+                    </h4>
+                    <div style={{ padding: '1rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', fontSize: '1rem', color: 'var(--text-primary)', lineHeight: 1.6 }}>
+                      {consultaDetails.historiaClinica.sintomas || 'Não informados'}
                     </div>
-                  )}
-                </>
+                  </div>
+                </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', color: 'var(--text-secondary)' }}>
-                  <p>Nenhuma pré-história clínica disponível.</p>
+                <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-xl)', color: 'var(--text-tertiary)', border: '2px dashed var(--border-color)' }}>
+                  <p>Informações de triagem não encontradas.</p>
                 </div>
               )}
 
-              <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <button
                   className="btn secondary"
                   onClick={handleCloseDetails}
-                  style={{ borderRadius: 'var(--radius-lg)' }}
+                  style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
                 >
                   Fechar
                 </button>
                 <button
                   className="btn primary"
                   onClick={() => router.push(`/consultas/atendimento?id=${encodeURIComponent(selectedPaciente?.consultaId || '')}`)}
-                  style={{ borderRadius: 'var(--radius-lg)' }}
+                  style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
                 >
-                  Iniciar Atendimento
+                  Atender agora
                 </button>
               </div>
             </div>
           ) : (
-            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-tertiary)' }}>
-              Não foi possível carregar os detalhes.
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-tertiary)' }}>
+              Erro ao carregar os detalhes.
             </div>
           )}
         </ContentModal>
