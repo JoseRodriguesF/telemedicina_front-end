@@ -2,8 +2,8 @@
 
 import './sidebar.css';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useEffect, useState, useMemo } from 'react';
 import ThemeToggle from '@/components/common/ThemeToggle/ThemeToggle';
 import { getUser, clearUser } from '@/lib/auth';
 
@@ -25,10 +25,21 @@ const baseItems: SidebarItem[] = [
   { id: 'historico', label: 'Histórico', icon: '/images/clock.svg', href: '/historico' },
 ];
 
-export default function Sidebar({ activeId = 'inicio', className = '' }: Props) {
+export default function Sidebar({ activeId: propActiveId, className = '' }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
+
+  const activeId = useMemo(() => {
+    if (propActiveId) return propActiveId;
+    if (pathname.startsWith('/inicio')) return 'inicio';
+    if (pathname.startsWith('/consultas')) return 'consultas';
+    if (pathname.startsWith('/historico')) return 'historico';
+    if (pathname.startsWith('/perfil')) return 'perfil';
+    if (pathname.startsWith('/configuracoes')) return 'configuracoes';
+    return 'inicio';
+  }, [propActiveId, pathname]);
 
   useEffect(() => {
     setMounted(true);

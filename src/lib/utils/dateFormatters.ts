@@ -156,3 +156,19 @@ export function isThisMonth(dateStr: string): boolean {
     return (m - 1) === today.getMonth() &&
         y === today.getFullYear();
 }
+/**
+ * Calcula o tempo de espera desde uma data de criação
+ * @param createdAt - Data em formato ISO
+ * @returns String formatada (ex: "5 min", "1h 10min")
+ */
+export function getTimeWaiting(createdAt: string): string {
+    const start = new Date(createdAt).getTime();
+    const now = new Date().getTime();
+    const diffMins = Math.floor((now - start) / 60000);
+
+    if (diffMins < 1) return 'Agora mesmo';
+    if (diffMins < 60) return `${diffMins} min`;
+    const hours = Math.floor(diffMins / 60);
+    const mins = diffMins % 60;
+    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+}

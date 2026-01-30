@@ -3,20 +3,24 @@
 import './inicio.css';
 import '@/components/layout/Header/header.css';
 import Image from 'next/image';
-import Link from 'next/link';
-import ThemeToggle from '@/components/common/ThemeToggle/ThemeToggle';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/layout/Sidebar/Sidebar';
-import { getUser, getUserFirstName, getToken, clearUser } from '@/lib/auth';
-import { psListActiveRooms, psGetFullHistory, PSFullHistoryItem, getConsultasAgendadas, ConsultaAgendada, cancelarConsulta } from '@/lib/axios/consultas';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import FrequencyChart from '@/components/dashboard/FrequencyChart';
-import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 import { useConsultationTimer } from '@/hooks/useConsultationTimer';
 
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
+import { getUser, getUserFirstName, getToken } from '@/lib/auth';
+import {
+  psListActiveRooms,
+  psGetFullHistory,
+  PSFullHistoryItem,
+  getConsultasAgendadas,
+  ConsultaAgendada,
+  cancelarConsulta
+} from '@/lib/axios/consultas';
 
 export default function InicioPage() {
   const router = useRouter();
@@ -213,13 +217,8 @@ export default function InicioPage() {
   };
 
   return (
-    <div className="inicio-page">
-      <div className="inicio-mobile-header">
-        <MobileHeader />
-      </div>
-      <Sidebar activeId="inicio" />
-
-      <main className="inicio-main">
+    <>
+      <DashboardLayout>
         <header className="dashboard-header">
           <h2>Bem-vindo, {displayName}!</h2>
         </header>
@@ -292,7 +291,6 @@ export default function InicioPage() {
               )}
             </div>
           </div>
-
 
           {/* Card 4: Última Consulta */}
           <div className="dash-card">
@@ -434,15 +432,14 @@ export default function InicioPage() {
               </div>
             )}
           </div>
-
         </section>
-      </main>
+      </DashboardLayout>
       <Modal
         isOpen={modal.isOpen}
         config={modal.config}
         onConfirm={modal.onConfirm}
         onCancel={modal.onCancel}
       />
-    </div>
+    </>
   );
 }
