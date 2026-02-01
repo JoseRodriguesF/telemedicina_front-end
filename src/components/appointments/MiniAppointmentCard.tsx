@@ -6,9 +6,10 @@ interface MiniAppointmentCardProps {
     appointment: ConsultaAgendada;
     isMedico: boolean;
     onAttend: (id: number) => void;
+    onViewDetails?: (appt: ConsultaAgendada) => void;
 }
 
-export function MiniAppointmentCard({ appointment: appt, isMedico, onAttend }: MiniAppointmentCardProps) {
+export function MiniAppointmentCard({ appointment: appt, isMedico, onAttend, onViewDetails }: MiniAppointmentCardProps) {
     const { canJoin, timeRemaining, isToday } = useConsultationTimer(appt.data_consulta, appt.hora_inicio);
 
     const isSolicitada = appt.status === 'solicitada';
@@ -59,6 +60,39 @@ export function MiniAppointmentCard({ appointment: appt, isMedico, onAttend }: M
                     {appt.status.charAt(0).toUpperCase() + appt.status.slice(1)}
                 </span>
             </div>
+
+            {isMedico && (
+                <div className="appt-actions" style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem',
+                    marginLeft: '1rem',
+                    justifyContent: 'center',
+                    minWidth: '120px'
+                }}>
+                    <button
+                        className="btn info"
+                        style={{ fontSize: '0.75rem', padding: '0.4rem' }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onViewDetails?.(appt);
+                        }}
+                    >
+                        Ver Detalhes
+                    </button>
+                    <button
+                        className="btn primary"
+                        style={{ fontSize: '0.75rem', padding: '0.4rem' }}
+                        disabled={!effectiveCanJoin && !isSolicitada}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onAttend(appt.id);
+                        }}
+                    >
+                        {isSolicitada ? 'Confirmar' : 'Atender'}
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

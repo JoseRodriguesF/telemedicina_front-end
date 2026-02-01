@@ -79,6 +79,12 @@ export type ConsultaAgendada = {
     id: number;
     nome_completo: string;
   };
+  historiaClinica?: Array<{
+    id: number;
+    queixaPrincipal: string;
+    descricaoSintomas?: string;
+    [key: string]: any;
+  }>;
 };
 
 export async function getConsultasAgendadas(token: string): Promise<ConsultaAgendada[]> {
@@ -235,13 +241,12 @@ export type PSFilaItem = {
   roomId?: string;
   createdAt: string;
   status: ConsultaStatus;
-  historiaClinicaId?: number;
-  historiaClinica?: {
-    queixaPrincipal?: string;
-    sintomas?: string;
-    tempoSintomas?: string;
-    historico?: string;
-  };
+  historiaClinica?: Array<{
+    id: number;
+    queixaPrincipal: string; // From backend: queixa_principal if mapped, but prisma returns it as defined in schema
+    descricaoSintomas?: string;
+    [key: string]: any;
+  }>;
 };
 
 export type PSRoomResponse = {

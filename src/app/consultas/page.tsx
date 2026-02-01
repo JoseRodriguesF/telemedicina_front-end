@@ -7,8 +7,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
-import { getConsultasAgendadas, ConsultaAgendada } from '@/lib/axios/consultas';
+import { getConsultasAgendadas, ConsultaAgendada, getHistoriaClinica, ConsultaDetails, confirmarConsulta } from '@/lib/axios/consultas';
 import { MiniAppointmentCard } from '@/components/appointments/MiniAppointmentCard';
+import ContentModal from '@/components/common/Modal/ContentModal';
+import { useModal } from '@/components/common/Modal/useModal';
+import { Modal } from '@/components/common/Modal/Modal';
 
 export default function ConsultasPage() {
   const router = useRouter();
@@ -16,6 +19,62 @@ export default function ConsultasPage() {
   const [isMedico, setIsMedico] = useState<boolean>(false);
   const [scheduledAppointments, setScheduledAppointments] = useState<ConsultaAgendada[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Modal logic for patient details
+  const globalModal = useModal();
+  const [selectedAppt, setSelectedAppt] = useState<ConsultaAgendada | null>(null);
+  const [consultaDetails, setConsultaDetails] = useState<ConsultaDetails | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
+  const handleViewDetails = async (appt: ConsultaAgendada) => {
+    setSelectedAppt(appt);
+
+    const hClinica = Array.isArray(appt.historiaClinica) && appt.historiaClinica.length > 0
+      ? appt.historiaClinica[0]
+      : null;
+
+    const details: ConsultaDetails = {
+      id: appt.id,
+      pacienteId: appt.pacienteId,
+      medicoId: appt.medicoId,
+      status: appt.status,
+      createdAt: appt.createdAt,
+      updatedAt: appt.updatedAt,
+      paciente: {
+        ...appt.paciente,
+        cpf: '',
+        sexo: '',
+        data_nascimento: '',
+        telefone: ''
+      },
+      historiaClinica: hClinica ? {
+        queixaPrincipal: hClinica.queixaPrincipal,
+        sintomas: hClinica.descricaoSintomas,
+      } : undefined
+    };
+
+    setConsultaDetails(details);
+  };
+
+  const handleAttend = async (id: number) => {
+    const appt = scheduledAppointments.find(a => a.id === id);
+    if (appt?.status === 'solicitada') {
+      try {
+        const token = getToken();
+        if (token) {
+          await confirmarConsulta(id, token);
+          // Atualizar lista local
+          setScheduledAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'agendada' as any } : a));
+          globalModal.success('Sucesso', 'Consulta confirmada com sucesso!');
+        }
+      } catch (error) {
+        console.error('Erro ao confirmar consulta:', error);
+        globalModal.error('Erro', 'Não foi possível confirmar a consulta.');
+      }
+    } else {
+      router.push(`/consultas/atendimento?id=${id}&scheduled=true`);
+    }
+  };
 
   useEffect(() => {
     const u = getUser();
@@ -166,7 +225,8 @@ export default function ConsultasPage() {
                     key={appt.id}
                     appointment={appt}
                     isMedico={isMedico}
-                    onAttend={(id) => router.push(`/consultas/atendimento?id=${id}&scheduled=true`)}
+                    onAttend={handleAttend}
+                    onViewDetails={handleViewDetails}
                   />
                 ))
               ) : (
@@ -185,6 +245,82 @@ export default function ConsultasPage() {
           </div>
         </section>
       </div>
+      <ContentModal
+        isOpen={!!selectedAppt}
+        onClose={() => setSelectedAppt(null)}
+        title="Ficha de Pré-Atendimento"
+        size="md"
+      >
+        {loadingDetails ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
+            <div className="spinner"></div>
+          </div>
+        ) : consultaDetails ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '0.5rem' }}>
+            <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)' }}>
+              <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-tertiary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Paciente</h4>
+              <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>{consultaDetails.paciente.nome_completo || 'Paciente'}</p>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>ID: #{consultaDetails.pacienteId}</span>
+            </div>
+
+            {consultaDetails.historiaClinica ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '0.5rem' }}>
+                <div className="detail-group">
+                  <h4 style={{ margin: '0 0 0.75rem', color: 'var(--color-primary-600)', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4l3 3" /><circle cx="12" cy="12" r="10" /></svg>
+                    Queixa Principal
+                  </h4>
+                  <div style={{ padding: '1rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', fontSize: '1rem', color: 'var(--text-primary)', lineHeight: 1.6 }}>
+                    {consultaDetails.historiaClinica.queixaPrincipal || 'Não informada'}
+                  </div>
+                </div>
+
+                <div className="detail-group">
+                  <h4 style={{ margin: '0 0 0.75rem', color: 'var(--color-primary-600)', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 14 4-4" /><path d="m3.34 19 8.66-8.66L20.66 19" /><path d="m3.34 5 8.66 8.66L20.66 5" /></svg>
+                    Sintomas Relatados
+                  </h4>
+                  <div style={{ padding: '1rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', fontSize: '1rem', color: 'var(--text-primary)', lineHeight: 1.6 }}>
+                    {consultaDetails.historiaClinica.sintomas || 'Não informados'}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-xl)', color: 'var(--text-tertiary)', border: '2px dashed var(--border-color)' }}>
+                <p>Informações de triagem não encontradas.</p>
+              </div>
+            )}
+
+            <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <button
+                className="btn secondary"
+                onClick={() => setSelectedAppt(null)}
+                style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
+              >
+                Fechar
+              </button>
+              <button
+                className="btn primary"
+                onClick={() => handleAttend(selectedAppt?.id!)}
+                style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
+              >
+                {selectedAppt?.status === 'solicitada' ? 'Confirmar Agora' : 'Atender agora'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-tertiary)' }}>
+            Erro ao carregar os detalhes.
+          </div>
+        )}
+      </ContentModal>
+
+      <Modal
+        isOpen={globalModal.isOpen}
+        config={globalModal.config}
+        onConfirm={globalModal.onConfirm}
+        onCancel={globalModal.onCancel}
+      />
     </DashboardLayout>
   );
 }

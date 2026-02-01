@@ -29,6 +29,10 @@ export default function PacientesPage() {
   const handleViewDetails = async (paciente: PSFilaItem) => {
     setSelectedPaciente(paciente);
 
+    const hClinica = Array.isArray(paciente.historiaClinica) && paciente.historiaClinica.length > 0
+      ? paciente.historiaClinica[0]
+      : null;
+
     // Objeto parcial inicial
     const details: ConsultaDetails = {
       id: Number(paciente.consultaId),
@@ -45,25 +49,24 @@ export default function PacientesPage() {
         data_nascimento: '',
         telefone: ''
       },
-      historiaClinica: {
-        queixaPrincipal: paciente.historiaClinica?.queixaPrincipal,
-        sintomas: paciente.historiaClinica?.sintomas,
-      }
+      historiaClinica: hClinica ? {
+        queixaPrincipal: hClinica.queixaPrincipal,
+        sintomas: hClinica.descricaoSintomas,
+      } : undefined
     };
 
-    // Se não veio historiaClinica completa na lista, mas temos o ID, buscamos individualmente
-    if (!details.historiaClinica?.queixaPrincipal && paciente.historiaClinicaId) {
+    // Fallback: se não veio na lista por algum motivo (embora agora venha)
+    if (!details.historiaClinica?.queixaPrincipal && (paciente as any).historiaClinicaId) {
       setLoadingDetails(true);
       try {
         const token = getToken();
         if (token) {
-          const historyData = await getHistoriaClinica(paciente.historiaClinicaId, token);
+          const historyData = await getHistoriaClinica((paciente as any).historiaClinicaId, token);
           if (historyData) {
-            // Suporte para snake_case vindo do back
             const raw = historyData as any;
             details.historiaClinica = {
               queixaPrincipal: historyData.queixaPrincipal || raw.queixa_principal,
-              sintomas: historyData.sintomas || raw.sintomas,
+              sintomas: historyData.sintomas || raw.descricao_sintomas || raw.sintomas,
             };
           }
         }
