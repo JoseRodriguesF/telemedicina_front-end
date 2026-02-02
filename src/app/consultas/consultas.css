@@ -169,7 +169,7 @@
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: var(--radius-xl);
-    padding: 1.25rem;
+    padding: 0.95rem 1.25rem;
     display: flex;
     align-items: center;
     gap: 1rem;
