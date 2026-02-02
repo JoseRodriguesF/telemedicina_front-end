@@ -9,15 +9,15 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import FrequencyChart from '@/components/dashboard/FrequencyChart';
 import { useConsultationTimer } from '@/hooks/useConsultationTimer';
 
+// ✅ NOVO: Importar hooks otimizados
+import { useConsultasAgendadas, useHistoricoCompleto, useSalasAtivas } from '@/hooks/useApiData';
+
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
 import {
-  psListActiveRooms,
-  psGetFullHistory,
   PSFullHistoryItem,
-  getConsultasAgendadas,
   ConsultaAgendada,
   cancelarConsulta
 } from '@/lib/axios/consultas';
@@ -29,6 +29,11 @@ export default function InicioPage() {
   const [isMedico, setIsMedico] = useState<boolean>(false);
   const [userId, setUserId] = useState<number | null>(null);
 
+  // ✅ NOVO: Usar hooks otimizados com cache automático
+  const { consultas, isLoading: loadingConsultas, refresh: refreshConsultas } = useConsultasAgendadas();
+  const { historico, isLoading: loadingHistorico } = useHistoricoCompleto();
+  const { salas, refresh: refreshSalas } = useSalasAtivas(userId?.toString());
+
   /* State for active session */
   const [reconnectData, setReconnectData] = useState<{
     roomId: string;
@@ -39,9 +44,7 @@ export default function InicioPage() {
     medicoNome?: string;
   } | null>(null);
 
-  const [fullHistory, setFullHistory] = useState<PSFullHistoryItem[]>([]);
   const [chartData, setChartData] = useState<Array<{ name: string; consultas: number }>>([]);
-  const [loadingHistory, setLoadingHistory] = useState(true);
 
   // Próxima consulta agendada real
   const [nextAppointment, setNextAppointment] = useState<ConsultaAgendada | null>(null);
@@ -69,6 +72,10 @@ export default function InicioPage() {
           }
 
           await cancelarConsulta(nextAppointment.id, token);
+
+          // ✅ NOVO: Atualizar cache do SWR
+          refreshConsultas();
+
           setNextAppointment(null);
           modal.success('Sucesso', 'Consulta desmarcada com sucesso!');
         } catch (error: any) {
@@ -95,6 +102,7 @@ export default function InicioPage() {
     }
   };
 
+  // ✅ OTIMIZADO: Inicialização do usuário (executado apenas 1 vez)
   useEffect(() => {
     const u = getUser();
     setDisplayName(getUserFirstName(u));
@@ -102,113 +110,97 @@ export default function InicioPage() {
     setIsMedico(isMed);
     setUserId(u?.id || null);
 
-    const token = getToken();
-    let found = false;
+    // Verificar sessionStorage para reconexão
     try {
       const raw = sessionStorage.getItem('consulta_reconnect');
       if (raw) {
         const data = JSON.parse(raw);
         if (data && data.userId && u && String(data.userId) === String(u.id)) {
           setReconnectData(data);
-          found = true;
         }
       }
     } catch { }
-    if (!found && token && u) {
-      const currentUserId = String(u.id);
-      psListActiveRooms(token, currentUserId).then((rooms) => {
-        if (Array.isArray(rooms) && rooms.length > 0) {
-          const sala = rooms[0];
-          const calculatedRole = u.tipo_usuario === 'medico' ? 'medico' : 'paciente';
-          setReconnectData({
-            roomId: sala.roomId || (sala as any).room_id || '',
-            consultaId: sala.consultaId || (sala as any).consulta_id || '',
-            userId: currentUserId,
-            role: calculatedRole,
-            pacienteNome: sala.pacienteNome,
-            medicoNome: sala.medicoNome
-          });
-        }
-      }).catch(err => console.error(err));
-    }
-
-    // Buscar consultas agendadas e pegar a mais próxima
-    if (token) {
-      getConsultasAgendadas(token)
-        .then((consultas: ConsultaAgendada[]) => {
-          if (consultas && consultas.length > 0) {
-            // Filtrar apenas consultas agendadas
-            const agendadas = consultas.filter(c => c.status === 'agendada');
-
-            // Ordenar por data e hora mais próxima (crescente)
-            const sorted = agendadas.sort((a, b) => {
-              const getTimestamp = (c: ConsultaAgendada) => {
-                if (c.hora_inicio.includes('T')) {
-                  return new Date(c.hora_inicio).getTime();
-                }
-                const dateTimeStr = `${c.data_consulta}T${c.hora_inicio}`;
-                return new Date(dateTimeStr).getTime();
-              };
-              return getTimestamp(a) - getTimestamp(b);
-            });
-
-            // Pegar a primeira (mais próxima)
-            if (sorted.length > 0) {
-              setNextAppointment(sorted[0]);
-            }
-          }
-        })
-        .catch((err: any) => {
-          console.error('Erro ao buscar consultas agendadas:', err);
-        });
-
-      psGetFullHistory(token)
-        .then((data: PSFullHistoryItem[]) => {
-          setFullHistory(data);
-          // Processar dados para o gráfico (da primeira consulta até hoje, máx 30 dias)
-          const processed = [];
-          const now = new Date();
-          now.setHours(0, 0, 0, 0);
-
-          let daysToShow = 30;
-          if (data.length > 0) {
-            const timestamps = data.map(item => new Date(item.createdAt || '').getTime());
-            const earliestTimestamp = Math.min(...timestamps);
-            const earliestDate = new Date(earliestTimestamp);
-            earliestDate.setHours(0, 0, 0, 0);
-
-            const diffTime = Math.abs(now.getTime() - earliestDate.getTime());
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-            daysToShow = Math.min(diffDays, 30);
-          } else {
-            daysToShow = 1; // Se não tem histórico, mostra apenas o dia atual
-          }
-
-          for (let i = daysToShow - 1; i >= 0; i--) {
-            const d = new Date(now);
-            d.setDate(now.getDate() - i);
-            const label = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-            const count = data.filter((item: PSFullHistoryItem) => {
-              const itemDate = new Date(item.createdAt);
-              return itemDate.toDateString() === d.toDateString();
-            }).length;
-            processed.push({ name: label, consultas: count });
-          }
-
-          // Injetar ponto inicial para efeito de subida (começa do zero)
-          if (processed.length > 0 && processed[0].consultas > 0) {
-            processed.unshift({
-              name: 'hidden_point',
-              consultas: 0
-            });
-          }
-
-          setChartData(processed);
-        })
-        .catch((err: any) => console.error('Erro ao buscar histórico:', err))
-        .finally(() => setLoadingHistory(false));
-    }
   }, []);
+
+  // ✅ OTIMIZADO: Processar salas ativas quando disponíveis
+  useEffect(() => {
+    if (salas && salas.length > 0 && !reconnectData) {
+      const u = getUser();
+      const sala = salas[0];
+      const calculatedRole = u?.tipo_usuario === 'medico' ? 'medico' : 'paciente';
+      setReconnectData({
+        roomId: sala.roomId || (sala as any).room_id || '',
+        consultaId: sala.consultaId || (sala as any).consulta_id || '',
+        userId: String(u?.id || ''),
+        role: calculatedRole,
+        pacienteNome: sala.pacienteNome,
+        medicoNome: sala.medicoNome
+      });
+    }
+  }, [salas, reconnectData]);
+
+  // ✅ OTIMIZADO: Processar próxima consulta quando consultas mudarem
+  useEffect(() => {
+    if (consultas && consultas.length > 0) {
+      const agendadas = consultas.filter(c => c.status === 'agendada');
+      const sorted = agendadas.sort((a, b) => {
+        const getTimestamp = (c: ConsultaAgendada) => {
+          if (c.hora_inicio.includes('T')) {
+            return new Date(c.hora_inicio).getTime();
+          }
+          return new Date(`${c.data_consulta}T${c.hora_inicio}`).getTime();
+        };
+        return getTimestamp(a) - getTimestamp(b);
+      });
+
+      if (sorted.length > 0) {
+        setNextAppointment(sorted[0]);
+      }
+    }
+  }, [consultas]);
+
+  // ✅ OTIMIZADO: Processar dados do gráfico quando histórico mudar
+  useEffect(() => {
+    if (historico) {
+      const processed = [];
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      let daysToShow = 30;
+      if (historico.length > 0) {
+        const timestamps = historico.map(item => new Date(item.createdAt || '').getTime());
+        const earliestTimestamp = Math.min(...timestamps);
+        const earliestDate = new Date(earliestTimestamp);
+        earliestDate.setHours(0, 0, 0, 0);
+
+        const diffTime = Math.abs(now.getTime() - earliestDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        daysToShow = Math.min(diffDays, 30);
+      } else {
+        daysToShow = 1;
+      }
+
+      for (let i = daysToShow - 1; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(now.getDate() - i);
+        const label = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        const count = historico.filter((item: PSFullHistoryItem) => {
+          const itemDate = new Date(item.createdAt);
+          return itemDate.toDateString() === d.toDateString();
+        }).length;
+        processed.push({ name: label, consultas: count });
+      }
+
+      if (processed.length > 0 && processed[0].consultas > 0) {
+        processed.unshift({
+          name: 'hidden_point',
+          consultas: 0
+        });
+      }
+
+      setChartData(processed);
+    }
+  }, [historico]);
 
   const handleReconnect = () => {
     if (reconnectData) {
@@ -233,7 +225,7 @@ export default function InicioPage() {
               </div>
             </div>
             <div className="dash-card-value">
-              {loadingHistory ? '--' : fullHistory.length}
+              {loadingHistorico ? '--' : historico.length}
               <span className="dash-card-trend trend-up">↑ 15%</span>
             </div>
             <div className="dash-card-footer">
@@ -302,21 +294,21 @@ export default function InicioPage() {
             </div>
             <div className="dash-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
               <div style={{ marginBottom: 'auto' }}>
-                {loadingHistory ? (
+                {loadingHistorico ? (
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>Carregando...</p>
-                ) : fullHistory.length > 0 ? (
+                ) : historico.length > 0 ? (
                   <>
                     <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', gap: '0.4rem', alignItems: 'baseline', margin: '0.25rem 0' }}>
                       <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
                         {isMedico ? 'Paciente:' : 'Médico:'}
                       </span>
                       {isMedico
-                        ? (fullHistory[0].paciente?.nome_completo?.trim().split(/\s+/)[0] || 'Paciente')
-                        : (fullHistory[0].medico?.nome_completo?.trim().split(/\s+/)[0] || 'Médico')}
+                        ? (historico[0].paciente?.nome_completo?.trim().split(/\s+/)[0] || 'Paciente')
+                        : (historico[0].medico?.nome_completo?.trim().split(/\s+/)[0] || 'Médico')}
                     </h4>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginTop: '0' }}>
-                      {fullHistory[0].createdAt
-                        ? `${formatDate(fullHistory[0].createdAt)} - ${formatTime(fullHistory[0].createdAt)}`
+                      {historico[0].createdAt
+                        ? `${formatDate(historico[0].createdAt)} - ${formatTime(historico[0].createdAt)}`
                         : 'Data não disponível'}
                     </p>
                   </>

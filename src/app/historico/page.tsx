@@ -7,61 +7,36 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
-import { psGetFullHistory, PSFullHistoryItem } from '@/lib/axios/consultas';
+import { PSFullHistoryItem } from '@/lib/axios/consultas';
+// ✅ NOVO: Importar hooks otimizados
+import { useHistoricoCompleto, useUserProfile } from '@/hooks/useApiData';
+import { useDebounce } from '@/hooks/useOptimization';
 import ContentModal from '@/components/common/Modal/ContentModal';
 import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
 
 export default function HistoricoPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>('');
-  const [history, setHistory] = useState<PSFullHistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [userType, setUserType] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedItem, setSelectedItem] = useState<PSFullHistoryItem | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [medicoRating, setMedicoRating] = useState<number | null>(null);
+
+  // ✅ NOVO: Usar hooks otimizados
+  const { historico: history, isLoading: loading } = useHistoricoCompleto();
+  const { profile } = useUserProfile();
+
+  // ✅ NOVO: Debounce na busca para evitar renderizações excessivas
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
+  const medicoRating = profile?.medico?.avaliacao || null;
 
   useEffect(() => {
     const u = getUser();
     setDisplayName(getUserFirstName(u));
     setUserType(u?.tipo_usuario || '');
-
-    const fetchHistory = async () => {
-      try {
-        const token = getToken();
-        if (token) {
-          const data = await psGetFullHistory(token);
-          setHistory(data);
-        }
-      } catch (error) {
-        console.error('Error fetching history:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchMedicoRating = async () => {
-      if (u?.tipo_usuario === 'medico') {
-        try {
-          const token = getToken();
-          if (token) {
-            const response = await fetch('/api/usuarios/me', {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            const profileData = await response.json();
-            setMedicoRating(profileData.medico?.avaliacao || null);
-          }
-        } catch (error) {
-          console.error('Error fetching medico rating:', error);
-        }
-      }
-    };
-
-    fetchHistory();
-    fetchMedicoRating();
   }, []);
 
   const getParticipantName = (item: PSFullHistoryItem) => {
@@ -72,8 +47,9 @@ export default function HistoricoPage() {
     }
   };
 
+  // ✅ OTIMIZADO: Usar debouncedSearch para evitar filtros excessivos
   const filteredHistory = history.filter(item => {
-    const nameMatch = getParticipantName(item).toLowerCase().includes(searchTerm.toLowerCase());
+    const nameMatch = getParticipantName(item).toLowerCase().includes(debouncedSearch.toLowerCase());
 
     let dateMatch = true;
     if (startDate || endDate) {

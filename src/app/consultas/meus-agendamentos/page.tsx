@@ -7,7 +7,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
-import { getConsultasAgendadas, ConsultaAgendada, confirmarConsulta, cancelarConsulta, ConsultaStatus } from '@/lib/axios/consultas';
+import { confirmarConsulta, cancelarConsulta, ConsultaStatus, ConsultaAgendada } from '@/lib/axios/consultas';
+// ✅ NOVO: Importar hooks otimizados
+import { useConsultasAgendadas } from '@/hooks/useApiData';
+import { useDebounce } from '@/hooks/useOptimization';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 
 import { Modal } from '@/components/common/Modal/Modal';
@@ -19,12 +22,29 @@ export default function MeusAgendamentosPage() {
     const router = useRouter();
     const modal = useModal();
     const [displayName, setDisplayName] = useState<string>('');
-    const [appointments, setAppointments] = useState<ConsultaAgendada[]>([]);
-    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterPeriod, setFilterPeriod] = useState<'all' | 'today' | 'week' | 'month'>('all');
     const [filterStatus, setFilterStatus] = useState<'all' | 'solicitada' | 'agendada'>('all');
     const [confirmingIds, setConfirmingIds] = useState<Set<number>>(new Set());
+
+    // ✅ NOVO: Usar hooks otimizados
+    const { consultas: allConsultas, isLoading: loading, refresh: refreshConsultas } = useConsultasAgendadas();
+
+    // ✅ NOVO: Debounce na busca
+    const debouncedSearch = useDebounce(searchTerm, 300);
+
+    // ✅ OTIMIZADO: Filtrar e ordenar consultas
+    const appointments = allConsultas
+        .filter(c => c.status === 'agendada' || c.status === 'solicitada')
+        .sort((a, b) => {
+            const getTimestamp = (c: ConsultaAgendada) => {
+                if (c.hora_inicio.includes('T')) {
+                    return new Date(c.hora_inicio).getTime();
+                }
+                return new Date(`${c.data_consulta}T${c.hora_inicio}`).getTime();
+            };
+            return getTimestamp(a) - getTimestamp(b);
+        });
 
     useEffect(() => {
         const u = getUser();
@@ -34,34 +54,6 @@ export default function MeusAgendamentosPage() {
         }
 
         setDisplayName(getUserFirstName(u));
-
-        const fetchAppointments = async () => {
-            try {
-                const token = getToken();
-                if (token) {
-                    const data = await getConsultasAgendadas(token);
-                    const consultas = data.filter(c => c.status === 'agendada' || c.status === 'solicitada');
-
-                    const sorted = consultas.sort((a, b) => {
-                        const getTimestamp = (c: ConsultaAgendada) => {
-                            if (c.hora_inicio.includes('T')) {
-                                return new Date(c.hora_inicio).getTime();
-                            }
-                            return new Date(`${c.data_consulta}T${c.hora_inicio}`).getTime();
-                        };
-                        return getTimestamp(a) - getTimestamp(b);
-                    });
-
-                    setAppointments(sorted);
-                }
-            } catch (error) {
-                console.error('Error fetching appointments:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchAppointments();
     }, [router]);
 
     const isToday = (dateStr: string) => {
@@ -87,8 +79,9 @@ export default function MeusAgendamentosPage() {
             date.getUTCFullYear() === today.getUTCFullYear();
     };
 
+    // ✅ OTIMIZADO: Usar debouncedSearch para evitar filtros excessivos
     const filteredAppointments = appointments.filter(item => {
-        const matchesSearch = item.paciente?.nome_completo?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = item.paciente?.nome_completo?.toLowerCase().includes(debouncedSearch.toLowerCase());
         let matchesPeriod = true;
         if (filterPeriod === 'today') matchesPeriod = isToday(item.data_consulta);
         else if (filterPeriod === 'week') matchesPeriod = isThisWeek(item.data_consulta);
@@ -109,9 +102,9 @@ export default function MeusAgendamentosPage() {
 
             await confirmarConsulta(consultaId, token);
 
-            setAppointments(prev => prev.map(appt =>
-                appt.id === consultaId ? { ...appt, status: 'agendada' as ConsultaStatus } : appt
-            ));
+            // ✅ NOVO: Atualizar cache do SWR
+            refreshConsultas();
+
             modal.success('Sucesso', 'Consulta confirmada com sucesso!');
         } catch (error: any) {
             console.error('Erro ao confirmar consulta:', error);
@@ -138,7 +131,9 @@ export default function MeusAgendamentosPage() {
 
                     await cancelarConsulta(consultaId, token);
 
-                    setAppointments(prev => prev.filter(appt => appt.id !== consultaId));
+                    // ✅ NOVO: Atualizar cache do SWR
+                    refreshConsultas();
+
                     modal.success('Sucesso', 'Consulta cancelada com sucesso!');
                 } catch (error: any) {
                     console.error('Erro ao cancelar consulta:', error);

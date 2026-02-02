@@ -7,7 +7,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
-import { getConsultasAgendadas, ConsultaAgendada, getHistoriaClinica, ConsultaDetails, confirmarConsulta, cancelarConsulta } from '@/lib/axios/consultas';
+import { ConsultaAgendada, ConsultaDetails, confirmarConsulta, cancelarConsulta } from '@/lib/axios/consultas';
+// ✅ NOVO: Importar hooks otimizados
+import { useConsultasAgendadas } from '@/hooks/useApiData';
 import { MiniAppointmentCard } from '@/components/appointments/MiniAppointmentCard';
 import ContentModal from '@/components/common/Modal/ContentModal';
 import { useModal } from '@/components/common/Modal/useModal';
@@ -18,8 +20,22 @@ export default function ConsultasPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>('');
   const [isMedico, setIsMedico] = useState<boolean>(false);
-  const [scheduledAppointments, setScheduledAppointments] = useState<ConsultaAgendada[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+
+  // ✅ NOVO: Usar hooks otimizados
+  const { consultas: allConsultas, isLoading: loading, refresh: refreshConsultas } = useConsultasAgendadas();
+
+  // ✅ OTIMIZADO: Filtrar e ordenar consultas
+  const scheduledAppointments = allConsultas
+    .filter(c => c.status === 'agendada' || c.status === 'solicitada')
+    .sort((a, b) => {
+      const getTimestamp = (c: ConsultaAgendada) => {
+        if (c.hora_inicio.includes('T')) {
+          return new Date(c.hora_inicio).getTime();
+        }
+        return new Date(`${c.data_consulta}T${c.hora_inicio}`).getTime();
+      };
+      return getTimestamp(a) - getTimestamp(b);
+    });
 
   // Modal logic for patient details
   const globalModal = useModal();
@@ -64,8 +80,10 @@ export default function ConsultasPage() {
         const token = getToken();
         if (token) {
           await confirmarConsulta(id, token);
-          // Atualizar lista local
-          setScheduledAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'agendada' as any } : a));
+
+          // ✅ NOVO: Atualizar cache do SWR
+          refreshConsultas();
+
           globalModal.success('Sucesso', 'Consulta confirmada com sucesso!');
         }
       } catch (error) {
@@ -86,7 +104,10 @@ export default function ConsultasPage() {
           const token = getToken();
           if (token) {
             await cancelarConsulta(id, token);
-            setScheduledAppointments(prev => prev.filter(appt => appt.id !== id));
+
+            // ✅ NOVO: Atualizar cache do SWR
+            refreshConsultas();
+
             setSelectedAppt(null);
             globalModal.success('Sucesso', 'Consulta cancelada com sucesso!');
           }
@@ -100,33 +121,9 @@ export default function ConsultasPage() {
 
   useEffect(() => {
     const u = getUser();
-    const token = getToken();
     setDisplayName(getUserFirstName(u));
     const isMed = (u?.tipo_usuario || '').toLowerCase() === 'medico';
     setIsMedico(isMed);
-
-    if (token) {
-      getConsultasAgendadas(token)
-        .then((data) => {
-          // Filtrar apenas agendadas e ordenar por data mais próxima
-          const filtered = data
-            .filter(c => c.status === 'agendada' || c.status === 'solicitada')
-            .sort((a, b) => {
-              const getTimestamp = (c: ConsultaAgendada) => {
-                if (c.hora_inicio.includes('T')) {
-                  return new Date(c.hora_inicio).getTime();
-                }
-                return new Date(`${c.data_consulta}T${c.hora_inicio}`).getTime();
-              };
-              return getTimestamp(a) - getTimestamp(b);
-            });
-          setScheduledAppointments(filtered);
-        })
-        .catch(err => console.error('Erro ao buscar consultas:', err))
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
   }, []);
 
   const scrollRef = useRef<HTMLDivElement>(null);
