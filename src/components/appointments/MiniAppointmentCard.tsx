@@ -29,7 +29,7 @@ export function MiniAppointmentCard({ appointment: appt, isMedico, onAttend, onV
                 <span className="month">{getMonthAbbreviation(appt.data_consulta)}</span>
             </div>
             <div className="appt-details">
-                <h4>{isMedico ? appt.paciente.nome_completo : appt.medico.nome_completo}</h4>
+                <h4>{isMedico ? appt.paciente.nome_completo.split(' ')[0] : appt.medico.nome_completo.split(' ')[0]}</h4>
                 <p>
                     {isMedico ? 'Paciente' : 'Médico'} • {formatTime(appt.hora_inicio)}
                     {!effectiveCanJoin && isToday && !isSolicitada && (
@@ -67,39 +67,6 @@ export function MiniAppointmentCard({ appointment: appt, isMedico, onAttend, onV
                     {appt.status.charAt(0).toUpperCase() + appt.status.slice(1)}
                 </span>
             </div>
-
-            {isMedico && (
-                <div className="appt-actions" style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '0.5rem',
-                    marginLeft: '1rem',
-                    justifyContent: 'center',
-                    minWidth: '120px'
-                }}>
-                    <button
-                        className="btn info"
-                        style={{ fontSize: '0.75rem', padding: '0.4rem' }}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onViewDetails?.(appt);
-                        }}
-                    >
-                        Ver Detalhes
-                    </button>
-                    <button
-                        className="btn primary"
-                        style={{ fontSize: '0.75rem', padding: '0.4rem' }}
-                        disabled={!effectiveCanJoin && !isSolicitada}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onAttend(appt.id);
-                        }}
-                    >
-                        {isSolicitada ? 'Confirmar' : 'Atender'}
-                    </button>
-                </div>
-            )}
         </div>
     );
 }
