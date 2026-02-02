@@ -16,7 +16,14 @@ export function MiniAppointmentCard({ appointment: appt, isMedico, onAttend, onV
     const effectiveCanJoin = canJoin && !isSolicitada;
 
     return (
-        <div className="appointment-mini-card" style={{ opacity: (!effectiveCanJoin && isToday && !isSolicitada) ? 0.9 : 1 }}>
+        <div
+            className="appointment-mini-card"
+            style={{
+                opacity: (!effectiveCanJoin && isToday && !isSolicitada) ? 0.9 : 1,
+                cursor: 'pointer'
+            }}
+            onClick={() => onViewDetails?.(appt)}
+        >
             <div className="appt-date-box">
                 <span className="day">{getDay(appt.data_consulta)}</span>
                 <span className="month">{getMonthAbbreviation(appt.data_consulta)}</span>

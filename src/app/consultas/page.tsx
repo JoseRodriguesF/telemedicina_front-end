@@ -7,11 +7,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
-import { getConsultasAgendadas, ConsultaAgendada, getHistoriaClinica, ConsultaDetails, confirmarConsulta } from '@/lib/axios/consultas';
+import { getConsultasAgendadas, ConsultaAgendada, getHistoriaClinica, ConsultaDetails, confirmarConsulta, cancelarConsulta } from '@/lib/axios/consultas';
 import { MiniAppointmentCard } from '@/components/appointments/MiniAppointmentCard';
 import ContentModal from '@/components/common/Modal/ContentModal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { Modal } from '@/components/common/Modal/Modal';
+import { formatTime } from '@/lib/utils/dateFormatters';
 
 export default function ConsultasPage() {
   const router = useRouter();
@@ -74,6 +75,27 @@ export default function ConsultasPage() {
     } else {
       router.push(`/consultas/atendimento?id=${id}&scheduled=true`);
     }
+  };
+
+  const handleCancelConsultation = async (id: number) => {
+    globalModal.confirm(
+      'Confirmar Cancelamento',
+      'Tem certeza que deseja desmarcar esta consulta? Esta ação não pode ser desfeita.',
+      async () => {
+        try {
+          const token = getToken();
+          if (token) {
+            await cancelarConsulta(id, token);
+            setScheduledAppointments(prev => prev.filter(appt => appt.id !== id));
+            setSelectedAppt(null);
+            globalModal.success('Sucesso', 'Consulta cancelada com sucesso!');
+          }
+        } catch (error) {
+          console.error('Erro ao cancelar consulta:', error);
+          globalModal.error('Erro', 'Não foi possível cancelar a consulta.');
+        }
+      }
+    );
   };
 
   useEffect(() => {
@@ -248,7 +270,7 @@ export default function ConsultasPage() {
       <ContentModal
         isOpen={!!selectedAppt}
         onClose={() => setSelectedAppt(null)}
-        title="Ficha de Pré-Atendimento"
+        title={isMedico ? "Ficha de Pré-Atendimento" : "Detalhes da Consulta"}
         size="md"
       >
         {loadingDetails ? (
@@ -258,9 +280,23 @@ export default function ConsultasPage() {
         ) : consultaDetails ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '0.5rem' }}>
             <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)' }}>
-              <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-tertiary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Paciente</h4>
-              <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>{consultaDetails.paciente.nome_completo || 'Paciente'}</p>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>ID: #{consultaDetails.pacienteId}</span>
+              <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-tertiary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{isMedico ? 'Paciente' : 'Médico'}</h4>
+              <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                {isMedico ? (consultaDetails.paciente.nome_completo || 'Paciente') : (selectedAppt?.medico.nome_completo || 'Médico')}
+              </p>
+              {!isMedico && <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>Clinico Geral</span>}
+              {isMedico && <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>ID: #{consultaDetails.pacienteId}</span>}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
+                <h4 style={{ margin: '0 0 0.25rem', color: 'var(--text-tertiary)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Data</h4>
+                <p style={{ margin: 0, fontWeight: 600 }}>{selectedAppt && new Date(selectedAppt.data_consulta).toLocaleDateString('pt-BR')}</p>
+              </div>
+              <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
+                <h4 style={{ margin: '0 0 0.25rem', color: 'var(--text-tertiary)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Horário</h4>
+                <p style={{ margin: 0, fontWeight: 600 }}>{selectedAppt && formatTime(selectedAppt.hora_inicio)}</p>
+              </div>
             </div>
 
             {consultaDetails.historiaClinica ? (
@@ -291,22 +327,48 @@ export default function ConsultasPage() {
               </div>
             )}
 
-            <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <button
-                className="btn secondary"
-                onClick={() => setSelectedAppt(null)}
-                style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
-              >
-                Fechar
-              </button>
-              <button
-                className="btn primary"
-                onClick={() => handleAttend(selectedAppt?.id!)}
-                style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
-              >
-                {selectedAppt?.status === 'solicitada' ? 'Confirmar Agora' : 'Atender agora'}
-              </button>
-            </div>
+            {isMedico ? (
+              <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <button
+                  className="btn secondary"
+                  onClick={() => setSelectedAppt(null)}
+                  style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
+                >
+                  Fechar
+                </button>
+                <button
+                  className="btn primary"
+                  onClick={() => handleAttend(selectedAppt?.id!)}
+                  style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
+                >
+                  {selectedAppt?.status === 'solicitada' ? 'Confirmar Agora' : 'Atender agora'}
+                </button>
+              </div>
+            ) : (
+              <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <button
+                  className="btn secondary"
+                  onClick={() => setSelectedAppt(null)}
+                  style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
+                >
+                  Voltar
+                </button>
+                <button
+                  className="btn danger"
+                  onClick={() => handleCancelConsultation(selectedAppt?.id!)}
+                  style={{
+                    borderRadius: 'var(--radius-lg)',
+                    padding: '0.8rem',
+                    backgroundColor: '#fee2e2',
+                    color: '#dc2626',
+                    border: '1px solid #fecaca',
+                    fontWeight: 600
+                  }}
+                >
+                  {selectedAppt?.status === 'solicitada' ? 'Retirar Solicitação' : 'Desmarcar Consulta'}
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-tertiary)' }}>
