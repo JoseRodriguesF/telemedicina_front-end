@@ -28,6 +28,8 @@ export type UserProfile = {
         especializacao_url?: string;
         assinatura_digital_url: string;
         seguro_responsabilidade_url: string;
+        telefone?: string;
+        avaliacao?: number;
     };
     enderecos?: Array<{
         id: number;

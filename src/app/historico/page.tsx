@@ -22,6 +22,7 @@ export default function HistoricoPage() {
   const [endDate, setEndDate] = useState('');
   const [selectedItem, setSelectedItem] = useState<PSFullHistoryItem | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [medicoRating, setMedicoRating] = useState<number | null>(null);
 
   useEffect(() => {
     const u = getUser();
@@ -42,7 +43,25 @@ export default function HistoricoPage() {
       }
     };
 
+    const fetchMedicoRating = async () => {
+      if (u?.tipo_usuario === 'medico') {
+        try {
+          const token = getToken();
+          if (token) {
+            const response = await fetch('/api/usuarios/me', {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const profileData = await response.json();
+            setMedicoRating(profileData.medico?.avaliacao || null);
+          }
+        } catch (error) {
+          console.error('Error fetching medico rating:', error);
+        }
+      }
+    };
+
     fetchHistory();
+    fetchMedicoRating();
   }, []);
 
   const getParticipantName = (item: PSFullHistoryItem) => {
@@ -200,14 +219,16 @@ export default function HistoricoPage() {
               <div className="stat-label">Realizadas na plataforma</div>
             </div>
 
-            <div className="stat-mini-card">
-              <div className="stat-header">
-                <h4>Avaliações</h4>
-                <div className="stat-icon">⭐</div>
+            {userType === 'medico' && (
+              <div className="stat-mini-card">
+                <div className="stat-header">
+                  <h4>Avaliações</h4>
+                  <div className="stat-icon">⭐</div>
+                </div>
+                <div className="stat-value">{medicoRating !== null ? medicoRating.toFixed(1) : '-'}</div>
+                <div className="stat-label">Média de satisfação</div>
               </div>
-              <div className="stat-value">4.9</div>
-              <div className="stat-label">Média de satisfação</div>
-            </div>
+            )}
           </aside>
         </div>
       </div>
