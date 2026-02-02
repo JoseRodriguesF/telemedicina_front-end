@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import './Modal.css';
 
 interface ContentModalProps {
@@ -52,11 +51,7 @@ export default function ContentModal({ isOpen, onClose, title, children, size = 
 
     const maxWidthStyle = size === 'lg' ? '800px' : size === 'xl' ? '1200px' : size === 'sm' ? '380px' : '600px';
 
-    // Use createPortal to render outside the current DOM hierarchy (e.g. at document.body end)
-    // This avoids parent transform/animation issues affecting fixed positioning
-    if (typeof document === 'undefined') return null;
-
-    return createPortal(
+    return (
         <div
             ref={modalRef}
             className={`modal-backdrop ${isOpen ? 'modal-open' : ''}`}
@@ -91,7 +86,6 @@ export default function ContentModal({ isOpen, onClose, title, children, size = 
                     {children}
                 </div>
             </div>
-        </div>,
-        document.body
+        </div>
     );
 }

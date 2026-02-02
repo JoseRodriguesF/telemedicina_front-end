@@ -114,11 +114,6 @@ function AtendimentoInner() {
   const [ratingJustification, setRatingJustification] = useState('');
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
 
-  // Estados para transcrição
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const [transcricao, setTranscricao] = useState('');
-  const recognitionRef = useRef<any>(null);
-
   const isScheduled = search.get('scheduled') === 'true';
 
   // Redirecionamento de segurança para pacientes em Pronto Atendimento
@@ -267,75 +262,6 @@ function AtendimentoInner() {
   // Helper para toggle de accordions
   const toggleAccordion = (id: string) => {
     setOpenAccordions(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  // Lógica de Transcrição
-  useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).webkitSpeechRecognition) {
-      const SpeechRecognition = (window as any).webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'pt-BR';
-
-      recognition.onresult = (event: any) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
-
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
-        }
-
-        if (finalTranscript) {
-          setTranscricao(prev => prev + (prev ? ' ' : '') + finalTranscript);
-        }
-      };
-
-      recognition.onerror = (event: any) => {
-        console.error('[Transcription] Error:', event.error);
-        if (event.error === 'not-allowed') {
-          setIsTranscribing(false);
-          modal.error('Permissão Negada', 'O acesso ao microfone para transcrição foi negado.');
-        }
-      };
-
-      recognition.onend = () => {
-        if (isTranscribing) {
-          recognition.start(); // Auto-restart if should be transcribing
-        }
-      };
-
-      recognitionRef.current = recognition;
-    }
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, []);
-
-  const toggleTranscription = () => {
-    if (!recognitionRef.current) {
-      modal.error('Não suportado', 'A transcrição de voz não é suportada neste navegador.');
-      return;
-    }
-
-    if (isTranscribing) {
-      recognitionRef.current.stop();
-      setIsTranscribing(false);
-    } else {
-      try {
-        recognitionRef.current.start();
-        setIsTranscribing(true);
-      } catch (e) {
-        console.error('[Transcription] Start error:', e);
-      }
-    }
   };
 
 
@@ -791,7 +717,7 @@ function AtendimentoInner() {
           // Envia hora_fim ao finalizar
           const now = new Date();
           const hora_fim = now.toTimeString().slice(0, 8); // formato HH:MM:SS
-          await endConsulta(cid, token, hora_fim, { ...atendimentoData, transcricao });
+          await endConsulta(cid, token, hora_fim, atendimentoData);
         }
       } catch (err) {
         console.error('Erro ao verificar/finalizar consulta:', err);
@@ -925,6 +851,14 @@ function AtendimentoInner() {
                   >
                     <p className="accordion-placeholder">Adicione prescrições durante a consulta.</p>
                   </Accordion>
+                  <Accordion
+                    id="notas"
+                    title="Notas"
+                    isOpen={!!openAccordions['notas']}
+                    onToggle={toggleAccordion}
+                  >
+                    <p className="accordion-placeholder">Adicione notas sobre o atendimento.</p>
+                  </Accordion>
                 </div>
               </aside>
 
@@ -936,99 +870,101 @@ function AtendimentoInner() {
                     {statusText || 'Em consulta'}
                   </div>
                   <div className="call-screen">
-                    <video
-                      ref={remoteRef}
-                      className="remote-video large"
-                      playsInline
-                      autoPlay
-                      aria-label="Vídeo do paciente"
-                      style={{
-                        opacity: remoteHasVideo && !connectionFailed ? 1 : 0,
-                        filter: (connectionFailed || !remoteHasVideo) ? 'blur(12px)' : undefined,
-                        transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
-                      }}
-                    />
-
-                    <div className="call-status-layer">
-                      {connectionFailed ? (
-                        <div className="call-status-content internet-error">
-                          <div className="overlay-icon">🌐</div>
-                          <div className="overlay-content">
-                            <h3>Conexão Perdida</h3>
-                            <p>{reconnecting ? 'Tentando restabelecer sinal...' : 'Verifique sua conexão com a internet.'}</p>
-                          </div>
-                        </div>
-                      ) : remoteDisconnected ? (
-                        <div className="call-status-content peer-disconnected">
-                          <div className="overlay-icon">🔌</div>
-                          <div className="overlay-content">
-                            <h3>Usuário desconectado</h3>
-                            <p>{showExitMessage ? 'A consulta foi encerrada pelo paciente.' : 'O sinal do paciente caiu. Aguardando volta...'}</p>
-                            {showExitMessage && (
-                              <Button variant="primary" onClick={() => router.push('/consultas')} style={{ marginTop: '1.5rem' }}>
-                                Voltar para Consultas
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      ) : !remoteConnected ? (
-                        <div className="call-status-content waiting">
-                          <div className="call-spinner"></div>
-                          <div className="overlay-content">
-                            <h3>Aguardando Paciente</h3>
-                            <p>A entrada pode levar alguns segundos...</p>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          {!remoteHasVideo && (
-                            <div className="call-status-content no-video">
-                              <div className="overlay-icon-small">📷</div>
-                              <div className="overlay-content">
-                                <p>O paciente desligou a câmera</p>
-                              </div>
-                            </div>
-                          )}
-                          <div className="status-alerts-container">
-                            {!remoteHasAudio && (
-                              <div className="remote-mic-alert">
-                                <span>🔇</span>
-                                <span>Paciente em silêncio</span>
-                              </div>
-                            )}
-                            {!micEnabled && (
-                              <div className="remote-mic-alert local">
-                                <span>🔇</span>
-                                <span>Seu microfone está desligado</span>
-                              </div>
-                            )}
-                            {!camEnabled && (
-                              <div className="remote-mic-alert local cam">
-                                <span>📷</span>
-                                <span>Sua câmera está desligada</span>
-                              </div>
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    <div className="self-video-container pip">
+                    <div className="call-screen">
                       <video
-                        ref={localRef}
-                        className="self-video"
+                        ref={remoteRef}
+                        className="remote-video large"
                         playsInline
                         autoPlay
-                        muted
-                        aria-label="Sua câmera"
-                        style={{ opacity: camEnabled ? 1 : 0 }}
+                        aria-label="Vídeo do paciente"
+                        style={{
+                          opacity: remoteHasVideo && !connectionFailed ? 1 : 0,
+                          filter: (connectionFailed || !remoteHasVideo) ? 'blur(12px)' : undefined,
+                          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}
                       />
-                      {!camEnabled && (
-                        <div className="no-camera-placeholder pip-placeholder">
-                          <div className="overlay-icon-small">📷</div>
-                          <div style={{ fontSize: '0.8rem', marginTop: '4px', color: '#94a3b8' }}>Você está sem vídeo</div>
-                        </div>
-                      )}
+
+                      <div className="call-status-layer">
+                        {connectionFailed ? (
+                          <div className="call-status-content internet-error">
+                            <div className="overlay-icon">🌐</div>
+                            <div className="overlay-content">
+                              <h3>Conexão Perdida</h3>
+                              <p>{reconnecting ? 'Tentando restabelecer sinal...' : 'Verifique sua conexão com a internet.'}</p>
+                            </div>
+                          </div>
+                        ) : remoteDisconnected ? (
+                          <div className="call-status-content peer-disconnected">
+                            <div className="overlay-icon">🔌</div>
+                            <div className="overlay-content">
+                              <h3>Usuário desconectado</h3>
+                              <p>{showExitMessage ? 'A consulta foi encerrada pelo paciente.' : 'O sinal do paciente caiu. Aguardando volta...'}</p>
+                              {showExitMessage && (
+                                <Button variant="primary" onClick={() => router.push('/consultas')} style={{ marginTop: '1.5rem' }}>
+                                  Voltar para Consultas
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ) : !remoteConnected ? (
+                          <div className="call-status-content waiting">
+                            <div className="call-spinner"></div>
+                            <div className="overlay-content">
+                              <h3>Aguardando Paciente</h3>
+                              <p>A entrada pode levar alguns segundos...</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {!remoteHasVideo && (
+                              <div className="call-status-content no-video">
+                                <div className="overlay-icon-small">📷</div>
+                                <div className="overlay-content">
+                                  <p>O paciente desligou a câmera</p>
+                                </div>
+                              </div>
+                            )}
+                            <div className="status-alerts-container">
+                              {!remoteHasAudio && (
+                                <div className="remote-mic-alert">
+                                  <span>🔇</span>
+                                  <span>Paciente em silêncio</span>
+                                </div>
+                              )}
+                              {!micEnabled && (
+                                <div className="remote-mic-alert local">
+                                  <span>🔇</span>
+                                  <span>Seu microfone está desligado</span>
+                                </div>
+                              )}
+                              {!camEnabled && (
+                                <div className="remote-mic-alert local cam">
+                                  <span>📷</span>
+                                  <span>Sua câmera está desligada</span>
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="self-video-container pip">
+                        <video
+                          ref={localRef}
+                          className="self-video"
+                          playsInline
+                          autoPlay
+                          muted
+                          aria-label="Sua câmera"
+                          style={{ opacity: camEnabled ? 1 : 0 }}
+                        />
+                        {!camEnabled && (
+                          <div className="no-camera-placeholder pip-placeholder">
+                            <div className="overlay-icon-small">📷</div>
+                            <div style={{ fontSize: '0.8rem', marginTop: '4px', color: '#94a3b8' }}>Você está sem vídeo</div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </section>
@@ -1276,6 +1212,7 @@ function AtendimentoInner() {
               </aside>
             </div>
 
+            {/* Chat Modal para Médico */}
             {showChat && (
               <div className="chat-modal-overlay" onClick={() => setShowChat(false)}>
                 <div className="chat-modal" onClick={(e) => e.stopPropagation()}>
@@ -1326,123 +1263,125 @@ function AtendimentoInner() {
                 Você está em uma consulta
               </div>
               <div className="call-screen">
-                <video
-                  ref={remoteRef}
-                  className="remote-video large"
-                  playsInline
-                  autoPlay
-                  aria-label="Vídeo do médico"
-                  style={{
-                    opacity: remoteHasVideo && !connectionFailed ? 1 : 0,
-                    filter: (connectionFailed || !remoteHasVideo) ? 'blur(12px)' : undefined,
-                    transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
-                  }}
-                />
-
-                <div className="call-status-layer">
-                  {connectionFailed ? (
-                    <div className="call-status-content internet-error">
-                      <div className="overlay-icon">🌐</div>
-                      <div className="overlay-content">
-                        <h3>Conexão Perdida</h3>
-                        <p>{reconnecting ? 'Tentando restabelecer sinal...' : 'Verifique sua conexão com a internet.'}</p>
-                      </div>
-                    </div>
-                  ) : remoteDisconnected ? (
-                    <div className="call-status-content peer-disconnected">
-                      <div className="overlay-icon">🔌</div>
-                      <div className="overlay-content">
-                        <h3>Usuário desconectado</h3>
-                        <p>{showExitMessage ? 'A consulta foi encerrada pelo outro participante.' : 'O sinal do outro participante caiu. Aguardando volta...'}</p>
-                        {showExitMessage && (
-                          <Button variant="primary" onClick={() => role === 'paciente' ? setShowRatingModal(true) : router.push('/consultas')} style={{ marginTop: '1.5rem' }}>
-                            Voltar para Consultas
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ) : !remoteConnected ? (
-                    <div className="call-status-content waiting">
-                      <div className="call-spinner"></div>
-                      <div className="overlay-content">
-                        <h3>Aguardando Médico</h3>
-                        <p>A entrada pode levar alguns segundos...</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      {!remoteHasVideo && (
-                        <div className="call-status-content no-video">
-                          <div className="overlay-icon-small">📷</div>
-                          <div className="overlay-content">
-                            <p>O médico desligou a câmera</p>
-                          </div>
-                        </div>
-                      )}
-                      <div className="status-alerts-container">
-                        {!remoteHasAudio && (
-                          <div className="remote-mic-alert">
-                            <span>🔇</span>
-                            <span>Médico em silêncio</span>
-                          </div>
-                        )}
-                        {!micEnabled && (
-                          <div className="remote-mic-alert local">
-                            <span>🔇</span>
-                            <span>Seu microfone está desligado</span>
-                          </div>
-                        )}
-                        {!camEnabled && (
-                          <div className="remote-mic-alert local cam">
-                            <span>📷</span>
-                            <span>Sua câmera está desligada</span>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                <div className="self-video-container pip">
+                <div className="call-screen">
                   <video
-                    ref={localRef}
-                    className="self-video"
+                    ref={remoteRef}
+                    className="remote-video large"
                     playsInline
                     autoPlay
-                    muted
-                    aria-label="Sua câmera"
-                    style={{ opacity: camEnabled ? 1 : 0 }}
+                    aria-label="Vídeo do médico"
+                    style={{
+                      opacity: remoteHasVideo && !connectionFailed ? 1 : 0,
+                      filter: (connectionFailed || !remoteHasVideo) ? 'blur(12px)' : undefined,
+                      transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
                   />
-                  {!camEnabled && (
-                    <div className="no-camera-placeholder pip-placeholder">
-                      <div className="overlay-icon-small">📷</div>
-                      <div style={{ fontSize: '0.8rem', marginTop: '4px', color: '#94a3b8' }}>Você está sem vídeo</div>
-                    </div>
-                  )}
-                </div>
-              </div>
 
-              <div className="call-controls">
-                <button className={`control-btn ${!camEnabled ? 'off' : ''}`} onClick={toggleCam} aria-label={camEnabled ? 'Desativar câmera' : 'Ativar câmera'}>
-                  {camEnabled ? (
-                    <svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z" /><rect width="14" height="12" x="2" y="6" rx="2" ry="2" /></svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z" /><rect width="14" height="12" x="2" y="6" rx="2" ry="2" /><line x1="2" y1="2" x2="22" y2="22" /></svg>
-                  )}
-                </button>
-                <button className={`control-btn ${!micEnabled ? 'off' : ''}`} onClick={toggleMic} aria-label={micEnabled ? 'Desativar microfone' : 'Ativar microfone'}>
-                  {micEnabled ? (
-                    <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23" /><path d="M9 9v3a3 3 0 0 0 5.12 2.12" /><path d="M15 9.34V5a3 3 0 0 0-5.94-.6" /><path d="M17 16.95A7 7 0 0 1 5 12v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>
-                  )}
-                </button>
-                <button className={`control-btn ${showChat ? 'active' : ''}`} aria-label={showChat ? "Esconder chat" : "Mostrar chat"} onClick={() => setShowChat(prev => !prev)}>
-                  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-                </button>
-                <button className="control-btn end" aria-label="Encerrar chamada" onClick={requestFinishCall}>
-                  <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-                </button>
+                  <div className="call-status-layer">
+                    {connectionFailed ? (
+                      <div className="call-status-content internet-error">
+                        <div className="overlay-icon">🌐</div>
+                        <div className="overlay-content">
+                          <h3>Conexão Perdida</h3>
+                          <p>{reconnecting ? 'Tentando restabelecer sinal...' : 'Verifique sua conexão com a internet.'}</p>
+                        </div>
+                      </div>
+                    ) : remoteDisconnected ? (
+                      <div className="call-status-content peer-disconnected">
+                        <div className="overlay-icon">🔌</div>
+                        <div className="overlay-content">
+                          <h3>Usuário desconectado</h3>
+                          <p>{showExitMessage ? 'A consulta foi encerrada pelo outro participante.' : 'O sinal do outro participante caiu. Aguardando volta...'}</p>
+                          {showExitMessage && (
+                            <Button variant="primary" onClick={() => role === 'paciente' ? setShowRatingModal(true) : router.push('/consultas')} style={{ marginTop: '1.5rem' }}>
+                              Voltar para Consultas
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ) : !remoteConnected ? (
+                      <div className="call-status-content waiting">
+                        <div className="call-spinner"></div>
+                        <div className="overlay-content">
+                          <h3>Aguardando Médico</h3>
+                          <p>A entrada pode levar alguns segundos...</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {!remoteHasVideo && (
+                          <div className="call-status-content no-video">
+                            <div className="overlay-icon-small">📷</div>
+                            <div className="overlay-content">
+                              <p>O médico desligou a câmera</p>
+                            </div>
+                          </div>
+                        )}
+                        <div className="status-alerts-container">
+                          {!remoteHasAudio && (
+                            <div className="remote-mic-alert">
+                              <span>🔇</span>
+                              <span>Médico em silêncio</span>
+                            </div>
+                          )}
+                          {!micEnabled && (
+                            <div className="remote-mic-alert local">
+                              <span>🔇</span>
+                              <span>Seu microfone está desligado</span>
+                            </div>
+                          )}
+                          {!camEnabled && (
+                            <div className="remote-mic-alert local cam">
+                              <span>📷</span>
+                              <span>Sua câmera está desligada</span>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="self-video-container pip">
+                    <video
+                      ref={localRef}
+                      className="self-video"
+                      playsInline
+                      autoPlay
+                      muted
+                      aria-label="Sua câmera"
+                      style={{ opacity: camEnabled ? 1 : 0 }}
+                    />
+                    {!camEnabled && (
+                      <div className="no-camera-placeholder pip-placeholder">
+                        <div className="overlay-icon-small">📷</div>
+                        <div style={{ fontSize: '0.8rem', marginTop: '4px', color: '#94a3b8' }}>Você está sem vídeo</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="call-controls">
+                  <button className={`control-btn ${!camEnabled ? 'off' : ''}`} onClick={toggleCam} aria-label={camEnabled ? 'Desativar câmera' : 'Ativar câmera'}>
+                    {camEnabled ? (
+                      <svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z" /><rect width="14" height="12" x="2" y="6" rx="2" ry="2" /></svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z" /><rect width="14" height="12" x="2" y="6" rx="2" ry="2" /><line x1="2" y1="2" x2="22" y2="22" /></svg>
+                    )}
+                  </button>
+                  <button className={`control-btn ${!micEnabled ? 'off' : ''}`} onClick={toggleMic} aria-label={micEnabled ? 'Desativar microfone' : 'Ativar microfone'}>
+                    {micEnabled ? (
+                      <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23" /><path d="M9 9v3a3 3 0 0 0 5.12 2.12" /><path d="M15 9.34V5a3 3 0 0 0-5.94-.6" /><path d="M17 16.95A7 7 0 0 1 5 12v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>
+                    )}
+                  </button>
+                  <button className={`control-btn ${showChat ? 'active' : ''}`} aria-label={showChat ? "Esconder chat" : "Mostrar chat"} onClick={() => setShowChat(prev => !prev)}>
+                    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                  </button>
+                  <button className="control-btn end" aria-label="Encerrar chamada" onClick={requestFinishCall}>
+                    <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                  </button>
+                </div>
               </div>
             </section>
 
@@ -1537,15 +1476,6 @@ function AtendimentoInner() {
                 <p className="detail-text">{consultaSelecionada.destino_final || 'Não registrado'}</p>
               </div>
             </div>
-
-            {(consultaSelecionada as any).transcricao && (
-              <div className="details-section">
-                <h4>Transcrição da Consulta</h4>
-                <div className="transcription-text-area history">
-                  {(consultaSelecionada as any).transcricao}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </ContentModal>

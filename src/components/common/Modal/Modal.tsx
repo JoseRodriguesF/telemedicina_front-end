@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
 import { ModalConfig } from './useModal' // Assuming useModal exports ModalConfig
 import './Modal.css'
 
@@ -51,8 +50,6 @@ export function Modal({ isOpen, config, onConfirm, onCancel, children }: ModalPr
 
   if (!isOpen || !config) return null
 
-  if (typeof document === 'undefined') return null;
-
   const getIcon = () => {
     switch (config.type) {
       case 'success':
@@ -87,7 +84,7 @@ export function Modal({ isOpen, config, onConfirm, onCancel, children }: ModalPr
     }
   }
 
-  return createPortal(
+  return (
     <div
       ref={modalRef}
       className={`modal-backdrop ${isOpen ? 'modal-open' : ''}`}
@@ -129,7 +126,6 @@ export function Modal({ isOpen, config, onConfirm, onCancel, children }: ModalPr
           </button>
         </div>
       </div>
-    </div>,
-    document.body
+    </div>
   )
 }
