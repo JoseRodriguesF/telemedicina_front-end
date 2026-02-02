@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
-import { confirmarConsulta, cancelarConsulta, ConsultaStatus, ConsultaAgendada } from '@/lib/axios/consultas';
+import { confirmarConsulta, cancelarConsulta, ConsultaStatus, ConsultaAgendada, ConsultaDetails } from '@/lib/axios/consultas';
 // ✅ NOVO: Importar hooks otimizados
 import { useConsultasAgendadas } from '@/hooks/useApiData';
 import { useDebounce } from '@/hooks/useOptimization';
@@ -17,6 +17,7 @@ import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
 import { AppointmentActionButtons } from '@/components/appointments/AppointmentActionButtons';
+import ContentModal from '@/components/common/Modal/ContentModal';
 
 export default function MeusAgendamentosPage() {
     const router = useRouter();
@@ -157,6 +158,41 @@ export default function MeusAgendamentosPage() {
         );
     };
 
+    const [selectedAppt, setSelectedAppt] = useState<ConsultaAgendada | null>(null);
+    const [consultaDetails, setConsultaDetails] = useState<ConsultaDetails | null>(null);
+    const [loadingDetails, setLoadingDetails] = useState(false);
+
+    const handleViewDetails = (appt: ConsultaAgendada) => {
+        if (appt.status !== 'solicitada') return; // Apenas para confirmação conforme solicitado
+
+        setSelectedAppt(appt);
+        const hClinica = Array.isArray(appt.historiaClinica) && appt.historiaClinica.length > 0
+            ? appt.historiaClinica[0]
+            : null;
+
+        const details: ConsultaDetails = {
+            id: appt.id,
+            pacienteId: appt.pacienteId,
+            medicoId: appt.medicoId,
+            status: appt.status,
+            createdAt: appt.createdAt,
+            updatedAt: appt.updatedAt,
+            paciente: {
+                ...appt.paciente,
+                cpf: '',
+                sexo: '',
+                data_nascimento: '',
+                telefone: ''
+            },
+            historiaClinica: hClinica ? {
+                queixaPrincipal: hClinica.queixaPrincipal,
+                sintomas: hClinica.descricaoSintomas,
+            } : undefined
+        };
+
+        setConsultaDetails(details);
+    };
+
     return (
         <div className="inicio-page">
             <div className="inicio-mobile-header">
@@ -238,7 +274,12 @@ export default function MeusAgendamentosPage() {
                                 </div>
                             ) : filteredAppointments.length > 0 ? (
                                 filteredAppointments.map((item) => (
-                                    <div key={item.id} className="history-item-card">
+                                    <div
+                                        key={item.id}
+                                        className="history-item-card"
+                                        onClick={() => handleViewDetails(item)}
+                                        style={{ cursor: item.status === 'solicitada' ? 'pointer' : 'default' }}
+                                    >
                                         <div className="history-item-avatar">
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
                                         </div>
@@ -272,8 +313,11 @@ export default function MeusAgendamentosPage() {
                                             status={item.status}
                                             pacienteNome={item.paciente.nome_completo}
                                             isConfirming={confirmingIds.has(item.id)}
-                                            onConfirm={handleConfirmarConsulta}
-                                            onCancel={handleCancelarConsulta}
+                                            onConfirm={(id) => {
+                                                // Se clicar no botão, não abre o modal (stopPropagation já é tratado no botão geralmente, mas bom garantir)
+                                                handleConfirmarConsulta(id);
+                                            }}
+                                            onCancel={(id, nome) => handleCancelarConsulta(id, nome)}
                                             onAttend={(id) => router.push(`/consultas/atendimento?id=${id}&scheduled=true`)}
                                         />
                                     </div>
@@ -314,6 +358,97 @@ export default function MeusAgendamentosPage() {
                     </div>
                 </div>
             </main>
+
+            <ContentModal
+                isOpen={!!selectedAppt}
+                onClose={() => setSelectedAppt(null)}
+                title="Ficha de Pré-Atendimento"
+                size="md"
+            >
+                {loadingDetails ? (
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
+                        <div className="spinner"></div>
+                    </div>
+                ) : consultaDetails ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '0.5rem' }}>
+                        <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)' }}>
+                            <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-tertiary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Paciente</h4>
+                            <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                {consultaDetails.paciente.nome_completo || 'Paciente'}
+                            </p>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>ID: #{consultaDetails.pacienteId}</span>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
+                                <h4 style={{ margin: '0 0 0.25rem', color: 'var(--text-tertiary)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Data</h4>
+                                <p style={{ margin: 0, fontWeight: 600 }}>{selectedAppt && new Date(selectedAppt.data_consulta).toLocaleDateString('pt-BR')}</p>
+                            </div>
+                            <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
+                                <h4 style={{ margin: '0 0 0.25rem', color: 'var(--text-tertiary)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Horário</h4>
+                                <p style={{ margin: 0, fontWeight: 600 }}>{selectedAppt && formatTime(selectedAppt.hora_inicio)}</p>
+                            </div>
+                        </div>
+
+                        {consultaDetails.historiaClinica ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '0.5rem' }}>
+                                <div className="detail-group">
+                                    <h4 style={{ margin: '0 0 0.75rem', color: 'var(--color-primary-600)', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8v4l3 3" /><circle cx="12" cy="12" r="10" /></svg>
+                                        Queixa Principal
+                                    </h4>
+                                    <div style={{ padding: '1rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', fontSize: '1rem', color: 'var(--text-primary)', lineHeight: 1.6 }}>
+                                        {consultaDetails.historiaClinica.queixaPrincipal || 'Não informada'}
+                                    </div>
+                                </div>
+
+                                <div className="detail-group">
+                                    <h4 style={{ margin: '0 0 0.75rem', color: 'var(--color-primary-600)', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 14 4-4" /><path d="m3.34 19 8.66-8.66L20.66 19" /><path d="m3.34 5 8.66 8.66L20.66 5" /></svg>
+                                        Sintomas Relatados
+                                    </h4>
+                                    <div style={{ padding: '1rem', background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', fontSize: '1rem', color: 'var(--text-primary)', lineHeight: 1.6 }}>
+                                        {consultaDetails.historiaClinica.sintomas || 'Não informados'}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-xl)', color: 'var(--text-tertiary)', border: '2px dashed var(--border-color)' }}>
+                                <p>Informações de triagem não encontradas.</p>
+                            </div>
+                        )}
+
+                        <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <button
+                                className="btn secondary"
+                                onClick={() => setSelectedAppt(null)}
+                                style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
+                            >
+                                Fechar
+                            </button>
+                            {selectedAppt?.status === 'solicitada' && (
+                                <button
+                                    className="btn primary"
+                                    onClick={() => {
+                                        if (selectedAppt) {
+                                            handleConfirmarConsulta(selectedAppt.id);
+                                            setSelectedAppt(null); // Fecha modal após confirmar
+                                        }
+                                    }}
+                                    style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
+                                >
+                                    Confirmar Agora
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-tertiary)' }}>
+                        Erro ao carregar os detalhes.
+                    </div>
+                )}
+            </ContentModal>
+
             <Modal
                 isOpen={modal.isOpen}
                 config={modal.config}
