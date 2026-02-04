@@ -1,14 +1,25 @@
 /* Perfil Page - Refined Design System */
 
+@keyframes profileFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .perfil-container {
     max-width: 900px;
-    /* Reduced from 1000px */
     margin: 0 auto;
     width: 100%;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    /* Reduced from 2rem */
+    animation: profileFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* User Header Card */
@@ -26,6 +37,8 @@
     transition: var(--transition-base);
     position: relative;
     overflow: hidden;
+    animation: profileFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: 0.1s;
 }
 
 .profile-hero-card::after {
@@ -43,9 +56,7 @@
 .avatar-wrapper {
     position: relative;
     width: 90px;
-    /* Reduced from 120px */
     height: 90px;
-    /* Reduced from 120px */
     flex-shrink: 0;
 }
 
@@ -58,7 +69,6 @@
     align-items: center;
     justify-content: center;
     font-size: 2rem;
-    /* Reduced from 3rem */
     font-weight: 800;
     color: var(--color-primary-500);
     border: 4px solid var(--card-bg);
@@ -70,9 +80,7 @@
     bottom: 5px;
     right: 5px;
     width: 28px;
-    /* Reduced from 32px */
     height: 28px;
-    /* Reduced from 32px */
     border-radius: 50%;
     background: var(--color-primary-500);
     color: white;
@@ -95,7 +103,6 @@
 
 .profile-info-main h3 {
     font-size: 1.5rem;
-    /* Reduced from 2rem */
     font-weight: 800;
     color: var(--text-primary);
     margin: 0;
@@ -105,9 +112,7 @@
 .profile-email {
     color: var(--text-secondary);
     font-size: 1rem;
-    /* Reduced from 1.1rem */
     margin: 0.25rem 0 0.75rem 0;
-    /* Reduced bottom margin */
 }
 
 .profile-badges {
@@ -117,10 +122,8 @@
 
 .profile-badge {
     padding: 0.3rem 0.8rem;
-    /* Reduced padding */
     border-radius: var(--radius-full);
     font-size: 0.75rem;
-    /* Reduced from 0.8rem */
     font-weight: 700;
     background: rgba(59, 130, 246, 0.1);
     color: var(--color-primary-500);
@@ -134,7 +137,8 @@
     display: grid;
     grid-template-columns: 1.5fr 1fr;
     gap: 1.5rem;
-    /* Reduced from 2rem */
+    animation: profileFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: 0.2s;
 }
 
 @media (max-width: 900px) {

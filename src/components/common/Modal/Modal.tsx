@@ -61,7 +61,7 @@ export function Modal({ isOpen, config, onConfirm, onCancel, children }: ModalPr
     }
   }, [isOpen])
 
-  if (!isOpen || !config || !mounted) return null
+  if (!config || !mounted) return null
 
   const getIcon = () => {
     switch (config.type) {

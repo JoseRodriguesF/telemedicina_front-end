@@ -22,7 +22,6 @@
     border: 1px solid var(--card-border);
     box-shadow: var(--shadow-xl);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
 }
 
 .service-card:hover {
@@ -108,13 +107,12 @@
     display: flex;
     overflow-x: auto;
     gap: 1.25rem;
-    padding-bottom: 0.5rem;
+    padding: 1rem 0.75rem 1.5rem;
+    margin: -1rem -0.75rem;
     scrollbar-width: none;
     -ms-overflow-style: none;
     scroll-behavior: smooth;
-    /* Rolagem suave */
-    width: 100%;
-    /* Garantir que ocupe o espaço */
+    width: calc(100% + 1.5rem);
 }
 
 .scroll-btn {
