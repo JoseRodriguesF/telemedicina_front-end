@@ -22,6 +22,9 @@ import {
   cancelarConsulta
 } from '@/lib/axios/consultas';
 
+// Array vazio estável para evitar loops infinitos de renderização
+const EMPTY_ARRAY: any[] = [];
+
 export default function InicioPage() {
   const router = useRouter();
   const modal = useModal();
@@ -34,10 +37,10 @@ export default function InicioPage() {
   const { historico: historicoRaw, isLoading: loadingHistorico } = useHistoricoCompleto();
   const { salas: salasRaw, refresh: refreshSalas } = useSalasAtivas(userId?.toString());
 
-  // Garantir que sempre temos arrays válidos
-  const consultas = Array.isArray(consultasRaw) ? consultasRaw : [];
-  const historico = Array.isArray(historicoRaw) ? historicoRaw : [];
-  const salas = Array.isArray(salasRaw) ? salasRaw : [];
+  // Garantir que sempre temos arrays válidos com REFERÊNCIA ESTÁVEL
+  const consultas = Array.isArray(consultasRaw) ? consultasRaw : EMPTY_ARRAY;
+  const historico = Array.isArray(historicoRaw) ? historicoRaw : EMPTY_ARRAY;
+  const salas = Array.isArray(salasRaw) ? salasRaw : EMPTY_ARRAY;
 
   /* State for active session */
   const [reconnectData, setReconnectData] = useState<{

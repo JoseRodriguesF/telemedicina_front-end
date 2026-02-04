@@ -16,6 +16,9 @@ import { useModal } from '@/components/common/Modal/useModal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { formatTime } from '@/lib/utils/dateFormatters';
 
+// Array vazio estável para evitar re-renders desnecessários
+const EMPTY_ARRAY: any[] = [];
+
 export default function ConsultasPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>('');
@@ -24,8 +27,8 @@ export default function ConsultasPage() {
   // ✅ NOVO: Usar hooks otimizados
   const { consultas: allConsultasRaw, isLoading: loading, refresh: refreshConsultas } = useConsultasAgendadas();
 
-  // Garantir que sempre temos um array válido
-  const allConsultas = Array.isArray(allConsultasRaw) ? allConsultasRaw : [];
+  // Garantir que sempre temos um array válido com referência estável
+  const allConsultas = Array.isArray(allConsultasRaw) ? allConsultasRaw : EMPTY_ARRAY;
 
   // ✅ OTIMIZADO: Filtrar e ordenar consultas
   const scheduledAppointments = allConsultas

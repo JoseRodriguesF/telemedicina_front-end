@@ -10,6 +10,9 @@ import {
 } from '@/lib/axios/consultas';
 import { getMyProfile, UserProfile } from '@/lib/axios/perfil';
 
+// Array vazio estável para evitar re-renders desnecessários
+const EMPTY_ARRAY: any[] = [];
+
 /**
  * Hook otimizado para buscar consultas agendadas com cache automático
  */
@@ -27,7 +30,7 @@ export function useConsultasAgendadas() {
     );
 
     return {
-        consultas: data || [],
+        consultas: data || EMPTY_ARRAY,
         isLoading,
         error,
         refresh: mutate
@@ -50,7 +53,7 @@ export function useHistoricoCompleto() {
     );
 
     return {
-        historico: data || [],
+        historico: data || EMPTY_ARRAY,
         isLoading,
         error,
         refresh: mutate
@@ -73,7 +76,7 @@ export function useSalasAtivas(userId?: string) {
     );
 
     return {
-        salas: data || [],
+        salas: data || EMPTY_ARRAY,
         isLoading,
         error,
         refresh: mutate

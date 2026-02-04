@@ -19,6 +19,9 @@ import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
 import { AppointmentActionButtons } from '@/components/appointments/AppointmentActionButtons';
 import ContentModal from '@/components/common/Modal/ContentModal';
 
+// Array vazio estável
+const EMPTY_ARRAY: any[] = [];
+
 export default function MeusAgendamentosPage() {
     const router = useRouter();
     const modal = useModal();
@@ -31,8 +34,8 @@ export default function MeusAgendamentosPage() {
     // ✅ NOVO: Usar hooks otimizados
     const { consultas: allConsultasRaw, isLoading: loading, refresh: refreshConsultas } = useConsultasAgendadas();
 
-    // Garantir que sempre temos um array válido
-    const allConsultas = Array.isArray(allConsultasRaw) ? allConsultasRaw : [];
+    // Garantir que sempre temos um array válido com referência estável
+    const allConsultas = Array.isArray(allConsultasRaw) ? allConsultasRaw : EMPTY_ARRAY;
 
     // ✅ NOVO: Debounce na busca
     const debouncedSearch = useDebounce(searchTerm, 300);
