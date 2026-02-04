@@ -100,10 +100,7 @@ export default function PerfilPage() {
 
   return (
     <DashboardLayout>
-      <header className="dashboard-header" style={{ marginBottom: '1rem' }}>
-        <h2>Perfil do Usuário</h2>
-        <p>Mantenha seus dados atualizados para uma melhor experiência.</p>
-      </header>
+
 
       <div className="perfil-container">
         {/* Profile Hero Card */}

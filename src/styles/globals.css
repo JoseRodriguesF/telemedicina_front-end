@@ -72,7 +72,7 @@
 	--shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 	--shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 	--shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-	--shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+	--shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
 	--shadow-glow: 0 0 20px rgba(14, 165, 233, 0.3);
 
 	/* Transitions - Optimized for premium feel */
@@ -131,11 +131,11 @@
 	--shadow-color: rgba(0, 0, 0, 0.06);
 	--shadow-color-lg: rgba(0, 0, 0, 0.1);
 
-	/* Enhanced Shadows for Light Mode */
-	--shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
-	--shadow-md: 0 4px 16px -2px rgba(0, 0, 0, 0.1), 0 2px 8px -1px rgba(0, 0, 0, 0.06);
-	--shadow-lg: 0 12px 32px -4px rgba(0, 0, 0, 0.12), 0 4px 16px -2px rgba(0, 0, 0, 0.08);
-	--shadow-xl: 0 24px 60px -8px rgba(0, 0, 0, 0.15), 0 12px 32px -4px rgba(0, 0, 0, 0.1);
+	/* Enhanced Shadows for Light Mode - Softer version */
+	--shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	--shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+	--shadow-lg: 0 8px 24px -4px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+	--shadow-xl: 0 16px 40px -8px rgba(0, 0, 0, 0.1), 0 8px 24px -4px rgba(0, 0, 0, 0.06);
 }
 
 /* ============================================
@@ -167,15 +167,15 @@
 	--header-bg: rgba(15, 23, 42, 0.85);
 	--header-border: rgba(14, 165, 233, 0.2);
 
-	/* Dark Mode Shadows */
-	--shadow-color: rgba(0, 0, 0, 0.3);
-	--shadow-color-lg: rgba(0, 0, 0, 0.5);
-	--shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-	--shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-	--shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
-	--shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
-	--shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-	--shadow-glow: 0 0 30px rgba(14, 165, 233, 0.4);
+	/* Dark Mode Shadows - Softer version */
+	--shadow-color: rgba(0, 0, 0, 0.25);
+	--shadow-color-lg: rgba(0, 0, 0, 0.4);
+	--shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+	--shadow-md: 0 4px 10px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
+	--shadow-lg: 0 10px 20px -3px rgba(0, 0, 0, 0.25), 0 4px 8px -2px rgba(0, 0, 0, 0.15);
+	--shadow-xl: 0 16px 30px -5px rgba(0, 0, 0, 0.3), 0 8px 15px -3px rgba(0, 0, 0, 0.2);
+	--shadow-2xl: 0 20px 40px -12px rgba(0, 0, 0, 0.45);
+	--shadow-glow: 0 0 25px rgba(14, 165, 233, 0.3);
 
 	/* Adjust primary colors for better dark mode visibility */
 	--color-primary-50: #075985;
@@ -578,8 +578,8 @@ textarea {
 .service-card:hover,
 .stat-mini-card:hover,
 .action-item:hover {
-	transform: translateY(-8px) scale(1.02);
-	box-shadow: var(--shadow-xl);
+	transform: translateY(-4px);
+	box-shadow: var(--shadow-lg);
 }
 
 /* Button Elevation */
