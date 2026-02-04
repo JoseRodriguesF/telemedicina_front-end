@@ -1,59 +1,81 @@
 /* ============================================
-   REGISTER PAGE - Modern & Premium Design
-   Matching Login Page Style
+   REGISTER PAGE - Uses Shared Auth Modal Styles
    ============================================ */
 
+/* Import shared auth modal styles */
+@import '../../styles/auth-modal.css';
+
+/* ============================================
+   REGISTER-SPECIFIC CLASS MAPPINGS
+   These map old class names to new shared classes
+   ============================================ */
+
+/* Page container */
 .register-page {
-  min-height: 100vh;
+  /* Extends .auth-page */
+  height: 100vh;
+  max-width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg-gradient);
   font-family: var(--font-family);
-  padding: 2rem 1rem;
+  padding: 1.5rem 1rem;
   position: relative;
+  overflow-x: hidden;
   overflow-y: auto;
   transition: background var(--transition-base);
 }
 
-/* Decorative Background Elements */
-.register-page::before {
+.register-page::before,
+.register-page::after {
   content: '';
   position: absolute;
-  top: -10%;
-  right: -5%;
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
+}
+
+.register-page::before {
+  top: -10%;
+  right: -5%;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
   animation: float 6s ease-in-out infinite;
 }
 
 .register-page::after {
-  content: '';
-  position: absolute;
   bottom: -10%;
   left: -5%;
   width: 400px;
   height: 400px;
   background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
   animation: float 8s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-20px) scale(1.05);
+  }
 }
 
 /* Allow scrolling when showing step 2/3 */
 .register-page.dados-pessoais-active {
-  overflow-y: auto;
   align-items: flex-start;
-  padding-top: 3rem;
-  padding-bottom: 3rem;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }
 
+/* Main container */
 .register-main {
   width: 100%;
-  max-width: 480px;
+  max-width: 420px;
   position: relative;
   z-index: 1;
   margin: 0 auto;
@@ -61,10 +83,11 @@
 
 /* Wider layout for step 2/3 */
 .register-main.dados-pessoais-wide {
-  max-width: 700px;
+  max-width: 600px;
+  /* Reduced from 700px for better proportions */
 }
 
-/* Register Card */
+/* Card */
 .register-card {
   width: 100%;
   background: var(--card-bg);
@@ -72,7 +95,7 @@
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-2xl);
-  padding: 3rem 2.5rem;
+  padding: 1.75rem 1.5rem;
   box-shadow: var(--shadow-2xl);
   transition: all var(--transition-base);
   margin: 0 auto;
@@ -84,22 +107,24 @@
 
 /* Card size modifiers */
 .register-card.dados-acesso-card {
-  max-width: 480px;
+  max-width: 420px;
+  padding: 1.75rem 1.5rem;
 }
 
 .register-card.dados-pessoais-card {
-  max-width: 700px;
-  padding: 2.5rem 2rem;
+  max-width: 600px;
+  /* Reduced from 700px */
+  padding: 2rem 1.75rem;
 }
 
-/* Logo/Brand */
+/* Brand */
 .register-brand {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .register-brand h1 {
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-2xl);
   font-weight: 800;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
@@ -115,9 +140,9 @@
 
 /* Title & Subtitle */
 .register-title {
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-xl);
   font-weight: 800;
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.5rem 0;
   text-align: center;
   color: var(--text-primary);
   letter-spacing: -0.01em;
@@ -125,9 +150,9 @@
 }
 
 .register-subtitle {
-  margin: 0 0 2rem 0;
+  margin: 0 0 1rem 0;
   color: var(--text-secondary);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   text-align: center;
   line-height: 1.6;
   transition: color var(--transition-base);
@@ -137,7 +162,7 @@
 .register-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.75rem;
 }
 
 /* Form Label */
@@ -165,11 +190,11 @@
   margin-left: 0;
 }
 
-/* Input Styles */
+/* Inputs */
 .form-input,
 .c-input {
   width: 100%;
-  padding: 0.875rem 1.125rem;
+  padding: 0.75rem 1rem;
   border: 2px solid var(--border-color);
   border-radius: var(--radius-lg);
   font-size: var(--font-size-base);
@@ -215,7 +240,7 @@
   color: var(--text-muted);
 }
 
-/* Button Styles */
+/* Buttons */
 .primary-btn,
 .submit-btn,
 .c-button--primary,
@@ -224,7 +249,7 @@
   margin-top: 0.5rem;
   background: var(--gradient-primary);
   color: #ffffff;
-  padding: 0.875rem 1.5rem;
+  padding: 0.75rem 1.5rem;
   border-radius: var(--radius-lg);
   border: none;
   font-weight: 700;
@@ -290,7 +315,7 @@
   background: transparent;
   color: var(--text-primary);
   border: 2px solid var(--border-color);
-  padding: 0.875rem 1.5rem;
+  padding: 0.75rem 1.5rem;
   border-radius: var(--radius-lg);
   font-weight: 600;
   transition: all var(--transition-base);
@@ -304,10 +329,10 @@
 
 /* Form Actions */
 .form-actions {
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .form-actions.two-equal {
@@ -351,7 +376,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin: 1.5rem 0;
+  margin: 1.25rem 0;
 }
 
 .divider::before,
@@ -377,7 +402,7 @@
   gap: 0.75rem;
   justify-content: center;
   width: 100%;
-  padding: 0.875rem 1.5rem;
+  padding: 0.75rem 1.5rem;
   border-radius: var(--radius-lg);
   border: 2px solid var(--border-color);
   background: var(--bg-primary);
@@ -413,11 +438,11 @@
 
 /* Footer */
 .register-footer {
-  margin-top: 2rem;
+  margin-top: 1.25rem;
   text-align: center;
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
-  padding-top: 1.5rem;
+  padding-top: 1.25rem;
   border-top: 1px solid var(--border-color);
 }
 
@@ -425,7 +450,7 @@
   margin-left: 0.25rem;
 }
 
-/* Error Text */
+/* Messages */
 .error-text {
   color: var(--color-error);
   font-size: var(--font-size-sm);
@@ -441,7 +466,6 @@
   font-size: 1rem;
 }
 
-/* Success Message */
 .success-text {
   color: var(--color-success);
   font-size: var(--font-size-sm);
@@ -457,10 +481,18 @@
   font-size: 1rem;
 }
 
-/* Responsive Design */
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
 @media (max-width: 768px) {
   .register-page {
-    padding: 1.5rem 1rem;
+    padding: 1rem;
+  }
+
+  .register-page.dados-pessoais-active {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
   }
 
   .register-main,
@@ -476,15 +508,15 @@
   }
 
   .register-title {
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-lg);
   }
 
   .register-subtitle {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
   }
 
   .register-brand h1 {
-    font-size: var(--font-size-2xl);
+    font-size: var(--font-size-xl);
   }
 
   .form-actions.two-equal {
@@ -501,6 +533,14 @@
 }
 
 @media (max-width: 480px) {
+  .register-page {
+    padding: 0.75rem;
+  }
+
+  .register-page.dados-pessoais-active {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
 
   .register-card,
   .register-card.dados-acesso-card,
@@ -516,12 +556,23 @@
   .c-btn,
   .google-btn,
   .c-button--google {
-    padding: 0.75rem 1rem;
+    padding: 0.625rem 0.875rem;
     font-size: var(--font-size-sm);
+  }
+
+  .register-brand {
+    margin-bottom: 1.25rem;
+  }
+
+  .register-title {
+    font-size: var(--font-size-base);
   }
 }
 
-/* Dark Mode Specific Adjustments */
+/* ============================================
+   DARK MODE
+   ============================================ */
+
 [data-theme="dark"] .register-card {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
 }

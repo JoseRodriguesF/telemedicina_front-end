@@ -110,7 +110,6 @@ export default function DadosAcessoPacienteCard({ onNext, tipoUsuario }: Props) 
     <section className="register-card dados-acesso-card">
       <div className="register-brand">
         <h1>Telemedicina</h1>
-        <p>Crie sua conta para começar seu atendimento</p>
       </div>
 
       <h1 className="register-title">Cadastro</h1>
