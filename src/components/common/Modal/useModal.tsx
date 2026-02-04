@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useRef } from 'react'
 
 export type ModalType = 'success' | 'error' | 'warning' | 'info'
 
@@ -18,8 +18,10 @@ export interface ModalConfig {
 export function useModal() {
     const [isOpen, setIsOpen] = useState(false)
     const [config, setConfig] = useState<ModalConfig | null>(null)
+    const configRef = useRef<ModalConfig | null>(null)
 
     const show = useCallback((modalConfig: ModalConfig) => {
+        configRef.current = modalConfig
         setConfig(modalConfig)
         setIsOpen(true)
     }, [])
@@ -27,22 +29,25 @@ export function useModal() {
     const close = useCallback(() => {
         setIsOpen(false)
         // Aguardar animação antes de limpar config
-        setTimeout(() => setConfig(null), 300)
+        setTimeout(() => {
+            setConfig(null)
+            configRef.current = null
+        }, 300)
     }, [])
 
     const confirm = useCallback(async () => {
-        if (config?.onConfirm) {
-            await config.onConfirm()
+        if (configRef.current?.onConfirm) {
+            await configRef.current.onConfirm()
         }
         close()
-    }, [config, close])
+    }, [close])
 
     const cancel = useCallback(async () => {
-        if (config?.onCancel) {
-            await config.onCancel()
+        if (configRef.current?.onCancel) {
+            await configRef.current.onCancel()
         }
         close()
-    }, [config, close])
+    }, [close])
 
     // Helper methods for common modal types
     const success = useCallback((title: string, message: string, onConfirm?: () => void) => {

@@ -69,14 +69,14 @@
 	padding: 0.75rem;
 	/* Reduced from 0.85rem */
 	box-shadow: var(--shadow-md);
-	transition: all var(--transition-base);
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	display: flex;
 	flex-direction: column;
 	gap: 0.3rem;
 }
 
 .dash-card:hover {
-	transform: translateY(-4px);
+	transform: translateY(-6px) scale(1.01);
 	box-shadow: var(--shadow-lg);
 	border-color: var(--color-primary-300);
 }

@@ -14,6 +14,12 @@ interface ModalProps {
 
 export function Modal({ isOpen, config, onConfirm, onCancel, children }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
+  const onCancelRef = useRef(onCancel)
+
+  // Manter ref atualizada
+  useEffect(() => {
+    onCancelRef.current = onCancel
+  }, [onCancel])
 
   // Handle ESC key
   useEffect(() => {
@@ -21,13 +27,13 @@ export function Modal({ isOpen, config, onConfirm, onCancel, children }: ModalPr
 
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onCancel()
+        onCancelRef.current()
       }
     }
 
     document.addEventListener('keydown', handleEsc)
     return () => document.removeEventListener('keydown', handleEsc)
-  }, [isOpen, onCancel])
+  }, [isOpen])
 
   // Handle click outside
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {

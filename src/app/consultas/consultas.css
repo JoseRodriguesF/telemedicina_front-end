@@ -173,12 +173,14 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .appointment-mini-card:hover {
     background: var(--bg-secondary);
-    border-color: var(--color-primary-200);
+    border-color: var(--color-primary-300);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
 }
 
 .appt-date-box {
