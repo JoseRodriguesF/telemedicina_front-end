@@ -30,9 +30,14 @@ export default function InicioPage() {
   const [userId, setUserId] = useState<number | null>(null);
 
   // ✅ NOVO: Usar hooks otimizados com cache automático
-  const { consultas, isLoading: loadingConsultas, refresh: refreshConsultas } = useConsultasAgendadas();
-  const { historico, isLoading: loadingHistorico } = useHistoricoCompleto();
-  const { salas, refresh: refreshSalas } = useSalasAtivas(userId?.toString());
+  const { consultas: consultasRaw, isLoading: loadingConsultas, refresh: refreshConsultas } = useConsultasAgendadas();
+  const { historico: historicoRaw, isLoading: loadingHistorico } = useHistoricoCompleto();
+  const { salas: salasRaw, refresh: refreshSalas } = useSalasAtivas(userId?.toString());
+
+  // Garantir que sempre temos arrays válidos
+  const consultas = Array.isArray(consultasRaw) ? consultasRaw : [];
+  const historico = Array.isArray(historicoRaw) ? historicoRaw : [];
+  const salas = Array.isArray(salasRaw) ? salasRaw : [];
 
   /* State for active session */
   const [reconnectData, setReconnectData] = useState<{
@@ -296,7 +301,7 @@ export default function InicioPage() {
               <div style={{ marginBottom: 'auto' }}>
                 {loadingHistorico ? (
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)' }}>Carregando...</p>
-                ) : historico.length > 0 ? (
+                ) : historico.length > 0 && historico[0] ? (
                   <>
                     <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', gap: '0.4rem', alignItems: 'baseline', margin: '0.25rem 0' }}>
                       <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
@@ -355,7 +360,9 @@ export default function InicioPage() {
                 <div className="dash-card-body">
                   <div className="appointment-info" style={{ marginBottom: '1.5rem' }}>
                     <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
-                      {isMedico ? nextAppointment.paciente.nome_completo : nextAppointment.medico.nome_completo}
+                      {isMedico
+                        ? (nextAppointment.paciente?.nome_completo || 'Paciente')
+                        : (nextAppointment.medico?.nome_completo || 'Médico')}
                     </h4>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                       {isMedico ? 'Paciente' : 'Médico'}
