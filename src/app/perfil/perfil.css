@@ -238,9 +238,13 @@
     justify-content: space-between;
     padding: 0.85rem;
     /* Reduced from 1rem */
-    background: var(--bg-tertiary);
+    background: #f1f5f9;
     border-radius: var(--radius-lg);
     transition: var(--transition-base);
+}
+
+[data-theme="dark"] .setting-item {
+    background: var(--bg-tertiary);
 }
 
 .setting-label {

@@ -333,7 +333,7 @@ export default function ConsultasPage() {
             {isMedico ? (
               <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <button
-                  className="btn secondary"
+                  className="btn btn-modal-back"
                   onClick={() => setSelectedAppt(null)}
                   style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
                 >
@@ -350,7 +350,7 @@ export default function ConsultasPage() {
             ) : (
               <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <button
-                  className="btn secondary"
+                  className="btn btn-modal-back"
                   onClick={() => setSelectedAppt(null)}
                   style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
                 >

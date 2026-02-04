@@ -204,6 +204,10 @@
     transform: translateY(-6px) scale(1.01);
     border-color: var(--color-primary-400);
     box-shadow: var(--shadow-lg);
+    background: var(--card-bg);
+}
+
+[data-theme="light"] .history-item-card:hover {
     background: var(--bg-primary);
 }
 

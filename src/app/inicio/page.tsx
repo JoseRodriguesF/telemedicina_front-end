@@ -277,7 +277,7 @@ export default function InicioPage() {
                 </>
               ) : (
                 <>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.5rem' }}>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', marginBottom: '0.5rem', textAlign: 'center' }}>
                     Nenhuma consulta ativa encontrada no momento.
                   </p>
                   <button
