@@ -87,9 +87,7 @@ export default function PerfilPage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <header className="dashboard-header">
-          <h2>Carregando Perfil...</h2>
-        </header>
+        <div className="perfil-container-loading" />
       </DashboardLayout>
     );
   }

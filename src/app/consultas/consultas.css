@@ -246,8 +246,6 @@
 }
 
 .btn-scheduling {
-    background: var(--bg-tertiary);
-    color: var(--text-primary);
     transition: var(--transition-base);
 }
 
@@ -256,12 +254,9 @@
 }
 
 [data-theme="dark"] .btn-scheduling {
-    background: #ffffff;
-    color: #0f172a;
-    /* Dark slate for high contrast text on white button */
     font-weight: 600;
 }
 
 [data-theme="dark"] .btn-scheduling:hover {
-    background: #f1f5f9;
+    background: var(--color-primary-600);
 }

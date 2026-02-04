@@ -327,7 +327,7 @@ export default function InicioPage() {
                 )}
               </div>
               <button
-                className="btn ghost"
+                className="btn primary"
                 style={{ borderRadius: 'var(--radius-lg)', width: '100%', padding: '0.4rem', marginTop: '0.5rem' }}
                 onClick={() => router.push('/historico')}
               >
