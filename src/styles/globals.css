@@ -75,11 +75,11 @@
 	--shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 	--shadow-glow: 0 0 20px rgba(14, 165, 233, 0.3);
 
-	/* Transitions */
-	--transition-fast: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-	--transition-base: 350ms cubic-bezier(0.4, 0, 0.2, 1);
-	--transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
-	--transition-bounce: 500ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	/* Transitions - Optimized for premium feel */
+	--transition-fast: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+	--transition-base: 450ms cubic-bezier(0.4, 0, 0.2, 1);
+	--transition-slow: 700ms cubic-bezier(0.4, 0, 0.2, 1);
+	--transition-bounce: 600ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
 
 	/* Typography */
@@ -553,22 +553,32 @@ textarea {
 		transform var(--transition-base);
 }
 
-/* Common Card & Item Transition */
-[class*="card"],
-[class*="item-card"],
+/* Common Card & Item Transition - Only for containers */
+.dash-card,
+.selection-card,
+.profile-section-card,
+.history-item-card,
 .appointment-mini-card,
-.history-item-card {
+.pac-card,
+.service-card,
+.stat-mini-card,
+.action-item {
 	transition: transform var(--transition-base),
 		box-shadow var(--transition-base),
 		border-color var(--transition-base),
 		background-color var(--transition-base);
 }
 
-[class*="card"]:hover,
-[class*="item-card"]:hover,
+.dash-card:hover,
+.selection-card:hover,
+.profile-section-card:hover,
+.history-item-card:hover,
 .appointment-mini-card:hover,
-.history-item-card:hover {
-	transform: translateY(-6px) scale(1.01);
+.pac-card:hover,
+.service-card:hover,
+.stat-mini-card:hover,
+.action-item:hover {
+	transform: translateY(-8px) scale(1.02);
 	box-shadow: var(--shadow-xl);
 }
 

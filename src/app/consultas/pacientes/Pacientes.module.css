@@ -82,9 +82,7 @@
 }
 
 .pac-card:hover {
-    transform: translateY(-8px);
     border-color: var(--color-primary-400);
-    box-shadow: var(--shadow-xl);
 }
 
 .pac-card::before {

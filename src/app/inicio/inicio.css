@@ -75,11 +75,7 @@
 	gap: 0.3rem;
 }
 
-.dash-card:hover {
-	transform: translateY(-6px) scale(1.01);
-	box-shadow: var(--shadow-lg);
-	border-color: var(--color-primary-300);
-}
+
 
 .dash-card-header {
 	display: flex;
@@ -180,8 +176,7 @@
 
 .action-item:hover {
 	background: var(--bg-primary);
-	border-color: var(--color-primary-200);
-	transform: scale(1.02);
+	border-color: var(--color-primary-300);
 }
 
 .action-item i {
