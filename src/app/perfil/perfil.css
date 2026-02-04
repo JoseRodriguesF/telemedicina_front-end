@@ -243,11 +243,6 @@
     transition: var(--transition-base);
 }
 
-.setting-item:hover {
-    background: var(--bg-secondary);
-    transform: translateX(4px);
-}
-
 .setting-label {
     display: flex;
     flex-direction: column;
