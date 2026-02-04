@@ -15,6 +15,7 @@ import ContentModal from '@/components/common/Modal/ContentModal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { formatTime } from '@/lib/utils/dateFormatters';
+import { useEffectOnce } from '@/hooks/useEffectOnce';
 
 // Array vazio estável para evitar re-renders desnecessários
 const EMPTY_ARRAY: any[] = [];
@@ -125,12 +126,12 @@ export default function ConsultasPage() {
     );
   };
 
-  useEffect(() => {
+  useEffectOnce(() => {
     const u = getUser();
     setDisplayName(getUserFirstName(u));
     const isMed = (u?.tipo_usuario || '').toLowerCase() === 'medico';
     setIsMedico(isMed);
-  }, []);
+  });
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);

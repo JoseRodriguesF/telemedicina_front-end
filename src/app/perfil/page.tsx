@@ -12,6 +12,7 @@ import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate } from '@/lib/utils/dateFormatters';
 import AddressAutocomplete from '@/components/common/Inputs/AddressAutocomplete';
+import { useEffectOnce } from '@/hooks/useEffectOnce';
 
 export default function PerfilPage() {
   const router = useRouter();
@@ -23,9 +24,9 @@ export default function PerfilPage() {
   const [editData, setEditData] = useState<any>({});
   const [isEditing, setIsEditing] = useState(false);
 
-  useEffect(() => {
+  useEffectOnce(() => {
     fetchProfile();
-  }, []);
+  });
 
   const fetchProfile = async () => {
     try {
