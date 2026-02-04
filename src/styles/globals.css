@@ -83,11 +83,11 @@
 	--shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
 	--shadow-glow: 0 0 20px rgba(14, 165, 233, 0.3);
 
-	/* Transitions - Sophisticated & Premium */
-	--transition-fast: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-	--transition-base: 500ms cubic-bezier(0.16, 1, 0.3, 1);
-	--transition-slow: 800ms cubic-bezier(0.16, 1, 0.3, 1);
-	--transition-bounce: 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+	/* Transitions - Standard & Reliable */
+	--transition-fast: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+	--transition-base: 450ms cubic-bezier(0.4, 0, 0.2, 1);
+	--transition-slow: 700ms cubic-bezier(0.4, 0, 0.2, 1);
+	--transition-bounce: 600ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
 
 	/* Typography */
