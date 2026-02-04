@@ -29,7 +29,10 @@ export default function MeusAgendamentosPage() {
     const [confirmingIds, setConfirmingIds] = useState<Set<number>>(new Set());
 
     // ✅ NOVO: Usar hooks otimizados
-    const { consultas: allConsultas, isLoading: loading, refresh: refreshConsultas } = useConsultasAgendadas();
+    const { consultas: allConsultasRaw, isLoading: loading, refresh: refreshConsultas } = useConsultasAgendadas();
+
+    // Garantir que sempre temos um array válido
+    const allConsultas = Array.isArray(allConsultasRaw) ? allConsultasRaw : [];
 
     // ✅ NOVO: Debounce na busca
     const debouncedSearch = useDebounce(searchTerm, 300);
@@ -286,7 +289,7 @@ export default function MeusAgendamentosPage() {
 
                                         <div className="history-item-main">
                                             <div className="history-item-top">
-                                                <span className="history-item-name">{item.paciente.nome_completo}</span>
+                                                <span className="history-item-name">{item.paciente?.nome_completo || 'Paciente'}</span>
                                             </div>
                                             <div className="history-item-meta">
                                                 <span>
@@ -311,7 +314,7 @@ export default function MeusAgendamentosPage() {
                                             data={item.data_consulta}
                                             hora={item.hora_inicio}
                                             status={item.status}
-                                            pacienteNome={item.paciente.nome_completo}
+                                            pacienteNome={item.paciente?.nome_completo || 'Paciente'}
                                             isConfirming={confirmingIds.has(item.id)}
                                             onConfirm={(id) => {
                                                 // Se clicar no botão, não abre o modal (stopPropagation já é tratado no botão geralmente, mas bom garantir)
@@ -374,7 +377,7 @@ export default function MeusAgendamentosPage() {
                         <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)' }}>
                             <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-tertiary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Paciente</h4>
                             <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                                {consultaDetails.paciente.nome_completo || 'Paciente'}
+                                {consultaDetails.paciente?.nome_completo || 'Paciente'}
                             </p>
                             <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>ID: #{consultaDetails.pacienteId}</span>
                         </div>

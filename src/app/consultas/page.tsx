@@ -22,7 +22,10 @@ export default function ConsultasPage() {
   const [isMedico, setIsMedico] = useState<boolean>(false);
 
   // ✅ NOVO: Usar hooks otimizados
-  const { consultas: allConsultas, isLoading: loading, refresh: refreshConsultas } = useConsultasAgendadas();
+  const { consultas: allConsultasRaw, isLoading: loading, refresh: refreshConsultas } = useConsultasAgendadas();
+
+  // Garantir que sempre temos um array válido
+  const allConsultas = Array.isArray(allConsultasRaw) ? allConsultasRaw : [];
 
   // ✅ OTIMIZADO: Filtrar e ordenar consultas
   const scheduledAppointments = allConsultas
@@ -279,7 +282,7 @@ export default function ConsultasPage() {
             <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)' }}>
               <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-tertiary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{isMedico ? 'Paciente' : 'Médico'}</h4>
               <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                {isMedico ? (consultaDetails.paciente.nome_completo || 'Paciente') : (selectedAppt?.medico.nome_completo || 'Médico')}
+                {isMedico ? (consultaDetails.paciente?.nome_completo || 'Paciente') : (selectedAppt?.medico?.nome_completo || 'Médico')}
               </p>
               {!isMedico && <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>Clinico Geral</span>}
               {isMedico && <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>ID: #{consultaDetails.pacienteId}</span>}
