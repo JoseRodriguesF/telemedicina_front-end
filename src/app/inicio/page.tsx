@@ -15,7 +15,6 @@ import { useConsultasAgendadas, useHistoricoCompleto, useSalasAtivas } from '@/h
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
-import { useEffectOnce } from '@/hooks/useEffectOnce';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
 import {
   PSFullHistoryItem,
@@ -111,9 +110,8 @@ export default function InicioPage() {
     }
   };
 
-  // ✅ OTIMIZADO: Inicialização do usuário (executado apenas 1 vez)
-  // ✅ OTIMIZADO: Inicialização do usuário (executado apenas 1 vez)
-  useEffectOnce(() => {
+  // ✅ OTIMIZADO: Inicialização do usuário
+  useEffect(() => {
     const u = getUser();
     setDisplayName(getUserFirstName(u));
     const isMed = (u?.tipo_usuario || '').toLowerCase() === 'medico';
@@ -130,7 +128,7 @@ export default function InicioPage() {
         }
       }
     } catch { }
-  });
+  }, []);
 
   // ✅ OTIMIZADO: Processar salas ativas quando disponíveis
   useEffect(() => {

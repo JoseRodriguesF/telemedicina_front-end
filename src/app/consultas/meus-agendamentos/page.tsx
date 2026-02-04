@@ -18,7 +18,6 @@ import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
 import { AppointmentActionButtons } from '@/components/appointments/AppointmentActionButtons';
 import ContentModal from '@/components/common/Modal/ContentModal';
-import { useEffectOnce } from '@/hooks/useEffectOnce';
 
 // Array vazio estável
 const EMPTY_ARRAY: any[] = [];
@@ -54,7 +53,7 @@ export default function MeusAgendamentosPage() {
             return getTimestamp(a) - getTimestamp(b);
         });
 
-    useEffectOnce(() => {
+    useEffect(() => {
         const u = getUser();
         if (!u || (u.tipo_usuario || '').toLowerCase() !== 'medico') {
             router.push('/inicio');
@@ -62,7 +61,7 @@ export default function MeusAgendamentosPage() {
         }
 
         setDisplayName(getUserFirstName(u));
-    });
+    }, [router]);
 
     const isToday = (dateStr: string) => {
         const today = new Date();

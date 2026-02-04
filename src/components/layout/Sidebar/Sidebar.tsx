@@ -55,10 +55,11 @@ export default function Sidebar({ activeId: propActiveId, className = '' }: Prop
     router.push('/login');
   };
 
-  if (!mounted) return null;
-
   return (
-    <aside className={`inicio-sidebar ${className}`} aria-label="Menu lateral">
+    <aside
+      className={`inicio-sidebar ${className}`}
+      aria-label="Menu lateral"
+    >
       <div className="sidebar-top">
         <div className="sidebar-logo">
           <div className="logo-inner">

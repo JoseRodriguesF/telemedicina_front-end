@@ -19,11 +19,20 @@ export function useModal() {
     const [isOpen, setIsOpen] = useState(false)
     const [config, setConfig] = useState<ModalConfig | null>(null)
     const configRef = useRef<ModalConfig | null>(null)
+    const isOpeningRef = useRef(false)
 
     const show = useCallback((modalConfig: ModalConfig) => {
+        if (isOpeningRef.current) return;
+        isOpeningRef.current = true;
+
         configRef.current = modalConfig
         setConfig(modalConfig)
         setIsOpen(true)
+
+        // Reset flag after animation
+        setTimeout(() => {
+            isOpeningRef.current = false;
+        }, 400);
     }, [])
 
     const close = useCallback(() => {

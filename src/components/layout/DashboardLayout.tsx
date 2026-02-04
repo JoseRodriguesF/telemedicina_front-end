@@ -16,7 +16,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <MobileHeader />
             </div>
             <Sidebar />
-            <main className="inicio-main">
+            <main className="inicio-main animate-fadeIn" style={{ animationDuration: '0.4s' }}>
                 {children}
             </main>
         </div>

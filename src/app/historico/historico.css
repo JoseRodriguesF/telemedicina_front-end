@@ -194,17 +194,17 @@
     display: flex;
     align-items: center;
     gap: 1.25rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: var(--transition-base);
     cursor: pointer;
     box-shadow: var(--shadow-md);
-    animation: dash-entry 0.5s ease-out forwards;
+    animation: dash-entry 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .history-item-card:hover {
     transform: translateY(-6px) scale(1.01);
-    border-color: var(--color-primary-300);
+    border-color: var(--color-primary-400);
     box-shadow: var(--shadow-lg);
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
 }
 
 .history-item-avatar {
@@ -319,14 +319,14 @@
     border-radius: var(--radius-xl);
     padding: 1.5rem;
     box-shadow: var(--shadow-md);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    animation: dash-entry 0.5s ease-out forwards;
+    transition: var(--transition-base);
+    animation: dash-entry 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .stat-mini-card:hover {
-    transform: translateY(-6px) scale(1.01);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--color-primary-300);
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--color-primary-400);
 }
 
 .stat-mini-card:nth-child(2) {

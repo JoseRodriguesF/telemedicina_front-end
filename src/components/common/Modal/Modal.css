@@ -143,7 +143,7 @@
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: var(--transition-base);
     border: 1px solid transparent;
 }
 
@@ -154,8 +154,8 @@
 
 .modal-button-primary:hover {
     background-color: var(--color-primary-700, #1d4ed8);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
 }
 
 .modal-button-secondary {
@@ -167,6 +167,7 @@
 .modal-button-secondary:hover {
     background-color: var(--bg-tertiary, #f3f4f6);
     border-color: var(--border-color-hover, #d1d5db);
+    transform: translateY(-1px);
 }
 
 /* Specific button colors for status */
@@ -176,7 +177,7 @@
 
 .modal-button-error:hover {
     background-color: #dc2626;
-    box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25);
 }
 
 .modal-button-warning {
@@ -185,7 +186,7 @@
 
 .modal-button-warning:hover {
     background-color: #d97706;
-    box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25);
 }
 
 /* Scrollbar para o modal body */

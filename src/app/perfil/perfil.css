@@ -18,15 +18,12 @@
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--card-border);
     border-radius: var(--radius-xl);
-    /* Reduced from 2xl */
     padding: 1.5rem;
-    /* Reduced from 2.5rem */
     display: flex;
     align-items: center;
     gap: 1.5rem;
-    /* Reduced from 2.5rem */
     box-shadow: var(--shadow-xl);
-    animation: dash-entry 0.6s ease-out;
+    transition: var(--transition-base);
     position: relative;
     overflow: hidden;
 }
@@ -160,11 +157,9 @@
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: var(--radius-xl);
-    /* Reduced from 2xl */
     padding: 1.25rem;
-    /* Reduced from 1.75rem */
     box-shadow: var(--shadow-lg);
-    animation: dash-entry 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: var(--transition-base);
 }
 
 .section-header {
