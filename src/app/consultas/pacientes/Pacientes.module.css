@@ -78,13 +78,13 @@
     gap: 1rem;
     position: relative;
     overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: var(--transition-base);
 }
 
 .pac-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-8px);
     border-color: var(--color-primary-400);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-xl);
 }
 
 .pac-card::before {

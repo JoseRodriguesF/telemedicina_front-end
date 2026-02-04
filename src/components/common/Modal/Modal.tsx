@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { ModalConfig } from './useModal' // Assuming useModal exports ModalConfig
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { ModalConfig } from './useModal'
 import './Modal.css'
 
 interface ModalProps {
@@ -15,6 +16,12 @@ interface ModalProps {
 export function Modal({ isOpen, config, onConfirm, onCancel, children }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
   const onCancelRef = useRef(onCancel)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
 
   // Manter ref atualizada
   useEffect(() => {
@@ -54,7 +61,7 @@ export function Modal({ isOpen, config, onConfirm, onCancel, children }: ModalPr
     }
   }, [isOpen])
 
-  if (!isOpen || !config) return null
+  if (!isOpen || !config || !mounted) return null
 
   const getIcon = () => {
     switch (config.type) {
@@ -90,7 +97,7 @@ export function Modal({ isOpen, config, onConfirm, onCancel, children }: ModalPr
     }
   }
 
-  return (
+  const modalContent = (
     <div
       ref={modalRef}
       className={`modal-backdrop ${isOpen ? 'modal-open' : ''}`}
@@ -134,4 +141,7 @@ export function Modal({ isOpen, config, onConfirm, onCancel, children }: ModalPr
       </div>
     </div>
   )
+
+  return createPortal(modalContent, document.body)
 }
+

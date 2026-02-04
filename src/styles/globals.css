@@ -553,17 +553,23 @@ textarea {
 		transform var(--transition-base);
 }
 
-/* Common Card Transition */
-[class*="card"] {
+/* Common Card & Item Transition */
+[class*="card"],
+[class*="item-card"],
+.appointment-mini-card,
+.history-item-card {
 	transition: transform var(--transition-base),
 		box-shadow var(--transition-base),
 		border-color var(--transition-base),
 		background-color var(--transition-base);
 }
 
-[class*="card"]:hover {
-	transform: translateY(-4px);
-	box-shadow: var(--shadow-lg);
+[class*="card"]:hover,
+[class*="item-card"]:hover,
+.appointment-mini-card:hover,
+.history-item-card:hover {
+	transform: translateY(-6px) scale(1.01);
+	box-shadow: var(--shadow-xl);
 }
 
 /* Button Elevation */

@@ -281,7 +281,7 @@
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition-base);
     border: 1px solid var(--border-color);
     background: var(--bg-primary);
     color: var(--text-secondary);

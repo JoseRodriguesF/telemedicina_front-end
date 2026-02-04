@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import './Modal.css';
 
 interface ContentModalProps {
@@ -13,6 +14,12 @@ interface ContentModalProps {
 
 export default function ContentModal({ isOpen, onClose, title, children, size = 'md' }: ContentModalProps) {
     const modalRef = useRef<HTMLDivElement>(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
 
     // Handle ESC key
     useEffect(() => {
@@ -47,11 +54,11 @@ export default function ContentModal({ isOpen, onClose, title, children, size = 
         };
     }, [isOpen]);
 
-    if (!isOpen) return null;
+    if (!isOpen || !mounted) return null;
 
     const maxWidthStyle = size === 'lg' ? '800px' : size === 'xl' ? '1200px' : size === 'sm' ? '380px' : '600px';
 
-    return (
+    const modalContent = (
         <div
             ref={modalRef}
             className={`modal-backdrop ${isOpen ? 'modal-open' : ''}`}
@@ -88,4 +95,7 @@ export default function ContentModal({ isOpen, onClose, title, children, size = 
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 }
+

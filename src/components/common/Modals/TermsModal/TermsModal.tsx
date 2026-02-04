@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import './TermsModal.css';
 import Button from '@/components/common/Buttons/Button';
 import DefaultTerms from './termsContent';
@@ -16,6 +17,12 @@ type Props = {
 
 export default function TermsModal({ open, title = 'Termos de Uso e Consentimento', termsHtml, onConfirm, onCancel, loading = false }: Props) {
   const [accepted, setAccepted] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   // Reset accepted state when modal opens/closes
   useEffect(() => {
@@ -24,9 +31,9 @@ export default function TermsModal({ open, title = 'Termos de Uso e Consentiment
     }
   }, [open]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  const modalContent = (
     <div className="tm-overlay">
       <div className="tm-modal">
         <div className="tm-header">
@@ -52,4 +59,7 @@ export default function TermsModal({ open, title = 'Termos de Uso e Consentiment
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
+

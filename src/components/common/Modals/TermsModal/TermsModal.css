@@ -1,15 +1,14 @@
 .tm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  padding: 1rem;
-  animation: fadeIn var(--transition-base);
+  z-index: 10000;
+  animation: fadeIn 0.4s ease-out;
 }
 
 .tm-modal {

@@ -81,7 +81,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition-base);
 }
 
 .edit-avatar-btn:hover {
@@ -236,7 +236,7 @@
     /* Reduced from 1rem */
     background: var(--bg-tertiary);
     border-radius: var(--radius-lg);
-    transition: all 0.2s;
+    transition: var(--transition-base);
 }
 
 .setting-item:hover {
@@ -277,7 +277,7 @@
     font-size: 0.85rem;
     /* Reduced from 0.9rem */
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--transition-base);
 }
 
 .btn-profile.primary {
