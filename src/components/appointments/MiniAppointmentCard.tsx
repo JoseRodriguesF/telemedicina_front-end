@@ -60,8 +60,9 @@ export function MiniAppointmentCard({ appointment: appt, isMedico, onAttend, onV
                     style={{
                         marginTop: '0.5rem',
                         display: 'inline-block',
-                        backgroundColor: isSolicitada ? 'var(--color-warning-100, #fef3c7)' : undefined,
-                        color: isSolicitada ? 'var(--color-warning-800, #92400e)' : undefined
+                        backgroundColor: isSolicitada ? 'var(--color-warning-soft)' : 'var(--color-success-soft)',
+                        color: isSolicitada ? 'var(--color-warning)' : 'var(--color-success)',
+                        border: `1px solid ${isSolicitada ? 'var(--color-warning-border)' : 'var(--color-success-border)'}`
                     }}
                 >
                     {appt.status.charAt(0).toUpperCase() + appt.status.slice(1)}

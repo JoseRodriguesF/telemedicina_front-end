@@ -267,7 +267,7 @@
 }
 
 :root {
-	--chart-dot-stroke: var(--border-color);
+	--chart-dot-stroke: #374151;
 }
 
 [data-theme='dark'] {

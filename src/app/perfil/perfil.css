@@ -237,8 +237,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.85rem;
-    /* Reduced from 1rem */
-    background: #f1f5f9;
+    background: #e2e8f0;
+    /* Cinza fixo e visível para modo claro */
     border-radius: var(--radius-lg);
     transition: var(--transition-base);
 }

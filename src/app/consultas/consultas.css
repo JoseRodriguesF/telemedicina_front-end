@@ -175,10 +175,14 @@
 }
 
 .appointment-mini-card:hover {
-    background: var(--bg-primary);
-    border-color: var(--color-primary-400);
     transform: translateY(-6px) scale(1.02);
+    border-color: var(--color-primary-400);
     box-shadow: var(--shadow-xl);
+    background: var(--card-bg);
+}
+
+[data-theme="light"] .appointment-mini-card:hover {
+    background: var(--bg-primary);
 }
 
 .appt-date-box {

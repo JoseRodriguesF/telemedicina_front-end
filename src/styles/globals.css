@@ -40,9 +40,17 @@
 
 	/* Semantic Colors */
 	--color-success: #10b981;
+	--color-success-soft: #ecfdf5;
+	--color-success-border: #d1fae5;
 	--color-warning: #f59e0b;
+	--color-warning-soft: #fffbeb;
+	--color-warning-border: #fef3c7;
 	--color-error: #ef4444;
+	--color-error-soft: #fee2e2;
+	--color-error-border: #fecaca;
 	--color-info: #3b82f6;
+	--color-info-soft: #eff6ff;
+	--color-info-border: #dbeafe;
 
 	/* Gradients - Pure Light Blue */
 	--gradient-primary: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
@@ -75,11 +83,11 @@
 	--shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
 	--shadow-glow: 0 0 20px rgba(14, 165, 233, 0.3);
 
-	/* Transitions - Optimized for premium feel */
-	--transition-fast: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-	--transition-base: 450ms cubic-bezier(0.4, 0, 0.2, 1);
-	--transition-slow: 700ms cubic-bezier(0.4, 0, 0.2, 1);
-	--transition-bounce: 600ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	/* Transitions - Sophisticated & Premium */
+	--transition-fast: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+	--transition-base: 500ms cubic-bezier(0.16, 1, 0.3, 1);
+	--transition-slow: 800ms cubic-bezier(0.16, 1, 0.3, 1);
+	--transition-bounce: 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
 
 	/* Typography */
@@ -178,8 +186,15 @@
 	--shadow-glow: 0 0 25px rgba(14, 165, 233, 0.3);
 
 	/* Adjust primary colors for better dark mode visibility */
-	--color-primary-50: #075985;
 	--color-primary-100: #0c4a6e;
+	--color-success-soft: rgba(16, 185, 129, 0.15);
+	--color-success-border: rgba(16, 185, 129, 0.3);
+	--color-warning-soft: rgba(245, 158, 11, 0.15);
+	--color-warning-border: rgba(245, 158, 11, 0.3);
+	--color-error-soft: rgba(239, 68, 68, 0.15);
+	--color-error-border: rgba(239, 68, 68, 0.3);
+	--color-info-soft: rgba(59, 130, 246, 0.15);
+	--color-info-border: rgba(59, 130, 246, 0.3);
 }
 
 /* ============================================
@@ -392,6 +407,23 @@ svg {
 	to {
 		opacity: 1;
 		transform: scale(1);
+	}
+}
+
+/* Spinner */
+.spinner {
+	width: 32px;
+	height: 32px;
+	border: 3px solid var(--border-color);
+	border-top-color: var(--color-primary-500);
+	border-radius: 50%;
+	animation: spin 0.8s linear infinite;
+	margin: 0 auto;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
 	}
 }
 
