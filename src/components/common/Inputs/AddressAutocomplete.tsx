@@ -71,6 +71,9 @@ export default function AddressAutocomplete({
       onChange={(e) => onChange(e.target.value)}
       type="text"
       autoComplete="off"
+      data-lpignore="true" // LastPass ignore
+      data-form-type="other"
+      spellCheck="false"
     />
   );
 }

@@ -452,6 +452,9 @@ svg {
 	border-radius: var(--radius-md);
 	margin-top: 4px;
 	background-color: var(--bg-primary);
+	z-index: 11000 !important;
+	/* Higher than modal (10500) */
+	pointer-events: auto !important;
 }
 
 [data-theme="dark"] .pac-container {
