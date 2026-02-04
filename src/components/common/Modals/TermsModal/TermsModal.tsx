@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './TermsModal.css';
 import Button from '@/components/common/Buttons/Button';
 import DefaultTerms from './termsContent';
@@ -16,6 +16,13 @@ type Props = {
 
 export default function TermsModal({ open, title = 'Termos de Uso e Consentimento', termsHtml, onConfirm, onCancel, loading = false }: Props) {
   const [accepted, setAccepted] = useState(false);
+
+  // Reset accepted state when modal opens/closes
+  useEffect(() => {
+    if (!open) {
+      setAccepted(false);
+    }
+  }, [open]);
 
   if (!open) return null;
 

@@ -2,8 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // Enable the React Compiler for optimized rendering
-  reactCompiler: true,
+  // Disable React StrictMode to prevent double rendering in development
+  reactStrictMode: false,
   async rewrites() {
     // During development or production, proxy client requests under /api/* to the remote API
     // EXCEPT for local routes like /api/upload

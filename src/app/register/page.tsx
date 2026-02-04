@@ -47,10 +47,6 @@ export default function RegisterPage() {
     }
   }, []);
 
-  useEffect(() => {
-    // Sem auto avanço por localStorage. O progresso é controlado via query 'resume=1'.
-  }, []);
-
   // Step 1 -> recebe do card o userId após createAcesso
   function handleNextFromStep1(data?: { email: string; password: string; userId?: number }) {
     if (!data) return;
