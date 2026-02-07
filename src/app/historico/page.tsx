@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
-import { PSFullHistoryItem } from '@/lib/axios/consultas';
+import { PSFullHistoryItem, searchHistoricoConsultas } from '@/lib/axios/consultas';
 // ✅ NOVO: Importar hooks otimizados
 import { useHistoricoCompleto, useUserProfile } from '@/hooks/useApiData';
 import { useDebounce } from '@/hooks/useOptimization';
@@ -23,6 +23,8 @@ export default function HistoricoPage() {
   const [endDate, setEndDate] = useState('');
   const [selectedItem, setSelectedItem] = useState<PSFullHistoryItem | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [searchResults, setSearchResults] = useState<PSFullHistoryItem[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   // ✅ NOVO: Usar hooks otimizados
   const { historico: history, isLoading: loading } = useHistoricoCompleto();
@@ -39,6 +41,33 @@ export default function HistoricoPage() {
     setUserType(u?.tipo_usuario || '');
   }, []);
 
+  // ✅ NOVO: Buscar via API quando o termo de busca mudar
+  useEffect(() => {
+    const performSearch = async () => {
+      if (!debouncedSearch.trim()) {
+        setSearchResults(null);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const token = getToken();
+        if (token) {
+          const results = await searchHistoricoConsultas(debouncedSearch, token);
+          setSearchResults(results);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar consultas:', error);
+        // Em caso de erro, usar busca local como fallback
+        setSearchResults(null);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    performSearch();
+  }, [debouncedSearch]);
+
   const getParticipantName = (item: PSFullHistoryItem) => {
     if (userType === 'paciente') {
       return item.medico?.nome_completo || 'Médico não identificado';
@@ -47,9 +76,12 @@ export default function HistoricoPage() {
     }
   };
 
-  // ✅ OTIMIZADO: Usar debouncedSearch para evitar filtros excessivos
-  const filteredHistory = history.filter(item => {
-    const nameMatch = getParticipantName(item).toLowerCase().includes(debouncedSearch.toLowerCase());
+  // ✅ OTIMIZADO: Usar searchResults da API ou filtro local
+  const dataSource = searchResults !== null ? searchResults : history;
+
+  const filteredHistory = dataSource.filter(item => {
+    // Se estamos usando resultados da API, não precisamos filtrar por nome novamente
+    const nameMatch = searchResults !== null ? true : getParticipantName(item).toLowerCase().includes(debouncedSearch.toLowerCase());
 
     let dateMatch = true;
     if (startDate || endDate) {
@@ -121,10 +153,10 @@ export default function HistoricoPage() {
         <div className="history-content-grid">
           {/* List Side */}
           <div className="history-list-container">
-            {loading ? (
+            {loading || isSearching ? (
               <div className="history-loading">
                 <div className="pulse-loader"></div>
-                <p>Carregando seu histórico de atendimentos...</p>
+                <p>{isSearching ? 'Buscando consultas...' : 'Carregando seu histórico de atendimentos...'}</p>
               </div>
             ) : filteredHistory.length > 0 ? (
               filteredHistory.map((item) => (

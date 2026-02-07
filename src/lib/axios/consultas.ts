@@ -420,3 +420,22 @@ export async function avaliarConsulta(
     throw new ApiError(err);
   }
 }
+
+/**
+ * Busca consultas no histórico por nome (médico ou paciente)
+ * @param searchTerm - Termo de busca (nome do médico ou paciente)
+ * @param token - Token de autenticação
+ */
+export async function searchHistoricoConsultas(
+  searchTerm: string,
+  token: string
+): Promise<PSFullHistoryItem[]> {
+  try {
+    const res = await axios.get(`/api/ps/historico-completo/search?q=${encodeURIComponent(searchTerm)}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data as PSFullHistoryItem[];
+  } catch (err) {
+    throw new ApiError(err);
+  }
+}
