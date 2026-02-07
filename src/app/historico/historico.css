@@ -224,6 +224,10 @@
     flex-shrink: 0;
 }
 
+[data-theme="light"] .history-item-avatar {
+    background: var(--color-primary-100);
+}
+
 .history-item-main {
     flex: 1;
     display: flex;
