@@ -979,6 +979,7 @@ function AtendimentoInner() {
                       <div className="historico-list">
                         {historicoConsultas.map((consulta) => (
                           <div key={consulta.id} className="historico-item">
+                            <div className="historico-item-avatar">👤</div>
                             <div className="historico-item-info">
                               <div className="historico-item-date">
                                 📅 {formatDate(consulta.data_consulta || consulta.createdAt)}
