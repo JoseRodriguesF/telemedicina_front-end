@@ -1200,29 +1200,13 @@ function AtendimentoInner() {
                     onToggle={toggleAccordion}
                   >
                     <div className="notas-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {pacienteNotas && (
-                        <div className="stored-notes" style={{
-                          fontSize: '0.85rem',
-                          color: 'var(--text-secondary)',
-                          padding: '8px',
-                          background: 'var(--bg-secondary)',
-                          borderRadius: '8px',
-                          border: '1px solid var(--border-color)',
-                          maxHeight: '100px',
-                          overflowY: 'auto',
-                          marginBottom: '4px'
-                        }}>
-                          <strong>Notas armazenadas:</strong>
-                          <p style={{ marginTop: '4px', whiteSpace: 'pre-wrap' }}>{pacienteNotas}</p>
-                        </div>
-                      )}
                       <textarea
                         className="atendimento-textarea"
-                        placeholder="Adicionar ou editar notas..."
+                        placeholder="Notas exclusivas do médico sobre este paciente (visíveis apenas para médicos)..."
                         value={pacienteNotas}
                         onChange={(e) => setPacienteNotas(e.target.value)}
-                        rows={3}
-                        style={{ minHeight: '80px', width: '100%' }}
+                        rows={pacienteNotas ? 6 : 3}
+                        style={{ minHeight: pacienteNotas ? '150px' : '80px', width: '100%' }}
                       />
                       <button
                         className="prescricao-btn prescricao-btn-submit"
@@ -1230,7 +1214,7 @@ function AtendimentoInner() {
                         disabled={isSavingNotas}
                         style={{ width: '100%' }}
                       >
-                        {isSavingNotas ? 'Salvando...' : 'Atualizar Notas'}
+                        {isSavingNotas ? 'Salvando...' : (pacienteNotas ? 'Atualizar Notas' : 'Salvar Notas')}
                       </button>
                     </div>
                   </Accordion>
@@ -1753,6 +1737,7 @@ function AtendimentoInner() {
                   </button>
                   <button className={`control-btn ${showChat ? 'active' : ''}`} aria-label={showChat ? "Esconder chat" : "Mostrar chat"} onClick={() => setShowChat(prev => !prev)}>
                     <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                    {unreadMessages > 0 && !showChat && <span className="chat-notification-badge"></span>}
                   </button>
                   <button className="control-btn end" aria-label="Encerrar chamada" onClick={requestFinishCall}>
                     <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>

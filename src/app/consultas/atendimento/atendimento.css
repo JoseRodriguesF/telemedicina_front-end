@@ -1520,8 +1520,8 @@
    ============================================ */
 .chat-notification-badge {
     position: absolute;
-    top: -4px;
-    right: -4px;
+    top: 6px;
+    right: 6px;
     width: 10px;
     height: 10px;
     background: #f97316;
