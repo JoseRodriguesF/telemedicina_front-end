@@ -211,7 +211,10 @@
 html {
 	scroll-behavior: smooth;
 	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
 	overflow-x: hidden;
+	/* Base font-size que escala com zoom */
+	font-size: 16px;
 }
 
 html,
@@ -630,4 +633,61 @@ textarea {
 .btn-ghost:hover {
 	background-color: var(--bg-tertiary);
 	transform: translateY(-1px);
+}
+
+/* ============================================
+   ZOOM RESPONSIVENESS
+   ============================================ */
+
+/* Garante que o body e containers principais respondam ao zoom */
+body {
+	/* Permite que o conteúdo se ajuste ao zoom */
+	zoom: 1;
+}
+
+/* Containers principais devem usar max-width com % para responder ao zoom */
+.inicio-main,
+.dashboard-main,
+.page-container,
+main {
+	width: 100%;
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+/* Garante que grids e flexbox respondam ao zoom */
+.dashboard-grid,
+.grid,
+.flex-container {
+	width: 100%;
+	max-width: 100%;
+}
+
+/* Elementos com largura fixa devem ter max-width: 100% para não quebrar em zoom alto */
+.modal-content,
+.card,
+.form-container {
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+/* Imagens e mídia devem escalar com zoom */
+img,
+video,
+iframe {
+	max-width: 100%;
+	height: auto;
+}
+
+/* Texto deve ser legível em qualquer zoom */
+p,
+span,
+div,
+a,
+button,
+input,
+textarea,
+select {
+	word-wrap: break-word;
+	overflow-wrap: break-word;
 }
