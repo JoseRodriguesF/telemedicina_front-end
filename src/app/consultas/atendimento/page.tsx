@@ -858,8 +858,8 @@ function AtendimentoInner() {
   }
 
   async function handleSubmitPrescricao() {
-    if (!prescricaoData.medicamento || !prescricaoData.dosagem || !prescricaoData.frequencia || !prescricaoData.duracao) {
-      modal.error('Campos Obrigatórios', 'Por favor, preencha todos os campos obrigatórios.');
+    if (!prescricaoData.medicamento || !prescricaoData.dosagem) {
+      modal.error('Campos Obrigatórios', 'Por favor, preencha pelo menos o Nome do Medicamento e a Dosagem.');
       return;
     }
 
@@ -1035,7 +1035,7 @@ function AtendimentoInner() {
                               </button>
                             </div>
                             <div className="prescricao-card-info">
-                              {p.dosagem} • {p.frequencia} • {p.duracao}
+                              {[p.dosagem, p.frequencia, p.duracao].filter(Boolean).join(' • ')}
                             </div>
                             {p.inclusoConvenio && <div className="prescricao-card-badge">Convênio</div>}
                           </div>
@@ -1121,22 +1121,35 @@ function AtendimentoInner() {
                           </div>
 
                           <div className="prescricao-input-wrapper">
-                            <label className="prescricao-input-label">Doses, Frequência e Duração *</label>
-                            <textarea
-                              className="atendimento-textarea"
-                              placeholder="Ex: 1 comprimido de 8 em 8 horas por 7 dias"
-                              value={`${prescricaoData.dosagem}${prescricaoData.frequencia ? '\n' + prescricaoData.frequencia : ''}${prescricaoData.duracao ? '\n' + prescricaoData.duracao : ''}`}
-                              onChange={(e) => {
-                                const lines = e.target.value.split('\n');
-                                setPrescricaoData(prev => ({
-                                  ...prev,
-                                  dosagem: lines[0] || '',
-                                  frequencia: lines[1] || '',
-                                  duracao: lines[2] || ''
-                                }));
-                              }}
-                              rows={3}
-                              style={{ minHeight: '80px', maxHeight: '120px' }}
+                            <label className="prescricao-input-label">Dosagem *</label>
+                            <input
+                              type="text"
+                              className="prescricao-input"
+                              placeholder="Ex: 1 comprimido, 500mg, 10ml..."
+                              value={prescricaoData.dosagem}
+                              onChange={(e) => setPrescricaoData(prev => ({ ...prev, dosagem: e.target.value }))}
+                            />
+                          </div>
+
+                          <div className="prescricao-input-wrapper">
+                            <label className="prescricao-input-label">Frequência</label>
+                            <input
+                              type="text"
+                              className="prescricao-input"
+                              placeholder="Ex: de 8 em 8 horas, 1x ao dia..."
+                              value={prescricaoData.frequencia}
+                              onChange={(e) => setPrescricaoData(prev => ({ ...prev, frequencia: e.target.value }))}
+                            />
+                          </div>
+
+                          <div className="prescricao-input-wrapper">
+                            <label className="prescricao-input-label">Duração</label>
+                            <input
+                              type="text"
+                              className="prescricao-input"
+                              placeholder="Ex: por 7 dias, uso contínuo..."
+                              value={prescricaoData.duracao}
+                              onChange={(e) => setPrescricaoData(prev => ({ ...prev, duracao: e.target.value }))}
                             />
                           </div>
 
