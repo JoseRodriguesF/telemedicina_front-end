@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
-import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta } from '@/lib/axios/consultas';
+import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta, updatePacienteNotas } from '@/lib/axios/consultas';
 import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas, getPrescricoesByConsulta, deletePrescricao, Prescricao as PrescricaoType } from '@/lib/axios/prescricoes';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
@@ -136,6 +136,8 @@ function AtendimentoInner() {
   const [showMedicamentoSugestoes, setShowMedicamentoSugestoes] = useState(false);
   const [showMarcaSugestoes, setShowMarcaSugestoes] = useState(false);
   const [isSubmittingPrescricao, setIsSubmittingPrescricao] = useState(false);
+  const [pacienteNotas, setPacienteNotas] = useState('');
+  const [isSavingNotas, setIsSavingNotas] = useState(false);
 
   const isScheduled = search.get('scheduled') === 'true';
 
@@ -171,6 +173,9 @@ function AtendimentoInner() {
         const data = await getConsulta(curCid, token);
 
         setConsultaDetails(data);
+        if (data.paciente?.usuario?.notas) {
+          setPacienteNotas(data.paciente.usuario.notas);
+        }
       } catch (err) {
         console.error('[AtendimentoInner] Erro ao buscar detalhes da consulta:', err);
       }
@@ -916,6 +921,22 @@ function AtendimentoInner() {
     modal.success('Prescrição Adicionada', 'A prescrição foi anexada à consulta localmente.');
   }
 
+  async function handleSaveNotas() {
+    const curCid = getConsultaIdFromUrl() || consultaIdState || consultaId;
+    if (!curCid || !token) return;
+
+    setIsSavingNotas(true);
+    try {
+      await updatePacienteNotas(curCid, token, pacienteNotas);
+      modal.success('Sucesso', 'Notas do paciente atualizadas.');
+    } catch (err) {
+      console.error('Erro ao salvar notas:', err);
+      modal.error('Erro', 'Não foi possível salvar as notas.');
+    } finally {
+      setIsSavingNotas(false);
+    }
+  }
+
   async function handleDeletePrescricao(id: number) {
     const pToDelete = activePrescricoes.find(p => p.id === id);
     if (!pToDelete) return;
@@ -1200,7 +1221,24 @@ function AtendimentoInner() {
                     isOpen={!!openAccordions['notas']}
                     onToggle={toggleAccordion}
                   >
-                    <p className="accordion-placeholder">Adicione notas sobre o atendimento.</p>
+                    <div className="notas-container" style={{ display: 'flex', flexDirection: 'column' }}>
+                      <textarea
+                        className="atendimento-textarea"
+                        placeholder="Notas exclusivas do médico sobre este paciente (visíveis apenas para médicos)..."
+                        value={pacienteNotas}
+                        onChange={(e) => setPacienteNotas(e.target.value)}
+                        rows={6}
+                        style={{ minHeight: '150px', marginBottom: '12px', width: '100%' }}
+                      />
+                      <button
+                        className="prescricao-btn prescricao-btn-submit"
+                        onClick={handleSaveNotas}
+                        disabled={isSavingNotas}
+                        style={{ width: '100%' }}
+                      >
+                        {isSavingNotas ? 'Salvando...' : 'Salvar Notas'}
+                      </button>
+                    </div>
                   </Accordion>
                 </div>
               </aside>

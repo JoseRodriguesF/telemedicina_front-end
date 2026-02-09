@@ -148,6 +148,9 @@ export type ConsultaDetails = {
     sexo: string;
     data_nascimento: string;
     telefone: string;
+    usuario?: {
+      notas?: string;
+    };
     // outros campos se necessário
   };
   historiaClinica?: Partial<HistoriaClinicaDetails>;
@@ -435,6 +438,24 @@ export async function searchHistoricoConsultas(
       headers: { Authorization: `Bearer ${token}` }
     });
     return res.data as PSFullHistoryItem[];
+  } catch (err) {
+    throw new ApiError(err);
+  }
+}
+
+/**
+ * Atualiza as notas exclusivas do médico sobre o paciente
+ */
+export async function updatePacienteNotas(
+  consultaId: string,
+  token: string,
+  notas: string
+): Promise<{ ok: boolean }> {
+  try {
+    const res = await axios.patch(`/api/consultas/${consultaId}/paciente/notas`, { notas }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
   } catch (err) {
     throw new ApiError(err);
   }
