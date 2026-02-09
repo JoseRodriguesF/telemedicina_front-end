@@ -298,6 +298,8 @@
     border-radius: 12px;
     font-size: 0.9rem;
     line-height: 1.4;
+    text-align: left;
+    word-break: break-word;
 }
 
 .chat-msg.me .chat-bubble {
@@ -1649,7 +1651,7 @@
     z-index: 100;
 }
 
-.prescricao suggestions-item {
+.prescricao-suggestions-item {
     padding: 10px 14px;
     cursor: pointer;
     transition: background 0.15s ease;
@@ -1775,13 +1777,20 @@
 }
 
 .prescricao-card-btn-delete {
+    background: none;
+    border: none;
     color: var(--color-error, #ef4444);
-    border-color: rgba(239, 68, 68, 0.3);
+    font-size: 1.1rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+    opacity: 0.6;
+    transition: all 0.2s ease;
 }
 
 .prescricao-card-btn-delete:hover {
-    background: rgba(239, 68, 68, 0.05);
-    border-color: var(--color-error, #ef4444);
+    opacity: 1;
+    transform: scale(1.1);
 }
 
 /* ============================================

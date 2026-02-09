@@ -118,7 +118,7 @@ export function isValidCRM(crm: string): boolean {
   if (!/^\d{7}-\d\/[A-Z]{2}$/.test(s)) return false;
   const uf = s.slice(-2);
   const VALID_UFS = [
-    'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
+    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
   ];
   return VALID_UFS.includes(uf);
 }
@@ -239,54 +239,19 @@ export function isValidDate(dateStr: string): boolean {
   return age >= 0 && age <= 130;
 }
 
-  /**
-   * Format and constrain a date input as DD/MM/YYYY while typing.
-   * It progressively enforces possible day and month values and clamps impossible dates
-   * (e.g., month > 12 becomes 12, day > 31 becomes 31, and respects month length + leap year when year is provided).
-   */
-  export function formatConstrainedDateInput(raw: string): string {
-    let digits = (raw || '').replace(/\D/g, '').slice(0, 8); // up to DDMMYYYY
-    // Day
-    let dd = digits.slice(0, 2);
-    if (dd.length === 1) {
-      if (parseInt(dd, 10) > 3) dd = '3';
-    } else if (dd.length === 2) {
-      const dNum = parseInt(dd, 10);
-      if (dNum === 0) dd = '01';
-      else if (dNum > 31) dd = '31';
-      else if (dd[0] === '3' && parseInt(dd[1], 10) > 1) dd = '31';
-    }
-
-    // Month
-    let mm = digits.slice(2, 4);
-    if (mm.length === 1) {
-      if (parseInt(mm, 10) > 1) mm = '1';
-    } else if (mm.length === 2) {
-      const mNum = parseInt(mm, 10);
-      if (mNum === 0) mm = '01';
-      else if (mNum > 12) mm = '12';
-    }
-
-    // Year
-    let yyyy = digits.slice(4, 8);
-    // When we have full month, apply month-specific max day (optionally leap year if year is complete)
-    if (dd.length === 2 && mm.length === 2) {
-      const dNum = parseInt(dd, 10);
-      const mNum = parseInt(mm, 10);
-      let isLeap = false;
-      if (yyyy.length === 4) {
-        const yNum = parseInt(yyyy, 10);
-        isLeap = (yNum % 4 === 0 && yNum % 100 !== 0) || (yNum % 400 === 0);
-      }
-      const daysInMonth = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][Math.max(0, mNum - 1)];
-      if (dNum > daysInMonth) dd = String(daysInMonth).padStart(2, '0');
-    }
-
-    let out = dd;
-    if (mm.length) out += '/' + mm;
-    if (yyyy.length) out += '/' + yyyy;
-    return out;
+/**
+ * Simple mask for DD/MM/YYYY
+ */
+export function formatConstrainedDateInput(raw: string): string {
+  const digits = (raw || '').replace(/\D/g, '').slice(0, 8);
+  if (digits.length >= 5) {
+    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
   }
+  if (digits.length >= 3) {
+    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}`;
+  }
+  return digits;
+}
 
 export default {
   isEmailFormatValid,

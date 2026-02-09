@@ -4,7 +4,7 @@ import './DadosPessoaisMedicoCard.css';
 import Input from '@/components/common/Inputs/Input';
 import Button from '@/components/common/Buttons/Button';
 import { useState } from 'react';
-import { isValidName, isValidCPF, isValidDate, isNotEmpty, isValidCRM } from '@/lib/validation/validators';
+import { isValidName, isValidCPF, isValidDate, isNotEmpty, isValidCRM, formatConstrainedDateInput } from '@/lib/validation/validators';
 
 export type DadosPessoaisMedico = {
   name: string;
@@ -125,10 +125,7 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
             placeholder="DD/MM/AAAA"
             value={birthDate}
             onChange={(e) => {
-              // format as DD/MM/YYYY while typing
-              let v = (e.target.value || '').replace(/\D/g, '').slice(0, 8);
-              if (v.length >= 5) v = v.replace(/(\d{2})(\d{2})(\d{1,4})/, '$1/$2/$3');
-              else if (v.length >= 3) v = v.replace(/(\d{2})(\d{1,2})/, '$1/$2');
+              const v = formatConstrainedDateInput(e.target.value || '');
               setBirthDate(v);
               setBirthDateError('');
             }}

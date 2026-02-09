@@ -9,7 +9,7 @@ import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
 import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta } from '@/lib/axios/consultas';
-import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas } from '@/lib/axios/prescricoes';
+import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas, getPrescricoesByConsulta, deletePrescricao, Prescricao as PrescricaoType } from '@/lib/axios/prescricoes';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
@@ -107,6 +107,8 @@ function AtendimentoInner() {
   // Estados para histórico de consultas
   const [historicoConsultas, setHistoricoConsultas] = useState<PSFullHistoryItem[]>([]);
   const [loadingHistorico, setLoadingHistorico] = useState(false);
+  const [activePrescricoes, setActivePrescricoes] = useState<PrescricaoType[]>([]);
+  const [loadingPrescricoes, setLoadingPrescricoes] = useState(false);
   const [consultaSelecionada, setConsultaSelecionada] = useState<PSFullHistoryItem | null>(null);
 
   // Estados para avaliação da consulta (paciente)
@@ -281,6 +283,24 @@ function AtendimentoInner() {
   };
 
   // Helper para toggle de accordions
+  useEffect(() => {
+    async function fetchPrescricoes() {
+      const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
+      if (cid && token && role === 'medico') {
+        setLoadingPrescricoes(true);
+        try {
+          const list = await getPrescricoesByConsulta(Number(cid), token);
+          setActivePrescricoes(list);
+        } catch (err) {
+          console.error('Erro ao buscar prescrições:', err);
+        } finally {
+          setLoadingPrescricoes(false);
+        }
+      }
+    }
+    fetchPrescricoes();
+  }, [consultaIdState, consultaId, token, role]);
+
   const toggleAccordion = (id: string) => {
     setOpenAccordions(prev => ({ ...prev, [id]: !prev[id] }));
   };
@@ -863,6 +883,10 @@ function AtendimentoInner() {
 
       modal.success('Prescrição Criada', 'A prescrição foi adicionada com sucesso.');
 
+      // Refresh list
+      const updatedList = await getPrescricoesByConsulta(Number(cid), token);
+      setActivePrescricoes(updatedList);
+
       // Limpar form
       setPrescricaoData({
         medicamento: '',
@@ -879,6 +903,25 @@ function AtendimentoInner() {
     } finally {
       setIsSubmittingPrescricao(false);
     }
+  }
+
+  async function handleDeletePrescricao(id: number) {
+    if (!token) return;
+
+    modal.confirm(
+      'Excluir Prescrição',
+      'Tem certeza que deseja excluir esta prescrição?',
+      async () => {
+        try {
+          await deletePrescricao(id, token);
+          setActivePrescricoes(prev => prev.filter(p => p.id !== id));
+          modal.success('Excluído', 'Prescrição removida com sucesso.');
+        } catch (err) {
+          console.error('Erro ao deletar prescrição:', err);
+          modal.error('Erro', 'Não foi possível excluir a prescrição.');
+        }
+      }
+    );
   }
 
   function cancelPrescricaoForm() {
@@ -920,8 +963,43 @@ function AtendimentoInner() {
             <div className="atendimento-container medico-layout">
               {/* Painel Esquerdo - Ficha de Atendimento */}
               <aside className="side-panel left-panel">
-                <div className="panel-header">Ficha de atendimento</div>
+                <div className="panel-header">Histórico e Chat</div>
                 <div className="panel-content">
+                  <Accordion
+                    id="chat"
+                    title={`Chat da consulta ${unreadMessages > 0 ? `(${unreadMessages})` : ''}`}
+                    isOpen={!!openAccordions['chat']}
+                    onToggle={toggleAccordion}
+                  >
+                    <div className="chat-panel">
+                      <div className="chat-body" style={{ height: '300px' }}>
+                        {messages.map((m, idx) => {
+                          let cls = 'chat-msg';
+                          if (m.author === 'Você') cls += ' me';
+                          else cls += ' patient';
+
+                          return (
+                            <div key={idx} className={cls}>
+                              <div className="chat-author">{m.author}</div>
+                              <div className="chat-bubble">{m.text}</div>
+                            </div>
+                          );
+                        })}
+                        <div ref={chatEndRef} />
+                      </div>
+                      <div className="chat-input" style={{ padding: '8px' }}>
+                        <input
+                          className="c-input"
+                          placeholder="Digite..."
+                          value={draft}
+                          onChange={(e) => setDraft(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
+                        />
+                        <Button variant="primary" onClick={sendMessage} style={{ padding: '6px 12px' }}>➤</Button>
+                      </div>
+                    </div>
+                  </Accordion>
+
                   <Accordion
                     id="historico-consultas"
                     title="Histórico de consultas"
@@ -940,44 +1018,17 @@ function AtendimentoInner() {
                               <div className="historico-item-date">
                                 📅 {formatDate(consulta.data_consulta || consulta.createdAt)}
                               </div>
-                              <div className="historico-item-status">
-                                Status: {consulta.status === 'finished' ? 'Finalizada' : consulta.status}
-                              </div>
                             </div>
                             <button
                               className="historico-item-button"
                               onClick={() => setConsultaSelecionada(consulta)}
                             >
-                              Ver Detalhes
+                              Ver
                             </button>
                           </div>
                         ))}
                       </div>
                     )}
-                  </Accordion>
-                  <Accordion
-                    id="historico-prescricoes"
-                    title="Histórico de prescrições"
-                    isOpen={!!openAccordions['historico-prescricoes']}
-                    onToggle={toggleAccordion}
-                  >
-                    <p className="accordion-placeholder">Nenhuma prescrição anterior registrada.</p>
-                  </Accordion>
-                  <Accordion
-                    id="prescricoes"
-                    title="Prescrições"
-                    isOpen={!!openAccordions['prescricoes']}
-                    onToggle={toggleAccordion}
-                  >
-                    <p className="accordion-placeholder">Adicione prescrições durante a consulta.</p>
-                  </Accordion>
-                  <Accordion
-                    id="notas"
-                    title="Notas"
-                    isOpen={!!openAccordions['notas']}
-                    onToggle={toggleAccordion}
-                  >
-                    <p className="accordion-placeholder">Adicione notas sobre o atendimento.</p>
                   </Accordion>
                 </div>
               </aside>
@@ -1105,9 +1156,15 @@ function AtendimentoInner() {
                         <svg viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23" /><path d="M9 9v3a3 3 0 0 0 5.12 2.12" /><path d="M15 9.34V5a3 3 0 0 0-5.94-.6" /><path d="M17 16.95A7 7 0 0 1 5 12v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>
                       )}
                     </button>
-                    <button className={`control-btn ${showChat ? 'active' : ''}`} aria-label={showChat ? "Fechar chat" : "Abrir chat"} onClick={() => setShowChat(prev => !prev)}>
+                    <button className={`control-btn ${showChat ? 'active' : ''}`} aria-label={showChat ? "Fechar chat" : "Abrir chat"} onClick={() => {
+                      if (role === 'medico') {
+                        setOpenAccordions(prev => ({ ...prev, chat: !prev.chat }));
+                      } else {
+                        setShowChat(prev => !prev);
+                      }
+                    }}>
                       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-                      {unreadMessages > 0 && !showChat && <span className="chat-notification-badge"></span>}
+                      {unreadMessages > 0 && !(role === 'medico' ? openAccordions['chat'] : showChat) && <span className="chat-notification-badge"></span>}
                     </button>
                     <button className="control-btn end" aria-label="Encerrar chamada" onClick={requestFinishCall}>
                       <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
@@ -1160,12 +1217,44 @@ function AtendimentoInner() {
                     title="Prescrições"
                     isOpen={!!openAccordions['prescricoes']}
                     onToggle={toggleAccordion}
+                    isFilled={activePrescricoes.length > 0}
                   >
+                    <div className="prescricoes-list" style={{ marginBottom: activePrescricoes.length > 0 ? '1rem' : '0' }}>
+                      {loadingPrescricoes ? (
+                        <p style={{ fontSize: '0.85rem', color: '#6b7280', textAlign: 'center' }}>Carregando...</p>
+                      ) : activePrescricoes.length === 0 ? (
+                        <p style={{ fontSize: '0.85rem', color: '#9ca3af', textAlign: 'center', fontStyle: 'italic' }}>Nenhuma prescrição adicionada.</p>
+                      ) : (
+                        activePrescricoes.map((p) => (
+                          <div key={p.id} className="prescricao-card">
+                            <div className="prescricao-card-header">
+                              <div>
+                                <div className="prescricao-card-medicamento">{p.medicamento}</div>
+                                {p.marca && <div className="prescricao-card-marca">{p.marca}</div>}
+                              </div>
+                              <button
+                                className="prescricao-card-btn-delete"
+                                onClick={() => handleDeletePrescricao(p.id)}
+                                title="Excluir"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                            <div className="prescricao-card-info">
+                              {p.dosagem} • {p.frequencia} • {p.duracao}
+                            </div>
+                            {p.inclusoConvenio && <div className="prescricao-card-badge">Convênio</div>}
+                          </div>
+                        ))
+                      )}
+                    </div>
+
                     <div className="prescricao-form">
                       {!showPrescricaoForm ? (
                         <button
                           className="prescricao-add-button"
                           onClick={() => setShowPrescricaoForm(true)}
+                          style={{ width: '100%' }}
                         >
                           <span>+</span> Nova Receita
                         </button>
@@ -1455,47 +1544,7 @@ function AtendimentoInner() {
               </aside>
             </div>
 
-            {/* Chat Modal para Médico */}
-            {showChat && (
-              <div className="chat-modal-overlay" onClick={() => setShowChat(false)}>
-                <div className="chat-modal" onClick={(e) => e.stopPropagation()}>
-                  <div className="chat-header">
-                    <span>Chat da consulta</span>
-                    <button className="chat-close-btn" onClick={() => setShowChat(false)} aria-label="Fechar chat">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="chat-body">
-                    {messages.map((m, idx) => {
-                      let cls = 'chat-msg';
-                      if (m.author === 'Você') cls += ' me';
-                      else cls += ' patient';
-
-                      return (
-                        <div key={idx} className={cls}>
-                          <div className="chat-author">{m.author}</div>
-                          <div className="chat-bubble">{m.text}</div>
-                        </div>
-                      );
-                    })}
-                    <div ref={chatEndRef} />
-                  </div>
-                  <div className="chat-input">
-                    <input
-                      className="c-input"
-                      placeholder="Digite sua mensagem..."
-                      value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
-                    />
-                    <Button variant="primary" onClick={sendMessage} aria-label="Enviar">➤</Button>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Chat Modal para Médico removido e integrado ao painel lateral */}
           </>
         ) : (
           /* LAYOUT PARA PACIENTE - Layout original com chat */
