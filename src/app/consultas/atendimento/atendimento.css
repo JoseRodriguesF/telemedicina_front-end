@@ -1219,9 +1219,8 @@
 }
 
 .historico-item:hover {
-    transform: translateY(-4px);
     border-color: var(--color-primary-300, #93c5fd);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+    background: var(--bg-secondary, #f9fafb);
 }
 
 .historico-item-avatar {
@@ -1276,8 +1275,7 @@
 
 .historico-item-button:hover {
     background: var(--color-primary-600, #2563eb);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 14px rgba(59, 130, 246, 0.35);
+    color: white;
 }
 
 .historico-item-button:active {

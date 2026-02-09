@@ -755,7 +755,27 @@ function AtendimentoInner() {
         // If 1 or fewer participants (myself or empty), close it.
         // Usually it includes myself before I leave.
         if (res.participants && res.participants.length <= 1) {
-          // Envia hora_fim ao finalizar
+          // 1. Salvar Prescrições Novas
+          const newPrescricoes = activePrescricoes.filter((p: any) => p.isNew);
+          if (newPrescricoes.length > 0) {
+            try {
+              await Promise.all(newPrescricoes.map(p =>
+                createPrescricao({
+                  consultaId: Number(cid),
+                  medicamento: p.medicamento,
+                  marca: p.marca || undefined,
+                  dosagem: p.dosagem,
+                  frequencia: p.frequencia,
+                  duracao: p.duracao,
+                  inclusoConvenio: p.inclusoConvenio
+                }, token)
+              ));
+            } catch (pErr) {
+              console.error('Erro ao salvar prescrições ao finalizar:', pErr);
+            }
+          }
+
+          // 2. Envia hora_fim ao finalizar
           const now = new Date();
           const hora_fim = now.toTimeString().slice(0, 8); // formato HH:MM:SS
           await endConsulta(cid, token, hora_fim, atendimentoData);
@@ -869,59 +889,57 @@ function AtendimentoInner() {
       return;
     }
 
-    setIsSubmittingPrescricao(true);
-    try {
-      await createPrescricao({
-        consultaId: Number(cid),
-        medicamento: prescricaoData.medicamento,
-        marca: prescricaoData.marca || undefined,
-        dosagem: prescricaoData.dosagem,
-        frequencia: prescricaoData.frequencia,
-        duracao: prescricaoData.duracao,
-        inclusoConvenio: prescricaoData.inclusoConvenio
-      }, token);
+    // Local push instead of API call
+    const newPrescricao: any = {
+      id: -Date.now(), // Temporary negative ID
+      medicamento: prescricaoData.medicamento,
+      marca: prescricaoData.marca || '',
+      dosagem: prescricaoData.dosagem,
+      frequencia: prescricaoData.frequencia || '',
+      duracao: prescricaoData.duracao || '',
+      inclusoConvenio: prescricaoData.inclusoConvenio,
+      isNew: true // Flag to save later
+    };
 
-      modal.success('Prescrição Criada', 'A prescrição foi adicionada com sucesso.');
+    setActivePrescricoes(prev => [...prev, newPrescricao]);
 
-      // Refresh list
-      const updatedList = await getPrescricoesByConsulta(Number(cid), token);
-      setActivePrescricoes(updatedList);
-
-      // Limpar form
-      setPrescricaoData({
-        medicamento: '',
-        marca: '',
-        dosagem: '',
-        frequencia: '',
-        duracao: '',
-        inclusoConvenio: false
-      });
-      setShowPrescricaoForm(false);
-    } catch (err) {
-      console.error('Erro ao criar prescrição:', err);
-      modal.error('Erro', 'Não foi possível criar a prescrição.');
-    } finally {
-      setIsSubmittingPrescricao(false);
-    }
+    // Limpar form
+    setPrescricaoData({
+      medicamento: '',
+      marca: '',
+      dosagem: '',
+      frequencia: '',
+      duracao: '',
+      inclusoConvenio: false
+    });
+    setShowPrescricaoForm(false);
+    modal.success('Prescrição Adicionada', 'A prescrição foi anexada à consulta localmente.');
   }
 
   async function handleDeletePrescricao(id: number) {
-    if (!token) return;
+    const pToDelete = activePrescricoes.find(p => p.id === id);
+    if (!pToDelete) return;
 
-    modal.confirm(
-      'Excluir Prescrição',
-      'Tem certeza que deseja excluir esta prescrição?',
-      async () => {
-        try {
+    const performDelete = async () => {
+      try {
+        if (id > 0 && token) {
+          // If it's a real prescription (positive ID), delete from DB
           await deletePrescricao(id, token);
-          setActivePrescricoes(prev => prev.filter(p => p.id !== id));
-          modal.success('Excluído', 'Prescrição removida com sucesso.');
-        } catch (err) {
-          console.error('Erro ao deletar prescrição:', err);
-          modal.error('Erro', 'Não foi possível excluir a prescrição.');
         }
+        // Always remove from local list
+        setActivePrescricoes(prev => prev.filter(p => p.id !== id));
+        modal.success('Excluído', 'Prescrição removida.');
+      } catch (err) {
+        console.error('Erro ao deletar prescrição:', err);
+        modal.error('Erro', 'Não foi possível excluir a prescrição.');
       }
-    );
+    };
+
+    if (id > 0) {
+      modal.confirm('Excluir Prescrição', 'Tem certeza que deseja excluir esta prescrição permanentemente do banco?', performDelete);
+    } else {
+      performDelete();
+    }
   }
 
   function cancelPrescricaoForm() {
@@ -979,7 +997,9 @@ function AtendimentoInner() {
                       <div className="historico-list">
                         {historicoConsultas.map((consulta) => (
                           <div key={consulta.id} className="historico-item">
-                            <div className="historico-item-avatar">👤</div>
+                            <div className="historico-item-avatar">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                            </div>
                             <div className="historico-item-info">
                               <div className="historico-item-date">
                                 📅 {formatDate(consulta.data_consulta || consulta.createdAt)}
