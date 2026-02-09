@@ -26,9 +26,7 @@
 	/* Reduced padding slightly */
 	margin-left: 112px;
 	/* Adjusted to fit the new sidebar + gap */
-	max-width: min(1400px, 100%);
-	/* Permite encolhimento em zoom reduzido */
-	width: 100%;
+	max-width: 1400px;
 	display: flex;
 	flex-direction: column;
 	gap: 1rem;
