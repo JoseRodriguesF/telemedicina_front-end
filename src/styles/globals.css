@@ -213,8 +213,12 @@ html {
 	-webkit-text-size-adjust: 100%;
 	text-size-adjust: 100%;
 	overflow-x: hidden;
-	/* Base font-size que escala com zoom */
-	font-size: 16px;
+	/* 
+	 * CRÍTICO: font-size em % permite que todo o layout escale com zoom do navegador
+	 * 100% = 16px em 100% de zoom, mas escala proporcionalmente em outros zooms
+	 * Todos os rem são relativos a este valor
+	 */
+	font-size: 100%;
 }
 
 html,
