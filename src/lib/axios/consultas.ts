@@ -79,12 +79,7 @@ export type ConsultaAgendada = {
     id: number;
     nome_completo: string;
   };
-  historiaClinica?: Array<{
-    id: number;
-    queixaPrincipal: string;
-    descricaoSintomas?: string;
-    [key: string]: any;
-  }>;
+  historiaClinica?: HistoriaClinicaItem[];
 };
 
 export async function getConsultasAgendadas(token: string): Promise<ConsultaAgendada[]> {
@@ -155,13 +150,7 @@ export type ConsultaDetails = {
     telefone: string;
     // outros campos se necessário
   };
-  historiaClinica?: {
-    queixaPrincipal?: string;
-    sintomas?: string;
-    tempoSintomas?: string;
-    historico?: string;
-    [key: string]: any;
-  };
+  historiaClinica?: Partial<HistoriaClinicaDetails>;
 };
 
 export async function getConsulta(consultaId: string, token: string): Promise<ConsultaDetails> {
@@ -216,14 +205,22 @@ export async function listParticipants(consultaId: string, token: string): Promi
   }
 }
 
+export type EndConsultaData = {
+  repouso?: string;
+  destino_final?: string;
+  diagnostico?: string;
+  evolucao?: string;
+  plano_terapeutico?: string;
+};
+
 export async function endConsulta(
   consultaId: string,
   token: string,
   hora_fim?: string,
-  data?: { repouso?: string; destino_final?: string; diagnostico?: string; evolucao?: string; plano_terapeutico?: string }
+  data?: EndConsultaData
 ): Promise<{ ok: boolean }> {
   try {
-    const body: Record<string, any> = {};
+    const body: Partial<EndConsultaData & { hora_fim: string }> = {};
     if (hora_fim) body.hora_fim = hora_fim;
     if (data) Object.assign(body, data);
     const res = await axios.post(`/api/consultas/${consultaId}/end`, body, { headers: { Authorization: `Bearer ${token}` } });
@@ -241,12 +238,7 @@ export type PSFilaItem = {
   roomId?: string;
   createdAt: string;
   status: ConsultaStatus;
-  historiaClinica?: Array<{
-    id: number;
-    queixaPrincipal: string; // From backend: queixa_principal if mapped, but prisma returns it as defined in schema
-    descricaoSintomas?: string;
-    [key: string]: any;
-  }>;
+  historiaClinica?: HistoriaClinicaItem[];
 };
 
 export type PSRoomResponse = {
@@ -255,17 +247,19 @@ export type PSRoomResponse = {
   iceServers: IceServer[];
 };
 
+export type PSCreateRoomOptions = {
+  data_consulta?: string;
+  hora_inicio?: string;
+  hora_fim?: string;
+  historiaClinicaId?: number;
+};
+
 export async function psCreateRoom(
   token: string,
-  options?: {
-    data_consulta?: string;
-    hora_inicio?: string;
-    hora_fim?: string;
-    historiaClinicaId?: number;
-  }
+  options?: PSCreateRoomOptions
 ): Promise<PSRoomResponse> {
   try {
-    const body: Record<string, any> = {};
+    const body: Partial<PSCreateRoomOptions> = {};
     if (options?.data_consulta) body.data_consulta = options.data_consulta;
     if (options?.hora_inicio) body.hora_inicio = options.hora_inicio;
     if (options?.hora_fim) body.hora_fim = options.hora_fim;
@@ -318,6 +312,12 @@ export async function psListActiveRooms(token: string, userId?: string): Promise
 }
 
 // História Clínica
+export type HistoriaClinicaItem = {
+  id: number;
+  queixaPrincipal: string;
+  descricaoSintomas?: string;
+};
+
 export type HistoriaClinicaDetails = {
   id: number;
   queixaPrincipal?: string;

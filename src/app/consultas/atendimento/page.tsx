@@ -124,7 +124,7 @@ function AtendimentoInner() {
         try {
           const data = await getConsulta(consultaId, token);
           if (!data.medicoId) {
-            console.log('[Atendimento] Sem médico atribuído. Redirecionando para espera.');
+
             router.replace(`/consultas/aguardando?id=${consultaId}`);
           } else {
             setConsultaDetails(data);
@@ -144,9 +144,9 @@ function AtendimentoInner() {
       if (!curCid || !token || user?.tipo_usuario !== 'medico') return;
 
       try {
-        console.log('[AtendimentoInner] Buscando dados do paciente, consultaId:', curCid);
+
         const data = await getConsulta(curCid, token);
-        console.log('[AtendimentoInner] Dados do paciente recebidos:', data);
+
         setConsultaDetails(data);
       } catch (err) {
         console.error('[AtendimentoInner] Erro ao buscar detalhes da consulta:', err);
@@ -163,10 +163,10 @@ function AtendimentoInner() {
         const pacienteId = consultaDetails.pacienteId;
         if (pacienteId) {
           try {
-            console.log('[AtendimentoInner] Buscando histórico do paciente:', pacienteId);
+
             setLoadingHistorico(true);
             const historico = await getHistoricoConsultasPaciente(pacienteId, token);
-            console.log('[AtendimentoInner] Histórico recebido:', historico);
+
             setHistoricoConsultas(historico);
           } catch (err) {
             console.error('[AtendimentoInner] Erro ao buscar histórico:', err);
@@ -473,7 +473,7 @@ function AtendimentoInner() {
       if (!offeringInitiatedRef.current && sessionRef.current) {
         offeringInitiatedRef.current = true;
         try {
-          console.log('[UI] Iniciando oferta para o outro par...');
+
           await sessionRef.current.createAndSendOffer();
         } catch (err) {
           console.error('[UI] ❌ Erro ao enviar oferta:', err);
@@ -514,7 +514,7 @@ function AtendimentoInner() {
       try {
         const data = await getConsulta(cid, token);
         if (!data.medicoId) {
-          console.log('[Atendimento] Redirecionando para aguardando: médico ainda não aceitou.');
+
           router.replace(`/consultas/aguardando?id=${cid}`);
           return;
         }
@@ -653,7 +653,7 @@ function AtendimentoInner() {
       // Failsafe: se nada aconteceu em 5 segundos, tenta forçar
       setTimeout(() => {
         if (role === 'medico' && !offeringInitiatedRef.current && isLocalReadyRef.current) {
-          console.log('[UI] Failsafe: Forçando sinal de pronto e nova tentativa de oferta.');
+
           hasReadySignalRef.current = true;
           checkAndInitiateOffering();
         }

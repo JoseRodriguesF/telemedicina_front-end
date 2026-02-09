@@ -71,8 +71,7 @@ export function useConsultationTimer(dateStr: string, timeStr: string) {
                 }
 
                 return new Date(dateTimeStr);
-            } catch (e) {
-                console.error('Erro ao processar data no Timer:', e);
+            } catch {
                 return null;
             }
         };
@@ -93,15 +92,7 @@ export function useConsultationTimer(dateStr: string, timeStr: string) {
             // Minutos até o inicio
             const minutesUntilStart = diffMs / (1000 * 60);
 
-            // Debug: Log para verificar valores
-            console.log('🔍 Timer Debug:', {
-                dateStr,
-                timeStr,
-                targetDate: targetDate.toISOString(),
-                now: now.toISOString(),
-                minutesUntilStart: minutesUntilStart.toFixed(2),
-                diffMs
-            });
+
 
             // A sala abre 5 minutos antes
             const UNLOCK_MINUTES = 5;
