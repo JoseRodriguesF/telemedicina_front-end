@@ -1076,7 +1076,7 @@ function AtendimentoInner() {
                               </button>
                             </div>
                             <div className="prescricao-card-info">
-                              {[p.dosagem, p.frequencia, p.duracao].filter(Boolean).join(' • ')}
+                              {p.dosagem}
                             </div>
                             {p.inclusoConvenio && <div className="prescricao-card-badge">Convênio</div>}
                           </div>
@@ -1162,35 +1162,13 @@ function AtendimentoInner() {
                           </div>
 
                           <div className="prescricao-input-wrapper">
-                            <label className="prescricao-input-label">Dosagem *</label>
+                            <label className="prescricao-input-label">Posologia *</label>
                             <input
                               type="text"
                               className="prescricao-input"
-                              placeholder="Ex: 1 comprimido, 500mg, 10ml..."
+                              placeholder="Dose, frequência e duração (Ex: 1 comprimido 8/8h por 7 dias)"
                               value={prescricaoData.dosagem}
                               onChange={(e) => setPrescricaoData(prev => ({ ...prev, dosagem: e.target.value }))}
-                            />
-                          </div>
-
-                          <div className="prescricao-input-wrapper">
-                            <label className="prescricao-input-label">Frequência</label>
-                            <input
-                              type="text"
-                              className="prescricao-input"
-                              placeholder="Ex: de 8 em 8 horas, 1x ao dia..."
-                              value={prescricaoData.frequencia}
-                              onChange={(e) => setPrescricaoData(prev => ({ ...prev, frequencia: e.target.value }))}
-                            />
-                          </div>
-
-                          <div className="prescricao-input-wrapper">
-                            <label className="prescricao-input-label">Duração</label>
-                            <input
-                              type="text"
-                              className="prescricao-input"
-                              placeholder="Ex: por 7 dias, uso contínuo..."
-                              value={prescricaoData.duracao}
-                              onChange={(e) => setPrescricaoData(prev => ({ ...prev, duracao: e.target.value }))}
                             />
                           </div>
 
@@ -1221,14 +1199,30 @@ function AtendimentoInner() {
                     isOpen={!!openAccordions['notas']}
                     onToggle={toggleAccordion}
                   >
-                    <div className="notas-container" style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div className="notas-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {pacienteNotas && (
+                        <div className="stored-notes" style={{
+                          fontSize: '0.85rem',
+                          color: 'var(--text-secondary)',
+                          padding: '8px',
+                          background: 'var(--bg-secondary)',
+                          borderRadius: '8px',
+                          border: '1px solid var(--border-color)',
+                          maxHeight: '100px',
+                          overflowY: 'auto',
+                          marginBottom: '4px'
+                        }}>
+                          <strong>Notas armazenadas:</strong>
+                          <p style={{ marginTop: '4px', whiteSpace: 'pre-wrap' }}>{pacienteNotas}</p>
+                        </div>
+                      )}
                       <textarea
                         className="atendimento-textarea"
-                        placeholder="Notas exclusivas do médico sobre este paciente (visíveis apenas para médicos)..."
+                        placeholder="Adicionar ou editar notas..."
                         value={pacienteNotas}
                         onChange={(e) => setPacienteNotas(e.target.value)}
-                        rows={6}
-                        style={{ minHeight: '150px', marginBottom: '12px', width: '100%' }}
+                        rows={3}
+                        style={{ minHeight: '80px', width: '100%' }}
                       />
                       <button
                         className="prescricao-btn prescricao-btn-submit"
@@ -1236,7 +1230,7 @@ function AtendimentoInner() {
                         disabled={isSavingNotas}
                         style={{ width: '100%' }}
                       >
-                        {isSavingNotas ? 'Salvando...' : 'Salvar Notas'}
+                        {isSavingNotas ? 'Salvando...' : 'Atualizar Notas'}
                       </button>
                     </div>
                   </Accordion>
