@@ -138,6 +138,7 @@ function AtendimentoInner() {
   const [isSubmittingPrescricao, setIsSubmittingPrescricao] = useState(false);
   const [pacienteNotas, setPacienteNotas] = useState('');
   const [isSavingNotas, setIsSavingNotas] = useState(false);
+  const [isEditingNotas, setIsEditingNotas] = useState(false);
 
   const isScheduled = search.get('scheduled') === 'true';
 
@@ -929,6 +930,7 @@ function AtendimentoInner() {
     try {
       await updatePacienteNotas(curCid, token, pacienteNotas);
       modal.success('Sucesso', 'Notas do paciente atualizadas.');
+      setIsEditingNotas(false);
     } catch (err) {
       console.error('Erro ao salvar notas:', err);
       modal.error('Erro', 'Não foi possível salvar as notas.');
@@ -1200,22 +1202,65 @@ function AtendimentoInner() {
                     onToggle={toggleAccordion}
                   >
                     <div className="notas-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <textarea
-                        className="atendimento-textarea"
-                        placeholder="Notas exclusivas do médico sobre este paciente (visíveis apenas para médicos)..."
-                        value={pacienteNotas}
-                        onChange={(e) => setPacienteNotas(e.target.value)}
-                        rows={pacienteNotas ? 6 : 3}
-                        style={{ minHeight: pacienteNotas ? '150px' : '80px', width: '100%' }}
-                      />
-                      <button
-                        className="prescricao-btn prescricao-btn-submit"
-                        onClick={handleSaveNotas}
-                        disabled={isSavingNotas}
-                        style={{ width: '100%' }}
-                      >
-                        {isSavingNotas ? 'Salvando...' : (pacienteNotas ? 'Atualizar Notas' : 'Salvar Notas')}
-                      </button>
+                      {!isEditingNotas ? (
+                        <>
+                          {pacienteNotas ? (
+                            <div className="prescricao-card" style={{ marginBottom: '8px' }}>
+                              <div className="prescricao-card-header">
+                                <div className="prescricao-card-medicamento">Notas do Paciente</div>
+                              </div>
+                              <div className="prescricao-card-info" style={{ whiteSpace: 'pre-wrap' }}>
+                                {pacienteNotas}
+                              </div>
+                              <button
+                                className="prescricao-add-button"
+                                onClick={() => setIsEditingNotas(true)}
+                                style={{ marginTop: '12px', width: '100%', fontSize: '0.8rem', padding: '6px' }}
+                              >
+                                Editar Notas
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              className="prescricao-add-button"
+                              onClick={() => setIsEditingNotas(true)}
+                              style={{ width: '100%' }}
+                            >
+                              <span>+</span> Adicionar Notas
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <textarea
+                            className="atendimento-textarea"
+                            placeholder="Notas exclusivas do médico sobre este paciente..."
+                            value={pacienteNotas}
+                            onChange={(e) => setPacienteNotas(e.target.value)}
+                            rows={6}
+                            style={{ minHeight: '150px', width: '100%' }}
+                            autoFocus
+                          />
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              className="prescricao-btn prescricao-btn-cancel"
+                              onClick={() => setIsEditingNotas(false)}
+                              disabled={isSavingNotas}
+                              style={{ flex: 1 }}
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              className="prescricao-btn prescricao-btn-submit"
+                              onClick={handleSaveNotas}
+                              disabled={isSavingNotas}
+                              style={{ flex: 2 }}
+                            >
+                              {isSavingNotas ? 'Salvando...' : 'Salvar Notas'}
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </Accordion>
                 </div>
