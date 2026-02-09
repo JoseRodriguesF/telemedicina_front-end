@@ -1207,45 +1207,49 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px;
-    background: var(--bg-primary, #ffffff);
-    border: 1px solid var(--border-color, #e5e7eb);
-    border-radius: 12px;
-    transition: all 0.2s ease;
+    padding: 14px;
+    background: var(--card-bg, #ffffff);
+    border: 1px solid var(--card-border, #e5e7eb);
+    border-radius: 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: default;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
 .historico-item:hover {
-    background: var(--bg-secondary, #f9fafb);
+    transform: translateY(-4px);
     border-color: var(--color-primary-300, #93c5fd);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
 }
 
 .historico-item-avatar {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    background: #3b82f6;
-    /* Blue background */
-    color: white;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    background: var(--color-primary-50, #eff6ff);
+    color: var(--color-primary-600, #2563eb);
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
-    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+    font-size: 1.2rem;
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="dark"] .historico-item-avatar {
+    background: rgba(37, 99, 235, 0.15);
+    color: #60a5fa;
 }
 
 .historico-item-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
 }
 
 .historico-item-date {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: var(--text-primary);
 }
@@ -1253,25 +1257,32 @@
 .historico-item-status {
     font-size: 0.75rem;
     color: var(--text-tertiary);
-    font-weight: 500;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
 }
 
 .historico-item-button {
-    padding: 6px 12px;
-    background: var(--bg-secondary);
-    color: var(--color-primary-600);
-    border: 1px solid var(--color-primary-100);
+    padding: 8px 16px;
+    background: var(--color-primary-500, #3b82f6);
+    color: white;
+    border: none;
     border-radius: 8px;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
 }
 
 .historico-item-button:hover {
-    background: var(--color-primary-600);
-    color: white;
-    border-color: var(--color-primary-600);
+    background: var(--color-primary-600, #2563eb);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(59, 130, 246, 0.35);
+}
+
+.historico-item-button:active {
+    transform: scale(0.95);
 }
 
 /* ============================================
