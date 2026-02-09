@@ -9,6 +9,7 @@ import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
 import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta } from '@/lib/axios/consultas';
+import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas } from '@/lib/axios/prescricoes';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
@@ -113,6 +114,26 @@ function AtendimentoInner() {
   const [ratingStars, setRatingStars] = useState(0);
   const [ratingJustification, setRatingJustification] = useState('');
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+
+  // Estados para mensagens não lidas no chat
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const lastMessageCountRef = useRef(0);
+
+  // Estados para prescrições
+  const [showPrescricaoForm, setShowPrescricaoForm] = useState(false);
+  const [prescricaoData, setPrescricaoData] = useState({
+    medicamento: '',
+    marca: '',
+    dosagem: '',
+    frequencia: '',
+    duracao: '',
+    inclusoConvenio: false
+  });
+  const [medicamentoSugestoes, setMedicamentoSugestoes] = useState<string[]>([]);
+  const [marcaSugestoes, setMarcaSugestoes] = useState<string[]>([]);
+  const [showMedicamentoSugestoes, setShowMedicamentoSugestoes] = useState(false);
+  const [showMarcaSugestoes, setShowMarcaSugestoes] = useState(false);
+  const [isSubmittingPrescricao, setIsSubmittingPrescricao] = useState(false);
 
   const isScheduled = search.get('scheduled') === 'true';
 
@@ -773,6 +794,105 @@ function AtendimentoInner() {
     }
   }
 
+  // Detectar mensagens não lidas quando o chat está fechado
+  useEffect(() => {
+    if (!showChat && messages.length > lastMessageCountRef.current) {
+      setUnreadMessages(messages.length - lastMessageCountRef.current);
+    } else if (showChat) {
+      setUnreadMessages(0);
+      lastMessageCountRef.current = messages.length;
+    }
+  }, [messages, showChat]);
+
+  // Funções de Prescrição
+  async function handleMedicamentoChange(value: string) {
+    setPrescricaoData(prev => ({ ...prev, medicamento: value }));
+
+    if (value.length >= 2 && token) {
+      try {
+        const sugestoes = await getSugestoesMedicamentos(value, token);
+        setMedicamentoSugestoes(sugestoes);
+        setShowMedicamentoSugestoes(true);
+      } catch (err) {
+        console.error('Erro ao buscar sugestões de medicamentos:', err);
+      }
+    } else {
+      setShowMedicamentoSugestoes(false);
+    }
+  }
+
+  async function handleMarcaChange(value: string) {
+    setPrescricaoData(prev => ({ ...prev, marca: value }));
+
+    if (value.length >= 1 && token) {
+      try {
+        const sugestoes = await getSugestoesMarcas(value, token);
+        setMarcaSugestoes(sugestoes);
+        setShowMarcaSugestoes(true);
+      } catch (err) {
+        console.error('Erro ao buscar sugestões de marcas:', err);
+      }
+    } else {
+      setShowMarcaSugestoes(false);
+    }
+  }
+
+  async function handleSubmitPrescricao() {
+    if (!prescricaoData.medicamento || !prescricaoData.dosagem || !prescricaoData.frequencia || !prescricaoData.duracao) {
+      modal.error('Campos Obrigatórios', 'Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
+    if (!cid || !token) {
+      modal.error('Erro', 'Consulta não encontrada.');
+      return;
+    }
+
+    setIsSubmittingPrescricao(true);
+    try {
+      await createPrescricao({
+        consultaId: Number(cid),
+        medicamento: prescricaoData.medicamento,
+        marca: prescricaoData.marca || undefined,
+        dosagem: prescricaoData.dosagem,
+        frequencia: prescricaoData.frequencia,
+        duracao: prescricaoData.duracao,
+        inclusoConvenio: prescricaoData.inclusoConvenio
+      }, token);
+
+      modal.success('Prescrição Criada', 'A prescrição foi adicionada com sucesso.');
+
+      // Limpar form
+      setPrescricaoData({
+        medicamento: '',
+        marca: '',
+        dosagem: '',
+        frequencia: '',
+        duracao: '',
+        inclusoConvenio: false
+      });
+      setShowPrescricaoForm(false);
+    } catch (err) {
+      console.error('Erro ao criar prescrição:', err);
+      modal.error('Erro', 'Não foi possível criar a prescrição.');
+    } finally {
+      setIsSubmittingPrescricao(false);
+    }
+  }
+
+  function cancelPrescricaoForm() {
+    setPrescricaoData({
+      medicamento: '',
+      marca: '',
+      dosagem: '',
+      frequencia: '',
+      duracao: '',
+      inclusoConvenio: false
+    });
+    setShowPrescricaoForm(false);
+  }
+
   // Determine status color:
   // Red: default / disconnected / failed / error
   // Yellow: connecting / local media ready but !remoteConnected
@@ -987,6 +1107,7 @@ function AtendimentoInner() {
                     </button>
                     <button className={`control-btn ${showChat ? 'active' : ''}`} aria-label={showChat ? "Fechar chat" : "Abrir chat"} onClick={() => setShowChat(prev => !prev)}>
                       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                      {unreadMessages > 0 && !showChat && <span className="chat-notification-badge"></span>}
                     </button>
                     <button className="control-btn end" aria-label="Encerrar chamada" onClick={requestFinishCall}>
                       <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
@@ -1034,6 +1155,128 @@ function AtendimentoInner() {
                 </div>
                 <div className="panel-header">Ficha de atendimento</div>
                 <div className="panel-content">
+                  <Accordion
+                    id="prescricoes"
+                    title="Prescrições"
+                    isOpen={!!openAccordions['prescricoes']}
+                    onToggle={toggleAccordion}
+                  >
+                    <div className="prescricao-form">
+                      {!showPrescricaoForm ? (
+                        <button
+                          className="prescricao-add-button"
+                          onClick={() => setShowPrescricaoForm(true)}
+                        >
+                          <span>+</span> Nova Receita
+                        </button>
+                      ) : (
+                        <div className="prescricao-form-inputs">
+                          <div className="prescricao-checkbox-wrapper">
+                            <input
+                              type="checkbox"
+                              id="incluso-convenio"
+                              checked={prescricaoData.inclusoConvenio}
+                              onChange={(e) => setPrescricaoData(prev => ({ ...prev, inclusoConvenio: e.target.checked }))}
+                            />
+                            <label htmlFor="incluso-convenio">Incluso no convênio</label>
+                          </div>
+
+                          <div className="prescricao-input-wrapper">
+                            <label className="prescricao-input-label">Medicamento *</label>
+                            <input
+                              type="text"
+                              className="prescricao-input"
+                              placeholder="Digite o nome do medicamento..."
+                              value={prescricaoData.medicamento}
+                              onChange={(e) => handleMedicamentoChange(e.target.value)}
+                              onBlur={() => setTimeout(() => setShowMedicamentoSugestoes(false), 200)}
+                            />
+                            {showMedicamentoSugestoes && medicamentoSugestoes.length > 0 && (
+                              <div className="prescricao-suggestions">
+                                {medicamentoSugestoes.map((sugestao, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="prescricao-suggestions-item"
+                                    onClick={() => {
+                                      setPrescricaoData(prev => ({ ...prev, medicamento: sugestao }));
+                                      setShowMedicamentoSugestoes(false);
+                                    }}
+                                  >
+                                    {sugestao}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="prescricao-input-wrapper">
+                            <label className="prescricao-input-label">Marca</label>
+                            <input
+                              type="text"
+                              className="prescricao-input"
+                              placeholder="Digite a marca (opcional)..."
+                              value={prescricaoData.marca}
+                              onChange={(e) => handleMarcaChange(e.target.value)}
+                              onBlur={() => setTimeout(() => setShowMarcaSugestoes(false), 200)}
+                            />
+                            {showMarcaSugestoes && marcaSugestoes.length > 0 && (
+                              <div className="prescricao-suggestions">
+                                {marcaSugestoes.map((sugestao, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="prescricao-suggestions-item"
+                                    onClick={() => {
+                                      setPrescricaoData(prev => ({ ...prev, marca: sugestao }));
+                                      setShowMarcaSugestoes(false);
+                                    }}
+                                  >
+                                    {sugestao}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="prescricao-input-wrapper">
+                            <label className="prescricao-input-label">Doses, Frequência e Duração *</label>
+                            <textarea
+                              className="atendimento-textarea"
+                              placeholder="Ex: 1 comprimido de 8 em 8 horas por 7 dias"
+                              value={`${prescricaoData.dosagem}${prescricaoData.frequencia ? '\n' + prescricaoData.frequencia : ''}${prescricaoData.duracao ? '\n' + prescricaoData.duracao : ''}`}
+                              onChange={(e) => {
+                                const lines = e.target.value.split('\n');
+                                setPrescricaoData(prev => ({
+                                  ...prev,
+                                  dosagem: lines[0] || '',
+                                  frequencia: lines[1] || '',
+                                  duracao: lines[2] || ''
+                                }));
+                              }}
+                              rows={3}
+                              style={{ minHeight: '80px', maxHeight: '120px' }}
+                            />
+                          </div>
+
+                          <div className="prescricao-form-actions">
+                            <button
+                              className="prescricao-btn prescricao-btn-cancel"
+                              onClick={cancelPrescricaoForm}
+                              disabled={isSubmittingPrescricao}
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              className="prescricao-btn prescricao-btn-submit"
+                              onClick={handleSubmitPrescricao}
+                              disabled={isSubmittingPrescricao || !prescricaoData.medicamento || !prescricaoData.dosagem}
+                            >
+                              {isSubmittingPrescricao ? 'Salvando...' : 'Agregar'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </Accordion>
                   <Accordion
                     id="evolucao"
                     title="Evolução"

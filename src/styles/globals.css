@@ -211,7 +211,14 @@
 html {
 	scroll-behavior: smooth;
 	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
 	overflow-x: hidden;
+	/* 
+	 * CRÍTICO: font-size em % permite que todo o layout escale com zoom do navegador
+	 * 100% = 16px em 100% de zoom, mas escala proporcionalmente em outros zooms
+	 * Todos os rem são relativos a este valor
+	 */
+	font-size: 100%;
 }
 
 html,
@@ -630,4 +637,110 @@ textarea {
 .btn-ghost:hover {
 	background-color: var(--bg-tertiary);
 	transform: translateY(-1px);
+}
+
+/* ============================================
+   ZOOM RESPONSIVENESS
+   ============================================ */
+
+/* Garante que o body e containers principais respondam ao zoom */
+body {
+	/* Removido zoom: 1 para permitir escalamento proporcional */
+	min-width: 0;
+}
+
+/* Containers principais devem usar max-width com % para responder ao zoom */
+.inicio-main,
+.dashboard-main,
+.page-container,
+main {
+	width: 100%;
+	max-width: 100%;
+	overflow-x: auto;
+	min-width: 0;
+}
+
+/* Garante que grids e flexbox respondam ao zoom */
+.dashboard-grid,
+.grid,
+.flex-container {
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+}
+
+/* Elementos com largura fixa devem ter max-width: 100% para não quebrar em zoom alto */
+.modal-content,
+.card,
+.form-container {
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+/* Imagens e mídia devem escalar com zoom */
+img,
+video,
+iframe {
+	max-width: 100%;
+	height: auto;
+}
+
+/* Texto deve ser legível em qualquer zoom */
+p,
+span,
+div,
+a,
+button,
+input,
+textarea,
+select {
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+}
+
+/* Ajusta padding em zoom reduzido */
+@media (max-width: 1920px) {
+
+	.inicio-main,
+	.dashboard-main,
+	main {
+		padding-left: clamp(0.5rem, 2vw, 2rem);
+		padding-right: clamp(0.5rem, 2vw, 2rem);
+	}
+}
+
+/* Ajusta grids em zoom reduzido */
+@media (max-width: 1200px) {
+	.dashboard-grid {
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+	}
+}
+
+/* Força escalamento proporcional em zoom reduzido */
+@media (max-width: 900px) {
+
+	.inicio-main,
+	.dashboard-main {
+		max-width: 100%;
+	}
+
+	.dashboard-grid {
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+		gap: 0.75rem;
+	}
+}
+
+/* Ajusta elementos com largura fixa para respeitarem o viewport */
+.inicio-page,
+.page-wrapper,
+[class*="-page"] {
+	width: 100%;
+	max-width: 100vw;
+	overflow-x: hidden;
+}
+
+/* Garante que nenhum elemento ultrapasse o viewport em zoom reduzido */
+* {
+	min-width: 0;
+	min-height: 0;
 }

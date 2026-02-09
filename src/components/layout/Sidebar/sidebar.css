@@ -1,9 +1,11 @@
 .inicio-sidebar {
   position: fixed;
-  left: 1rem;
-  top: 1rem;
-  bottom: 1rem;
-  width: 80px;
+  left: clamp(0.5rem, 1vw, 1rem);
+  /* Margem escalável */
+  top: clamp(0.5rem, 1vw, 1rem);
+  bottom: clamp(0.5rem, 1vw, 1rem);
+  width: clamp(70px, 5rem, 80px);
+  /* 80px = 5rem, escalável */
   background: var(--card-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -11,7 +13,8 @@
   border-radius: var(--radius-2xl);
   display: flex;
   flex-direction: column;
-  padding: 1.5rem 0.75rem;
+  padding: clamp(1rem, 2.2vw, 1.5rem) clamp(0.6rem, 1vw, 0.75rem);
+  /* Padding escalável */
   box-shadow: var(--shadow-xl);
   z-index: 1000;
   transition: all var(--transition-base);
@@ -25,8 +28,9 @@
 }
 
 .logo-inner {
-  width: 48px;
-  height: 48px;
+  width: clamp(42px, 3rem, 48px);
+  /* 48px = 3rem, escalável */
+  height: clamp(42px, 3rem, 48px);
   background: var(--gradient-primary);
   border-radius: var(--radius-xl);
   display: flex;
@@ -132,15 +136,17 @@
 .tool-btn {
   background: transparent;
   border: none;
-  width: 44px;
-  height: 44px;
+  width: clamp(38px, 2.75rem, 44px);
+  /* 44px = 2.75rem, escalável */
+  height: clamp(38px, 2.75rem, 44px);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--transition-fast);
-  font-size: 1.25rem;
+  font-size: clamp(1.1rem, 1.8vw, 1.25rem);
+  /* Fonte escalável */
 }
 
 .tool-btn:hover {
@@ -172,8 +178,9 @@
 }
 
 .user-avatar {
-  width: 48px;
-  height: 48px;
+  width: clamp(42px, 3rem, 48px);
+  /* 48px = 3rem, escalável */
+  height: clamp(42px, 3rem, 48px);
   border-radius: var(--radius-full);
   overflow: hidden;
   border: 2px solid var(--border-color);
