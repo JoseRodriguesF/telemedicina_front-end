@@ -12,6 +12,7 @@ import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate } from '@/lib/utils/dateFormatters';
 import AddressAutocomplete from '@/components/common/Inputs/AddressAutocomplete';
+import ContentModal from '@/components/common/Modal/ContentModal';
 
 export default function PerfilPage() {
   const router = useRouter();
@@ -22,6 +23,10 @@ export default function PerfilPage() {
   // States for Editing
   const [editData, setEditData] = useState<any>({});
   const [isEditing, setIsEditing] = useState(false);
+
+  // States for Document Viewer
+  const [documentViewerOpen, setDocumentViewerOpen] = useState(false);
+  const [currentDocument, setCurrentDocument] = useState<{ title: string; url: string } | null>(null);
 
   useEffect(() => {
     fetchProfile();
@@ -67,6 +72,15 @@ export default function PerfilPage() {
       }
     });
     setIsEditing(true);
+  };
+
+  const handleDocumentView = (title: string, url: string) => {
+    if (!url) {
+      modal.error('Documento não disponível', 'Este documento ainda não foi cadastrado.');
+      return;
+    }
+    setCurrentDocument({ title, url });
+    setDocumentViewerOpen(true);
   };
 
   const handleSave = async () => {
@@ -143,10 +157,12 @@ export default function PerfilPage() {
                   <div className="field-value">{(userData as any).crm || '-'}</div>
                 </div>
               )}
-              <div className="field-group">
-                <label>Telefone / WhatsApp</label>
-                <div className="field-value">{(userData as any).telefone || '-'}</div>
-              </div>
+              {profile?.tipo_usuario === 'paciente' && (
+                <div className="field-group">
+                  <label>Telefone / WhatsApp</label>
+                  <div className="field-value">{(userData as any).telefone || '-'}</div>
+                </div>
+              )}
               <div className="field-group">
                 <label>Data de Nascimento</label>
                 <div className="field-value">{(userData as any).data_nascimento ? formatDate((userData as any).data_nascimento) : '-'}</div>
@@ -167,25 +183,100 @@ export default function PerfilPage() {
               </div>
             </div>
 
-            <div className="section-header" style={{ marginTop: '2.5rem' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-              <h4>Endereço</h4>
-            </div>
+            {profile?.tipo_usuario === 'paciente' && (
+              <>
+                <div className="section-header" style={{ marginTop: '2.5rem' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                  <h4>Endereço</h4>
+                </div>
 
-            <div className="profile-form-grid">
-              <div className="field-group" style={{ gridColumn: 'span 2' }}>
-                <label>Logradouro</label>
-                <div className="field-value">{mainAddress?.endereco || 'Não informado'}</div>
-              </div>
-              <div className="field-group">
-                <label>Número</label>
-                <div className="field-value">{mainAddress?.numero || '-'}</div>
-              </div>
-              <div className="field-group">
-                <label>Complemento</label>
-                <div className="field-value">{mainAddress?.complemento || '-'}</div>
-              </div>
-            </div>
+                <div className="profile-form-grid">
+                  <div className="field-group" style={{ gridColumn: 'span 2' }}>
+                    <label>Logradouro</label>
+                    <div className="field-value">{mainAddress?.endereco || 'Não informado'}</div>
+                  </div>
+                  <div className="field-group">
+                    <label>Número</label>
+                    <div className="field-value">{mainAddress?.numero || '-'}</div>
+                  </div>
+                  <div className="field-group">
+                    <label>Complemento</label>
+                    <div className="field-value">{mainAddress?.complemento || '-'}</div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {profile?.tipo_usuario === 'medico' && (
+              <>
+                <div className="section-header" style={{ marginTop: '2.5rem' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14.5 2 14.5 7.5 20 7.5" /></svg>
+                  <h4>Documentos Profissionais</h4>
+                </div>
+
+                <div className="documents-grid">
+                  <div className="document-card" onClick={() => handleDocumentView('Diploma', (userData as any).diploma_url)}>
+                    <div className="document-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14.5 2 14.5 7.5 20 7.5" /></svg>
+                    </div>
+                    <div className="document-info">
+                      <div className="document-title">Diploma</div>
+                      <div className="document-status">{(userData as any).diploma_url ? 'Disponível' : 'Não cadastrado'}</div>
+                    </div>
+                    {(userData as any).diploma_url && (
+                      <button className="btn-view-doc">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="document-card" onClick={() => handleDocumentView('Assinatura Digital', (userData as any).assinatura_digital_url)}>
+                    <div className="document-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5" /><rect x="2" y="6" width="14" height="12" rx="2" /></svg>
+                    </div>
+                    <div className="document-info">
+                      <div className="document-title">Assinatura Digital</div>
+                      <div className="document-status">{(userData as any).assinatura_digital_url ? 'Disponível' : 'Não cadastrado'}</div>
+                    </div>
+                    {(userData as any).assinatura_digital_url && (
+                      <button className="btn-view-doc">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="document-card" onClick={() => handleDocumentView('Especialização', (userData as any).especializacao_url)}>
+                    <div className="document-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>
+                    </div>
+                    <div className="document-info">
+                      <div className="document-title">Especialização</div>
+                      <div className="document-status">{(userData as any).especializacao_url ? 'Disponível' : 'Não cadastrado'}</div>
+                    </div>
+                    {(userData as any).especializacao_url && (
+                      <button className="btn-view-doc">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="document-card" onClick={() => handleDocumentView('Seguro de Responsabilidade', (userData as any).seguro_responsabilidade_url)}>
+                    <div className="document-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /></svg>
+                    </div>
+                    <div className="document-info">
+                      <div className="document-title">Seguro de Responsabilidade</div>
+                      <div className="document-status">{(userData as any).seguro_responsabilidade_url ? 'Disponível' : 'Não cadastrado'}</div>
+                    </div>
+                    {(userData as any).seguro_responsabilidade_url && (
+                      <button className="btn-view-doc">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </section>
 
           {/* Security Section */}
@@ -250,16 +341,65 @@ export default function PerfilPage() {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="field-group">
-              <label>Telefone</label>
-              <input
-                className="field-value"
-                style={{ width: '100%', background: 'var(--bg-tertiary)' }}
-                value={editData.telefone}
-                onChange={(e) => setEditData({ ...editData, telefone: e.target.value })}
-              />
-            </div>
+          {profile?.tipo_usuario === 'paciente' && (
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="field-group">
+                  <label>Telefone</label>
+                  <input
+                    className="field-value"
+                    style={{ width: '100%', background: 'var(--bg-tertiary)' }}
+                    value={editData.telefone}
+                    onChange={(e) => setEditData({ ...editData, telefone: e.target.value })}
+                  />
+                </div>
+                <div className="field-group">
+                  <label>Data Nascimento</label>
+                  <input
+                    type="date"
+                    className="field-value"
+                    style={{ width: '100%', background: 'var(--bg-tertiary)' }}
+                    value={editData.data_nascimento}
+                    onChange={(e) => setEditData({ ...editData, data_nascimento: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="section-header" style={{ marginBottom: '0.5rem', marginTop: '0.5rem' }}>
+                <h4 style={{ fontSize: '1rem' }}>Endereço</h4>
+              </div>
+              <div className="field-group">
+                <label>Rua / Logradouro</label>
+                <AddressAutocomplete
+                  className="field-value"
+                  placeholder=""
+                  value={editData.endereco?.endereco || ''}
+                  onChange={(val) => setEditData({ ...editData, endereco: { ...editData.endereco, endereco: val } })}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="field-group">
+                  <label>Número</label>
+                  <input
+                    className="field-value"
+                    style={{ width: '100%', background: 'var(--bg-tertiary)' }}
+                    value={editData.endereco?.numero}
+                    onChange={(e) => setEditData({ ...editData, endereco: { ...editData.endereco, numero: e.target.value } })}
+                  />
+                </div>
+                <div className="field-group">
+                  <label>Complemento</label>
+                  <input
+                    className="field-value"
+                    style={{ width: '100%', background: 'var(--bg-tertiary)' }}
+                    value={editData.endereco?.complemento}
+                    onChange={(e) => setEditData({ ...editData, endereco: { ...editData.endereco, complemento: e.target.value } })}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {profile?.tipo_usuario === 'medico' && (
             <div className="field-group">
               <label>Data Nascimento</label>
               <input
@@ -270,41 +410,38 @@ export default function PerfilPage() {
                 onChange={(e) => setEditData({ ...editData, data_nascimento: e.target.value })}
               />
             </div>
-          </div>
-          <div className="section-header" style={{ marginBottom: '0.5rem', marginTop: '0.5rem' }}>
-            <h4 style={{ fontSize: '1rem' }}>Endereço</h4>
-          </div>
-          <div className="field-group">
-            <label>Rua / Logradouro</label>
-            <AddressAutocomplete
-              className="field-value"
-              placeholder=""
-              value={editData.endereco?.endereco || ''}
-              onChange={(val) => setEditData({ ...editData, endereco: { ...editData.endereco, endereco: val } })}
-            />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <div className="field-group">
-              <label>Número</label>
-              <input
-                className="field-value"
-                style={{ width: '100%', background: 'var(--bg-tertiary)' }}
-                value={editData.endereco?.numero}
-                onChange={(e) => setEditData({ ...editData, endereco: { ...editData.endereco, numero: e.target.value } })}
-              />
-            </div>
-            <div className="field-group">
-              <label>Complemento</label>
-              <input
-                className="field-value"
-                style={{ width: '100%', background: 'var(--bg-tertiary)' }}
-                value={editData.endereco?.complemento}
-                onChange={(e) => setEditData({ ...editData, endereco: { ...editData.endereco, complemento: e.target.value } })}
-              />
-            </div>
-          </div>
+          )}
         </div>
       </Modal>
+
+      {/* Document Viewer Modal */}
+      <ContentModal
+        isOpen={documentViewerOpen}
+        onClose={() => {
+          setDocumentViewerOpen(false);
+          setCurrentDocument(null);
+        }}
+        title={currentDocument?.title || 'Documento'}
+        size="lg"
+      >
+        {currentDocument?.url && (
+          <div style={{ width: '100%', height: '70vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+            {currentDocument.url.toLowerCase().endsWith('.pdf') ? (
+              <iframe
+                src={currentDocument.url}
+                style={{ width: '100%', height: '100%', border: 'none' }}
+                title={currentDocument.title}
+              />
+            ) : (
+              <img
+                src={currentDocument.url}
+                alt={currentDocument.title}
+                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+              />
+            )}
+          </div>
+        )}
+      </ContentModal>
 
       <Modal
         isOpen={modal.isOpen}

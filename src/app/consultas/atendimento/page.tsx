@@ -725,20 +725,37 @@ function AtendimentoInner() {
 
   function requestFinishCall() {
     if (role === 'medico') {
-      const missing = [];
-      if (!atendimentoData.evolucao.trim()) missing.push('Evolução');
-      if (!atendimentoData.plano_terapeutico.trim()) missing.push('Plano Terapêutico');
-      if (!atendimentoData.diagnostico.trim()) missing.push('Diagnóstico');
-      if (!atendimentoData.repouso) missing.push('Repouso');
-      if (!atendimentoData.destino_final) missing.push('Destino Final');
+      // Verifica se o médico está anulando o paciente
+      const isAnulacao = atendimentoData.destino_final?.toLowerCase().includes('anular');
+      
+      // Se for anulação, apenas verifica se o destino final foi preenchido
+      if (isAnulacao) {
+        if (!atendimentoData.destino_final) {
+          setShowValidation(true);
+          modal.error(
+            'Campos pendentes',
+            'Por favor, selecione o motivo da anulação no campo Destino Final.'
+          );
+          return;
+        }
+        // Se destino final de anulação está preenchido, permite encerrar
+      } else {
+        // Validação completa para casos normais
+        const missing = [];
+        if (!atendimentoData.evolucao.trim()) missing.push('Evolução');
+        if (!atendimentoData.plano_terapeutico.trim()) missing.push('Plano Terapêutico');
+        if (!atendimentoData.diagnostico.trim()) missing.push('Diagnóstico');
+        if (!atendimentoData.repouso) missing.push('Repouso');
+        if (!atendimentoData.destino_final) missing.push('Destino Final');
 
-      if (missing.length > 0) {
-        setShowValidation(true);
-        modal.error(
-          'Campos pendentes',
-          `Por favor, preencha os seguintes campos antes de finalizar: ${missing.join(', ')}.`
-        );
-        return;
+        if (missing.length > 0) {
+          setShowValidation(true);
+          modal.error(
+            'Campos pendentes',
+            `Por favor, preencha os seguintes campos antes de finalizar: ${missing.join(', ')}.`
+          );
+          return;
+        }
       }
     }
 
@@ -1021,7 +1038,7 @@ function AtendimentoInner() {
                         {historicoConsultas.map((consulta) => (
                           <div key={consulta.id} className="historico-item">
                             <div className="historico-item-avatar">
-                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
                             </div>
                             <div className="historico-item-info">
                               <div className="historico-item-date">
