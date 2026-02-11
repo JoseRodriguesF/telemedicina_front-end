@@ -5,7 +5,7 @@ export type UserProfile = {
     id: number;
     email: string;
     tipo_usuario: 'medico' | 'paciente';
-    registroFull: boolean;
+    registro_full: boolean;
     paciente?: {
         id: number;
         nome_completo: string;
