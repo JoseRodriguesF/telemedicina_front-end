@@ -96,13 +96,15 @@
   border: 1px solid var(--card-border);
   border-radius: var(--radius-2xl);
   padding: 1.75rem 1.5rem;
-  box-shadow: var(--shadow-xl);
+  /* Inverted hover: deep shadow is default */
+  box-shadow: 0 30px 60px -15px var(--shadow-color);
   transition: var(--transition-slow);
   margin: 0 auto;
 }
 
 .register-card:hover {
-  box-shadow: 0 30px 60px -15px var(--shadow-color);
+  /* Inverted hover: subtle shadow on hover */
+  box-shadow: var(--shadow-xl);
 }
 
 /* Card size modifiers */
