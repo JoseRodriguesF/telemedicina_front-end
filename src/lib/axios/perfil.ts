@@ -24,10 +24,14 @@ export type UserProfile = {
         cpf: string;
         sexo: string;
         crm: string;
-        diploma_url: string;
+        tem_diploma?: boolean;
+        tem_especializacao?: boolean;
+        tem_assinatura?: boolean;
+        tem_seguro?: boolean;
+        diploma_url?: string;
         especializacao_url?: string;
-        assinatura_digital_url: string;
-        seguro_responsabilidade_url: string;
+        assinatura_digital_url?: string;
+        seguro_responsabilidade_url?: string;
         telefone?: string;
         avaliacao?: number;
     };

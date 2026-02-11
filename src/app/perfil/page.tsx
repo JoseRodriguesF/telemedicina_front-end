@@ -91,15 +91,15 @@ export default function PerfilPage() {
     try {
       setUploadingDoc(fieldName);
       const res = await uploadFileToServer(file);
-      const fileUrl = res.secure_url || res.url;
-
-      if (!fileUrl) throw new Error('Falha ao obter URL do arquivo.');
 
       const token = getToken();
       if (!token) return;
 
-      // Update backend with new URL
-      await updateMyProfile(token, { [fieldName]: fileUrl });
+      // Mapear fieldName (ex: diploma_url) para o campo esperado pela API (ex: diploma)
+      const apiField = fieldName.replace('_url', '').replace('_digital', '');
+
+      // Update backend with new data
+      await updateMyProfile(token, { [apiField]: res });
 
       modal.success('Documento Enviado', 'O documento foi atualizado com sucesso.');
       await fetchProfile();
@@ -139,6 +139,8 @@ export default function PerfilPage() {
   const userData = (profile?.paciente || profile?.medico || {}) as any;
   const addresses = profile?.enderecos || [];
   const mainAddress = addresses[0] || null;
+
+  const getDocUrl = (type: string) => profile?.medico?.id ? `/api/medicos/${profile.medico.id}/documentos/${type}` : '';
 
   return (
     <DashboardLayout>
@@ -252,8 +254,8 @@ export default function PerfilPage() {
                   <input id="upload-seguro" type="file" style={{ display: 'none' }} accept=".pdf,image/*" onChange={(e) => handleFileUpload(e, 'seguro_responsabilidade_url')} />
 
                   <div
-                    className={`document-card ${(userData as any).diploma_url ? 'active' : ''}`}
-                    onClick={() => (userData as any).diploma_url ? handleDocumentView('Diploma Médico', (userData as any).diploma_url) : document.getElementById('upload-diploma')?.click()}
+                    className={`document-card ${profile.medico?.tem_diploma ? 'active' : ''}`}
+                    onClick={() => profile.medico?.tem_diploma ? handleDocumentView('Diploma Médico', getDocUrl('diploma')) : document.getElementById('upload-diploma')?.click()}
                   >
                     {uploadingDoc === 'diploma_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -261,9 +263,9 @@ export default function PerfilPage() {
                     </div>
                     <div className="document-info">
                       <div className="document-title">Diploma Médico</div>
-                      <div className="document-status">{(userData as any).diploma_url ? 'Verificado' : 'Clique para enviar'}</div>
+                      <div className="document-status">{profile.medico?.tem_diploma ? 'Verificado' : 'Clique para enviar'}</div>
                     </div>
-                    {(userData as any).diploma_url ? (
+                    {profile.medico?.tem_diploma ? (
                       <button className="btn-view-doc">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                         Visualizar
@@ -277,8 +279,8 @@ export default function PerfilPage() {
                   </div>
 
                   <div
-                    className={`document-card ${(userData as any).assinatura_digital_url ? 'active' : ''}`}
-                    onClick={() => (userData as any).assinatura_digital_url ? handleDocumentView('Assinatura Digital', (userData as any).assinatura_digital_url) : document.getElementById('upload-assinatura')?.click()}
+                    className={`document-card ${profile.medico?.tem_assinatura ? 'active' : ''}`}
+                    onClick={() => profile.medico?.tem_assinatura ? handleDocumentView('Assinatura Digital', getDocUrl('assinatura')) : document.getElementById('upload-assinatura')?.click()}
                   >
                     {uploadingDoc === 'assinatura_digital_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -286,9 +288,9 @@ export default function PerfilPage() {
                     </div>
                     <div className="document-info">
                       <div className="document-title">Assinatura Digital</div>
-                      <div className="document-status">{(userData as any).assinatura_digital_url ? 'Verificado' : 'Clique para enviar'}</div>
+                      <div className="document-status">{profile.medico?.tem_assinatura ? 'Verificado' : 'Clique para enviar'}</div>
                     </div>
-                    {(userData as any).assinatura_digital_url ? (
+                    {profile.medico?.tem_assinatura ? (
                       <button className="btn-view-doc">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                         Visualizar
@@ -302,8 +304,8 @@ export default function PerfilPage() {
                   </div>
 
                   <div
-                    className={`document-card ${(userData as any).especializacao_url ? 'active' : ''}`}
-                    onClick={() => (userData as any).especializacao_url ? handleDocumentView('Especialização / RQE', (userData as any).especializacao_url) : document.getElementById('upload-especializacao')?.click()}
+                    className={`document-card ${profile.medico?.tem_especializacao ? 'active' : ''}`}
+                    onClick={() => profile.medico?.tem_especializacao ? handleDocumentView('Especialização / RQE', getDocUrl('especializacao')) : document.getElementById('upload-especializacao')?.click()}
                   >
                     {uploadingDoc === 'especializacao_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -311,9 +313,9 @@ export default function PerfilPage() {
                     </div>
                     <div className="document-info">
                       <div className="document-title">Especialização / RQE</div>
-                      <div className="document-status">{(userData as any).especializacao_url ? 'Verificado' : 'Clique para enviar'}</div>
+                      <div className="document-status">{profile.medico?.tem_especializacao ? 'Verificado' : 'Clique para enviar'}</div>
                     </div>
-                    {(userData as any).especializacao_url ? (
+                    {profile.medico?.tem_especializacao ? (
                       <button className="btn-view-doc">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                         Visualizar
@@ -327,8 +329,8 @@ export default function PerfilPage() {
                   </div>
 
                   <div
-                    className={`document-card ${(userData as any).seguro_responsabilidade_url ? 'active' : ''}`}
-                    onClick={() => (userData as any).seguro_responsabilidade_url ? handleDocumentView('Seguro Profissional', (userData as any).seguro_responsabilidade_url) : document.getElementById('upload-seguro')?.click()}
+                    className={`document-card ${profile.medico?.tem_seguro ? 'active' : ''}`}
+                    onClick={() => profile.medico?.tem_seguro ? handleDocumentView('Seguro Profissional', getDocUrl('seguro')) : document.getElementById('upload-seguro')?.click()}
                   >
                     {uploadingDoc === 'seguro_responsabilidade_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -336,9 +338,9 @@ export default function PerfilPage() {
                     </div>
                     <div className="document-info">
                       <div className="document-title">Seguro Profissional</div>
-                      <div className="document-status">{(userData as any).seguro_responsabilidade_url ? 'Verificado' : 'Clique para enviar'}</div>
+                      <div className="document-status">{profile.medico?.tem_seguro ? 'Verificado' : 'Clique para enviar'}</div>
                     </div>
-                    {(userData as any).seguro_responsabilidade_url ? (
+                    {profile.medico?.tem_seguro ? (
                       <button className="btn-view-doc">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
                         Visualizar

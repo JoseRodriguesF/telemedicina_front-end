@@ -8,10 +8,10 @@ export type MedicoPayload = {
   cpf: string; // digits only
   sexo: string; // 'masculino' | 'feminino' | 'outro'
   crm: string; // e.g. 'CRM-12345' or '12345'
-  diploma_url?: string | null;
-  especializacao_url?: string | null;
-  assinatura_digital_url?: string | null;
-  seguro_responsabilidade_url?: string | null;
+  diploma: { data: string; mimetype: string };
+  especializacao?: { data: string; mimetype: string } | null;
+  assinatura_digital: { data: string; mimetype: string };
+  seguro_responsabilidade: { data: string; mimetype: string };
 };
 
 export type CreateMedicoResponse = {

@@ -75,10 +75,10 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
         cpf: (pd?.cpf || '').toString().replace(/\D/g, ''),
         sexo: (pd?.gender || pd?.sexo || '').toString().toLowerCase(),
         crm: pd?.crm || '',
-        diploma_url: diplomaResp?.secure_url || diplomaResp?.url || null,
-        especializacao_url: especializacaoResp?.secure_url || especializacaoResp?.url || null,
-        assinatura_digital_url: assinaturaResp?.secure_url || assinaturaResp?.url || null,
-        seguro_responsabilidade_url: seguroResp?.secure_url || seguroResp?.url || null,
+        diploma: diplomaResp,
+        especializacao: especializacaoResp,
+        assinatura_digital: assinaturaResp,
+        seguro_responsabilidade: seguroResp,
       };
 
       // Remove keys with null or undefined values so the backend doesn't reject
