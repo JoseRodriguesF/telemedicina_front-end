@@ -27,7 +27,7 @@ export default function PerfilPage() {
 
   // States for Document Viewer
   const [documentViewerOpen, setDocumentViewerOpen] = useState(false);
-  const [currentDocument, setCurrentDocument] = useState<{ title: string; url: string } | null>(null);
+  const [currentDocument, setCurrentDocument] = useState<{ title: string; url: string; mimetype?: string } | null>(null);
 
   // States for Uploads
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
@@ -78,9 +78,9 @@ export default function PerfilPage() {
     setIsEditing(true);
   };
 
-  const handleDocumentView = (title: string, url: string) => {
+  const handleDocumentView = (title: string, url: string, mimetype?: string) => {
     if (!url) return;
-    setCurrentDocument({ title, url });
+    setCurrentDocument({ title, url, mimetype });
     setDocumentViewerOpen(true);
   };
 
@@ -157,6 +157,7 @@ export default function PerfilPage() {
   const getDocUrl = (type: string) => {
     if (!profile?.medico) return '';
     const token = getToken();
+    // Use token in query param for native browser elements (img/object)
     return `/api/usuarios/me/documentos/${type}${token ? `?token=${token}` : ''}`;
   };
 
@@ -273,7 +274,7 @@ export default function PerfilPage() {
 
                   <div
                     className={`document-card ${profile.medico?.tem_diploma ? 'active' : ''}`}
-                    onClick={() => profile.medico?.tem_diploma ? handleDocumentView('Diploma Médico', getDocUrl('diploma')) : document.getElementById('upload-diploma')?.click()}
+                    onClick={() => profile.medico?.tem_diploma ? handleDocumentView('Diploma Médico', getDocUrl('diploma'), profile.medico?.diploma_mimetype) : document.getElementById('upload-diploma')?.click()}
                   >
                     {uploadingDoc === 'diploma_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -298,7 +299,7 @@ export default function PerfilPage() {
 
                   <div
                     className={`document-card ${profile.medico?.tem_assinatura ? 'active' : ''}`}
-                    onClick={() => profile.medico?.tem_assinatura ? handleDocumentView('Assinatura Digital', getDocUrl('assinatura')) : document.getElementById('upload-assinatura')?.click()}
+                    onClick={() => profile.medico?.tem_assinatura ? handleDocumentView('Assinatura Digital', getDocUrl('assinatura'), profile.medico?.assinatura_digital_mimetype) : document.getElementById('upload-assinatura')?.click()}
                   >
                     {uploadingDoc === 'assinatura_digital_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -323,7 +324,7 @@ export default function PerfilPage() {
 
                   <div
                     className={`document-card ${profile.medico?.tem_especializacao ? 'active' : ''}`}
-                    onClick={() => profile.medico?.tem_especializacao ? handleDocumentView('Especialização / RQE', getDocUrl('especializacao')) : document.getElementById('upload-especializacao')?.click()}
+                    onClick={() => profile.medico?.tem_especializacao ? handleDocumentView('Especialização / RQE', getDocUrl('especializacao'), profile.medico?.especializacao_mimetype) : document.getElementById('upload-especializacao')?.click()}
                   >
                     {uploadingDoc === 'especializacao_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -348,7 +349,7 @@ export default function PerfilPage() {
 
                   <div
                     className={`document-card ${profile.medico?.tem_seguro ? 'active' : ''}`}
-                    onClick={() => profile.medico?.tem_seguro ? handleDocumentView('Seguro Profissional', getDocUrl('seguro')) : document.getElementById('upload-seguro')?.click()}
+                    onClick={() => profile.medico?.tem_seguro ? handleDocumentView('Seguro Profissional', getDocUrl('seguro'), profile.medico?.seguro_responsabilidade_mimetype) : document.getElementById('upload-seguro')?.click()}
                   >
                     {uploadingDoc === 'seguro_responsabilidade_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -522,7 +523,7 @@ export default function PerfilPage() {
       >
         {currentDocument?.url && (
           <div className="pdf-viewer-container">
-            {currentDocument.url.toLowerCase().split('?')[0].endsWith('.pdf') ? (
+            {(currentDocument.mimetype === 'application/pdf' || currentDocument.url.toLowerCase().split('?')[0].endsWith('.pdf')) ? (
               <object
                 data={currentDocument.url}
                 type="application/pdf"

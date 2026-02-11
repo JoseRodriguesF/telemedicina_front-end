@@ -29,9 +29,13 @@ export type UserProfile = {
         tem_assinatura?: boolean;
         tem_seguro?: boolean;
         diploma_url?: string;
+        diploma_mimetype?: string;
         especializacao_url?: string;
+        especializacao_mimetype?: string;
         assinatura_digital_url?: string;
+        assinatura_digital_mimetype?: string;
         seguro_responsabilidade_url?: string;
+        seguro_responsabilidade_mimetype?: string;
         telefone?: string;
         avaliacao?: number;
     };
