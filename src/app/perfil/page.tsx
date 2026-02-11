@@ -531,36 +531,9 @@ export default function PerfilPage() {
       >
         {currentDocument?.url && (
           <div className="pdf-viewer-container">
-            {/* Custom Navigation Overlay */}
-            {currentDocument.mimetype === 'application/pdf' && (
-              <>
-                <div className="pdf-navigation-overlay">
-                  <button
-                    className="nav-arrow"
-                    onClick={() => setPdfPage(prev => Math.max(1, prev - 1))}
-                    disabled={pdfPage <= 1}
-                    title="Página Anterior"
-                  >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-                  </button>
-                  <button
-                    className="nav-arrow"
-                    onClick={() => setPdfPage(prev => prev + 1)}
-                    title="Próxima Página"
-                  >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-                  </button>
-                </div>
-                <div className="page-indicator">
-                  Página {pdfPage}
-                </div>
-              </>
-            )}
-
             {(currentDocument.mimetype === 'application/pdf') ? (
               <object
-                key={`${currentDocument.url}-${pdfPage}`}
-                data={`${currentDocument.url}#page=${pdfPage}&toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+                data={`${currentDocument.url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
                 type="application/pdf"
                 className="pdf-object-view"
               >
