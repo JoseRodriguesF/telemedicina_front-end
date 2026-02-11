@@ -28,6 +28,7 @@ export default function PerfilPage() {
   // States for Document Viewer
   const [documentViewerOpen, setDocumentViewerOpen] = useState(false);
   const [currentDocument, setCurrentDocument] = useState<{ title: string; url: string; mimetype?: string } | null>(null);
+  const [pdfPage, setPdfPage] = useState(1);
 
   // States for Uploads
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
@@ -80,6 +81,7 @@ export default function PerfilPage() {
 
   const handleDocumentView = (title: string, url: string, mimetype?: string) => {
     if (!url) return;
+    setPdfPage(1); // Reset to first page
     setCurrentDocument({ title, url, mimetype });
     setDocumentViewerOpen(true);
   };
@@ -154,11 +156,17 @@ export default function PerfilPage() {
   const addresses = profile?.enderecos || [];
   const mainAddress = addresses[0] || null;
 
-  const getDocUrl = (type: string) => {
+  const getDocUrl = (type: string, page?: number) => {
     if (!profile?.medico) return '';
     const token = getToken();
-    // Use token in query param for native browser elements (img/object)
-    return `/api/usuarios/me/documentos/${type}${token ? `?token=${token}` : ''}`;
+    let url = `/api/usuarios/me/documentos/${type}${token ? `?token=${token}` : ''}`;
+
+    // PDF specific customization for clean viewing
+    if (page && (profile.medico as any)[`${type}_mimetype`] === 'application/pdf') {
+      url += `#page=${page}&toolbar=0&navpanes=0&scrollbar=1&view=FitH`;
+    }
+
+    return url;
   };
 
   return (
@@ -523,13 +531,38 @@ export default function PerfilPage() {
       >
         {currentDocument?.url && (
           <div className="pdf-viewer-container">
-            {(currentDocument.mimetype === 'application/pdf' || currentDocument.url.toLowerCase().split('?')[0].endsWith('.pdf')) ? (
+            {/* Custom Navigation Overlay */}
+            {currentDocument.mimetype === 'application/pdf' && (
+              <>
+                <div className="pdf-navigation-overlay">
+                  <button
+                    className="nav-arrow"
+                    onClick={() => setPdfPage(prev => Math.max(1, prev - 1))}
+                    disabled={pdfPage <= 1}
+                    title="Página Anterior"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+                  </button>
+                  <button
+                    className="nav-arrow"
+                    onClick={() => setPdfPage(prev => prev + 1)}
+                    title="Próxima Página"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                  </button>
+                </div>
+                <div className="page-indicator">
+                  Página {pdfPage}
+                </div>
+              </>
+            )}
+
+            {(currentDocument.mimetype === 'application/pdf') ? (
               <object
-                data={currentDocument.url}
+                key={`${currentDocument.url}-${pdfPage}`}
+                data={`${currentDocument.url}#page=${pdfPage}&toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
                 type="application/pdf"
-                width="100%"
-                height="100%"
-                style={{ borderRadius: 'var(--radius-lg)' }}
+                className="pdf-object-view"
               >
                 <div className="pdf-fallback">
                   <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14.5 2 14.5 7.5 20 7.5" /><path d="M12 12v6" /><path d="m15 15-3 3-3-3" /></svg>
