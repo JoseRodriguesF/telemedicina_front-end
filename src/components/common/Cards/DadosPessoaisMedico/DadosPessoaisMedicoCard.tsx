@@ -122,11 +122,11 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
           <span className="label-title">Data de nascimento <span className="required-asterisk">*</span></span>
           <Input
             type="text"
+            mask="date"
             placeholder="DD/MM/AAAA"
             value={birthDate}
             onChange={(e) => {
-              const v = formatConstrainedDateInput(e.target.value || '');
-              setBirthDate(v);
+              setBirthDate(e.target.value);
               setBirthDateError('');
             }}
           />

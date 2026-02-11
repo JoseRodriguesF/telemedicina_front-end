@@ -1,7 +1,7 @@
 import React from 'react';
 import './input.css';
 
-type MaskType = 'cpf' | 'phone' | undefined;
+type MaskType = 'cpf' | 'phone' | 'date' | undefined;
 
 type Props = React.InputHTMLAttributes<HTMLInputElement> & {
   className?: string;
@@ -33,6 +33,17 @@ function formatPhone(value: string) {
   return `(${ddd}) ${prefix}-${last4}`;
 }
 
+function formatDate(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+  if (digits.length >= 5) {
+    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+  }
+  if (digits.length >= 3) {
+    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}`;
+  }
+  return digits;
+}
+
 export default function Input({ className = '', mask, sanitize, onChange, ...rest }: Props) {
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     let val = e.target.value || '';
@@ -45,6 +56,7 @@ export default function Input({ className = '', mask, sanitize, onChange, ...res
     }
     if (mask === 'cpf') val = formatCPF(val);
     if (mask === 'phone') val = formatPhone(val);
+    if (mask === 'date') val = formatDate(val);
 
     if (onChange) {
       // create a synthetic event with the formatted value

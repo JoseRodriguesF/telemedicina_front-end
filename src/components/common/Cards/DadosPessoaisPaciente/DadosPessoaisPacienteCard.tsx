@@ -194,16 +194,18 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
 
         <label className="form-label">
           <span className="label-title">Data de nascimento <span className="required-asterisk">*</span></span>
-          <Input
-            type="text"
-            placeholder="DD/MM/AAAA"
-            {...register('birthDate', {
-              onChange: (e) => {
-                const formatted = formatConstrainedDateInput(e.target.value || '');
-                setValue('birthDate', formatted);
-              }
-            })}
-            className={errors.birthDate ? 'c-input--error' : ''}
+          <Controller
+            control={control}
+            name="birthDate"
+            render={({ field }) => (
+              <Input
+                type="text"
+                mask="date"
+                placeholder="DD/MM/AAAA"
+                {...field}
+                className={errors.birthDate ? 'c-input--error' : ''}
+              />
+            )}
           />
           {errors.birthDate && <div className="error-text">{errors.birthDate.message as string}</div>}
         </label>

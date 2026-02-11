@@ -84,13 +84,27 @@ export default function PerfilPage() {
     setDocumentViewerOpen(true);
   };
 
+  async function fileToBase64(file: File): Promise<{ data: string; mimetype: string }> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64String = (reader.result as string).split(',')[1];
+        resolve({ data: base64String, mimetype: file.type });
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  }
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
       setUploadingDoc(fieldName);
-      const res = await uploadFileToServer(file);
+
+      // Convert to Base64 for database storage
+      const fileData = await fileToBase64(file);
 
       const token = getToken();
       if (!token) return;
@@ -98,8 +112,8 @@ export default function PerfilPage() {
       // Mapear fieldName (ex: diploma_url) para o campo esperado pela API (ex: diploma)
       const apiField = fieldName.replace('_url', '').replace('_digital', '');
 
-      // Update backend with new data
-      await updateMyProfile(token, { [apiField]: res });
+      // Update backend with new data (object with data/mimetype)
+      await updateMyProfile(token, { [apiField]: fileData });
 
       modal.success('Documento Enviado', 'O documento foi atualizado com sucesso.');
       await fetchProfile();
@@ -140,7 +154,7 @@ export default function PerfilPage() {
   const addresses = profile?.enderecos || [];
   const mainAddress = addresses[0] || null;
 
-  const getDocUrl = (type: string) => profile?.medico?.id ? `/api/medicos/${profile.medico.id}/documentos/${type}` : '';
+  const getDocUrl = (type: string) => profile?.medico ? `/api/usuarios/me/documentos/${type}` : '';
 
   return (
     <DashboardLayout>

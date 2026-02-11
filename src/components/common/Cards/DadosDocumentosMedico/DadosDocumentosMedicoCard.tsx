@@ -39,6 +39,18 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
     );
   }
 
+  async function fileToBase64(file: File): Promise<{ data: string; mimetype: string }> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64String = (reader.result as string).split(',')[1];
+        resolve({ data: base64String, mimetype: file.type });
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
@@ -48,14 +60,15 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
     }
     setLoading(true);
     try {
-      const upload = (await import('@/lib/upload')).default;
       const createMedico = (await import('@/lib/axios/medicos')).default;
 
-      // upload required files to server -> cloudinary
-      const seguroResp = await upload(seguroFile as File);
-      const diplomaResp = await upload(diplomaFile as File);
-      const assinaturaResp = await upload(assinaturaFile as File);
-      const especializacaoResp = diplomaEspFile ? await upload(diplomaEspFile as File) : null;
+      // Convert files to Base64 for database storage
+      const [seguro, diploma, assinatura, especializacao] = await Promise.all([
+        fileToBase64(seguroFile),
+        fileToBase64(diplomaFile),
+        fileToBase64(assinaturaFile),
+        diplomaEspFile ? fileToBase64(diplomaEspFile) : Promise.resolve(null)
+      ]);
 
       // build payload using passed props (userId and pessoaisData) or fallbacks
       const pd = pessoaisData || {};
@@ -75,10 +88,11 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
         cpf: (pd?.cpf || '').toString().replace(/\D/g, ''),
         sexo: (pd?.gender || pd?.sexo || '').toString().toLowerCase(),
         crm: pd?.crm || '',
-        diploma: diplomaResp,
-        especializacao: especializacaoResp,
-        assinatura_digital: assinaturaResp,
-        seguro_responsabilidade: seguroResp,
+        // Documentos direto para o banco
+        diploma,
+        especializacao,
+        assinatura_digital: assinatura,
+        seguro_responsabilidade: seguro,
       };
 
       // Remove keys with null or undefined values so the backend doesn't reject
