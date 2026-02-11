@@ -13,6 +13,7 @@ import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate } from '@/lib/utils/dateFormatters';
 import AddressAutocomplete from '@/components/common/Inputs/AddressAutocomplete';
 import ContentModal from '@/components/common/Modal/ContentModal';
+import { uploadFileToServer } from '@/lib/upload';
 
 export default function PerfilPage() {
   const router = useRouter();
@@ -27,6 +28,9 @@ export default function PerfilPage() {
   // States for Document Viewer
   const [documentViewerOpen, setDocumentViewerOpen] = useState(false);
   const [currentDocument, setCurrentDocument] = useState<{ title: string; url: string } | null>(null);
+
+  // States for Uploads
+  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProfile();
@@ -75,12 +79,38 @@ export default function PerfilPage() {
   };
 
   const handleDocumentView = (title: string, url: string) => {
-    if (!url) {
-      modal.error('Documento não disponível', 'Este documento ainda não foi cadastrado.');
-      return;
-    }
+    if (!url) return;
     setCurrentDocument({ title, url });
     setDocumentViewerOpen(true);
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingDoc(fieldName);
+      const res = await uploadFileToServer(file);
+      const fileUrl = res.secure_url || res.url;
+
+      if (!fileUrl) throw new Error('Falha ao obter URL do arquivo.');
+
+      const token = getToken();
+      if (!token) return;
+
+      // Update backend with new URL
+      await updateMyProfile(token, { [fieldName]: fileUrl });
+
+      modal.success('Documento Enviado', 'O documento foi atualizado com sucesso.');
+      await fetchProfile();
+    } catch (error: any) {
+      console.error('Erro no upload:', error);
+      modal.error('Erro no Upload', 'Não foi possível enviar o documento. ' + (error?.message || ''));
+    } finally {
+      setUploadingDoc(null);
+      // Reset input
+      event.target.value = '';
+    }
   };
 
   const handleSave = async () => {
@@ -215,62 +245,108 @@ export default function PerfilPage() {
                 </div>
 
                 <div className="documents-grid">
-                  <div className="document-card" onClick={() => handleDocumentView('Diploma', (userData as any).diploma_url)}>
+                  {/* Inputs ocultos para upload */}
+                  <input id="upload-diploma" type="file" style={{ display: 'none' }} accept=".pdf,image/*" onChange={(e) => handleFileUpload(e, 'diploma_url')} />
+                  <input id="upload-assinatura" type="file" style={{ display: 'none' }} accept=".pdf,image/*" onChange={(e) => handleFileUpload(e, 'assinatura_digital_url')} />
+                  <input id="upload-especializacao" type="file" style={{ display: 'none' }} accept=".pdf,image/*" onChange={(e) => handleFileUpload(e, 'especializacao_url')} />
+                  <input id="upload-seguro" type="file" style={{ display: 'none' }} accept=".pdf,image/*" onChange={(e) => handleFileUpload(e, 'seguro_responsabilidade_url')} />
+
+                  <div
+                    className={`document-card ${(userData as any).diploma_url ? 'active' : ''}`}
+                    onClick={() => (userData as any).diploma_url ? handleDocumentView('Diploma Médico', (userData as any).diploma_url) : document.getElementById('upload-diploma')?.click()}
+                  >
+                    {uploadingDoc === 'diploma_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14.5 2 14.5 7.5 20 7.5" /></svg>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14.5 2 14.5 7.5 20 7.5" /></svg>
                     </div>
                     <div className="document-info">
-                      <div className="document-title">Diploma</div>
-                      <div className="document-status">{(userData as any).diploma_url ? 'Disponível' : 'Não cadastrado'}</div>
+                      <div className="document-title">Diploma Médico</div>
+                      <div className="document-status">{(userData as any).diploma_url ? 'Verificado' : 'Clique para enviar'}</div>
                     </div>
-                    {(userData as any).diploma_url && (
+                    {(userData as any).diploma_url ? (
                       <button className="btn-view-doc">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                        Visualizar
+                      </button>
+                    ) : (
+                      <button className="btn-upload-doc" style={{ opacity: 1, transform: 'none' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                        Enviar
                       </button>
                     )}
                   </div>
 
-                  <div className="document-card" onClick={() => handleDocumentView('Assinatura Digital', (userData as any).assinatura_digital_url)}>
+                  <div
+                    className={`document-card ${(userData as any).assinatura_digital_url ? 'active' : ''}`}
+                    onClick={() => (userData as any).assinatura_digital_url ? handleDocumentView('Assinatura Digital', (userData as any).assinatura_digital_url) : document.getElementById('upload-assinatura')?.click()}
+                  >
+                    {uploadingDoc === 'assinatura_digital_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5" /><rect x="2" y="6" width="14" height="12" rx="2" /></svg>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5" /><rect x="2" y="6" width="14" height="12" rx="2" /></svg>
                     </div>
                     <div className="document-info">
                       <div className="document-title">Assinatura Digital</div>
-                      <div className="document-status">{(userData as any).assinatura_digital_url ? 'Disponível' : 'Não cadastrado'}</div>
+                      <div className="document-status">{(userData as any).assinatura_digital_url ? 'Verificado' : 'Clique para enviar'}</div>
                     </div>
-                    {(userData as any).assinatura_digital_url && (
+                    {(userData as any).assinatura_digital_url ? (
                       <button className="btn-view-doc">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                        Visualizar
+                      </button>
+                    ) : (
+                      <button className="btn-upload-doc" style={{ opacity: 1, transform: 'none' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                        Enviar
                       </button>
                     )}
                   </div>
 
-                  <div className="document-card" onClick={() => handleDocumentView('Especialização', (userData as any).especializacao_url)}>
+                  <div
+                    className={`document-card ${(userData as any).especializacao_url ? 'active' : ''}`}
+                    onClick={() => (userData as any).especializacao_url ? handleDocumentView('Especialização / RQE', (userData as any).especializacao_url) : document.getElementById('upload-especializacao')?.click()}
+                  >
+                    {uploadingDoc === 'especializacao_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>
                     </div>
                     <div className="document-info">
-                      <div className="document-title">Especialização</div>
-                      <div className="document-status">{(userData as any).especializacao_url ? 'Disponível' : 'Não cadastrado'}</div>
+                      <div className="document-title">Especialização / RQE</div>
+                      <div className="document-status">{(userData as any).especializacao_url ? 'Verificado' : 'Clique para enviar'}</div>
                     </div>
-                    {(userData as any).especializacao_url && (
+                    {(userData as any).especializacao_url ? (
                       <button className="btn-view-doc">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                        Visualizar
+                      </button>
+                    ) : (
+                      <button className="btn-upload-doc" style={{ opacity: 1, transform: 'none' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                        Enviar
                       </button>
                     )}
                   </div>
 
-                  <div className="document-card" onClick={() => handleDocumentView('Seguro de Responsabilidade', (userData as any).seguro_responsabilidade_url)}>
+                  <div
+                    className={`document-card ${(userData as any).seguro_responsabilidade_url ? 'active' : ''}`}
+                    onClick={() => (userData as any).seguro_responsabilidade_url ? handleDocumentView('Seguro Profissional', (userData as any).seguro_responsabilidade_url) : document.getElementById('upload-seguro')?.click()}
+                  >
+                    {uploadingDoc === 'seguro_responsabilidade_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /></svg>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /></svg>
                     </div>
                     <div className="document-info">
-                      <div className="document-title">Seguro de Responsabilidade</div>
-                      <div className="document-status">{(userData as any).seguro_responsabilidade_url ? 'Disponível' : 'Não cadastrado'}</div>
+                      <div className="document-title">Seguro Profissional</div>
+                      <div className="document-status">{(userData as any).seguro_responsabilidade_url ? 'Verificado' : 'Clique para enviar'}</div>
                     </div>
-                    {(userData as any).seguro_responsabilidade_url && (
+                    {(userData as any).seguro_responsabilidade_url ? (
                       <button className="btn-view-doc">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+                        Visualizar
+                      </button>
+                    ) : (
+                      <button className="btn-upload-doc" style={{ opacity: 1, transform: 'none' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                        Enviar
                       </button>
                     )}
                   </div>
@@ -425,19 +501,38 @@ export default function PerfilPage() {
         size="lg"
       >
         {currentDocument?.url && (
-          <div style={{ width: '100%', height: '70vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-            {currentDocument.url.toLowerCase().endsWith('.pdf') ? (
-              <iframe
-                src={currentDocument.url}
-                style={{ width: '100%', height: '100%', border: 'none' }}
-                title={currentDocument.title}
-              />
+          <div className="pdf-viewer-container">
+            {currentDocument.url.toLowerCase().split('?')[0].endsWith('.pdf') ? (
+              <object
+                data={currentDocument.url}
+                type="application/pdf"
+                width="100%"
+                height="100%"
+                style={{ borderRadius: 'var(--radius-lg)' }}
+              >
+                <div className="pdf-fallback">
+                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14.5 2 14.5 7.5 20 7.5" /><path d="M12 12v6" /><path d="m15 15-3 3-3-3" /></svg>
+                  <div className="pdf-error-title">Visualização indisponível no navegador</div>
+                  <p>Não foi possível carregar o visualizador de PDF diretamente. Você pode baixar o documento para visualizá-lo em seu dispositivo.</p>
+                  <a
+                    href={currentDocument.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-pdf-download"
+                    download
+                  >
+                    Baixar Documento (PDF)
+                  </a>
+                </div>
+              </object>
             ) : (
-              <img
-                src={currentDocument.url}
-                alt={currentDocument.title}
-                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-              />
+              <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <img
+                  src={currentDocument.url}
+                  alt={currentDocument.title}
+                  style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                />
+              </div>
             )}
           </div>
         )}
