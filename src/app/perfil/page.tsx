@@ -154,7 +154,11 @@ export default function PerfilPage() {
   const addresses = profile?.enderecos || [];
   const mainAddress = addresses[0] || null;
 
-  const getDocUrl = (type: string) => profile?.medico ? `/api/usuarios/me/documentos/${type}` : '';
+  const getDocUrl = (type: string) => {
+    if (!profile?.medico) return '';
+    const token = getToken();
+    return `/api/usuarios/me/documentos/${type}${token ? `?token=${token}` : ''}`;
+  };
 
   return (
     <DashboardLayout>
