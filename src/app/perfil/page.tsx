@@ -110,7 +110,7 @@ export default function PerfilPage() {
       if (!token) return;
 
       // Mapear fieldName (ex: diploma_url) para o campo esperado pela API (ex: diploma)
-      const apiField = fieldName.replace('_url', '').replace('_digital', '');
+      const apiField = fieldName.replace('_url', '');
 
       // Update backend with new data (object with data/mimetype)
       await updateMyProfile(token, { [apiField]: fileData });
