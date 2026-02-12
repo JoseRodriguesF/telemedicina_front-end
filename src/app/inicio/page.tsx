@@ -328,8 +328,16 @@ export default function InicioPage() {
               </div>
               <button
                 className="btn primary"
-                style={{ borderRadius: 'var(--radius-lg)', width: '100%', padding: '0.4rem', marginTop: '0.5rem' }}
+                style={{
+                  borderRadius: 'var(--radius-lg)',
+                  width: '100%',
+                  padding: '0.4rem',
+                  marginTop: '0.5rem',
+                  opacity: loadingHistorico || historico.length === 0 ? 0.6 : 1,
+                  cursor: loadingHistorico || historico.length === 0 ? 'not-allowed' : 'pointer'
+                }}
                 onClick={() => router.push('/historico')}
+                disabled={loadingHistorico || historico.length === 0}
               >
                 Ver Resumo
               </button>

@@ -9,7 +9,7 @@ import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
 import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta, updatePacienteNotas } from '@/lib/axios/consultas';
-import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas, getPrescricoesByConsulta, deletePrescricao, Prescricao as PrescricaoType } from '@/lib/axios/prescricoes';
+import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas, getPrescricoesByConsulta, deletePrescricao, getPrescricoesByPaciente, Prescricao as PrescricaoType } from '@/lib/axios/prescricoes';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
@@ -110,6 +110,8 @@ function AtendimentoInner() {
   const [activePrescricoes, setActivePrescricoes] = useState<PrescricaoType[]>([]);
   const [loadingPrescricoes, setLoadingPrescricoes] = useState(false);
   const [consultaSelecionada, setConsultaSelecionada] = useState<PSFullHistoryItem | null>(null);
+  const [historicoPrescricoes, setHistoricoPrescricoes] = useState<PrescricaoType[]>([]);
+  const [loadingHistoricoPrescricoes, setLoadingHistoricoPrescricoes] = useState(false);
 
   // Estados para avaliação da consulta (paciente)
   const [showRatingModal, setShowRatingModal] = useState(false);
@@ -207,6 +209,28 @@ function AtendimentoInner() {
     }
 
     fetchHistory();
+  }, [consultaDetails, token, user?.tipo_usuario]);
+
+  // Buscar histórico de prescrições do paciente se for médico
+  useEffect(() => {
+    async function fetchPrescriptionHistory() {
+      if (consultaDetails && token && user?.tipo_usuario === 'medico') {
+        const pacienteId = consultaDetails.pacienteId;
+        if (pacienteId) {
+          try {
+            setLoadingHistoricoPrescricoes(true);
+            const data = await getPrescricoesByPaciente(pacienteId, token);
+            setHistoricoPrescricoes(data);
+          } catch (err) {
+            console.error('[AtendimentoInner] Erro ao buscar histórico de prescrições:', err);
+          } finally {
+            setLoadingHistoricoPrescricoes(false);
+          }
+        }
+      }
+    }
+
+    fetchPrescriptionHistory();
   }, [consultaDetails, token, user?.tipo_usuario]);
 
 
@@ -727,7 +751,7 @@ function AtendimentoInner() {
     if (role === 'medico') {
       // Verifica se o médico está anulando o paciente
       const isAnulacao = atendimentoData.destino_final?.toLowerCase().includes('anular');
-      
+
       // Se for anulação, apenas verifica se o destino final foi preenchido
       if (isAnulacao) {
         if (!atendimentoData.destino_final) {
@@ -901,8 +925,8 @@ function AtendimentoInner() {
   }
 
   async function handleSubmitPrescricao() {
-    if (!prescricaoData.medicamento || !prescricaoData.dosagem) {
-      modal.error('Campos Obrigatórios', 'Por favor, preencha pelo menos o Nome do Medicamento e a Dosagem.');
+    if (!prescricaoData.medicamento || !prescricaoData.dosagem || !prescricaoData.frequencia || !prescricaoData.duracao) {
+      modal.error('Campos Obrigatórios', 'Por favor, preencha o Nome do Medicamento, Dosagem, Frequência e Duração.');
       return;
     }
 
@@ -1063,7 +1087,29 @@ function AtendimentoInner() {
                     isOpen={!!openAccordions['historico-prescricoes']}
                     onToggle={toggleAccordion}
                   >
-                    <p className="accordion-placeholder">Nenhuma prescrição anterior registrada.</p>
+                    {loadingHistoricoPrescricoes ? (
+                      <p className="accordion-placeholder">Carregando histórico...</p>
+                    ) : historicoPrescricoes.length === 0 ? (
+                      <p className="accordion-placeholder">Nenhuma prescrição anterior registrada.</p>
+                    ) : (
+                      <div className="historico-list">
+                        {historicoPrescricoes.map((prescrito) => (
+                          <div key={prescrito.id} className="historico-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                            <div className="historico-item-info">
+                              <div className="historico-item-date" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                                {prescrito.medicamento} {prescrito.marca ? `(${prescrito.marca})` : ''}
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                📅 {formatDate((prescrito as any).consulta?.data_consulta || (prescrito as any).consulta?.createdAt || prescrito.createdAt)}
+                              </div>
+                              <div style={{ fontSize: '0.8rem', marginTop: '2px' }}>
+                                {prescrito.dosagem} - {prescrito.frequencia} - {prescrito.duracao}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </Accordion>
 
                   <Accordion
@@ -1094,8 +1140,10 @@ function AtendimentoInner() {
                                 ✕
                               </button>
                             </div>
-                            <div className="prescricao-card-info">
-                              {p.dosagem}
+                            <div className="prescricao-card-info" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                              <span><strong>Dosagem:</strong> {p.dosagem}</span>
+                              <span><strong>Frequência:</strong> {p.frequencia}</span>
+                              <span><strong>Duração:</strong> {p.duracao}</span>
                             </div>
                             {p.inclusoConvenio && <div className="prescricao-card-badge">Convênio</div>}
                           </div>
@@ -1181,13 +1229,35 @@ function AtendimentoInner() {
                           </div>
 
                           <div className="prescricao-input-wrapper">
-                            <label className="prescricao-input-label">Posologia *</label>
+                            <label className="prescricao-input-label">Dosagem *</label>
                             <input
                               type="text"
                               className="prescricao-input"
-                              placeholder="Dose, frequência e duração (Ex: 1 comprimido 8/8h por 7 dias)"
+                              placeholder="Ex: 500mg, 1 comprimido, 5ml..."
                               value={prescricaoData.dosagem}
                               onChange={(e) => setPrescricaoData(prev => ({ ...prev, dosagem: e.target.value }))}
+                            />
+                          </div>
+
+                          <div className="prescricao-input-wrapper">
+                            <label className="prescricao-input-label">Frequência *</label>
+                            <input
+                              type="text"
+                              className="prescricao-input"
+                              placeholder="Ex: 8/8h, uma vez ao dia, se dor..."
+                              value={prescricaoData.frequencia}
+                              onChange={(e) => setPrescricaoData(prev => ({ ...prev, frequencia: e.target.value }))}
+                            />
+                          </div>
+
+                          <div className="prescricao-input-wrapper">
+                            <label className="prescricao-input-label">Duração *</label>
+                            <input
+                              type="text"
+                              className="prescricao-input"
+                              placeholder="Ex: 7 dias, uso contínuo..."
+                              value={prescricaoData.duracao}
+                              onChange={(e) => setPrescricaoData(prev => ({ ...prev, duracao: e.target.value }))}
                             />
                           </div>
 

@@ -109,3 +109,15 @@ export async function getSugestoesMarcas(query: string, token: string): Promise<
     );
     return response.data;
 }
+/**
+ * Obter histórico de prescrições de um paciente
+ */
+export async function getPrescricoesByPaciente(pacienteId: number, token: string): Promise<Prescricao[]> {
+    const response = await axios.get(
+        `${API_URL}/prescricoes/paciente/${pacienteId}`,
+        {
+            headers: { Authorization: `Bearer ${token}` }
+        }
+    );
+    return response.data;
+}
