@@ -203,73 +203,80 @@ export default function PerfilPage() {
         </section>
 
         <div className="profile-content-grid">
-          {/* Detailed Info */}
-          <section className="profile-section-card">
-            <div className="section-header">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-              <h4>Dados Cadastrais</h4>
-            </div>
-
-            <div className="profile-form-grid">
-              {profile?.tipo_usuario === 'medico' && (
-                <div className="field-group">
-                  <label>CRM</label>
-                  <div className="field-value">{(userData as any).crm || '-'}</div>
-                </div>
-              )}
-              {profile?.tipo_usuario === 'paciente' && (
-                <div className="field-group">
-                  <label>Telefone / WhatsApp</label>
-                  <div className="field-value">{(userData as any).telefone || '-'}</div>
-                </div>
-              )}
-              <div className="field-group">
-                <label>Data de Nascimento</label>
-                <div className="field-value">{(userData as any).data_nascimento ? formatDate((userData as any).data_nascimento) : '-'}</div>
+          {/* Left Column: Details & Documents */}
+          <div className="profile-main-column" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+            {/* 1. Basic Info Card */}
+            <section className="profile-section-card">
+              <div className="section-header">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                <h4>Dados Cadastrais</h4>
               </div>
-              <div className="field-group">
-                <label>Sexo</label>
-                <div className="field-value">{(userData as any).sexo || '-'}</div>
-              </div>
-              {profile?.tipo_usuario === 'paciente' && (
-                <div className="field-group">
-                  <label>Estado Civil</label>
-                  <div className="field-value">{(userData as any).estado_civil || '-'}</div>
-                </div>
-              )}
-              <div className="field-group">
-                <label>CPF</label>
-                <div className="field-value">{(userData as any).cpf || '-'}</div>
-              </div>
-            </div>
 
-            {profile?.tipo_usuario === 'paciente' && (
-              <>
-                <div className="section-header" style={{ marginTop: '2.5rem' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-                  <h4>Endereço</h4>
-                </div>
-
-                <div className="profile-form-grid">
-                  <div className="field-group" style={{ gridColumn: 'span 2' }}>
-                    <label>Logradouro</label>
-                    <div className="field-value">{mainAddress?.endereco || 'Não informado'}</div>
-                  </div>
+              <div className="profile-form-grid">
+                {profile?.tipo_usuario === 'medico' && (
                   <div className="field-group">
-                    <label>Número</label>
-                    <div className="field-value">{mainAddress?.numero || '-'}</div>
+                    <label>CRM</label>
+                    <div className="field-value">{(userData as any).crm || '-'}</div>
                   </div>
+                )}
+                {profile?.tipo_usuario === 'paciente' && (
                   <div className="field-group">
-                    <label>Complemento</label>
-                    <div className="field-value">{mainAddress?.complemento || '-'}</div>
+                    <label>Telefone / WhatsApp</label>
+                    <div className="field-value">{(userData as any).telefone || '-'}</div>
                   </div>
+                )}
+                <div className="field-group">
+                  <label>Data de Nascimento</label>
+                  <div className="field-value">{(userData as any).data_nascimento ? formatDate((userData as any).data_nascimento) : '-'}</div>
                 </div>
-              </>
-            )}
+                <div className="field-group">
+                  <label>Sexo</label>
+                  <div className="field-value">{(userData as any).sexo || '-'}</div>
+                </div>
+                {profile?.tipo_usuario === 'paciente' && (
+                  <div className="field-group">
+                    <label>Estado Civil</label>
+                    <div className="field-value">{(userData as any).estado_civil || '-'}</div>
+                  </div>
+                )}
+                <div className="field-group">
+                  <label>CPF</label>
+                  <div className="field-value">{(userData as any).cpf || '-'}</div>
+                </div>
+              </div>
 
+              {profile?.tipo_usuario === 'paciente' && (
+                <>
+                  <div className="section-header" style={{ marginTop: '2.5rem' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                    <h4>Endereço</h4>
+                  </div>
+
+                  <div className="profile-form-grid">
+                    <div className="field-group" style={{ gridColumn: 'span 2' }}>
+                      <label>Logradouro</label>
+                      <div className="field-value">{mainAddress?.endereco || 'Não informado'}</div>
+                    </div>
+                    <div className="field-group">
+                      <label>Número</label>
+                      <div className="field-value">{mainAddress?.numero || '-'}</div>
+                    </div>
+                    <div className="field-group">
+                      <label>Complemento</label>
+                      <div className="field-value">{mainAddress?.complemento || '-'}</div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </section>
+
+            {/* 2. Professional Summary (Doctors Only) */}
+            {profile?.tipo_usuario === 'medico' && <ResumoProfissionalCard />}
+
+            {/* 3. Professional Documents Card (Doctors Only) */}
             {profile?.tipo_usuario === 'medico' && (
-              <>
-                <div className="section-header" style={{ marginTop: '2.5rem' }}>
+              <section className="profile-section-card">
+                <div className="section-header">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14.5 2 14.5 7.5 20 7.5" /></svg>
                   <h4>Documentos Profissionais</h4>
                 </div>
@@ -381,11 +388,9 @@ export default function PerfilPage() {
                     )}
                   </div>
                 </div>
-
-                <ResumoProfissionalCard />
-              </>
+              </section>
             )}
-          </section>
+          </div>
 
           {/* Security Section */}
           <aside className="profile-section-card">
