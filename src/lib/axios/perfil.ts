@@ -38,6 +38,7 @@ export type UserProfile = {
         seguro_responsabilidade_mimetype?: string;
         telefone?: string;
         avaliacao?: number;
+        resumo_profissional?: string;
     };
     enderecos?: Array<{
         id: number;
