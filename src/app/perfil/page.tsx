@@ -14,6 +14,7 @@ import { formatDate } from '@/lib/utils/dateFormatters';
 import AddressAutocomplete from '@/components/common/Inputs/AddressAutocomplete';
 import ContentModal from '@/components/common/Modal/ContentModal';
 import { uploadFileToServer } from '@/lib/upload';
+import ResumoProfissionalCard from '@/components/dashboard/ResumoProfissionalCard';
 
 export default function PerfilPage() {
   const router = useRouter();
@@ -380,6 +381,8 @@ export default function PerfilPage() {
                     )}
                   </div>
                 </div>
+
+                <ResumoProfissionalCard />
               </>
             )}
           </section>

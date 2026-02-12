@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { getToken } from "@/lib/auth";
-import { updateMyProfile, UserProfile } from "@/lib/axios/perfil";
+import { updateMyProfile } from "@/lib/axios/perfil";
 import { useUserProfile } from "@/hooks/useApiData";
 
 export default function ResumoProfissionalCard() {
@@ -39,30 +38,28 @@ export default function ResumoProfissionalCard() {
     if (!profile || profile.tipo_usuario !== "medico") return null;
 
     return (
-        <div className="dash-card tall">
-            <div className="dash-card-header">
-                <h3>Resumo Profissional</h3>
-                <div className="dash-card-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                    </svg>
-                </div>
+        <section className="profile-section-card" style={{ gridColumn: "1 / -1" }}>
+            <div className="section-header">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                <h4>Resumo Profissional</h4>
             </div>
 
-            <div className="dash-card-body" style={{ marginTop: "0.5rem" }}>
+            <div className="profile-form-grid" style={{ marginTop: "1rem", display: "block" }}>
                 {isEditing ? (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", height: "100%" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                         <textarea
                             className="details-text"
                             style={{
                                 width: "100%",
-                                minHeight: "150px",
-                                flex: 1,
+                                minHeight: "180px",
                                 resize: "none",
                                 fontFamily: "inherit",
-                                fontSize: "0.9rem",
-                                padding: "0.75rem",
+                                fontSize: "1rem",
+                                lineHeight: "1.6",
+                                padding: "1rem",
                                 border: "1px solid var(--border-color)",
                                 borderRadius: "var(--radius-lg)",
                                 backgroundColor: "var(--bg-secondary)",
@@ -72,10 +69,10 @@ export default function ResumoProfissionalCard() {
                             value={resumo}
                             onChange={(e) => setResumo(e.target.value)}
                         />
-                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
                             <button
-                                className="btn ghost"
-                                style={{ flex: 1, padding: "0.5rem" }}
+                                className="btn-profile secondary"
+                                style={{ minWidth: "120px" }}
                                 onClick={() => {
                                     setIsEditing(false);
                                     setResumo(profile?.medico?.resumo_profissional || "");
@@ -85,8 +82,8 @@ export default function ResumoProfissionalCard() {
                                 Cancelar
                             </button>
                             <button
-                                className="btn primary"
-                                style={{ flex: 1, padding: "0.5rem" }}
+                                className="btn-profile primary"
+                                style={{ minWidth: "120px" }}
                                 onClick={handleSave}
                                 disabled={loading}
                             >
@@ -95,43 +92,38 @@ export default function ResumoProfissionalCard() {
                         </div>
                     </div>
                 ) : (
-                    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                         <div style={{
-                            flex: 1,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 8,
-                            WebkitBoxOrient: "vertical",
-                            fontSize: "0.95rem",
-                            lineHeight: "1.6",
+                            fontSize: "1rem",
+                            lineHeight: "1.7",
                             color: resumo ? "var(--text-primary)" : "var(--text-tertiary)",
-                            fontStyle: resumo ? "normal" : "italic"
+                            fontStyle: resumo ? "normal" : "italic",
+                            whiteSpace: "pre-wrap",
+                            backgroundColor: "var(--bg-tertiary)",
+                            padding: "1.25rem",
+                            borderRadius: "var(--radius-lg)",
+                            border: "1px solid var(--border-color)"
                         }}>
                             {resumo || "Você ainda não definiu um resumo profissional. Clique em 'Editar Resumo' para apresentar-se aos seus pacientes."}
                         </div>
-                        <button
-                            className="btn btn-primary"
-                            style={{
-                                marginTop: "1rem",
-                                borderRadius: "var(--radius-lg)",
-                                width: "100%",
-                                padding: "0.5rem",
-                                background: "var(--bg-tertiary)",
-                                color: "var(--text-primary)",
-                                border: "1px solid var(--border-color)"
-                            }}
-                            onClick={() => setIsEditing(true)}
-                        >
-                            Editar Resumo
-                        </button>
+                        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                            <button
+                                className="btn-profile secondary"
+                                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+                                onClick={() => setIsEditing(true)}
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                                Editar Resumo
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
 
-            <div className="dash-card-footer" style={{ marginTop: "0.5rem" }}>
-                Este resumo aparece no seu perfil para os pacientes.
-            </div>
-        </div>
+            <p style={{ marginTop: "1rem", fontSize: "0.85rem", color: "var(--text-tertiary)", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+                Este resumo é exibido publicamente para seus pacientes no seu perfil de atendimento.
+            </p>
+        </section>
     );
 }

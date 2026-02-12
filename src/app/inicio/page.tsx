@@ -22,8 +22,6 @@ import {
   cancelarConsulta
 } from '@/lib/axios/consultas';
 
-import ResumoProfissionalCard from '@/components/dashboard/ResumoProfissionalCard';
-
 // Array vazio estável para evitar loops infinitos de renderização
 const EMPTY_ARRAY: any[] = [];
 
@@ -444,8 +442,6 @@ export default function InicioPage() {
               </div>
             )}
           </div>
-
-          {isMedico && <ResumoProfissionalCard />}
         </section>
       </DashboardLayout>
       <Modal
