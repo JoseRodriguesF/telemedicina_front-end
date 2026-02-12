@@ -148,10 +148,7 @@ export type ConsultaDetails = {
     sexo: string;
     data_nascimento: string;
     telefone: string;
-    usuario?: {
-      notas?: string;
-    };
-    // outros campos se necessário
+    notas?: string;
   };
   historiaClinica?: Partial<HistoriaClinicaDetails>;
 };

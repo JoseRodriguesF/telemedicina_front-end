@@ -176,8 +176,8 @@ function AtendimentoInner() {
         const data = await getConsulta(curCid, token);
 
         setConsultaDetails(data);
-        if (data.paciente?.usuario?.notas) {
-          setPacienteNotas(data.paciente.usuario.notas);
+        if (data.paciente?.notas) {
+          setPacienteNotas(data.paciente.notas);
         }
       } catch (err) {
         console.error('[AtendimentoInner] Erro ao buscar detalhes da consulta:', err);
