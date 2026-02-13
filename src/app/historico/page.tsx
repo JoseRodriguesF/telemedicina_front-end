@@ -390,6 +390,24 @@ export default function HistoricoPage() {
               </div>
             </div>
 
+            {selectedItem.historiaClinica && selectedItem.historiaClinica.length > 0 && (
+              <div className="details-section">
+                <h4>História Clínica (Triagem)</h4>
+                <div style={{
+                  padding: '1rem',
+                  background: 'var(--bg-secondary)',
+                  borderRadius: 'var(--radius-lg)',
+                  border: '1px solid var(--border-color)',
+                  fontSize: '0.95rem',
+                  color: 'var(--text-primary)',
+                  lineHeight: 1.6,
+                  whiteSpace: 'pre-wrap'
+                }}>
+                  {selectedItem.historiaClinica[0].conteudo}
+                </div>
+              </div>
+            )}
+
             <div className="details-section">
               <h4>Diagnóstico</h4>
               <p className="detail-text">{selectedItem.diagnostico || 'Não registrado'}</p>
