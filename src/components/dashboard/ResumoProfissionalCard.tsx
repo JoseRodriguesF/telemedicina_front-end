@@ -4,12 +4,15 @@ import { useState, useEffect } from "react";
 import { getToken } from "@/lib/auth";
 import { updateMyProfile } from "@/lib/axios/perfil";
 import { useUserProfile } from "@/hooks/useApiData";
+import ContentModal from "@/components/common/Modal/ContentModal";
+import FormattedText from "@/components/common/FormattedText";
 
 export default function ResumoProfissionalCard() {
     const { profile, refresh } = useUserProfile();
     const [isEditing, setIsEditing] = useState(false);
     const [resumo, setResumo] = useState("");
     const [loading, setLoading] = useState(false);
+    const [showFullContent, setShowFullContent] = useState(false);
 
     useEffect(() => {
         if (profile?.medico?.resumo_profissional) {
@@ -104,7 +107,43 @@ export default function ResumoProfissionalCard() {
                             borderRadius: "var(--radius-lg)",
                             border: "1px solid var(--border-color)"
                         }}>
-                            {resumo || "Você ainda não definiu um resumo profissional. Clique em 'Editar Resumo' para apresentar-se aos seus pacientes."}
+                            {resumo ? (
+                                <div style={{ position: 'relative' }}>
+                                    <FormattedText
+                                        text={resumo.length > 200 ? `${resumo.substring(0, 200)}...` : resumo}
+                                        style={{
+                                            fontSize: "1rem",
+                                            lineHeight: "1.7",
+                                            color: "var(--text-primary)"
+                                        }}
+                                    />
+                                    {resumo.length > 200 && (
+                                        <button
+                                            onClick={() => setShowFullContent(true)}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                color: 'var(--color-primary-500)',
+                                                fontWeight: 600,
+                                                cursor: 'pointer',
+                                                padding: '0.25rem 0',
+                                                fontSize: '0.9rem',
+                                                marginTop: '0.5rem',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.25rem'
+                                            }}
+                                        >
+                                            Ver texto completo
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                <span style={{ fontStyle: "italic", color: "var(--text-tertiary)" }}>
+                                    Você ainda não definiu um resumo profissional. Clique em 'Editar Resumo' para apresentar-se aos seus pacientes.
+                                </span>
+                            )}
                         </div>
                         <div style={{ display: "flex", justifyContent: "flex-end" }}>
                             <button
@@ -124,6 +163,24 @@ export default function ResumoProfissionalCard() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
                 Este resumo é exibido publicamente para seus pacientes no seu perfil de atendimento.
             </p>
+
+            <ContentModal
+                isOpen={showFullContent}
+                onClose={() => setShowFullContent(false)}
+                title="Resumo Profissional Completo"
+                size="md"
+            >
+                <div style={{ padding: '0.5rem' }}>
+                    <FormattedText
+                        text={resumo}
+                        style={{
+                            fontSize: "1.05rem",
+                            lineHeight: "1.8",
+                            color: "var(--text-primary)"
+                        }}
+                    />
+                </div>
+            </ContentModal>
         </div>
     );
 }
