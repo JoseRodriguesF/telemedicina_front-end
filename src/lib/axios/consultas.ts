@@ -314,18 +314,12 @@ export async function psListActiveRooms(token: string, userId?: string): Promise
 // História Clínica
 export type HistoriaClinicaItem = {
   id: number;
-  queixaPrincipal: string;
-  descricaoSintomas?: string;
+  conteudo: string;
 };
 
 export type HistoriaClinicaDetails = {
   id: number;
-  queixaPrincipal?: string;
-  sintomas?: string;
-  tempoSintomas?: string;
-  historico?: string;
-  medicamentos?: string;
-  alergias?: string;
+  conteudo: string;
 };
 
 export async function getHistoriaClinica(id: number, token: string): Promise<HistoriaClinicaDetails> {

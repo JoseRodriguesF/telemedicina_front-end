@@ -165,7 +165,10 @@ export default function HistoricoPage() {
           </button>
           <button
             className={`tab-btn ${activeTab === 'prescricoes' ? 'active' : ''}`}
-            onClick={() => setActiveTab('prescricoes')}
+            onClick={() => {
+              setActiveTab('prescricoes');
+              setFilterStatus('all');
+            }}
           >
             Prescrições ({totalPrescricoes})
           </button>
@@ -209,11 +212,16 @@ export default function HistoricoPage() {
 
         <div className="status-filters">
           <button className={`btn ${filterStatus === 'all' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('all')}>Todos</button>
-          <button className={`btn ${filterStatus === 'finished' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('finished')}>Finalizadas</button>
-          <button className={`btn ${filterStatus === 'agendada' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('agendada')}>Agendadas</button>
-          <button className={`btn ${filterStatus === 'solicitada' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('solicitada')}>Solicitadas</button>
-          <button className={`btn ${filterStatus === 'cancelled' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('cancelled')}>Canceladas</button>
-          <button className={`btn ${filterStatus === 'in_progress' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('in_progress')}>Em andamento</button>
+
+          {activeTab === 'atendimentos' && (
+            <>
+              <button className={`btn ${filterStatus === 'finished' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('finished')}>Finalizadas</button>
+              <button className={`btn ${filterStatus === 'agendada' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('agendada')}>Agendadas</button>
+              <button className={`btn ${filterStatus === 'solicitada' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('solicitada')}>Solicitadas</button>
+              <button className={`btn ${filterStatus === 'cancelled' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('cancelled')}>Canceladas</button>
+              <button className={`btn ${filterStatus === 'in_progress' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('in_progress')}>Em andamento</button>
+            </>
+          )}
         </div>
 
         <div className="history-content-grid">

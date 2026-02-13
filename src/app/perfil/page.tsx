@@ -15,6 +15,7 @@ import AddressAutocomplete from '@/components/common/Inputs/AddressAutocomplete'
 import ContentModal from '@/components/common/Modal/ContentModal';
 import { uploadFileToServer } from '@/lib/upload';
 import ResumoProfissionalCard from '@/components/dashboard/ResumoProfissionalCard';
+import HistoriaClinicaCard from '@/components/dashboard/HistoriaClinicaCard';
 
 export default function PerfilPage() {
   const router = useRouter();
@@ -270,6 +271,9 @@ export default function PerfilPage() {
 
             {/* 2. Professional Summary (Doctors Only) */}
             {profile?.tipo_usuario === 'medico' && <ResumoProfissionalCard />}
+
+            {/* 2. Clinical History (Patients Only) */}
+            {profile?.tipo_usuario === 'paciente' && <HistoriaClinicaCard />}
 
             {/* 3. Professional Documents Section (Doctors Only) */}
             {profile?.tipo_usuario === 'medico' && (

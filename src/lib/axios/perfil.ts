@@ -16,6 +16,7 @@ export type UserProfile = {
         telefone: string;
         responsavel_legal?: string;
         telefone_responsavel?: string;
+        historia_clinica?: string;
     };
     medico?: {
         id: number;
