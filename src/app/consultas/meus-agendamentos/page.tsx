@@ -16,6 +16,7 @@ import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
+import FormattedText from '@/components/common/FormattedText';
 import { AppointmentActionButtons } from '@/components/appointments/AppointmentActionButtons';
 import ContentModal from '@/components/common/Modal/ContentModal';
 
@@ -407,12 +408,15 @@ export default function MeusAgendamentosPage() {
                                         background: 'var(--bg-tertiary)',
                                         borderRadius: 'var(--radius-lg)',
                                         border: '1px solid var(--border-color)',
-                                        fontSize: '1rem',
-                                        color: 'var(--text-primary)',
-                                        lineHeight: 1.7,
-                                        whiteSpace: 'pre-wrap'
                                     }}>
-                                        {consultaDetails.historiaClinica.conteudo || 'Não informada'}
+                                        <FormattedText
+                                            text={consultaDetails.historiaClinica.conteudo || 'Não informada'}
+                                            style={{
+                                                fontSize: '1rem',
+                                                color: 'var(--text-primary)',
+                                                lineHeight: 1.7
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             </div>

@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getUserFirstName, getToken, getUser } from '@/lib/auth';
 import ContentModal from '@/components/common/Modal/ContentModal';
 import { psListFila, PSFilaItem, getConsulta, ConsultaDetails, getHistoriaClinica } from '@/lib/axios/consultas';
+import FormattedText from '@/components/common/FormattedText';
 import { getTimeWaiting } from '@/lib/utils/dateFormatters';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
@@ -226,12 +227,15 @@ export default function PacientesPage() {
                       background: 'var(--bg-tertiary)',
                       borderRadius: 'var(--radius-lg)',
                       border: '1px solid var(--border-color)',
-                      fontSize: '1rem',
-                      color: 'var(--text-primary)',
-                      lineHeight: 1.7,
-                      whiteSpace: 'pre-wrap'
                     }}>
-                      {consultaDetails.historiaClinica.conteudo || 'Não informada'}
+                      <FormattedText
+                        text={consultaDetails.historiaClinica.conteudo || 'Não informada'}
+                        style={{
+                          fontSize: '1rem',
+                          color: 'var(--text-primary)',
+                          lineHeight: 1.7
+                        }}
+                      />
                     </div>
                   </div>
                 </div>

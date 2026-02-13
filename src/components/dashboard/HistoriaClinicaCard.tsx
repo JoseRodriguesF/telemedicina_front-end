@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { getToken } from "@/lib/auth";
 import { updateMyProfile } from "@/lib/axios/perfil";
 import { useUserProfile } from "@/hooks/useApiData";
+import FormattedText from "@/components/common/FormattedText";
 
 export default function HistoriaClinicaCard() {
     const { profile, refresh } = useUserProfile();
@@ -97,17 +98,25 @@ export default function HistoriaClinicaCard() {
                 ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                         <div style={{
-                            fontSize: "1rem",
-                            lineHeight: "1.7",
-                            color: historia ? "var(--text-primary)" : "var(--text-tertiary)",
-                            fontStyle: historia ? "normal" : "italic",
-                            whiteSpace: "pre-wrap",
                             backgroundColor: "var(--bg-tertiary)",
                             padding: "1.25rem",
                             borderRadius: "var(--radius-lg)",
                             border: "1px solid var(--border-color)"
                         }}>
-                            {historia || "Sua história clínica ainda não foi registrada. Ela será gerada automaticamente após sua primeira triagem com a Angélica."}
+                            {historia ? (
+                                <FormattedText
+                                    text={historia}
+                                    style={{
+                                        fontSize: "1rem",
+                                        lineHeight: "1.7",
+                                        color: "var(--text-primary)"
+                                    }}
+                                />
+                            ) : (
+                                <span style={{ fontStyle: "italic", color: "var(--text-tertiary)" }}>
+                                    Sua história clínica ainda não foi registrada. Ela será gerada automaticamente após sua primeira triagem com a Angélica.
+                                </span>
+                            )}
                         </div>
                         <div style={{ display: "flex", justifyContent: "flex-end" }}>
                             <button

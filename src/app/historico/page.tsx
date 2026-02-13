@@ -13,6 +13,7 @@ import { useHistoricoCompleto, useUserProfile } from '@/hooks/useApiData';
 import { useDebounce } from '@/hooks/useOptimization';
 import ContentModal from '@/components/common/Modal/ContentModal';
 import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
+import FormattedText from '@/components/common/FormattedText';
 
 export default function HistoricoPage() {
   const router = useRouter();
@@ -398,12 +399,15 @@ export default function HistoricoPage() {
                   background: 'var(--bg-secondary)',
                   borderRadius: 'var(--radius-lg)',
                   border: '1px solid var(--border-color)',
-                  fontSize: '0.95rem',
-                  color: 'var(--text-primary)',
-                  lineHeight: 1.6,
-                  whiteSpace: 'pre-wrap'
                 }}>
-                  {selectedItem.historiaClinica[0].conteudo}
+                  <FormattedText
+                    text={selectedItem.historiaClinica[0].conteudo}
+                    style={{
+                      fontSize: '0.95rem',
+                      color: 'var(--text-primary)',
+                      lineHeight: 1.6
+                    }}
+                  />
                 </div>
               </div>
             )}
