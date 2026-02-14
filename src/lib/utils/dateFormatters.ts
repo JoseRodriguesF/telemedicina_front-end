@@ -55,9 +55,17 @@ export function formatDate(dateString: string | Date | null | undefined): string
  * @param timeString - Hora em formato HH:mm:ss ou ISO completo
  * @returns String formatada HH:mm
  */
-export function formatTime(timeString: string | null | undefined): string {
+export function formatTime(timeString: string | Date | null | undefined): string {
     if (!timeString) return '';
     try {
+        if (timeString instanceof Date) {
+            return timeString.toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: TIMEZONE
+            });
+        }
+
         if (timeString.includes('T')) {
             return new Date(timeString).toLocaleTimeString('pt-BR', {
                 hour: '2-digit',
@@ -68,7 +76,7 @@ export function formatTime(timeString: string | null | undefined): string {
         // Se for HH:mm:ss sem T, assume que já é o valor que se deseja mostrar
         return timeString.substring(0, 5);
     } catch (e) {
-        return timeString;
+        return typeof timeString === 'string' ? timeString : '';
     }
 }
 

@@ -14,6 +14,8 @@ import { useDebounce } from '@/hooks/useOptimization';
 import ContentModal from '@/components/common/Modal/ContentModal';
 import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
 import FormattedText from '@/components/common/FormattedText';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function HistoricoPage() {
   const router = useRouter();
@@ -24,6 +26,9 @@ export default function HistoricoPage() {
   const [endDate, setEndDate] = useState('');
   const [selectedItem, setSelectedItem] = useState<PSFullHistoryItem | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [selectedPrescription, setSelectedPrescription] = useState<any | null>(null);
+  const [showPrescriptionDetails, setShowPrescriptionDetails] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [searchResults, setSearchResults] = useState<PSFullHistoryItem[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [activeTab, setActiveTab] = useState<'atendimentos' | 'prescricoes'>('atendimentos');
@@ -148,6 +153,47 @@ export default function HistoricoPage() {
 
   const totalAtendimentos = history.length;
   const totalPrescricoes = history.reduce((acc, c) => acc + (c.prescricoes?.length || 0), 0);
+
+  const generatePDF = async (presc: any) => {
+    setIsGeneratingPDF(true);
+    // Pequeno delay para garantir que o template com os dados corretos foi renderizado
+    setSelectedPrescription(presc);
+
+    setTimeout(async () => {
+      const element = document.getElementById('prescription-pdf-template');
+      if (!element) {
+        setIsGeneratingPDF(false);
+        return;
+      }
+
+      try {
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`Prescricao_${presc.medicamento}_${formatDate(presc.consultaData)}.pdf`);
+      } catch (error) {
+        console.error('Erro ao gerar PDF:', error);
+      } finally {
+        setIsGeneratingPDF(false);
+      }
+    }, 500);
+  };
 
   return (
     <DashboardLayout>
@@ -281,25 +327,40 @@ export default function HistoricoPage() {
               /* Aba de Prescrições */
               allPrescriptions.length > 0 ? (
                 allPrescriptions.map((presc, idx) => (
-                  <div key={`${presc.id}-${idx}`} className="history-item-card">
-                    <div className="history-item-avatar" style={{ backgroundColor: 'var(--color-primary-100)', color: 'var(--color-primary-600)' }}>
+                  <div
+                    key={`${presc.id}-${idx}`}
+                    className="history-item-card prescription-card"
+                    onClick={() => { setSelectedPrescription(presc); setShowPrescriptionDetails(true); }}
+                  >
+                    <div className="history-item-avatar">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22v-5" /><path d="M12 12V2" /><path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" /><path d="m15 13-3-3-3 3" /></svg>
                     </div>
 
                     <div className="history-item-main">
                       <div className="history-item-top">
                         <span className="history-item-name">{presc.medicamento}</span>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>{presc.marca || 'Genérico'}</span>
+                        <span className="prescription-brand">{presc.marca || 'Genérico'}</span>
                       </div>
-                      <div className="history-item-meta">
-                        <span title="Dosagem"><strong>Dosagem:</strong> {presc.dosagem}</span>
-                        <span title="Frequência"><strong>Freq.:</strong> {presc.frequencia}</span>
-                        <span title="Duração"><strong>Dur.:</strong> {presc.duracao}</span>
+
+                      <div className="prescription-info-grid">
+                        <div className="prescription-info-item">
+                          <label>Dosagem</label>
+                          <span>{presc.dosagem}</span>
+                        </div>
+                        <div className="prescription-info-item">
+                          <label>Frequência</label>
+                          <span>{presc.frequencia}</span>
+                        </div>
+                        <div className="prescription-info-item">
+                          <label>Duração</label>
+                          <span>{presc.duracao}</span>
+                        </div>
                       </div>
-                      <div className="history-item-meta" style={{ marginTop: '0.25rem' }}>
+
+                      <div className="history-item-meta" style={{ marginTop: '0.75rem' }}>
                         <span>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                          {userType === 'paciente' ? `Dr. ${presc.medicoNome}` : `Paciente: ${presc.pacienteNome}`}
+                          {userType === 'paciente' ? `Dr(a). ${presc.medicoNome}` : `Paciente: ${presc.pacienteNome}`}
                         </span>
                         <span>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
@@ -308,14 +369,29 @@ export default function HistoricoPage() {
                       </div>
                     </div>
 
-                    <div className="history-item-status">
-                      <span className={`badge ${getStatusBadgeClass(presc.consultaStatus)}`}>
-                        Consulta {getStatusLabel(presc.consultaStatus)}
-                      </span>
-                    </div>
-
                     <div className="history-item-actions">
-                      <button className="action-btn" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', boxShadow: 'none' }}>Baixar PDF</button>
+                      <button
+                        className="action-btn-secondary btn-download"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          generatePDF(presc);
+                        }}
+                        disabled={isGeneratingPDF && selectedPrescription?.id === presc.id}
+                      >
+                        {isGeneratingPDF && selectedPrescription?.id === presc.id ? (
+                          <span className="flex items-center gap-2">
+                            <div className="mini-spinner"></div> Gerando...
+                          </span>
+                        ) : (
+                          <>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.4rem' }}>
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" />
+                            </svg>
+                            PDF
+                          </>
+                        )}
+                      </button>
+                      <button className="action-btn-secondary">Detalhes</button>
                     </div>
                   </div>
                 ))
@@ -454,6 +530,158 @@ export default function HistoricoPage() {
           </div>
         )}
       </ContentModal>
+
+      {/* Modal de Detalhes da Prescrição */}
+      <ContentModal
+        isOpen={showPrescriptionDetails}
+        onClose={() => setShowPrescriptionDetails(false)}
+        title="Detalhes da Prescrição"
+        size="md"
+      >
+        {selectedPrescription && (
+          <div className="prescription-details-container">
+            <div className="prescription-header-info">
+              <div>
+                <h3 className="prescription-medication-title">{selectedPrescription.medicamento}</h3>
+                <span className="prescription-brand">{selectedPrescription.marca || 'Laboratório Genérico'}</span>
+              </div>
+              <button
+                className="action-btn btn-download"
+                onClick={() => generatePDF(selectedPrescription)}
+                disabled={isGeneratingPDF}
+              >
+                {isGeneratingPDF ? 'Gerando...' : 'Baixar PDF'}
+              </button>
+            </div>
+
+            <div className="prescription-details-grid">
+              <div className="prescription-detail-box">
+                <label>Dosagem</label>
+                <span>{selectedPrescription.dosagem}</span>
+              </div>
+              <div className="prescription-detail-box">
+                <label>Frequência</label>
+                <span>{selectedPrescription.frequencia}</span>
+              </div>
+              <div className="prescription-detail-box">
+                <label>Duração</label>
+                <span>{selectedPrescription.duracao}</span>
+              </div>
+              <div className="prescription-detail-box">
+                <label>Data da Consulta</label>
+                <span>{formatDate(selectedPrescription.consultaData)}</span>
+              </div>
+            </div>
+
+            <div className="details-section">
+              <h4>Informações Adicionais</h4>
+              <div className="prescription-detail-box" style={{ background: 'var(--bg-secondary)' }}>
+                <label>Médico Responsável</label>
+                <p style={{ fontWeight: 700, margin: '0.25rem 0' }}>Dr(a). {selectedPrescription.medicoNome}</p>
+
+                <label style={{ marginTop: '1rem' }}>Paciente</label>
+                <p style={{ fontWeight: 600, margin: '0.25rem 0' }}>{selectedPrescription.pacienteNome}</p>
+              </div>
+            </div>
+
+            {selectedPrescription.orientacoes && (
+              <div className="details-section">
+                <h4>Orientações</h4>
+                <div className="detail-text">
+                  {selectedPrescription.orientacoes}
+                </div>
+              </div>
+            )}
+
+            <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
+              Prescrição gerada via Plataforma JJ Telemedicina
+            </div>
+          </div>
+        )}
+      </ContentModal>
+
+      {/* Template para o PDF (Invisível) - Design de Prescrição Realista */}
+      {selectedPrescription && (
+        <div id="prescription-pdf-template">
+          <div className="pdf-watermark">JJ TELEMEDICINA</div>
+          <div className="pdf-inner-border"></div>
+
+          <div className="pdf-header">
+            <div className="pdf-logo-wrapper">
+              <div className="pdf-logo-circle">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22v-5" /><path d="M12 12V2" /><path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" /><path d="m15 13-3-3-3 3" />
+                </svg>
+              </div>
+              <div className="pdf-logo-text">
+                <h1>JJ Telemedicina</h1>
+                <p>Cuidado Digital de Excelência</p>
+              </div>
+            </div>
+            <div className="pdf-header-meta">
+              <div>JJ Serviços Médicos e Tecnológicos Ltda.</div>
+              <div>CNPJ: 00.000.000/0001-00</div>
+              <div>contato@jjtelemedicina.com.br</div>
+              <div>www.jjtelemedicina.com.br</div>
+            </div>
+          </div>
+
+          <div className="pdf-title-section">
+            <h2 className="pdf-title-main">Receituário</h2>
+            <p className="pdf-title-sub">Prescrição Médica Digital</p>
+          </div>
+
+          <div className="pdf-patient-section">
+            <span className="pdf-patient-label">Para:</span>
+            <p className="pdf-patient-name">{selectedPrescription.pacienteNome}</p>
+          </div>
+
+          <div className="pdf-prescription-body">
+            <div className="pdf-med-item">
+              <span className="pdf-med-number">1.</span>
+              <div className="pdf-med-name-row">
+                <span className="pdf-med-name">{selectedPrescription.medicamento} {selectedPrescription.dosagem}</span>
+                <span className="pdf-med-quantity">1 Unidade</span>
+              </div>
+
+              <div className="pdf-instructions-box">
+                <div className="pdf-instruction-line">
+                  <span className="pdf-instruction-label">Uso:</span>
+                  {selectedPrescription.orientacoes || `Tomar conforme orientação: ${selectedPrescription.frequencia} por ${selectedPrescription.duracao}.`}
+                </div>
+                {selectedPrescription.marca && (
+                  <div className="pdf-instruction-line" style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>
+                    <span className="pdf-instruction-label">Obs:</span> Preferência por marca {selectedPrescription.marca}.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="pdf-footer">
+            <div className="pdf-seal-wrapper">
+              <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+            </div>
+            <div className="pdf-signature-area">
+              <div className="pdf-signature-line"></div>
+              <p className="pdf-doctor-name">Dr(a). {selectedPrescription.medicoNome}</p>
+              <p className="pdf-doctor-info">CRM/UF: 000000 - Especialista em Telemedicina</p>
+            </div>
+
+            <div className="pdf-auth-footer">
+              <div>
+                Emitido em: <strong>{formatDate(new Date())} às {formatTime(new Date())}</strong>
+              </div>
+              <div className="pdf-auth-code">
+                CÓD: {Math.random().toString(36).substring(2, 10).toUpperCase()}-{selectedPrescription.id}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

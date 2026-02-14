@@ -462,3 +462,406 @@
     opacity: 0.3;
     margin-bottom: 0.5rem;
 }
+
+/* Prescription Specific Card Enhancements */
+.prescription-card {
+    border-left: 4px solid var(--color-primary-500);
+}
+
+.prescription-card .history-item-avatar {
+    background: var(--color-primary-50) !important;
+    color: var(--color-primary-600) !important;
+    border: 1px solid var(--color-primary-100);
+}
+
+.prescription-info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    background: var(--bg-secondary);
+    padding: 0.75rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--card-border);
+}
+
+.prescription-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.prescription-info-item label {
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.prescription-info-item span {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+/* Prescription Details Modal */
+.prescription-details-container {
+    padding: 1rem 0;
+}
+
+.prescription-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.prescription-medication-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-primary-600);
+    margin: 0;
+}
+
+.prescription-brand {
+    font-size: 0.9rem;
+    color: var(--text-tertiary);
+    font-weight: 500;
+}
+
+.prescription-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.prescription-detail-box {
+    background: var(--bg-tertiary);
+    padding: 1.25rem;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-color);
+}
+
+.prescription-detail-box label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.prescription-detail-box span {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.prescription-instructions {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* PDF Template (Hidden from UI) - Realistic Medical Prescription */
+#prescription-pdf-template {
+    position: fixed;
+    top: -9999px;
+    left: -9999px;
+    width: 210mm;
+    min-height: 297mm;
+    background: white;
+    color: #1e293b !important;
+    padding: 20mm;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex !important;
+    flex-direction: column;
+    box-sizing: border-box;
+    border: 1px solid #e2e8f0;
+}
+
+#prescription-pdf-template * {
+    color: #1e293b !important;
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+/* Watermark */
+.pdf-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 8rem;
+    font-weight: 900;
+    color: rgba(14, 165, 233, 0.03) !important;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.pdf-inner-border {
+    position: absolute;
+    top: 10mm;
+    left: 10mm;
+    right: 10mm;
+    bottom: 10mm;
+    border: 1px solid rgba(14, 165, 233, 0.1);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.pdf-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 3px solid #0ea5e9;
+    padding-bottom: 2rem;
+    margin-bottom: 2.5rem;
+    z-index: 2;
+}
+
+.pdf-logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.pdf-logo-circle {
+    width: 50px;
+    height: 50px;
+    background: #0ea5e9;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pdf-logo-text h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0ea5e9 !important;
+    letter-spacing: -0.02em;
+}
+
+.pdf-logo-text p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #64748b !important;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.pdf-header-meta {
+    text-align: right;
+    font-size: 0.8rem;
+    color: #475569 !important;
+    line-height: 1.4;
+}
+
+.pdf-title-section {
+    text-align: center;
+    margin-bottom: 3rem;
+    z-index: 2;
+}
+
+.pdf-title-main {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #1e293b !important;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 0.5rem;
+}
+
+.pdf-title-sub {
+    font-size: 0.85rem;
+    color: #64748b !important;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.pdf-patient-section {
+    margin-bottom: 3rem;
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 6px solid #0ea5e9;
+    z-index: 2;
+}
+
+.pdf-patient-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #0ea5e9 !important;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.pdf-patient-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1e293b !important;
+    margin: 0;
+}
+
+.pdf-prescription-body {
+    flex: 1;
+    z-index: 2;
+}
+
+.pdf-med-item {
+    margin-bottom: 2.5rem;
+    position: relative;
+    padding-left: 2.5rem;
+}
+
+.pdf-med-number {
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #0ea5e9 !important;
+}
+
+.pdf-med-name-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.pdf-med-name {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #1e293b !important;
+}
+
+.pdf-med-quantity {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #64748b !important;
+}
+
+.pdf-instructions-box {
+    padding: 0.5rem 0;
+}
+
+.pdf-instruction-line {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #334155 !important;
+    margin-bottom: 0.5rem;
+}
+
+.pdf-instruction-label {
+    font-weight: 700;
+    color: #64748b !important;
+    margin-right: 0.5rem;
+}
+
+.pdf-footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 3rem;
+    z-index: 2;
+}
+
+.pdf-seal-wrapper {
+    margin-bottom: 1.5rem;
+    opacity: 0.6;
+}
+
+.pdf-signature-area {
+    text-align: center;
+    width: 60%;
+}
+
+.pdf-signature-line {
+    border-top: 1.5px solid #94a3b8;
+    margin-bottom: 0.75rem;
+}
+
+.pdf-doctor-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #1e293b !important;
+    margin: 0;
+}
+
+.pdf-doctor-info {
+    font-size: 0.85rem;
+    color: #64748b !important;
+    margin: 0.25rem 0 1.5rem;
+}
+
+.pdf-auth-footer {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-size: 0.7rem;
+    color: #94a3b8 !important;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 1rem;
+}
+
+.pdf-auth-code {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 700;
+}
+
+/* Response/Button improvements */
+.action-btn-secondary {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition-base);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    box-shadow: none;
+}
+
+.action-btn-secondary:hover {
+    background: var(--bg-secondary);
+    border-color: var(--color-primary-400);
+}
+
+.btn-download {
+    background: #10b981 !important;
+    /* Green for download */
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+}
+
+.btn-download:hover {
+    background: #059669 !important;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3) !important;
+}
+
+.mini-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
