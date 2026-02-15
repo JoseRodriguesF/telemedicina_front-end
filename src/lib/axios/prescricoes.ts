@@ -23,6 +23,7 @@ export interface CreatePrescricaoData {
     frequencia: string;
     duracao: string;
     inclusoConvenio?: boolean;
+    pdf?: { data: string; mimetype: string }; // Novo campo para o PDF assinado
 }
 
 /**

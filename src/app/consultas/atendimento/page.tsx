@@ -13,9 +13,11 @@ import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas, getPres
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
-import { formatDate } from '@/lib/utils/dateFormatters';
+import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
 import AddressAutocomplete from '@/components/common/Inputs/AddressAutocomplete';
 import ContentModal from '@/components/common/Modal/ContentModal';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
 
@@ -141,6 +143,12 @@ function AtendimentoInner() {
   const [pacienteNotas, setPacienteNotas] = useState('');
   const [isSavingNotas, setIsSavingNotas] = useState(false);
   const [isEditingNotas, setIsEditingNotas] = useState(false);
+
+  // Estados para Prescrição Digital .gov
+  const [prescricaoGerada, setPrescricaoGerada] = useState(false);
+  const [signedPdfFile, setSignedPdfFile] = useState<{ data: string; mimetype: string } | null>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const hiddenFileInputRef = useRef<HTMLInputElement>(null);
 
   const isScheduled = search.get('scheduled') === 'true';
 
@@ -814,7 +822,8 @@ function AtendimentoInner() {
                   dosagem: p.dosagem,
                   frequencia: p.frequencia,
                   duracao: p.duracao,
-                  inclusoConvenio: p.inclusoConvenio
+                  inclusoConvenio: p.inclusoConvenio,
+                  pdf: signedPdfFile || undefined // Anexa o PDF assinado se existir
                 }, token)
               ));
             } catch (pErr) {
@@ -1018,6 +1027,89 @@ function AtendimentoInner() {
     setShowPrescricaoForm(false);
   }
 
+  // Lógica para Gerar e Baixar PDF Profissional
+  async function handleGenerateFinalPDF() {
+    if (activePrescricoes.length === 0) {
+      modal.error('Erro', 'Adicione pelo menos um medicamento para gerar a prescrição.');
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    // Expandir o accordion de prescrições se não estiver aberto para garantir renderização do template
+    if (!openAccordions['prescricoes']) {
+      setOpenAccordions(prev => ({ ...prev, prescricoes: true }));
+    }
+
+    // Pequeno delay para garantir que o DOM renderizou o template com os dados
+    setTimeout(async () => {
+      const element = document.getElementById('atendimento-prescription-pdf-template');
+      if (!element) {
+        setIsGeneratingPDF(false);
+        modal.error('Erro', 'Não foi possível localizar o template de impressão.');
+        return;
+      }
+
+      try {
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`Prescricao_${consultaDetails?.paciente?.nome_completo || 'Paciente'}_${new Date().toLocaleDateString()}.pdf`);
+
+        // Marcar como gerada para trocar a UI
+        setPrescricaoGerada(true);
+        setShowPrescricaoForm(false);
+        modal.success('PDF Gerado!', 'Assine o documento no portal do Gov.br e anexe o arquivo final aqui.');
+      } catch (error) {
+        console.error('Erro ao gerar PDF:', error);
+        modal.error('Erro', 'Falha ao processar a imagem do PDF.');
+      } finally {
+        setIsGeneratingPDF(false);
+      }
+    }, 800);
+  }
+
+  async function handleSignedPdfUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      modal.error('Formato Inválido', 'Por favor, anexe apenas arquivos PDF assinados.');
+      return;
+    }
+
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64Data = (reader.result as string).split(',')[1];
+        setSignedPdfFile({
+          data: base64Data,
+          mimetype: file.type
+        });
+        modal.success('Sucesso', 'Prescrição assinada anexada com sucesso!');
+      };
+    } catch (err) {
+      console.error('Erro ao ler PDF:', err);
+      modal.error('Erro', 'Não foi possível processar o arquivo.');
+    }
+  }
+
   // Determine status color:
   // Red: default / disconnected / failed / error
   // Yellow: connecting / local media ready but !remoteConnected
@@ -1117,169 +1209,246 @@ function AtendimentoInner() {
                     title="Prescrições"
                     isOpen={!!openAccordions['prescricoes']}
                     onToggle={toggleAccordion}
-                    isFilled={activePrescricoes.length > 0}
+                    isFilled={activePrescricoes.length > 0 || !!signedPdfFile}
                   >
-                    <div className="prescricoes-list" style={{ marginBottom: activePrescricoes.length > 0 ? '1rem' : '0' }}>
-                      {loadingPrescricoes ? (
-                        <p style={{ fontSize: '0.85rem', color: '#6b7280', textAlign: 'center' }}>Carregando...</p>
-                      ) : activePrescricoes.length === 0 ? (
-                        <p style={{ fontSize: '0.85rem', color: '#9ca3af', textAlign: 'center', fontStyle: 'italic' }}>Nenhuma prescrição adicionada.</p>
-                      ) : (
-                        activePrescricoes.map((p) => (
-                          <div key={p.id} className="prescricao-card">
-                            <div className="prescricao-card-header">
-                              <div>
-                                <div className="prescricao-card-medicamento">{p.medicamento}</div>
-                                {p.marca && <div className="prescricao-card-marca">{p.marca}</div>}
+                    {!prescricaoGerada ? (
+                      <>
+                        <div className="prescricoes-list" style={{ marginBottom: activePrescricoes.length > 0 ? '1rem' : '0' }}>
+                          {loadingPrescricoes ? (
+                            <p style={{ fontSize: '0.85rem', color: '#6b7280', textAlign: 'center' }}>Carregando...</p>
+                          ) : activePrescricoes.length === 0 ? (
+                            <p style={{ fontSize: '0.85rem', color: '#9ca3af', textAlign: 'center', fontStyle: 'italic' }}>Nenhuma prescrição adicionada.</p>
+                          ) : (
+                            activePrescricoes.map((p) => (
+                              <div key={p.id} className="prescricao-card">
+                                <div className="prescricao-card-header">
+                                  <div>
+                                    <div className="prescricao-card-medicamento">{p.medicamento}</div>
+                                    {p.marca && <div className="prescricao-card-marca">{p.marca}</div>}
+                                  </div>
+                                  <button
+                                    className="prescricao-card-btn-delete"
+                                    onClick={() => handleDeletePrescricao(p.id)}
+                                    title="Excluir"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                                <div className="prescricao-card-info" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                  <span><strong>Dosagem:</strong> {p.dosagem}</span>
+                                  <span><strong>Frequência:</strong> {p.frequencia}</span>
+                                  <span><strong>Duração:</strong> {p.duracao}</span>
+                                </div>
+                                {p.inclusoConvenio && <div className="prescricao-card-badge">Convênio</div>}
                               </div>
+                            ))
+                          )}
+                        </div>
+
+                        <div className="prescricao-form">
+                          {!showPrescricaoForm ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                               <button
-                                className="prescricao-card-btn-delete"
-                                onClick={() => handleDeletePrescricao(p.id)}
-                                title="Excluir"
+                                className="prescricao-add-button"
+                                onClick={() => setShowPrescricaoForm(true)}
+                                style={{ width: '100%' }}
                               >
-                                ✕
+                                <span>+</span> Adicionar Medicamento
+                              </button>
+
+                              {activePrescricoes.length > 0 && (
+                                <button
+                                  className="prescricao-btn prescricao-btn-submit"
+                                  style={{ width: '100%', padding: '12px', background: 'var(--color-primary-600)' }}
+                                  onClick={handleGenerateFinalPDF}
+                                  disabled={isGeneratingPDF}
+                                >
+                                  {isGeneratingPDF ? 'Processando...' : 'Gerar PDF para Assinar'}
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="prescricao-form-inputs">
+                              <div className="prescricao-checkbox-wrapper">
+                                <input
+                                  type="checkbox"
+                                  id="incluso-convenio"
+                                  checked={prescricaoData.inclusoConvenio}
+                                  onChange={(e) => setPrescricaoData(prev => ({ ...prev, inclusoConvenio: e.target.checked }))}
+                                />
+                                <label htmlFor="incluso-convenio">Incluso no convênio</label>
+                              </div>
+
+                              <div className="prescricao-input-wrapper">
+                                <label className="prescricao-input-label">Medicamento *</label>
+                                <input
+                                  type="text"
+                                  className="prescricao-input"
+                                  placeholder="Digite o nome do medicamento..."
+                                  value={prescricaoData.medicamento}
+                                  onChange={(e) => handleMedicamentoChange(e.target.value)}
+                                  onBlur={() => setTimeout(() => setShowMedicamentoSugestoes(false), 200)}
+                                />
+                                {showMedicamentoSugestoes && medicamentoSugestoes.length > 0 && (
+                                  <div className="prescricao-suggestions">
+                                    {medicamentoSugestoes.map((sugestao, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="prescricao-suggestions-item"
+                                        onClick={() => {
+                                          setPrescricaoData(prev => ({ ...prev, medicamento: sugestao }));
+                                          setShowMedicamentoSugestoes(false);
+                                        }}
+                                      >
+                                        {sugestao}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="prescricao-input-wrapper">
+                                <label className="prescricao-input-label">Marca</label>
+                                <input
+                                  type="text"
+                                  className="prescricao-input"
+                                  placeholder="Digite a marca (opcional)..."
+                                  value={prescricaoData.marca}
+                                  onChange={(e) => handleMarcaChange(e.target.value)}
+                                  onBlur={() => setTimeout(() => setShowMarcaSugestoes(false), 200)}
+                                />
+                                {showMarcaSugestoes && marcaSugestoes.length > 0 && (
+                                  <div className="prescricao-suggestions">
+                                    {marcaSugestoes.map((sugestao, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="prescricao-suggestions-item"
+                                        onClick={() => {
+                                          setPrescricaoData(prev => ({ ...prev, marca: sugestao }));
+                                          setShowMarcaSugestoes(false);
+                                        }}
+                                      >
+                                        {sugestao}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="prescricao-input-wrapper">
+                                <label className="prescricao-input-label">Dosagem *</label>
+                                <input
+                                  type="text"
+                                  className="prescricao-input"
+                                  placeholder="Ex: 500mg, 1 comprimido, 5ml..."
+                                  value={prescricaoData.dosagem}
+                                  onChange={(e) => setPrescricaoData(prev => ({ ...prev, dosagem: e.target.value }))}
+                                />
+                              </div>
+
+                              <div className="prescricao-input-wrapper">
+                                <label className="prescricao-input-label">Frequência *</label>
+                                <input
+                                  type="text"
+                                  className="prescricao-input"
+                                  placeholder="Ex: 8/8h, uma vez ao dia, se dor..."
+                                  value={prescricaoData.frequencia}
+                                  onChange={(e) => setPrescricaoData(prev => ({ ...prev, frequencia: e.target.value }))}
+                                />
+                              </div>
+
+                              <div className="prescricao-input-wrapper">
+                                <label className="prescricao-input-label">Duração *</label>
+                                <input
+                                  type="text"
+                                  className="prescricao-input"
+                                  placeholder="Ex: 7 dias, uso contínuo..."
+                                  value={prescricaoData.duracao}
+                                  onChange={(e) => setPrescricaoData(prev => ({ ...prev, duracao: e.target.value }))}
+                                />
+                              </div>
+
+                              <div className="prescricao-form-actions">
+                                <button
+                                  className="prescricao-btn prescricao-btn-cancel"
+                                  onClick={cancelPrescricaoForm}
+                                  disabled={isSubmittingPrescricao}
+                                >
+                                  Cancelar
+                                </button>
+                                <button
+                                  className="prescricao-btn prescricao-btn-submit"
+                                  onClick={handleSubmitPrescricao}
+                                  disabled={isSubmittingPrescricao || !prescricaoData.medicamento || !prescricaoData.dosagem}
+                                >
+                                  {isSubmittingPrescricao ? 'Salvando...' : 'Agregar'}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="signed-upload-zone" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.5rem 0' }}>
+                        <div style={{
+                          background: 'var(--bg-secondary)',
+                          padding: '1rem',
+                          borderRadius: '12px',
+                          border: '2px dashed var(--border-color)',
+                          textAlign: 'center'
+                        }}>
+                          <input
+                            type="file"
+                            accept=".pdf"
+                            style={{ display: 'none' }}
+                            ref={hiddenFileInputRef}
+                            onChange={handleSignedPdfUpload}
+                          />
+
+                          {signedPdfFile ? (
+                            <div style={{ color: '#22c55e', fontWeight: 600, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                              <span>✅ PDF Assinado Anexado</span>
+                              <button
+                                className="action-btn-secondary"
+                                style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                                onClick={() => hiddenFileInputRef.current?.click()}
+                              >
+                                Substituir
                               </button>
                             </div>
-                            <div className="prescricao-card-info" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                              <span><strong>Dosagem:</strong> {p.dosagem}</span>
-                              <span><strong>Frequência:</strong> {p.frequencia}</span>
-                              <span><strong>Duração:</strong> {p.duracao}</span>
+                          ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                                Assine o PDF no <strong>Gov.br</strong> e anexe o arquivo final abaixo.
+                              </p>
+                              <button
+                                className="prescricao-add-button"
+                                style={{ width: '100%', marginTop: '5px' }}
+                                onClick={() => hiddenFileInputRef.current?.click()}
+                              >
+                                Anexar PDF Assinado
+                              </button>
                             </div>
-                            {p.inclusoConvenio && <div className="prescricao-card-badge">Convênio</div>}
-                          </div>
-                        ))
-                      )}
-                    </div>
-
-                    <div className="prescricao-form">
-                      {!showPrescricaoForm ? (
-                        <button
-                          className="prescricao-add-button"
-                          onClick={() => setShowPrescricaoForm(true)}
-                          style={{ width: '100vw', maxWidth: '100%' }}
-                        >
-                          <span>+</span> Nova Receita
-                        </button>
-                      ) : (
-                        <div className="prescricao-form-inputs">
-                          <div className="prescricao-checkbox-wrapper">
-                            <input
-                              type="checkbox"
-                              id="incluso-convenio"
-                              checked={prescricaoData.inclusoConvenio}
-                              onChange={(e) => setPrescricaoData(prev => ({ ...prev, inclusoConvenio: e.target.checked }))}
-                            />
-                            <label htmlFor="incluso-convenio">Incluso no convênio</label>
-                          </div>
-
-                          <div className="prescricao-input-wrapper">
-                            <label className="prescricao-input-label">Medicamento *</label>
-                            <input
-                              type="text"
-                              className="prescricao-input"
-                              placeholder="Digite o nome do medicamento..."
-                              value={prescricaoData.medicamento}
-                              onChange={(e) => handleMedicamentoChange(e.target.value)}
-                              onBlur={() => setTimeout(() => setShowMedicamentoSugestoes(false), 200)}
-                            />
-                            {showMedicamentoSugestoes && medicamentoSugestoes.length > 0 && (
-                              <div className="prescricao-suggestions">
-                                {medicamentoSugestoes.map((sugestao, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="prescricao-suggestions-item"
-                                    onClick={() => {
-                                      setPrescricaoData(prev => ({ ...prev, medicamento: sugestao }));
-                                      setShowMedicamentoSugestoes(false);
-                                    }}
-                                  >
-                                    {sugestao}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="prescricao-input-wrapper">
-                            <label className="prescricao-input-label">Marca</label>
-                            <input
-                              type="text"
-                              className="prescricao-input"
-                              placeholder="Digite a marca (opcional)..."
-                              value={prescricaoData.marca}
-                              onChange={(e) => handleMarcaChange(e.target.value)}
-                              onBlur={() => setTimeout(() => setShowMarcaSugestoes(false), 200)}
-                            />
-                            {showMarcaSugestoes && marcaSugestoes.length > 0 && (
-                              <div className="prescricao-suggestions">
-                                {marcaSugestoes.map((sugestao, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="prescricao-suggestions-item"
-                                    onClick={() => {
-                                      setPrescricaoData(prev => ({ ...prev, marca: sugestao }));
-                                      setShowMarcaSugestoes(false);
-                                    }}
-                                  >
-                                    {sugestao}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="prescricao-input-wrapper">
-                            <label className="prescricao-input-label">Dosagem *</label>
-                            <input
-                              type="text"
-                              className="prescricao-input"
-                              placeholder="Ex: 500mg, 1 comprimido, 5ml..."
-                              value={prescricaoData.dosagem}
-                              onChange={(e) => setPrescricaoData(prev => ({ ...prev, dosagem: e.target.value }))}
-                            />
-                          </div>
-
-                          <div className="prescricao-input-wrapper">
-                            <label className="prescricao-input-label">Frequência *</label>
-                            <input
-                              type="text"
-                              className="prescricao-input"
-                              placeholder="Ex: 8/8h, uma vez ao dia, se dor..."
-                              value={prescricaoData.frequencia}
-                              onChange={(e) => setPrescricaoData(prev => ({ ...prev, frequencia: e.target.value }))}
-                            />
-                          </div>
-
-                          <div className="prescricao-input-wrapper">
-                            <label className="prescricao-input-label">Duração *</label>
-                            <input
-                              type="text"
-                              className="prescricao-input"
-                              placeholder="Ex: 7 dias, uso contínuo..."
-                              value={prescricaoData.duracao}
-                              onChange={(e) => setPrescricaoData(prev => ({ ...prev, duracao: e.target.value }))}
-                            />
-                          </div>
-
-                          <div className="prescricao-form-actions">
-                            <button
-                              className="prescricao-btn prescricao-btn-cancel"
-                              onClick={cancelPrescricaoForm}
-                              disabled={isSubmittingPrescricao}
-                            >
-                              Cancelar
-                            </button>
-                            <button
-                              className="prescricao-btn prescricao-btn-submit"
-                              onClick={handleSubmitPrescricao}
-                              disabled={isSubmittingPrescricao || !prescricaoData.medicamento || !prescricaoData.dosagem}
-                            >
-                              {isSubmittingPrescricao ? 'Salvando...' : 'Agregar'}
-                            </button>
-                          </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+
+                        <button
+                          className="prescricao-btn-cancel"
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            borderBottom: '1px solid currentColor',
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            alignSelf: 'center',
+                            padding: '2px 0'
+                          }}
+                          onClick={() => setPrescricaoGerada(false)}
+                        >
+                          Voltar para edição de itens
+                        </button>
+                      </div>
+                    )}
                   </Accordion>
 
                   <Accordion
@@ -2035,6 +2204,91 @@ function AtendimentoInner() {
           </div>
         </div>
       </ContentModal>
+
+      {/* Template para o PDF (Invisível) - Design de Prescrição Realista */}
+      <div id="atendimento-prescription-pdf-template" style={{ position: 'fixed', left: '-9999px', top: '-9999px' }}>
+        <div id="prescription-pdf-template">
+          <div className="pdf-watermark">JJ TELEMEDICINA</div>
+          <div className="pdf-inner-border"></div>
+
+          <div className="pdf-header">
+            <div className="pdf-logo-wrapper">
+              <div className="pdf-logo-circle">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22v-5" /><path d="M12 12V2" /><path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" /><path d="m15 13-3-3-3 3" />
+                </svg>
+              </div>
+              <div className="pdf-logo-text">
+                <h1>JJ Telemedicina</h1>
+                <p>Cuidado Digital de Excelência</p>
+              </div>
+            </div>
+            <div className="pdf-header-meta">
+              <div>JJ Serviços Médicos e Tecnológicos Ltda.</div>
+              <div>CNPJ: 00.000.000/0001-00</div>
+              <div>contato@jjtelemedicina.com.br</div>
+              <div>www.jjtelemedicina.com.br</div>
+            </div>
+          </div>
+
+          <div className="pdf-title-section">
+            <h2 className="pdf-title-main">Receituário</h2>
+            <p className="pdf-title-sub">Prescrição Médica Digital</p>
+          </div>
+
+          <div className="pdf-patient-section">
+            <span className="pdf-patient-label">Para:</span>
+            <p className="pdf-patient-name">{consultaDetails?.paciente?.nome_completo || 'Paciente'}</p>
+          </div>
+
+          <div className="pdf-prescription-body">
+            {activePrescricoes.map((p, index) => (
+              <div key={p.id} className="pdf-med-item">
+                <span className="pdf-med-number">{index + 1}.</span>
+                <div className="pdf-med-name-row">
+                  <span className="pdf-med-name">{p.medicamento} {p.dosagem}</span>
+                  <span className="pdf-med-quantity">1 Unidade</span>
+                </div>
+
+                <div className="pdf-instructions-box">
+                  <div className="pdf-instruction-line">
+                    <span className="pdf-instruction-label">Uso:</span>
+                    Tomar conforme orientação: {p.frequencia} por {p.duracao}.
+                  </div>
+                  {p.marca && (
+                    <div className="pdf-instruction-line" style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>
+                      <span className="pdf-instruction-label">Obs:</span> Preferência por marca {p.marca}.
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="pdf-footer">
+            <div className="pdf-seal-wrapper">
+              <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+            </div>
+            <div className="pdf-signature-area">
+              <div className="pdf-signature-line"></div>
+              <p className="pdf-doctor-name">Dr(a). {getUser()?.nome || 'Médico'}</p>
+              <p className="pdf-doctor-info">CRM/UF: 000000 - Especialista em Telemedicina</p>
+            </div>
+
+            <div className="pdf-auth-footer">
+              <div>
+                Emitido em: <strong>{formatDate(new Date())} às {formatTime(new Date())}</strong>
+              </div>
+              <div className="pdf-auth-code">
+                CÓD: {Math.random().toString(36).substring(2, 10).toUpperCase()}-{consultaDetails?.id || 'REF'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
