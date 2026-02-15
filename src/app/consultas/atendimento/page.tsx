@@ -1127,24 +1127,25 @@ function AtendimentoInner() {
 
       try {
         const canvas = await html2canvas(element, {
-          scale: 2,
+          scale: 1.6, // Reduzido de 2.0 para diminuir tamanho sem perder legibilidade
           useCORS: true,
           logging: false,
           backgroundColor: '#ffffff'
         });
 
-        const imgData = canvas.toDataURL('image/png');
+        const imgData = canvas.toDataURL('image/jpeg', 0.85); // Mudado para JPEG com compressão para reduzir drasticamente o tamanho
         const pdf = new jsPDF({
           orientation: 'portrait',
           unit: 'mm',
-          format: 'a4'
+          format: 'a4',
+          compress: true // Ativa compressão nativa do jsPDF
         });
 
         const imgProps = pdf.getImageProperties(imgData);
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
         pdf.save(`Prescricao_${consultaDetails?.paciente?.nome_completo || 'Paciente'}_${new Date().toLocaleDateString()}.pdf`);
 
         // Marcar como gerada para trocar a UI
