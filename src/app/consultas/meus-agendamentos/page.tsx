@@ -382,7 +382,6 @@ export default function MeusAgendamentosPage() {
                             <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                                 {consultaDetails.paciente?.nome_completo || 'Paciente'}
                             </p>
-                            <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>ID: #{consultaDetails.pacienteId}</span>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

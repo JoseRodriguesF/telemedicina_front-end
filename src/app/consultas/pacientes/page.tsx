@@ -161,7 +161,6 @@ export default function PacientesPage() {
                         <div className={styles['pac-info']}>
                           <h3>
                             Paciente
-                            <span className={styles['pac-id']}>#{p.pacienteId}</span>
                           </h3>
                           <div className={styles['pac-time']}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
@@ -212,7 +211,6 @@ export default function PacientesPage() {
               <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)' }}>
                 <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-tertiary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Paciente</h4>
                 <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>{consultaDetails.paciente?.nome_completo || 'Paciente'}</p>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>ID: #{consultaDetails.pacienteId}</span>
               </div>
 
               {consultaDetails.historiaClinica ? (

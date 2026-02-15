@@ -284,11 +284,13 @@ export default function ConsultasPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '0.5rem' }}>
             <div style={{ background: 'var(--bg-tertiary)', padding: '1.25rem', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)' }}>
               <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-tertiary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{isMedico ? 'Paciente' : 'Médico'}</h4>
-              <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                {isMedico ? (consultaDetails.paciente?.nome_completo || 'Paciente') : (selectedAppt?.medico?.nome_completo || 'Médico')}
-              </p>
-              {!isMedico && <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>Clinico Geral</span>}
-              {isMedico && <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>ID: #{consultaDetails.pacienteId}</span>}
+              {isMedico && <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>{consultaDetails.paciente?.nome_completo || 'Paciente'}</p>}
+              {!isMedico && (
+                <>
+                  <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>{selectedAppt?.medico?.nome_completo || 'Médico'}</p>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>Clinico Geral</span>
+                </>
+              )}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

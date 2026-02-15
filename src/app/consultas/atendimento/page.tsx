@@ -793,8 +793,11 @@ function AtendimentoInner() {
         }
       }
     }
-
-    setIsConfirmingEnd(true);
+    if (role === 'medico') {
+      setIsConfirmingEnd(true);
+    } else {
+      confirmFinishCall();
+    }
   }
 
   async function confirmFinishCall() {
@@ -1219,16 +1222,23 @@ function AtendimentoInner() {
                     ) : (
                       <div className="historico-list">
                         {historicoPrescricoes.map((prescrito) => (
-                          <div key={prescrito.id} className="historico-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                          <div key={prescrito.id} className="historico-item">
+                            <div className="historico-item-avatar" style={{ background: 'var(--color-primary-50)', color: 'var(--color-primary-600)' }}>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
+                                <path d="m8.5 8.5 7 7" />
+                              </svg>
+                            </div>
                             <div className="historico-item-info">
-                              <div className="historico-item-date" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                              <div className="historico-item-date" style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.9rem' }}>
                                 {prescrito.medicamento} {prescrito.marca ? `(${prescrito.marca})` : ''}
                               </div>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                📅 {formatDate((prescrito as any).consulta?.data_consulta || (prescrito as any).consulta?.createdAt || prescrito.createdAt)}
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
+                                {formatDate((prescrito as any).consulta?.data_consulta || (prescrito as any).consulta?.createdAt || prescrito.createdAt)}
                               </div>
-                              <div style={{ fontSize: '0.8rem', marginTop: '2px' }}>
-                                {prescrito.dosagem} - {prescrito.frequencia} - {prescrito.duracao}
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                {prescrito.dosagem} • {prescrito.frequencia} • {prescrito.duracao}
                               </div>
                             </div>
                           </div>
