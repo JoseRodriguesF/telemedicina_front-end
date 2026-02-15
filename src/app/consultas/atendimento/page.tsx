@@ -198,7 +198,7 @@ function AtendimentoInner() {
   useEffect(() => {
     async function fetchPatientDetails() {
       const curCid = getConsultaIdFromUrl() || consultaIdState || consultaId;
-      if (!curCid || !token || user?.tipo_usuario !== 'medico') return;
+      if (!curCid || !token || user?.tipo_usuario !== 'medico' || !isClaimed) return;
 
       try {
 
@@ -243,7 +243,7 @@ function AtendimentoInner() {
   // Buscar histórico de prescrições do paciente se for médico
   useEffect(() => {
     async function fetchPrescriptionHistory() {
-      if (consultaDetails && token && user?.tipo_usuario === 'medico') {
+      if (consultaDetails && token && user?.tipo_usuario === 'medico' && isClaimed) {
         const pacienteId = consultaDetails.pacienteId;
         if (pacienteId) {
           try {
@@ -328,7 +328,7 @@ function AtendimentoInner() {
   useEffect(() => {
     async function fetchPrescricoes() {
       const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
-      if (cid && token && role === 'medico') {
+      if (cid && token && role === 'medico' && isClaimed) {
         setLoadingPrescricoes(true);
         try {
           const list = await getPrescricoesByConsulta(Number(cid), token);
@@ -407,7 +407,7 @@ function AtendimentoInner() {
     if (remoteConnected) return; // Se já está conectado, não precisa de polling redundante
 
     const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
-    if (!cid || !token) return;
+    if (!cid || !token || (role === 'medico' && !isClaimed)) return;
     if (pollingRef.current !== null) return;
 
     let stopped = false;
@@ -823,8 +823,10 @@ function AtendimentoInner() {
           const newPrescricoes = activePrescricoes.filter((p: any) => p.isNew);
           if (newPrescricoes.length > 0) {
             try {
-              await Promise.all(newPrescricoes.map(p =>
-                createPrescricao({
+              // Envia as prescrições sequencialmente para evitar sobrecarga e garantir que o PDF seja enviado apenas uma vez
+              for (let i = 0; i < newPrescricoes.length; i++) {
+                const p = newPrescricoes[i];
+                await createPrescricao({
                   consultaId: Number(cid),
                   medicamento: p.medicamento,
                   marca: p.marca || undefined,
@@ -832,9 +834,11 @@ function AtendimentoInner() {
                   frequencia: p.frequencia,
                   duracao: p.duracao,
                   inclusoConvenio: p.inclusoConvenio,
-                  pdf: signedPdfFile || undefined // Anexa o PDF assinado se existir
-                }, token)
-              ));
+                  // Envia o PDF apenas na PRIMEIRA prescrição para evitar erro 413 (Payload Too Large)
+                  // e redundância desnecessária. O banco de dados associa o PDF a esta prescrição.
+                  pdf: (i === 0) ? (signedPdfFile || undefined) : undefined
+                }, token);
+              }
             } catch (pErr) {
               console.error('Erro ao salvar prescrições ao finalizar:', pErr);
             }
@@ -1159,6 +1163,14 @@ function AtendimentoInner() {
   async function handleSignedPdfUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Limite de segurança para Vercel (4.5MB total de request, então o arquivo deve ser < ~3MB)
+    const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB
+    if (file.size > MAX_FILE_SIZE) {
+      modal.error('Arquivo muito grande', 'O PDF assinado deve ter no máximo 3MB para ser processado corretamente.');
+      e.target.value = '';
+      return;
+    }
 
     if (file.type !== 'application/pdf') {
       modal.error('Formato Inválido', 'Por favor, anexe apenas arquivos PDF assinados.');
