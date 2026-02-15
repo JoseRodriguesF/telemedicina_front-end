@@ -11,6 +11,7 @@ import { PSFullHistoryItem, searchHistoricoConsultas } from '@/lib/axios/consult
 // ✅ NOVO: Importar hooks otimizados
 import { useHistoricoCompleto, useUserProfile } from '@/hooks/useApiData';
 import { useDebounce } from '@/hooks/useOptimization';
+import { downloadPrescricaoPdf } from '@/lib/axios/prescricoes';
 import ContentModal from '@/components/common/Modal/ContentModal';
 import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
 import FormattedText from '@/components/common/FormattedText';
@@ -195,6 +196,32 @@ export default function HistoricoPage() {
     }, 500);
   };
 
+  const handleDownloadRealPdf = async (presc: any) => {
+    const token = getToken();
+    if (!token || !presc.id) return;
+
+    setIsGeneratingPDF(true);
+    setSelectedPrescription(presc);
+
+    try {
+      const blob = await downloadPrescricaoPdf(presc.id, token);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Prescricao_${presc.medicamento}_${formatDate(presc.consultaData)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Erro ao baixar PDF:', err);
+      // Fallback para geração local se o usuário desejar, ou apenas erro
+      // generatePDF(presc); 
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <header className="dashboard-header" style={{ marginBottom: '0.75rem' }}>
@@ -374,9 +401,13 @@ export default function HistoricoPage() {
                         className="action-btn-secondary btn-download"
                         onClick={(e) => {
                           e.stopPropagation();
-                          generatePDF(presc);
+                          handleDownloadRealPdf(presc);
                         }}
-                        disabled={isGeneratingPDF && selectedPrescription?.id === presc.id}
+                        disabled={!presc.tem_pdf || (isGeneratingPDF && selectedPrescription?.id === presc.id)}
+                        style={{
+                          opacity: presc.tem_pdf ? 1 : 0.3,
+                          cursor: presc.tem_pdf ? 'pointer' : 'not-allowed'
+                        }}
                       >
                         {isGeneratingPDF && selectedPrescription?.id === presc.id ? (
                           <span className="flex items-center gap-2">
@@ -547,10 +578,14 @@ export default function HistoricoPage() {
               </div>
               <button
                 className="action-btn btn-download"
-                onClick={() => generatePDF(selectedPrescription)}
-                disabled={isGeneratingPDF}
+                style={{
+                  opacity: selectedPrescription.tem_pdf ? 1 : 0.3,
+                  cursor: selectedPrescription.tem_pdf ? 'pointer' : 'not-allowed'
+                }}
+                onClick={() => handleDownloadRealPdf(selectedPrescription)}
+                disabled={!selectedPrescription.tem_pdf || isGeneratingPDF}
               >
-                {isGeneratingPDF ? 'Gerando...' : 'Baixar PDF'}
+                {isGeneratingPDF ? 'Baixando...' : 'Baixar PDF'}
               </button>
             </div>
 

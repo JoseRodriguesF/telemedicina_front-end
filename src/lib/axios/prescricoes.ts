@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333';
+const API_URL = '/api';
 
 export interface Prescricao {
     id: number;
@@ -118,6 +118,19 @@ export async function getPrescricoesByPaciente(pacienteId: number, token: string
         `${API_URL}/prescricoes/paciente/${pacienteId}`,
         {
             headers: { Authorization: `Bearer ${token}` }
+        }
+    );
+    return response.data;
+}
+/**
+ * Baixar o PDF de uma prescrição
+ */
+export async function downloadPrescricaoPdf(id: number, token: string): Promise<Blob> {
+    const response = await axios.get(
+        `${API_URL}/prescricoes/${id}/pdf`,
+        {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: 'blob'
         }
     );
     return response.data;

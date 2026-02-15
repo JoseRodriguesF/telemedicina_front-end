@@ -453,3 +453,4 @@ export async function updatePacienteNotas(
     throw new ApiError(err);
   }
 }
+
