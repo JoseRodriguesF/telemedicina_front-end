@@ -9,7 +9,7 @@ import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
 import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta, updatePacienteNotas } from '@/lib/axios/consultas';
-import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas, getPrescricoesByConsulta, deletePrescricao, getPrescricoesByPaciente, Prescricao as PrescricaoType } from '@/lib/axios/prescricoes';
+import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas, getPrescricoesByConsulta, deletePrescricao, getPrescricoesByPaciente, Prescricao as PrescricaoType, downloadPrescricaoPdf } from '@/lib/axios/prescricoes';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
@@ -139,6 +139,7 @@ function AtendimentoInner() {
   const [ratingStars, setRatingStars] = useState(0);
   const [ratingJustification, setRatingJustification] = useState('');
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [isClaimed, setIsClaimed] = useState(false);
 
   // Estados para mensagens não lidas no chat
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -213,7 +214,7 @@ function AtendimentoInner() {
     }
 
     fetchPatientDetails();
-  }, [consultaId, consultaIdState, token, user?.tipo_usuario]);
+  }, [consultaId, consultaIdState, token, user?.tipo_usuario, isClaimed]);
 
   // Buscar histórico de consultas do paciente se for médico
   useEffect(() => {
@@ -237,7 +238,7 @@ function AtendimentoInner() {
     }
 
     fetchHistory();
-  }, [consultaDetails, token, user?.tipo_usuario]);
+  }, [consultaDetails, token, user?.tipo_usuario, isClaimed]);
 
   // Buscar histórico de prescrições do paciente se for médico
   useEffect(() => {
@@ -259,7 +260,7 @@ function AtendimentoInner() {
     }
 
     fetchPrescriptionHistory();
-  }, [consultaDetails, token, user?.tipo_usuario]);
+  }, [consultaDetails, token, user?.tipo_usuario, isClaimed]);
 
 
   const handleConnected = () => {
@@ -340,7 +341,7 @@ function AtendimentoInner() {
       }
     }
     fetchPrescricoes();
-  }, [consultaIdState, consultaId, token, role]);
+  }, [consultaIdState, consultaId, token, role, isClaimed]);
 
   const toggleAccordion = (id: string) => {
     setOpenAccordions(prev => ({ ...prev, [id]: !prev[id] }));
@@ -608,16 +609,16 @@ function AtendimentoInner() {
     claimingRef.current = true;
 
     try {
-      const { roomId: rId, consultaId: cId, iceServers: ice } = await psClaim(cid, token);
-
+      const { roomId: rId, iceServers: ice } = await psClaim(cid, token);
+      setIsClaimed(true); // Permite que os useEffects de busca de dados rodem agora que temos acesso
       setRoomId(rId);
-      setConsultaIdState(cId);
+      setConsultaIdState(cid);
 
       // Persiste os dados para futuras reconexões (refresh de página)
       try {
         sessionStorage.setItem('consulta_reconnect', JSON.stringify({
           roomId: rId,
-          consultaId: cId,
+          consultaId: cid,
           userId: String(user?.id || ''),
           role,
           iceServers: ice,
@@ -808,10 +809,16 @@ function AtendimentoInner() {
     const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
     if (cid && token) {
       try {
-        const res = await listParticipants(cid, token);
-        // If doctor is ending, always save. If patient, only if last one (or use different logic).
-        // Standardizing: if doctor is leaving, we must persist the attendance data.
-        if (role === 'medico' || (res.participants && res.participants.length <= 1)) {
+        let participantsCount = 0;
+        try {
+          const res = await listParticipants(cid, token);
+          participantsCount = res.participants?.length || 0;
+        } catch (pErr) {
+          console.warn('[Atendimento] Erro ao listar participantes, prosseguindo salvamento:', pErr);
+        }
+
+        // Se for médico, sempre salva. Se for paciente, salva se for o único/último.
+        if (role === 'medico' || participantsCount <= 1) {
           // 1. Salvar Prescrições Novas
           const newPrescricoes = activePrescricoes.filter((p: any) => p.isNew);
           if (newPrescricoes.length > 0) {
@@ -842,6 +849,9 @@ function AtendimentoInner() {
           const now = new Date();
           const hora_fim = now.toTimeString().slice(0, 8); // formato HH:MM:SS
           await endConsulta(cid, token, hora_fim, atendimentoData);
+
+          // Limpar PDF após envio
+          setSignedPdfFile(null);
         }
       } catch (err) {
         console.error('Erro ao verificar/finalizar consulta:', err);
@@ -881,6 +891,13 @@ function AtendimentoInner() {
         if (missing.length > 0) {
           setShowValidation(true);
           modal.error('Campos pendentes', `Por favor, preencha os seguintes campos antes de finalizar: ${missing.join(', ')}.`);
+          return;
+        }
+
+        // Validação do PDF caso haja prescrições novas
+        const hasNewPrescricoes = activePrescricoes.some((p: any) => p.isNew);
+        if (hasNewPrescricoes && !signedPdfFile) {
+          modal.error('Prescrição não assinada', 'Você adicionou novos medicamentos. Por favor, gere e anexe o PDF assinado (.gov) no painel lateral antes de finalizar.');
           return;
         }
       }
@@ -1048,6 +1065,25 @@ function AtendimentoInner() {
       modal.confirm('Excluir Prescrição', 'Tem certeza que deseja excluir esta prescrição permanentemente do banco?', performDelete);
     } else {
       performDelete();
+    }
+  }
+
+  async function handleDownloadPrescricaoPdf(id: number) {
+    if (!token) return;
+
+    try {
+      const blob = await downloadPrescricaoPdf(id, token);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Prescricao_${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Erro ao baixar PDF:', err);
+      modal.error('Erro', 'Não foi possível baixar o PDF da prescrição.');
     }
   }
 
@@ -1240,6 +1276,25 @@ function AtendimentoInner() {
                               <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
                                 {prescrito.dosagem} • {prescrito.frequencia} • {prescrito.duracao}
                               </div>
+                            </div>
+                            <div className="historico-item-actions">
+                              <button
+                                className="action-btn-secondary"
+                                style={{
+                                  padding: '6px 10px',
+                                  fontSize: '0.75rem',
+                                  opacity: (prescrito as any).tem_pdf ? 1 : 0.4,
+                                  cursor: (prescrito as any).tem_pdf ? 'pointer' : 'not-allowed'
+                                }}
+                                disabled={!(prescrito as any).tem_pdf}
+                                onClick={() => handleDownloadPrescricaoPdf(prescrito.id)}
+                                title={(prescrito as any).tem_pdf ? 'Baixar PDF Assinado' : 'PDF não disponível'}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" />
+                                </svg>
+                                PDF
+                              </button>
                             </div>
                           </div>
                         ))}
@@ -2334,6 +2389,7 @@ function AtendimentoInner() {
                     ))}
                   </div>
                 )}
+
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: 'auto', textAlign: 'center' }}>
                   Para adicionar novas prescrições, utilize o painel lateral durante a consulta.
                 </p>
@@ -2350,7 +2406,7 @@ function AtendimentoInner() {
             </Button>
           </div>
         </div>
-      </ContentModal>
+      </ContentModal >
 
       <Modal
         isOpen={modal.isOpen}
@@ -2499,7 +2555,7 @@ function AtendimentoInner() {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 
