@@ -2332,7 +2332,7 @@ function AtendimentoInner() {
           </div>
 
           <div className="confirmation-actions">
-            <Button variant="secondary" onClick={() => setIsConfirmingEnd(false)}>
+            <Button variant="ghost" onClick={() => setIsConfirmingEnd(false)}>
               Voltar
             </Button>
             <Button variant="primary" onClick={confirmFinishWithValidation}>
