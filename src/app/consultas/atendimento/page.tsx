@@ -57,6 +57,25 @@ const Accordion = ({ id, title, isOpen, onToggle, isFilled, isMissing, children 
 );
 
 function AtendimentoInner() {
+  const destinoFinalOptions = [
+    "Em domicílio com orientações médicas",
+    "Indico seguimento externo",
+    "Indico seguimento externo no consultório ou ambulatório",
+    "Paciente ausente",
+    "Anular paciente",
+    "Anular por falta de conexão",
+    "Envio de ambulância (código amarelo)",
+    "Envio de ambulância (código vermelho)"
+  ];
+
+  const repousoOptions = [
+    "Alta",
+    "Repouso 24h",
+    "Repouso 48h",
+    "Repouso 72h",
+    "Consulta não justifica repouso"
+  ];
+
   const [connectionFailed, setConnectionFailed] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
@@ -149,6 +168,7 @@ function AtendimentoInner() {
   const [signedPdfFile, setSignedPdfFile] = useState<{ data: string; mimetype: string } | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const hiddenFileInputRef = useRef<HTMLInputElement>(null);
+  const [isConfirmingEnd, setIsConfirmingEnd] = useState(false);
 
   const isScheduled = search.get('scheduled') === 'true';
 
@@ -294,24 +314,7 @@ function AtendimentoInner() {
     }
   }, [atendimentoData.destino_final, consultaDetails]);
 
-  const destinoFinalOptions = [
-    "Em domicílio com orientações médicas",
-    "Indico seguimento externo",
-    "Indico seguimento externo no consultório ou ambulatório",
-    "Paciente ausente",
-    "Anular paciente",
-    "Anular por falta de conexão",
-    "Envio de ambulância (código amarelo)",
-    "Envio de ambulância (código vermelho)"
-  ];
 
-  const repousoOptions = [
-    "Alta",
-    "Repouso 24h",
-    "Repouso 48h",
-    "Repouso 72h",
-    "Consulta não justifica repouso"
-  ];
 
   const handleOptionToggle = (field: 'repouso' | 'destino_final', option: string) => {
     setAtendimentoData(prev => ({
@@ -791,11 +794,7 @@ function AtendimentoInner() {
       }
     }
 
-    modal.confirm(
-      'Encerrar atendimento',
-      'Tem certeza que deseja deixar o atendimento?',
-      confirmFinishCall
-    );
+    setIsConfirmingEnd(true);
   }
 
   async function confirmFinishCall() {
@@ -807,9 +806,9 @@ function AtendimentoInner() {
     if (cid && token) {
       try {
         const res = await listParticipants(cid, token);
-        // If 1 or fewer participants (myself or empty), close it.
-        // Usually it includes myself before I leave.
-        if (res.participants && res.participants.length <= 1) {
+        // If doctor is ending, always save. If patient, only if last one (or use different logic).
+        // Standardizing: if doctor is leaving, we must persist the attendance data.
+        if (role === 'medico' || (res.participants && res.participants.length <= 1)) {
           // 1. Salvar Prescrições Novas
           const newPrescricoes = activePrescricoes.filter((p: any) => p.isNew);
           if (newPrescricoes.length > 0) {
@@ -831,7 +830,12 @@ function AtendimentoInner() {
             }
           }
 
-          // 2. Envia hora_fim ao finalizar
+          // 2. Salvar Notas do Paciente se for médico
+          if (role === 'medico' && pacienteNotas) {
+            try { await updatePacienteNotas(cid, token, pacienteNotas); } catch (nErr) { console.error('Erro ao salvar notas ao finalizar:', nErr); }
+          }
+
+          // 3. Envia hora_fim ao finalizar
           const now = new Date();
           const hora_fim = now.toTimeString().slice(0, 8); // formato HH:MM:SS
           await endConsulta(cid, token, hora_fim, atendimentoData);
@@ -852,6 +856,35 @@ function AtendimentoInner() {
     } else {
       router.push('/consultas');
     }
+  }
+
+  async function confirmFinishWithValidation() {
+    if (role === 'medico') {
+      const isAnulacao = atendimentoData.destino_final?.toLowerCase().includes('anular');
+      if (isAnulacao) {
+        if (!atendimentoData.destino_final) {
+          setShowValidation(true);
+          modal.error('Campos pendentes', 'Por favor, selecione o motivo da anulação.');
+          return;
+        }
+      } else {
+        const missing = [];
+        if (!atendimentoData.evolucao.trim()) missing.push('Evolução');
+        if (!atendimentoData.plano_terapeutico.trim()) missing.push('Plano Terapêutico');
+        if (!atendimentoData.diagnostico.trim()) missing.push('Diagnóstico');
+        if (!atendimentoData.repouso) missing.push('Repouso');
+        if (!atendimentoData.destino_final) missing.push('Destino Final');
+
+        if (missing.length > 0) {
+          setShowValidation(true);
+          modal.error('Campos pendentes', `Por favor, preencha os seguintes campos antes de finalizar: ${missing.join(', ')}.`);
+          return;
+        }
+      }
+    }
+
+    setIsConfirmingEnd(false);
+    confirmFinishCall();
   }
 
   async function handleRatingSubmit() {
@@ -2140,6 +2173,173 @@ function AtendimentoInner() {
             </div>
           </div>
         )}
+      </ContentModal>
+
+      {/* Modal de Confirmação de Finalização (Médico) */}
+      <ContentModal
+        isOpen={isConfirmingEnd}
+        onClose={() => setIsConfirmingEnd(false)}
+        title="Confirmar Informações do Atendimento"
+        size="xl"
+      >
+        <div className="confirmation-screen">
+          <p className="confirmation-description">
+            Revise abaixo todas as informações inseridas durante a consulta. Você pode editá-las antes de finalizar definitivamente.
+          </p>
+
+          <div className="confirmation-grid">
+            <div className="confirmation-section">
+              <h4>Ficha de Atendimento</h4>
+              <div className="confirmation-form">
+                <div className="form-group">
+                  <label>Evolução</label>
+                  <textarea
+                    className="atendimento-textarea"
+                    style={{ minHeight: '100px' }}
+                    value={atendimentoData.evolucao}
+                    onChange={(e) => setAtendimentoData(prev => ({ ...prev, evolucao: e.target.value }))}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Notas Privadas (Sobre o Paciente)</label>
+                  <textarea
+                    className="atendimento-textarea"
+                    style={{ minHeight: '80px', borderLeft: '4px solid var(--color-primary-500)' }}
+                    placeholder="Notas exclusivas para seu controle..."
+                    value={pacienteNotas}
+                    onChange={(e) => setPacienteNotas(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Plano Terapêutico</label>
+                  <textarea
+                    className="atendimento-textarea"
+                    style={{ minHeight: '100px' }}
+                    value={atendimentoData.plano_terapeutico}
+                    onChange={(e) => setAtendimentoData(prev => ({ ...prev, plano_terapeutico: e.target.value }))}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Diagnóstico</label>
+                  <input
+                    type="text"
+                    className="atendimento-input-small"
+                    value={atendimentoData.diagnostico}
+                    onChange={(e) => setAtendimentoData(prev => ({ ...prev, diagnostico: e.target.value }))}
+                  />
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Repouso</label>
+                    <select
+                      className="atendimento-input-small"
+                      value={atendimentoData.repouso}
+                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, repouso: e.target.value }))}
+                    >
+                      <option value="">Selecione...</option>
+                      {repousoOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Destino Final</label>
+                    <select
+                      className="atendimento-input-small"
+                      value={atendimentoData.destino_final}
+                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, destino_final: e.target.value }))}
+                    >
+                      <option value="">Selecione...</option>
+                      {destinoFinalOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {atendimentoData.destino_final.toLowerCase().includes('ambulância') && (
+                  <div className="confirmation-ambulance-fields" style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                    <h5 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#b45309' }}>Dados para Envio de Ambulância</h5>
+                    <div className="form-group">
+                      <label>Endereço Completo</label>
+                      <input
+                        type="text"
+                        className="atendimento-input-small"
+                        value={atendimentoData.endereco_ambulancia.endereco}
+                        onChange={(e) => setAtendimentoData(prev => ({
+                          ...prev,
+                          endereco_ambulancia: { ...prev.endereco_ambulancia, endereco: e.target.value }
+                        }))}
+                      />
+                    </div>
+                    <div className="form-row" style={{ marginTop: '0.75rem' }}>
+                      <div className="form-group">
+                        <label>Complemento</label>
+                        <input
+                          type="text"
+                          className="atendimento-input-small"
+                          value={atendimentoData.endereco_ambulancia.complemento}
+                          onChange={(e) => setAtendimentoData(prev => ({
+                            ...prev,
+                            endereco_ambulancia: { ...prev.endereco_ambulancia, complemento: e.target.value }
+                          }))}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Telefone de Contato</label>
+                        <input
+                          type="text"
+                          className="atendimento-input-small"
+                          value={atendimentoData.endereco_ambulancia.telefone}
+                          onChange={(e) => setAtendimentoData(prev => ({
+                            ...prev,
+                            endereco_ambulancia: { ...prev.endereco_ambulancia, telefone: e.target.value }
+                          }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="confirmation-section">
+              <h4>Prescrições</h4>
+              <div className="confirmation-prescriptions">
+                {activePrescricoes.length === 0 ? (
+                  <p className="no-prescriptions">Nenhuma prescrição adicionada.</p>
+                ) : (
+                  <div className="prescricao-list">
+                    {activePrescricoes.map((p) => (
+                      <div key={p.id} className="prescricao-card">
+                        <div className="prescricao-card-header">
+                          <div className="prescricao-card-medicamento">{p.medicamento}</div>
+                          <button
+                            className="prescricao-delete-btn"
+                            onClick={() => handleDeletePrescricao(p.id)}
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                        <div className="prescricao-card-info">
+                          {p.dosagem} - {p.frequencia} - {p.duracao}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: 'auto', textAlign: 'center' }}>
+                  Para adicionar novas prescrições, utilize o painel lateral durante a consulta.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="confirmation-actions">
+            <Button variant="secondary" onClick={() => setIsConfirmingEnd(false)}>
+              Voltar
+            </Button>
+            <Button variant="primary" onClick={confirmFinishWithValidation}>
+              Confirmar e Finalizar Atendimento
+            </Button>
+          </div>
+        </div>
       </ContentModal>
 
       <Modal

@@ -2187,3 +2187,169 @@
     background: var(--bg-secondary);
     border-color: var(--color-primary-500);
 }
+
+/* ============================================
+   CONFIRMATION SCREEN (FINALIZE ATTENDANCE)
+   ============================================ */
+
+.confirmation-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 0.5rem;
+}
+
+.confirmation-description {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+}
+
+.confirmation-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 2rem;
+}
+
+.confirmation-section h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-primary-700);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--color-primary-100);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.confirmation-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.confirmation-prescriptions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 16px;
+    height: 100%;
+}
+
+.no-prescriptions {
+    color: var(--text-tertiary);
+    text-align: center;
+    padding: 2rem;
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+.prescricao-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    overflow-y: auto;
+    max-height: 400px;
+    padding-right: 4px;
+}
+
+.prescricao-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.prescricao-list::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 10px;
+}
+
+.prescricao-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.prescricao-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary-200);
+}
+
+.prescricao-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.prescricao-card-medicamento {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.prescricao-delete-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.2s ease;
+}
+
+.prescricao-delete-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.prescricao-card-info {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.confirmation-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 900px) {
+    .confirmation-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
