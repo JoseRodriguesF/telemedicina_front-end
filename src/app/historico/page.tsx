@@ -638,7 +638,6 @@ export default function HistoricoPage() {
       {/* Template para o PDF (Invisível) - Design de Prescrição Realista */}
       {selectedPrescription && (
         <div id="prescription-pdf-template">
-          <div className="pdf-watermark">JJ TELEMEDICINA</div>
           <div className="pdf-inner-border"></div>
 
           <div className="pdf-header">

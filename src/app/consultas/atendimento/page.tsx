@@ -347,6 +347,128 @@ function AtendimentoInner() {
     setOpenAccordions(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  // Handler para submeter uma nova prescrição
+  const handleSubmitPrescricao = async () => {
+    if (!prescricaoData.medicamento || !prescricaoData.dosagem || !prescricaoData.frequencia || !prescricaoData.duracao) {
+      modal.error('Campos obrigatórios', 'Preencha todos os campos obrigatórios da prescrição.');
+      return;
+    }
+
+    setIsSubmittingPrescricao(true);
+    try {
+      // Adiciona a prescrição localmente com flag isNew
+      const novaPrescricao = {
+        id: Date.now(), // ID temporário
+        consultaId: Number(consultaId),
+        medicamento: prescricaoData.medicamento,
+        marca: prescricaoData.marca || null,
+        dosagem: prescricaoData.dosagem,
+        frequencia: prescricaoData.frequencia,
+        duracao: prescricaoData.duracao,
+        inclusoConvenio: prescricaoData.inclusoConvenio,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isNew: true // Flag para identificar prescrições ainda não salvas no banco
+      } as any;
+
+      setActivePrescricoes(prev => [...prev, novaPrescricao]);
+
+      // Limpa o formulário
+      setPrescricaoData({
+        medicamento: '',
+        marca: '',
+        dosagem: '',
+        frequencia: '',
+        duracao: '',
+        inclusoConvenio: false
+      });
+      setShowPrescricaoForm(false);
+    } catch (err) {
+      console.error('Erro ao adicionar prescrição:', err);
+      modal.error('Erro', 'Não foi possível adicionar a prescrição.');
+    } finally {
+      setIsSubmittingPrescricao(false);
+    }
+  };
+
+  // Handler para mudança no campo medicamento (com autocomplete)
+  const handleMedicamentoChange = async (value: string) => {
+    setPrescricaoData(prev => ({ ...prev, medicamento: value }));
+
+    if (value.length > 2 && token) {
+      try {
+        const sugestoes = await getSugestoesMedicamentos(value, token);
+        setMedicamentoSugestoes(sugestoes);
+        setShowMedicamentoSugestoes(true);
+      } catch (err) {
+        console.error('Erro ao buscar sugestões de medicamentos:', err);
+      }
+    } else {
+      setShowMedicamentoSugestoes(false);
+    }
+  };
+
+  // Handler para mudança no campo marca (com autocomplete)
+  const handleMarcaChange = async (value: string) => {
+    setPrescricaoData(prev => ({ ...prev, marca: value }));
+
+    if (value.length > 1 && token) {
+      try {
+        const sugestoes = await getSugestoesMarcas(value, token);
+        setMarcaSugestoes(sugestoes);
+        setShowMarcaSugestoes(true);
+      } catch (err) {
+        console.error('Erro ao buscar sugestões de marcas:', err);
+      }
+    } else {
+      setShowMarcaSugestoes(false);
+    }
+  };
+
+  // Handler para deletar uma prescrição
+  const handleDeletePrescricao = async (id: number) => {
+    const prescricao = activePrescricoes.find(p => p.id === id);
+    if (!prescricao) return;
+
+    const isNew = (prescricao as any).isNew;
+
+    if (isNew) {
+      // Se é nova e ainda não foi salva, apenas remove localmente
+      setActivePrescricoes(prev => prev.filter(p => p.id !== id));
+    } else {
+      // Se já está no banco, faz a chamada para deletar
+      try {
+        if (token) {
+          await deletePrescricao(id, token);
+          setActivePrescricoes(prev => prev.filter(p => p.id !== id));
+        }
+      } catch (err) {
+        console.error('Erro ao deletar prescrição:', err);
+        modal.error('Erro', 'Não foi possível deletar a prescrição.');
+      }
+    }
+  };
+
+  // Handler para baixar PDF de uma prescrição
+  const handleDownloadPrescricaoPdf = async (id: number) => {
+    if (!token) return;
+
+    try {
+      const blob = await downloadPrescricaoPdf(id, token);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `prescricao_${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Erro ao baixar PDF:', err);
+      modal.error('Erro', 'Não foi possível baixar o PDF da prescrição.');
+    }
+  };
+
 
   // Médico entra e compartilha sua mídia ao chegar.
   // Ao entrar, paciente cria sala + mídia; médico apenas abre mídia e faz claim.
@@ -951,78 +1073,7 @@ function AtendimentoInner() {
     }
   }, [messages, showChat]);
 
-  // Funções de Prescrição
-  async function handleMedicamentoChange(value: string) {
-    setPrescricaoData(prev => ({ ...prev, medicamento: value }));
-
-    if (value.length >= 2 && token) {
-      try {
-        const sugestoes = await getSugestoesMedicamentos(value, token);
-        setMedicamentoSugestoes(sugestoes);
-        setShowMedicamentoSugestoes(true);
-      } catch (err) {
-        console.error('Erro ao buscar sugestões de medicamentos:', err);
-      }
-    } else {
-      setShowMedicamentoSugestoes(false);
-    }
-  }
-
-  async function handleMarcaChange(value: string) {
-    setPrescricaoData(prev => ({ ...prev, marca: value }));
-
-    if (value.length >= 1 && token) {
-      try {
-        const sugestoes = await getSugestoesMarcas(value, token);
-        setMarcaSugestoes(sugestoes);
-        setShowMarcaSugestoes(true);
-      } catch (err) {
-        console.error('Erro ao buscar sugestões de marcas:', err);
-      }
-    } else {
-      setShowMarcaSugestoes(false);
-    }
-  }
-
-  async function handleSubmitPrescricao() {
-    if (!prescricaoData.medicamento || !prescricaoData.dosagem || !prescricaoData.frequencia || !prescricaoData.duracao) {
-      modal.error('Campos Obrigatórios', 'Por favor, preencha o Nome do Medicamento, Dosagem, Frequência e Duração.');
-      return;
-    }
-
-    const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
-    if (!cid || !token) {
-      modal.error('Erro', 'Consulta não encontrada.');
-      return;
-    }
-
-    // Local push instead of API call
-    const newPrescricao: any = {
-      id: -Date.now(), // Temporary negative ID
-      medicamento: prescricaoData.medicamento,
-      marca: prescricaoData.marca || '',
-      dosagem: prescricaoData.dosagem,
-      frequencia: prescricaoData.frequencia || '',
-      duracao: prescricaoData.duracao || '',
-      inclusoConvenio: prescricaoData.inclusoConvenio,
-      isNew: true // Flag to save later
-    };
-
-    setActivePrescricoes(prev => [...prev, newPrescricao]);
-
-    // Limpar form
-    setPrescricaoData({
-      medicamento: '',
-      marca: '',
-      dosagem: '',
-      frequencia: '',
-      duracao: '',
-      inclusoConvenio: false
-    });
-    setShowPrescricaoForm(false);
-    modal.success('Prescrição Adicionada', 'A prescrição foi anexada à consulta localmente.');
-  }
-
+  // Funções auxiliares para prescrição (apenas as que não foram duplicadas)
   async function handleSaveNotas() {
     const curCid = getConsultaIdFromUrl() || consultaIdState || consultaId;
     if (!curCid || !token) return;
@@ -1037,51 +1088,6 @@ function AtendimentoInner() {
       modal.error('Erro', 'Não foi possível salvar as notas.');
     } finally {
       setIsSavingNotas(false);
-    }
-  }
-
-  async function handleDeletePrescricao(id: number) {
-    const pToDelete = activePrescricoes.find(p => p.id === id);
-    if (!pToDelete) return;
-
-    const performDelete = async () => {
-      try {
-        if (id > 0 && token) {
-          // If it's a real prescription (positive ID), delete from DB
-          await deletePrescricao(id, token);
-        }
-        // Always remove from local list
-        setActivePrescricoes(prev => prev.filter(p => p.id !== id));
-        modal.success('Excluído', 'Prescrição removida.');
-      } catch (err) {
-        console.error('Erro ao deletar prescrição:', err);
-        modal.error('Erro', 'Não foi possível excluir a prescrição.');
-      }
-    };
-
-    if (id > 0) {
-      modal.confirm('Excluir Prescrição', 'Tem certeza que deseja excluir esta prescrição permanentemente do banco?', performDelete);
-    } else {
-      performDelete();
-    }
-  }
-
-  async function handleDownloadPrescricaoPdf(id: number) {
-    if (!token) return;
-
-    try {
-      const blob = await downloadPrescricaoPdf(id, token);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Prescricao_${id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      console.error('Erro ao baixar PDF:', err);
-      modal.error('Erro', 'Não foi possível baixar o PDF da prescrição.');
     }
   }
 
@@ -1142,7 +1148,7 @@ function AtendimentoInner() {
         pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
         pdf.save(`Prescricao_${consultaDetails?.paciente?.nome_completo || 'Paciente'}_${new Date().toLocaleDateString()}.pdf`);
 
-        // Marcar como gerada para trocar a UI
+        // Marcar como gerada para trovar a UI
         setPrescricaoGerada(true);
         setShowPrescricaoForm(false);
         modal.success('PDF Gerado!', 'Assine o documento no portal do Gov.br e anexe o arquivo final aqui.');
@@ -2481,7 +2487,6 @@ function AtendimentoInner() {
       {/* Template para o PDF (Invisível) - Design de Prescrição Realista */}
       <div id="atendimento-prescription-pdf-template" style={{ position: 'fixed', left: '-9999px', top: '-9999px' }}>
         <div id="prescription-pdf-template">
-          <div className="pdf-watermark">JJ TELEMEDICINA</div>
           <div className="pdf-inner-border"></div>
 
           <div className="pdf-header">
