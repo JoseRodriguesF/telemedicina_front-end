@@ -805,25 +805,36 @@ function AtendimentoInner() {
     // Permitir navegação sem disparar o aviso do navegador (beforeunload)
     bypassBeforeUnloadRef.current = true;
 
-    // 1. Check if I am the last one
+    // 1. Terminar a chamada WebRTC IMEDIATAMENTE para o outro lado desconectar
+    try { sessionRef.current?.end(); } catch { }
+    try { sessionStorage.removeItem('ps_room'); } catch { }
+    try { sessionStorage.removeItem('consulta_reconnect'); } catch { }
+
+    // 2. Definir navegação/UI IMEDIATAMENTE também
+    if (role === 'paciente') {
+      setShowRatingModal(true);
+    } else {
+      router.push('/consultas');
+    }
+
+    // 3. Executar salvamento em "background" (não bloqueia a UI/navegação)
     const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
     if (cid && token) {
-      try {
-        let participantsCount = 0;
+      // Usamos uma função anônima auto-executável para o salvamento não impedir o retorno da função
+      (async () => {
         try {
-          const res = await listParticipants(cid, token);
-          participantsCount = res.participants?.length || 0;
-        } catch (pErr) {
-          console.warn('[Atendimento] Erro ao listar participantes, prosseguindo salvamento:', pErr);
-        }
+          let participantsCount = 0;
+          try {
+            const res = await listParticipants(cid, token);
+            participantsCount = res.participants?.length || 0;
+          } catch (pErr) {
+            console.warn('[Atendimento] Erro ao listar participantes:', pErr);
+          }
 
-        // Se for médico, sempre salva. Se for paciente, salva se for o único/último.
-        if (role === 'medico' || participantsCount <= 1) {
-          // 1. Salvar Prescrições Novas
-          const newPrescricoes = activePrescricoes.filter((p: any) => p.isNew);
-          if (newPrescricoes.length > 0) {
-            try {
-              // Envia as prescrições sequencialmente para evitar sobrecarga e garantir que o PDF seja enviado apenas uma vez
+          if (role === 'medico' || participantsCount <= 1) {
+            // Salvar Prescrições
+            const newPrescricoes = activePrescricoes.filter((p: any) => p.isNew);
+            if (newPrescricoes.length > 0) {
               for (let i = 0; i < newPrescricoes.length; i++) {
                 const p = newPrescricoes[i];
                 await createPrescricao({
@@ -834,44 +845,27 @@ function AtendimentoInner() {
                   frequencia: p.frequencia,
                   duracao: p.duracao,
                   inclusoConvenio: p.inclusoConvenio,
-                  // Envia o PDF apenas na PRIMEIRA prescrição para evitar erro 413 (Payload Too Large)
-                  // e redundância desnecessária. O banco de dados associa o PDF a esta prescrição.
                   pdf: (i === 0) ? (signedPdfFile || undefined) : undefined
-                }, token);
+                }, token).catch(e => console.error('Erro prescrição:', e));
               }
-            } catch (pErr) {
-              console.error('Erro ao salvar prescrições ao finalizar:', pErr);
             }
+
+            // Salvar Notas
+            if (role === 'medico' && pacienteNotas) {
+              await updatePacienteNotas(cid, token, pacienteNotas).catch(e => console.error('Erro notas:', e));
+            }
+
+            // Finalizar Consulta
+            const hora_fim = new Date().toTimeString().slice(0, 8);
+            await endConsulta(cid, token, hora_fim, atendimentoData).catch(e => console.error('Erro endConsulta:', e));
+
+            // Limpar estados locais
+            setSignedPdfFile(null);
           }
-
-          // 2. Salvar Notas do Paciente se for médico
-          if (role === 'medico' && pacienteNotas) {
-            try { await updatePacienteNotas(cid, token, pacienteNotas); } catch (nErr) { console.error('Erro ao salvar notas ao finalizar:', nErr); }
-          }
-
-          // 3. Envia hora_fim ao finalizar
-          const now = new Date();
-          const hora_fim = now.toTimeString().slice(0, 8); // formato HH:MM:SS
-          await endConsulta(cid, token, hora_fim, atendimentoData);
-
-          // Limpar PDF após envio
-          setSignedPdfFile(null);
+        } catch (err) {
+          console.error('Erro no salvamento de background:', err);
         }
-      } catch (err) {
-        console.error('Erro ao verificar/finalizar consulta:', err);
-      }
-    }
-
-    try { sessionRef.current?.end(); } catch { }
-    try { sessionStorage.removeItem('ps_room'); } catch { }
-    // Remove dados de reconexão ao sair normalmente
-    try { sessionStorage.removeItem('consulta_reconnect'); } catch { }
-
-    // Se for paciente, mostra modal de avaliação antes de sair
-    if (role === 'paciente') {
-      setShowRatingModal(true);
-    } else {
-      router.push('/consultas');
+      })();
     }
   }
 
