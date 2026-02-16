@@ -108,6 +108,46 @@ export default function PacientesPage() {
   const totalWaiting = pacientes.filter(p => p.status === 'scheduled').length;
   const error = queryError ? (queryError as any).message : null;
 
+  // Função para filtrar campos administrativos do prontuário de triagem
+  const removeAdministrativeFields = (content: string): string => {
+    if (!content) return content;
+
+    const lines = content.split('\n');
+    const filteredLines: string[] = [];
+    let skipMode = false;
+
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+
+      // Pular linhas de cabeçalho administrativo
+      if (
+        trimmedLine.startsWith('---') ||
+        trimmedLine.includes('PRONTUÁRIO DE TRIAGEM') ||
+        trimmedLine.includes('ID DO PACIENTE:') ||
+        trimmedLine.includes('DATA DA TRIAGEM:') ||
+        trimmedLine.includes('RESPONSÁVEL:') ||
+        trimmedLine.includes('⚠️ SÍNTESE DA CONDUTA:') ||
+        trimmedLine.includes('PRÉ-CONSULTA')
+      ) {
+        skipMode = true;
+        continue;
+      }
+
+      // Detectar fim do cabeçalho administrativo
+      if (skipMode && trimmedLine.startsWith('###')) {
+        skipMode = false;
+      }
+
+      // Adicionar linha se não estiver em modo skip
+      if (!skipMode) {
+        filteredLines.push(line);
+      }
+    }
+
+    return filteredLines.join('\n').trim();
+  };
+
+
   return (
     <DashboardLayout>
       <div className={styles['pacientes-container']}>
@@ -227,7 +267,7 @@ export default function PacientesPage() {
                       border: '1px solid var(--border-color)',
                     }}>
                       <FormattedText
-                        text={consultaDetails.historiaClinica.conteudo || 'Não informada'}
+                        text={removeAdministrativeFields(consultaDetails.historiaClinica.conteudo || '') || 'Não informada'}
                         style={{
                           fontSize: '1rem',
                           color: 'var(--text-primary)',
