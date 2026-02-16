@@ -148,7 +148,9 @@ export default function HistoricoPage() {
       consultaStatus: consulta.status,
       medicoNome: consulta.medico?.nome_completo,
       pacienteNome: consulta.paciente?.nome_completo,
-      consultaData: consulta.data_consulta || consulta.createdAt
+      consultaData: consulta.data_consulta || consulta.createdAt,
+      // Garantir que tem_pdf seja verdadeiro se houver dados de PDF
+      tem_pdf: p.tem_pdf || !!p.pdf_mimetype || !!p.pdf_data
     }))
   );
 
