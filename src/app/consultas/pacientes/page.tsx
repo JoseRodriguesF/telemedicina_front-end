@@ -114,32 +114,34 @@ export default function PacientesPage() {
 
     const lines = content.split('\n');
     const filteredLines: string[] = [];
-    let skipMode = false;
+    let inHeader = true; // Iniciar assumindo que estamos no cabeçalho
 
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
       const trimmedLine = line.trim();
 
-      // Pular linhas de cabeçalho administrativo
-      if (
-        trimmedLine.startsWith('---') ||
-        trimmedLine.includes('PRONTUÁRIO DE TRIAGEM') ||
-        trimmedLine.includes('ID DO PACIENTE:') ||
-        trimmedLine.includes('DATA DA TRIAGEM:') ||
-        trimmedLine.includes('RESPONSÁVEL:') ||
-        trimmedLine.includes('⚠️ SÍNTESE DA CONDUTA:') ||
-        trimmedLine.includes('PRÉ-CONSULTA')
-      ) {
-        skipMode = true;
-        continue;
-      }
-
-      // Detectar fim do cabeçalho administrativo
-      if (skipMode && trimmedLine.startsWith('###')) {
-        skipMode = false;
-      }
-
-      // Adicionar linha se não estiver em modo skip
-      if (!skipMode) {
+      // Se estamos no cabeçalho, verificar se é uma linha administrativa
+      if (inHeader) {
+        // Linhas que indicam cabeçalho administrativo
+        if (
+          trimmedLine.startsWith('---') ||
+          trimmedLine.includes('PRONTUÁRIO DE TRIAGEM') ||
+          trimmedLine.includes('ID DO PACIENTE:') ||
+          trimmedLine.includes('DATA DA TRIAGEM:') ||
+          trimmedLine.includes('RESPONSÁVEL:') ||
+          trimmedLine.includes('⚠️ SÍNTESE DA CONDUTA:') ||
+          trimmedLine.includes('PRÉ-CONSULTA') ||
+          trimmedLine === '' // Linhas vazias no início
+        ) {
+          // Pular esta linha
+          continue;
+        } else {
+          // Encontramos conteúdo real, não estamos mais no cabeçalho
+          inHeader = false;
+          filteredLines.push(line);
+        }
+      } else {
+        // Já saímos do cabeçalho, incluir tudo
         filteredLines.push(line);
       }
     }
