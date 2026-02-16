@@ -74,10 +74,17 @@ export default function FormattedText({ text, style }: FormattedTextProps) {
                     );
                 }
 
-                // Linha comum de texto
+                // Linha comum de texto - processar negrito se houver
+                const parts = line.split(/(\*\*[^*]+\*\*)/g);
+
                 return (
                     <div key={index} style={{ marginBottom: line.trim() === '' ? '0.5rem' : '0' }}>
-                        {line}
+                        {parts.map((part, i) => {
+                            if (part.startsWith('**') && part.endsWith('**')) {
+                                return <strong key={i}>{part.slice(2, -2)}</strong>;
+                            }
+                            return <span key={i}>{part}</span>;
+                        })}
                     </div>
                 );
             })}
