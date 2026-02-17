@@ -3,7 +3,7 @@
 import './inicio.css';
 import '@/components/layout/Header/header.css';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import FrequencyChart from '@/components/dashboard/FrequencyChart';
@@ -29,7 +29,7 @@ import {
 // Array vazio estável para evitar loops infinitos de renderização
 const EMPTY_ARRAY: any[] = [];
 
-export default function InicioPage() {
+function InicioPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const modal = useModal();
@@ -614,5 +614,17 @@ export default function InicioPage() {
       />
       <RatingModal />
     </>
+  );
+}
+
+export default function InicioPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-primary)' }}>
+        <div className="spinner"></div>
+      </div>
+    }>
+      <InicioPageContent />
+    </Suspense>
   );
 }
