@@ -18,6 +18,7 @@ import AddressAutocomplete from '@/components/common/Inputs/AddressAutocomplete'
 import ContentModal from '@/components/common/Modal/ContentModal';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import FormattedText from '@/components/common/FormattedText';
 
 type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
 
@@ -1833,6 +1834,30 @@ function AtendimentoInner() {
                 </div>
                 <div className="panel-header">Ficha de atendimento</div>
                 <div className="panel-content">
+                  <Accordion
+                    id="triagem"
+                    title="História Clínica (Triagem)"
+                    isOpen={!!openAccordions['triagem']}
+                    onToggle={toggleAccordion}
+                    isFilled={!!consultaDetails?.historiaClinica}
+                  >
+                    {consultaDetails?.historiaClinica ? (
+                      <div className="triagem-content-wrapper" style={{ padding: '0.5rem 0' }}>
+                        <FormattedText
+                          text={consultaDetails.historiaClinica.conteudo || 'Não informada'}
+                          style={{
+                            fontSize: '1rem',
+                            color: 'var(--text-primary)',
+                            lineHeight: 1.7
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280', fontSize: '0.85rem' }}>
+                        Informações de triagem não encontradas.
+                      </div>
+                    )}
+                  </Accordion>
                   <Accordion
                     id="evolucao"
                     title="Evolução"

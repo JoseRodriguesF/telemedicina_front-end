@@ -15,19 +15,21 @@ import type { ChatIAResponse, ChatHistory, ChatMessage as ChatMsg } from '@/type
 function formatIaText(text: string): string {
   if (!text) return '';
   let html = text
+    .replace(/^### (.*$)/gm, '<h3 style="color: var(--color-primary-600); font-weight: 700; margin-top: 1rem; margin-bottom: 0.5rem; font-size: 1rem; text-transform: uppercase;">$1</h3>') // ### Cabeçalho
     .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') // **negrito**
     .replace(/\n\n/g, '<br/><br/>') // parágrafos
     .replace(/\n/g, '<br/>') // quebras de linha
     .replace(/^- (.*)$/gm, '<li>$1</li>'); // tópicos
-  // Se houver <li>, envolver todos em <ul> (sem regex dotAll)
+
+  // Se houver <li>, envolver todos em <ul>
   if (/<li>/.test(html)) {
-    // Junta todos <li> em um <ul>
-    const lis = html.match(/<li>.*?<\/li>/g);
-    if (lis) {
-      html = html.replace(/(<li>.*?<\/li>)/g, '');
-      html += '<ul>' + lis.join('') + '</ul>';
-    }
+    // Processar grupos de li para envolver em ul
+    html = html.replace(/(<li>.*?<\/li>)+/g, (match) => `<ul>${match}</ul>`);
   }
+
+  // Limpar possíveis bolds excessivos dentro de headers já formatados
+  html = html.replace(/<h3(.*?)><b>(.*?)<\/b><\/h3>/g, '<h3$1>$2</h3>');
+
   return html;
 }
 
@@ -124,8 +126,10 @@ function PreConsultaInner() {
 
       const data: ChatIAResponse = await res.json();
       const answer = String(data?.answer ?? 'Sem resposta da IA.');
+      let finalHistoriaId = historiaClinicaId;
 
       if (data.historiaClinicaId) {
+        finalHistoriaId = data.historiaClinicaId;
         setHistoriaClinicaId(data.historiaClinicaId);
       }
 
@@ -138,6 +142,8 @@ function PreConsultaInner() {
 
       if (data?.completed === true) {
         setCompleted(true);
+        // Chamar handleEnviar imediatamente com o ID mais recente para evitar race condition do state
+        handleEnviar(finalHistoriaId);
       }
     } catch (err: any) {
       const msg = String(err?.message ?? 'Erro desconhecido ao chamar a IA');
@@ -148,7 +154,7 @@ function PreConsultaInner() {
     }
   }
 
-  async function handleEnviar() {
+  async function handleEnviar(forcedHistoriaId?: number) {
     const token = getToken();
     const user = getUser();
     if (user?.tipo_usuario !== 'paciente') {
@@ -159,14 +165,17 @@ function PreConsultaInner() {
       modal.warning('Login Expirado', 'Faça login novamente para continuar.');
       return;
     }
+
+    const currentHistoriaId = forcedHistoriaId || historiaClinicaId;
+
     if (token) {
       if (flow === 'agendamento') {
         const queryParams = new URLSearchParams({
           date: dateStr || '',
           time: timeStr || ''
         });
-        if (historiaClinicaId) {
-          queryParams.append('historiaId', String(historiaClinicaId));
+        if (currentHistoriaId) {
+          queryParams.append('historiaId', String(currentHistoriaId));
         }
         router.push(`/consultas/selecao-medico?${queryParams.toString()}`);
         return;
@@ -174,7 +183,7 @@ function PreConsultaInner() {
 
       try {
         const { roomId, consultaId, iceServers } = await psCreateRoom(token, {
-          historiaClinicaId
+          historiaClinicaId: currentHistoriaId
         });
         sessionStorage.setItem('ps_room', JSON.stringify({ roomId, consultaId, iceServers }));
         router.push(`/consultas/aguardando?id=${encodeURIComponent(consultaId)}`);
@@ -198,15 +207,6 @@ function PreConsultaInner() {
       el.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
-
-  // Navegação automática ao completed
-  useEffect(() => {
-    if (completed) {
-      // Create room automatically after completion logic
-      handleEnviar();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [completed]);
 
   // ✅ Limpar histórico ao sair da tela (desmontar componente)
   useEffect(() => {
