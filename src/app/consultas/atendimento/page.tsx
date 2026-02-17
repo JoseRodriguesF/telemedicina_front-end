@@ -135,11 +135,6 @@ function AtendimentoInner() {
   const [historicoPrescricoes, setHistoricoPrescricoes] = useState<PrescricaoType[]>([]);
   const [loadingHistoricoPrescricoes, setLoadingHistoricoPrescricoes] = useState(false);
 
-  // Estados para avaliação da consulta (paciente)
-  const [showRatingModal, setShowRatingModal] = useState(false);
-  const [ratingStars, setRatingStars] = useState(0);
-  const [ratingJustification, setRatingJustification] = useState('');
-  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [isClaimed, setIsClaimed] = useState(false);
 
   // Estados para mensagens não lidas no chat
@@ -801,15 +796,22 @@ function AtendimentoInner() {
         }
 
         // Quando o paciente recebe a notificação de que o médico está desligando
-        if (ev === 'doctor-disconnecting' && role === 'paciente') {
-          console.log('[Atendimento] Paciente recebeu notificação: médico desligando');
-          // Desconectar imediatamente e redirecionar para /inicio
-          bypassBeforeUnloadRef.current = true;
-          try { sessionRef.current?.end(); } catch { }
-          try { sessionStorage.removeItem('ps_room'); } catch { }
-          try { sessionStorage.removeItem('consulta_reconnect'); } catch { }
-          // Redirecionar para /inicio e mostrar modal de avaliação lá
-          router.push(`/inicio?showRating=true&consultaId=${cid}`);
+        if (ev === 'doctor-disconnecting') {
+          const u = getUser();
+          const r = u?.tipo_usuario === 'medico' ? 'medico' : 'paciente';
+
+          if (r === 'paciente') {
+            console.log('[Atendimento] Paciente recebeu notificação: médico desligando');
+            // Desconectar imediatamente e redirecionar para /inicio
+            bypassBeforeUnloadRef.current = true;
+            try { sessionRef.current?.end(); } catch { }
+            try { sessionStorage.removeItem('ps_room'); } catch { }
+            try { sessionStorage.removeItem('consulta_reconnect'); } catch { }
+
+            // Pegar o ID da consulta atual para a avaliação
+            const currentCid = getConsultaIdFromUrl() || consultaIdState || consultaId;
+            router.push(`/inicio?showRating=true&consultaId=${currentCid}`);
+          }
         }
       });
 
@@ -1009,7 +1011,7 @@ function AtendimentoInner() {
 
     // Navegar para a página apropriada
     if (role === 'paciente') {
-      setShowRatingModal(true);
+      router.push(`/inicio?showRating=true&consultaId=${cid}`);
     } else {
       router.push('/consultas');
     }
@@ -1049,42 +1051,6 @@ function AtendimentoInner() {
 
     setIsConfirmingEnd(false);
     confirmFinishCall();
-  }
-
-  async function handleRatingSubmit() {
-    if (ratingStars === 0) {
-      modal.error('Erro', 'Por favor, selecione uma nota de 1 a 5 estrelas.');
-      return;
-    }
-
-    if (ratingStars < 5 && !ratingJustification.trim()) {
-      modal.error('Justificativa Necessária', 'Por favor, informe uma justificativa para a sua nota.');
-      return;
-    }
-
-    const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
-    if (!cid || !token) {
-      router.push('/consultas');
-      return;
-    }
-
-    setIsSubmittingRating(true);
-    try {
-      await avaliarConsulta(cid, token, {
-        estrelas: ratingStars,
-        avaliacao: ratingJustification
-      });
-      setShowRatingModal(false);
-      modal.success('Obrigado!', 'Sua avaliação foi registrada com sucesso.', () => {
-        router.push('/consultas');
-      });
-    } catch (err: any) {
-      console.error('Erro ao enviar avaliação:', err);
-      modal.error('Erro', 'Não foi possível enviar sua avaliação no momento. Você será redirecionado.');
-      setTimeout(() => router.push('/consultas'), 2000);
-    } finally {
-      setIsSubmittingRating(false);
-    }
   }
 
   // Detectar mensagens não lidas quando o chat está fechado
@@ -2475,62 +2441,6 @@ function AtendimentoInner() {
         onConfirm={modal.onConfirm}
         onCancel={modal.onCancel}
       />
-
-      {/* Modal de Avaliação do Médico */}
-      <ContentModal
-        isOpen={showRatingModal}
-        onClose={() => { }} // Não permite fechar sem avaliar ou carregar fallback
-        title="Avalie o seu atendimento"
-        size="sm"
-      >
-        <div className="rating-modal-content">
-          <p className="rating-description">Como você avalia o atendimento do médico?</p>
-
-          <div className="star-rating">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                className={`star-btn ${ratingStars >= star ? 'active' : ''}`}
-                onClick={() => setRatingStars(star)}
-                aria-label={`${star} estrelas`}
-              >
-                ★
-              </button>
-            ))}
-          </div>
-
-          {ratingStars > 0 && ratingStars < 5 && (
-            <div className="rating-justification">
-              <label htmlFor="justification">O que podemos melhorar? (Obrigatório)</label>
-              <textarea
-                id="justification"
-                className="atendimento-textarea"
-                placeholder="Conte-nos o motivo da sua nota..."
-                value={ratingJustification}
-                onChange={(e) => setRatingJustification(e.target.value)}
-              ></textarea>
-            </div>
-          )}
-
-          <div className="rating-actions">
-            <Button
-              variant="primary"
-              onClick={handleRatingSubmit}
-              disabled={isSubmittingRating || (ratingStars < 5 && !ratingJustification.trim()) || ratingStars === 0}
-              style={{ width: '100%' }}
-            >
-              {isSubmittingRating ? 'Enviando...' : 'Enviar Avaliação'}
-            </Button>
-            <button
-              className="skip-rating-btn"
-              onClick={() => router.push('/consultas')}
-              disabled={isSubmittingRating}
-            >
-              Agora não
-            </button>
-          </div>
-        </div>
-      </ContentModal>
 
       {/* Template para o PDF (Invisível) - Design de Prescrição Realista */}
       <div id="atendimento-prescription-pdf-template" style={{ position: 'fixed', left: '-9999px', top: '-9999px' }}>
