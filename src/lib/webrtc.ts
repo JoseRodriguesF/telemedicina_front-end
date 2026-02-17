@@ -8,6 +8,7 @@ export type SignalMessage =
   | { type: 'answer'; sdp: RTCSessionDescriptionInit }
   | { type: 'ice-candidate', candidate: RTCIceCandidateInit }
   | { type: 'media-state'; video: boolean; audio: boolean }
+  | { type: 'doctor-disconnecting' }
   | { type: 'end' };
 
 export type WebRTCSessionArgs = {
@@ -18,7 +19,7 @@ export type WebRTCSessionArgs = {
   iceServers: RTCIceServer[];
 };
 
-export type SignalEvent = 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived' | 'ready' | 'peer-joined' | 'peer-left';
+export type SignalEvent = 'joined' | 'offerReceived' | 'answerSent' | 'answerReceived' | 'ready' | 'peer-joined' | 'peer-left' | 'doctor-disconnecting';
 
 export type WebRTCSession = {
   pc: RTCPeerConnection;
@@ -29,6 +30,7 @@ export type WebRTCSession = {
   createAndSendOffer: () => Promise<void>;
   createAndSendAnswer: () => Promise<void>;
   end: () => void;
+  sendDoctorDisconnecting: () => void;
   restartIce: () => void;
   sendMediaState: (video: boolean, audio: boolean) => void;
   onRemoteTrack: (cb: (stream: MediaStream) => void) => void;
@@ -159,6 +161,8 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
         emitSignal('peer-joined', msg);
       } else if (msg.type === 'peer-left') {
         emitSignal('peer-left', msg);
+      } else if (msg.type === 'doctor-disconnecting') {
+        emitSignal('doctor-disconnecting', msg);
       } else if (msg.type === 'offer') {
         emitSignal('offerReceived', msg);
         // Collision prevention (ignore if we are making offer and have higher precedence, 
@@ -268,6 +272,16 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     }
   };
 
+  const sendDoctorDisconnecting = () => {
+    try {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'doctor-disconnecting' }));
+      }
+    } catch (err) {
+      console.error('[WebRTC] Erro ao enviar doctor-disconnecting:', err);
+    }
+  };
+
   const onRemoteTrack = (cb: (stream: MediaStream) => void) => { onRemote = cb; };
   const onRemoteMediaState = (cb: (state: { video: boolean; audio: boolean }) => void) => { onRemoteMedia = cb; };
   const onRemoteEnd = (cb: () => void) => { onRemoteEndCb = cb; };
@@ -313,7 +327,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   return {
     pc, ws, localStream,
     startLocalMedia, setLocalStream, createAndSendOffer, createAndSendAnswer,
-    end, restartIce, sendMediaState, onRemoteTrack, onRemoteMediaState, onRemoteEnd,
+    end, sendDoctorDisconnecting, restartIce, sendMediaState, onRemoteTrack, onRemoteMediaState, onRemoteEnd,
     createChatChannel, onChatMessage, sendMessage,
     onConnectionStateChange, onIceConnectionStateChange, onSignalEvent,
   };

@@ -798,6 +798,22 @@ function AtendimentoInner() {
           hasReadySignalRef.current = false;
           offeringInitiatedRef.current = false;
         }
+
+        // Quando o paciente recebe a notificação de que o médico está desligando
+        if (ev === 'doctor-disconnecting' && role === 'paciente') {
+          console.log('[Atendimento] Paciente recebeu notificação: médico desligando');
+          // Desconectar imediatamente e redirecionar para /inicio
+          bypassBeforeUnloadRef.current = true;
+          try { sessionRef.current?.end(); } catch { }
+          try { sessionStorage.removeItem('ps_room'); } catch { }
+          try { sessionStorage.removeItem('consulta_reconnect'); } catch { }
+          // Redirecionar para /inicio e mostrar modal de avaliação
+          router.push('/inicio');
+          // Pequeno delay para garantir que o redirecionamento ocorreu antes de mostrar o modal
+          setTimeout(() => {
+            setShowRatingModal(true);
+          }, 500);
+        }
       });
 
       session.onRemoteTrack((stream) => {
@@ -915,8 +931,16 @@ function AtendimentoInner() {
           return;
         }
       }
-    }
-    if (role === 'medico') {
+
+      // Notificar o paciente que o médico está desligando
+      try {
+        sessionRef.current?.sendDoctorDisconnecting();
+        console.log('[Atendimento] Notificação enviada ao paciente: médico desligando');
+      } catch (err) {
+        console.error('[Atendimento] Erro ao notificar paciente:', err);
+      }
+
+      // Abrir modal de confirmação para o médico
       setIsConfirmingEnd(true);
     } else {
       confirmFinishCall();
@@ -927,67 +951,70 @@ function AtendimentoInner() {
     // Permitir navegação sem disparar o aviso do navegador (beforeunload)
     bypassBeforeUnloadRef.current = true;
 
-    // 1. Terminar a chamada WebRTC IMEDIATAMENTE para o outro lado desconectar
+    const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
+
+    // Se for médico, salvar dados ANTES de terminar a chamada
+    if (role === 'medico' && cid && token) {
+      try {
+        console.log('[Atendimento] Médico: iniciando salvamento dos dados...');
+
+        // Salvar Prescrições
+        const newPrescricoes = activePrescricoes.filter((p: any) => p.isNew);
+        if (newPrescricoes.length > 0) {
+          console.log(`[Atendimento] Salvando ${newPrescricoes.length} prescrições...`);
+          for (let i = 0; i < newPrescricoes.length; i++) {
+            const p = newPrescricoes[i];
+            await createPrescricao({
+              consultaId: Number(cid),
+              medicamento: p.medicamento,
+              marca: p.marca || undefined,
+              dosagem: p.dosagem,
+              frequencia: p.frequencia,
+              duracao: p.duracao,
+              inclusoConvenio: p.inclusoConvenio,
+              pdf: (i === 0) ? (signedPdfFile || undefined) : undefined
+            }, token);
+            console.log(`[Atendimento] Prescrição ${i + 1}/${newPrescricoes.length} salva`);
+          }
+        }
+
+        // Salvar Notas
+        if (pacienteNotas) {
+          console.log('[Atendimento] Salvando notas do paciente...');
+          await updatePacienteNotas(cid, token, pacienteNotas);
+          console.log('[Atendimento] Notas salvas com sucesso');
+        }
+
+        // Finalizar Consulta
+        const hora_fim = new Date().toTimeString().slice(0, 8);
+        console.log('[Atendimento] Finalizando consulta...');
+        await endConsulta(cid, token, hora_fim, atendimentoData);
+        console.log('[Atendimento] Consulta finalizada com sucesso');
+
+        // Limpar estados locais
+        setSignedPdfFile(null);
+      } catch (err) {
+        console.error('[Atendimento] ERRO ao salvar dados:', err);
+        modal.error(
+          'Erro ao Salvar',
+          'Houve um erro ao salvar os dados da consulta. Por favor, verifique sua conexão e tente novamente.'
+        );
+        // Não prosseguir se houver erro no salvamento
+        bypassBeforeUnloadRef.current = false;
+        return;
+      }
+    }
+
+    // Terminar a chamada WebRTC
     try { sessionRef.current?.end(); } catch { }
     try { sessionStorage.removeItem('ps_room'); } catch { }
     try { sessionStorage.removeItem('consulta_reconnect'); } catch { }
 
-    // 2. Definir navegação/UI IMEDIATAMENTE também
+    // Navegar para a página apropriada
     if (role === 'paciente') {
       setShowRatingModal(true);
     } else {
       router.push('/consultas');
-    }
-
-    // 3. Executar salvamento em "background" (não bloqueia a UI/navegação)
-    const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
-    if (cid && token) {
-      // Usamos uma função anônima auto-executável para o salvamento não impedir o retorno da função
-      (async () => {
-        try {
-          let participantsCount = 0;
-          try {
-            const res = await listParticipants(cid, token);
-            participantsCount = res.participants?.length || 0;
-          } catch (pErr) {
-            console.warn('[Atendimento] Erro ao listar participantes:', pErr);
-          }
-
-          if (role === 'medico' || participantsCount <= 1) {
-            // Salvar Prescrições
-            const newPrescricoes = activePrescricoes.filter((p: any) => p.isNew);
-            if (newPrescricoes.length > 0) {
-              for (let i = 0; i < newPrescricoes.length; i++) {
-                const p = newPrescricoes[i];
-                await createPrescricao({
-                  consultaId: Number(cid),
-                  medicamento: p.medicamento,
-                  marca: p.marca || undefined,
-                  dosagem: p.dosagem,
-                  frequencia: p.frequencia,
-                  duracao: p.duracao,
-                  inclusoConvenio: p.inclusoConvenio,
-                  pdf: (i === 0) ? (signedPdfFile || undefined) : undefined
-                }, token).catch(e => console.error('Erro prescrição:', e));
-              }
-            }
-
-            // Salvar Notas
-            if (role === 'medico' && pacienteNotas) {
-              await updatePacienteNotas(cid, token, pacienteNotas).catch(e => console.error('Erro notas:', e));
-            }
-
-            // Finalizar Consulta
-            const hora_fim = new Date().toTimeString().slice(0, 8);
-            await endConsulta(cid, token, hora_fim, atendimentoData).catch(e => console.error('Erro endConsulta:', e));
-
-            // Limpar estados locais
-            setSignedPdfFile(null);
-          }
-        } catch (err) {
-          console.error('Erro no salvamento de background:', err);
-        }
-      })();
     }
   }
 
