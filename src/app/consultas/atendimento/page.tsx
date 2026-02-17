@@ -808,12 +808,8 @@ function AtendimentoInner() {
           try { sessionRef.current?.end(); } catch { }
           try { sessionStorage.removeItem('ps_room'); } catch { }
           try { sessionStorage.removeItem('consulta_reconnect'); } catch { }
-          // Redirecionar para /inicio e mostrar modal de avaliação
-          router.push('/inicio');
-          // Pequeno delay para garantir que o redirecionamento ocorreu antes de mostrar o modal
-          setTimeout(() => {
-            setShowRatingModal(true);
-          }, 500);
+          // Redirecionar para /inicio e mostrar modal de avaliação lá
+          router.push(`/inicio?showRating=true&consultaId=${cid}`);
         }
       });
 

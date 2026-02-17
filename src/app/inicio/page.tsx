@@ -4,10 +4,13 @@ import './inicio.css';
 import '@/components/layout/Header/header.css';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import FrequencyChart from '@/components/dashboard/FrequencyChart';
 import { useConsultationTimer } from '@/hooks/useConsultationTimer';
+
+// ✅ NOVO: Importar ContentModal
+import ContentModal from '@/components/common/Modal/ContentModal';
 
 // ✅ NOVO: Importar hooks otimizados
 import { useConsultasAgendadas, useHistoricoCompleto, useSalasAtivas } from '@/hooks/useApiData';
@@ -19,7 +22,8 @@ import { getUser, getUserFirstName, getToken } from '@/lib/auth';
 import {
   PSFullHistoryItem,
   ConsultaAgendada,
-  cancelarConsulta
+  cancelarConsulta,
+  avaliarConsulta
 } from '@/lib/axios/consultas';
 
 // Array vazio estável para evitar loops infinitos de renderização
@@ -27,10 +31,19 @@ const EMPTY_ARRAY: any[] = [];
 
 export default function InicioPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const modal = useModal();
   const [displayName, setDisplayName] = useState<string>('');
   const [isMedico, setIsMedico] = useState<boolean>(false);
   const [userId, setUserId] = useState<number | null>(null);
+
+  // Estados para Avaliação
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingStars, setRatingStars] = useState(0);
+  const [ratingHover, setRatingHover] = useState(0);
+  const [ratingText, setRatingText] = useState('');
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [ratingConsultaId, setRatingConsultaId] = useState<string | null>(null);
 
   // ✅ NOVO: Usar hooks otimizados com cache automático
   const { consultas: consultasRaw, isLoading: loadingConsultas, refresh: refreshConsultas } = useConsultasAgendadas();
@@ -215,6 +228,155 @@ export default function InicioPage() {
       router.push(`/consultas/atendimento?id=${reconnectData.consultaId}`);
     }
   };
+
+  // ✅ NOVO: Detectar parâmetro de avaliação na URL
+  useEffect(() => {
+    const showRating = searchParams.get('showRating');
+    const cId = searchParams.get('consultaId');
+
+    if (showRating === 'true' && cId) {
+      setRatingConsultaId(cId);
+      setShowRatingModal(true);
+      // Limpar a URL para não mostrar o modal novamente ao dar refresh
+      router.replace('/inicio');
+    }
+  }, [searchParams, router]);
+
+  const handleRatingSubmit = async () => {
+    if (ratingStars === 0) {
+      modal.error('Atenção', 'Por favor, selecione uma nota de 1 a 5 estrelas.');
+      return;
+    }
+
+    setIsSubmittingRating(true);
+    try {
+      const token = getToken();
+      if (!token || !ratingConsultaId) throw new Error('Dados faltando para avaliação');
+
+      await avaliarConsulta(ratingConsultaId, token, {
+        estrelas: ratingStars,
+        avaliacao: ratingText
+      });
+
+      setShowRatingModal(false);
+      modal.success('Obrigado!', 'Sua avaliação foi enviada com sucesso.');
+    } catch (err) {
+      console.error('Erro ao enviar avaliação:', err);
+      modal.error('Erro', 'Houve um problema ao enviar sua avaliação. Tente novamente.');
+    } finally {
+      setIsSubmittingRating(false);
+    }
+  };
+
+  // ✅ NOVO: Modal de Avaliação
+  const RatingModal = () => (
+    <ContentModal
+      isOpen={showRatingModal}
+      onClose={() => setShowRatingModal(false)}
+      title="Sua consulta terminou"
+      size="md"
+    >
+      <div style={{ textAlign: 'center', padding: '1rem' }}>
+        <div style={{ marginBottom: '2rem' }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            background: 'var(--color-success-100)',
+            color: 'var(--color-success-600)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1.5rem'
+          }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+          <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+            Como foi seu atendimento?
+          </h3>
+          <p style={{ color: 'var(--text-secondary)' }}>
+            Sua opinião é fundamental para mantermos a qualidade do nosso serviço médico.
+          </p>
+        </div>
+
+        <div style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                onMouseEnter={() => setRatingHover(star)}
+                onMouseLeave={() => setRatingHover(0)}
+                onClick={() => setRatingStars(star)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '5px',
+                  cursor: 'pointer',
+                  color: (ratingHover || ratingStars) >= star ? '#fbbf24' : '#d1d5db',
+                  transition: 'transform 0.2s, color 0.2s',
+                  transform: (ratingHover || ratingStars) === star ? 'scale(1.2)' : 'scale(1)'
+                }}
+              >
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+              </button>
+            ))}
+          </div>
+          <p style={{ fontWeight: 600, color: 'var(--text-primary)', height: '1.2rem' }}>
+            {ratingStars === 1 && "Muito Insatisfeito"}
+            {ratingStars === 2 && "Insatisfeito"}
+            {ratingStars === 3 && "Regular"}
+            {ratingStars === 4 && "Satisfeito"}
+            {ratingStars === 5 && "Muito Satisfeito"}
+          </p>
+        </div>
+
+        <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
+          <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+            Deixe um comentário (opcional):
+          </label>
+          <textarea
+            value={ratingText}
+            onChange={(e) => setRatingText(e.target.value)}
+            placeholder="Conte-nos um pouco mais sobre sua experiência..."
+            style={{
+              width: '100%',
+              minHeight: '100px',
+              padding: '0.75rem',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border-color)',
+              background: 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+              resize: 'vertical',
+              fontSize: '0.95rem'
+            }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button
+            className="btn ghost"
+            onClick={() => setShowRatingModal(false)}
+            style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-lg)' }}
+          >
+            Pular
+          </button>
+          <button
+            className="btn primary"
+            onClick={handleRatingSubmit}
+            disabled={isSubmittingRating || ratingStars === 0}
+            style={{ flex: 2, padding: '0.75rem', borderRadius: 'var(--radius-lg)' }}
+          >
+            {isSubmittingRating ? 'Enviando...' : 'Enviar Avaliação'}
+          </button>
+        </div>
+      </div>
+    </ContentModal>
+  );
 
   return (
     <>
@@ -450,6 +612,7 @@ export default function InicioPage() {
         onConfirm={modal.onConfirm}
         onCancel={modal.onCancel}
       />
+      <RatingModal />
     </>
   );
 }
