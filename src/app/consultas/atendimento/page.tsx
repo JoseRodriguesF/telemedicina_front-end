@@ -2079,7 +2079,7 @@ function AtendimentoInner() {
                           <h3>Usuário desconectado</h3>
                           <p>{showExitMessage ? 'A consulta foi encerrada pelo outro participante.' : 'O sinal do outro participante caiu. Aguardando volta...'}</p>
                           {showExitMessage && (
-                            <Button variant="primary" onClick={() => role === 'paciente' ? setShowRatingModal(true) : router.push('/consultas')} style={{ marginTop: '1.5rem' }}>
+                            <Button variant="primary" onClick={confirmFinishCall} style={{ marginTop: '1.5rem' }}>
                               Voltar para Consultas
                             </Button>
                           )}
