@@ -340,27 +340,29 @@ function InicioPageContent() {
           </p>
         </div>
 
-        <div style={{ marginBottom: '1.25rem', textAlign: 'left' }}>
-          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-            {ratingStars > 0 && ratingStars < 5 ? 'Conte o que podemos melhorar (obrigatório):' : 'Deixe um comentário (opcional):'}
-          </label>
-          <textarea
-            value={ratingText}
-            onChange={(e) => setRatingText(e.target.value)}
-            placeholder={ratingStars > 0 && ratingStars < 5 ? "Por favor, relate sua experiência aqui..." : "Conte-nos um pouco mais sobre sua experiência..."}
-            style={{
-              width: '100%',
-              minHeight: '80px',
-              padding: '0.75rem',
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--border-color)',
-              background: 'var(--bg-tertiary)',
-              color: 'var(--text-primary)',
-              resize: 'none',
-              fontSize: '0.9rem'
-            }}
-          />
-        </div>
+        {ratingStars > 0 && ratingStars < 5 && (
+          <div style={{ marginBottom: '1.25rem', textAlign: 'left' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+              Conte o que podemos melhorar (obrigatório):
+            </label>
+            <textarea
+              value={ratingText}
+              onChange={(e) => setRatingText(e.target.value)}
+              placeholder="Por favor, relate sua experiência aqui..."
+              style={{
+                width: '100%',
+                minHeight: '80px',
+                padding: '0.75rem',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-tertiary)',
+                color: 'var(--text-primary)',
+                resize: 'none',
+                fontSize: '0.9rem'
+              }}
+            />
+          </div>
+        )}
 
         <div style={{ display: 'flex' }}>
           <button
