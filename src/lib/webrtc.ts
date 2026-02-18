@@ -75,6 +75,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   };
 
   const pendingIceCandidates: RTCIceCandidateInit[] = [];
+  const outgoingIceQueue: SignalMessage[] = [];
   let isMakingOffer = false;
 
   const waitForOpen = () =>
@@ -105,6 +106,8 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
       const msg: SignalMessage = { type: 'ice-candidate', candidate: e.candidate.toJSON() };
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify(msg));
+      } else {
+        outgoingIceQueue.push(msg);
       }
     }
   };
@@ -147,6 +150,12 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   ws.onopen = () => {
     const joinMsg: SignalMessage = { type: 'join', role: args.role };
     ws.send(JSON.stringify(joinMsg));
+
+    // Despachar candidatos ICE que foram gerados antes do socket estar pronto
+    while (outgoingIceQueue.length > 0) {
+      const msg = outgoingIceQueue.shift();
+      if (msg) ws.send(JSON.stringify(msg));
+    }
   };
 
   ws.onmessage = async (evt) => {
@@ -155,6 +164,10 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
 
       if (msg.type === 'joined') {
         emitSignal('joined', msg);
+        // Se já existem 2 ou mais participantes, o canal está pronto para o handshake
+        if (msg.participants && msg.participants.length >= 2) {
+          emitSignal('ready');
+        }
       } else if (msg.type === 'ready') {
         emitSignal('ready', msg);
       } else if (msg.type === 'peer-joined') {
@@ -225,11 +238,20 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   };
 
   const createAndSendOffer = async () => {
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    const msg: SignalMessage = { type: 'offer', sdp: offer };
-    await waitForOpen();
-    ws.send(JSON.stringify(msg));
+    // Evitar criar oferta se já houver uma negociação em curso,
+    // a menos que estejamos estáveis ou seja o médico iniciando.
+    if (pc.signalingState !== 'stable' && args.role !== 'medico') return;
+
+    try {
+      isMakingOffer = true;
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      const msg: SignalMessage = { type: 'offer', sdp: offer };
+      await waitForOpen();
+      ws.send(JSON.stringify(msg));
+    } finally {
+      isMakingOffer = false;
+    }
   };
 
   const createAndSendAnswer = async () => {
