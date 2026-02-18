@@ -248,6 +248,11 @@ function InicioPageContent() {
       return;
     }
 
+    if (ratingStars < 5 && !ratingText.trim()) {
+      modal.error('Comentário Obrigatório', 'Para avaliações abaixo de 5 estrelas, por favor nos conte brevemente o que podemos melhorar.');
+      return;
+    }
+
     setIsSubmittingRating(true);
     try {
       const token = getToken();
@@ -276,34 +281,34 @@ function InicioPageContent() {
       title="Sua consulta terminou"
       size="md"
     >
-      <div style={{ textAlign: 'center', padding: '1rem' }}>
-        <div style={{ marginBottom: '2rem' }}>
+      <div style={{ textAlign: 'center', padding: '0.5rem' }}>
+        <div style={{ marginBottom: '1.25rem' }}>
           <div style={{
-            width: '80px',
-            height: '80px',
+            width: '60px',
+            height: '60px',
             background: 'var(--color-success-100)',
             color: 'var(--color-success-600)',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 1.5rem'
+            margin: '0 auto 1rem'
           }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
           </div>
-          <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+          <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
             Como foi seu atendimento?
           </h3>
-          <p style={{ color: 'var(--text-secondary)' }}>
-            Sua opinião é fundamental para mantermos a qualidade do nosso serviço médico.
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+            Sua opinião é fundamental para mantermos a qualidade do nosso serviço.
           </p>
         </div>
 
-        <div style={{ marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+        <div style={{ marginBottom: '1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.25rem', marginBottom: '0.75rem' }}>
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
@@ -320,13 +325,13 @@ function InicioPageContent() {
                   transform: (ratingHover || ratingStars) === star ? 'scale(1.2)' : 'scale(1)'
                 }}
               >
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
               </button>
             ))}
           </div>
-          <p style={{ fontWeight: 600, color: 'var(--text-primary)', height: '1.2rem' }}>
+          <p style={{ fontWeight: 600, color: 'var(--text-primary)', height: '1rem', fontSize: '0.95rem' }}>
             {ratingStars === 1 && "Muito Insatisfeito"}
             {ratingStars === 2 && "Insatisfeito"}
             {ratingStars === 3 && "Regular"}
@@ -335,41 +340,34 @@ function InicioPageContent() {
           </p>
         </div>
 
-        <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
-          <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-            Deixe um comentário (opcional):
+        <div style={{ marginBottom: '1.25rem', textAlign: 'left' }}>
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+            {ratingStars > 0 && ratingStars < 5 ? 'Conte o que podemos melhorar (obrigatório):' : 'Deixe um comentário (opcional):'}
           </label>
           <textarea
             value={ratingText}
             onChange={(e) => setRatingText(e.target.value)}
-            placeholder="Conte-nos um pouco mais sobre sua experiência..."
+            placeholder={ratingStars > 0 && ratingStars < 5 ? "Por favor, relate sua experiência aqui..." : "Conte-nos um pouco mais sobre sua experiência..."}
             style={{
               width: '100%',
-              minHeight: '100px',
+              minHeight: '80px',
               padding: '0.75rem',
               borderRadius: 'var(--radius-lg)',
               border: '1px solid var(--border-color)',
               background: 'var(--bg-tertiary)',
               color: 'var(--text-primary)',
-              resize: 'vertical',
-              fontSize: '0.95rem'
+              resize: 'none',
+              fontSize: '0.9rem'
             }}
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button
-            className="btn ghost"
-            onClick={() => setShowRatingModal(false)}
-            style={{ flex: 1, padding: '0.75rem', borderRadius: 'var(--radius-lg)' }}
-          >
-            Pular
-          </button>
+        <div style={{ display: 'flex' }}>
           <button
             className="btn primary"
             onClick={handleRatingSubmit}
             disabled={isSubmittingRating || ratingStars === 0}
-            style={{ flex: 2, padding: '0.75rem', borderRadius: 'var(--radius-lg)' }}
+            style={{ width: '100%', padding: '0.85rem', borderRadius: 'var(--radius-lg)', fontWeight: 600 }}
           >
             {isSubmittingRating ? 'Enviando...' : 'Enviar Avaliação'}
           </button>
