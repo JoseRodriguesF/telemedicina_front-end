@@ -534,9 +534,11 @@ function AtendimentoInner() {
         const resp = await listParticipants(cid, token);
         if (!stopped && Array.isArray(resp?.participants) && resp.participants.length >= 2) {
           // Se o polling detecta 2 pessoas mas não estamos conectados, reforça o sinal de 'ready'
-          if (!remoteConnected && !hasReadySignalRef.current) {
-            console.log('[UI] Polling detectou participantes. Ativando handshake...');
-            hasReadySignalRef.current = true;
+          if (!remoteConnected) {
+            if (!hasReadySignalRef.current) {
+              console.log('[UI] Polling detectou participantes. Ativando handshake...');
+              hasReadySignalRef.current = true;
+            }
             checkAndInitiateOffering();
           }
         }
@@ -677,19 +679,20 @@ function AtendimentoInner() {
     // medico é sempre o responsável por iniciar a oferta inicial
     if (role === 'medico' && hasReadySignalRef.current && isLocalReadyRef.current) {
       if (sessionRef.current && !remoteConnected) {
-        // Se já está em signalingState 'have-local-offer', não precisa disparar outro agora
-        if (sessionRef.current.pc.signalingState !== 'stable' && !offeringInitiatedRef.current) {
+        // Se já houver uma oferta iniciada há pouco tempo e ainda estivermos em estado instável, aguardamos.
+        // Mas permitimos re-tentar se estiver 'stable' novamente ou se passou o tempo do timeout.
+        if (sessionRef.current.pc.signalingState !== 'stable' && offeringInitiatedRef.current) {
           return;
         }
 
         offeringInitiatedRef.current = true;
         try {
-          console.log('[UI] Iniciando oferta WebRTC via checkAndInitiateOffering...');
+          console.log('[UI] [Handshake] Enviando oferta WebRTC...');
           await sessionRef.current.createAndSendOffer();
         } catch (err) {
-          console.error('[UI] ❌ Erro ao enviar oferta:', err);
-          // Permite tentar novamente se falhar
-          setTimeout(() => { offeringInitiatedRef.current = false; }, 2000);
+          console.error('[UI] [Handshake] ❌ Erro ao enviar oferta:', err);
+          // Permite tentar novamente após 3 segundos em caso de erro
+          setTimeout(() => { offeringInitiatedRef.current = false; }, 3000);
         }
       }
     }
