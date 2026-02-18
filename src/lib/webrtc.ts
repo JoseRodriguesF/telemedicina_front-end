@@ -233,15 +233,27 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
       console.log('[WebRTC] Setting local stream, tracks:', stream.getTracks().length);
       stream.getTracks().forEach((t) => {
         const senders = pc.getSenders();
-        const existingSender = senders.find(s => s.track === t || (s.track === null && s.track === null));
-        // Se já existe um sender sem track (criado pelo transceiver), usamos ele
-        const emptySender = senders.find(s => s.track === null && (s as any).track === null);
+        // Tenta encontrar um sender que já tenha essa track
+        const existingSender = senders.find(s => s.track === t);
 
-        if (existingSender && existingSender.track === t) {
-          // Já está lá
-        } else if (emptySender) {
-          emptySender.replaceTrack(t);
+        if (existingSender) {
+          console.log(`[WebRTC] Track ${t.kind} already has a sender.`);
+          return;
+        }
+
+        // Tenta encontrar um transceiver vago do MESMO TIPO (audio ou video)
+        // Isso resolve o erro "Track kind does not match Sender kind"
+        const transceivers = pc.getTransceivers();
+        const emptyTransceiver = transceivers.find(tr =>
+          !tr.sender.track &&
+          tr.receiver.track.kind === t.kind
+        );
+
+        if (emptyTransceiver) {
+          console.log(`[WebRTC] Using empty ${t.kind} transceiver for track.`);
+          emptyTransceiver.sender.replaceTrack(t);
         } else {
+          console.log(`[WebRTC] Adding new track ${t.kind} to peer connection.`);
           pc.addTrack(t, stream);
         }
       });
