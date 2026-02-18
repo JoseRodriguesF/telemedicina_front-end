@@ -122,6 +122,7 @@ function AtendimentoInner() {
   const [remoteHasAudio, setRemoteHasAudio] = useState(false);
   const [remoteDisconnected, setRemoteDisconnected] = useState(false);
   const [showExitMessage, setShowExitMessage] = useState(false);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
 
   // Estados para accordions do layout de médico
   const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({});
@@ -267,7 +268,19 @@ function AtendimentoInner() {
     setShowExitMessage(false);
     setRemoteConnected(true);
     setStatusText('Em consulta');
+    console.log('[UI] Consulta conectada com sucesso.');
   };
+
+  // Efeito para garantir que o stream remoto seja anexado ao elemento de vídeo assim que disponível
+  useEffect(() => {
+    if (remoteStream && remoteRef.current) {
+      console.log('[UI] Anexando stream remoto ao elemento de vídeo...');
+      remoteRef.current.srcObject = remoteStream;
+      remoteRef.current.play().catch(err => {
+        console.warn('[UI] Falha ao dar play no vídeo remoto (pode requerer interação):', err);
+      });
+    }
+  }, [remoteStream, remoteRef.current]);
 
   // Modo UI: organizar telas/estilo sem lógica de API/signaling.
   // Estados para a ficha de atendimento (médico)
@@ -539,6 +552,7 @@ function AtendimentoInner() {
               console.log('[UI] Polling detectou participantes. Ativando handshake...');
               hasReadySignalRef.current = true;
             }
+            // Chama independentemente para garantir que um médico entrando depois dispare a oferta
             checkAndInitiateOffering();
           }
         }
@@ -682,6 +696,7 @@ function AtendimentoInner() {
         // Se já houver uma oferta iniciada há pouco tempo e ainda estivermos em estado instável, aguardamos.
         // Mas permitimos re-tentar se estiver 'stable' novamente ou se passou o tempo do timeout.
         if (sessionRef.current.pc.signalingState !== 'stable' && offeringInitiatedRef.current) {
+          console.log('[UI] [Handshake] Já existe processo em curso. Estado:', sessionRef.current.pc.signalingState);
           return;
         }
 
@@ -694,7 +709,13 @@ function AtendimentoInner() {
           // Permite tentar novamente após 3 segundos em caso de erro
           setTimeout(() => { offeringInitiatedRef.current = false; }, 3000);
         }
+      } else {
+        if (!sessionRef.current) console.log('[UI] [Handshake] Session null');
+        if (remoteConnected) console.log('[UI] [Handshake] Já conectado');
       }
+    } else {
+      // Debug log opcional
+      // console.log('[UI] [Handshake] Condições não atendidas:', { role, hasReady: hasReadySignalRef.current, isLocalReady: isLocalReadyRef.current });
     }
   };
 
@@ -830,11 +851,8 @@ function AtendimentoInner() {
       });
 
       session.onRemoteTrack((stream) => {
-
-        if (remoteRef.current) {
-          remoteRef.current.srcObject = stream;
-          remoteRef.current.play().catch(e => console.warn('[UI] Error playing remote video:', e));
-        }
+        console.log('[UI] Recebido stream remoto. ID:', stream.id);
+        setRemoteStream(stream);
         setRemoteConnected(true);
         setRemoteDisconnected(false);
         setShowExitMessage(false);

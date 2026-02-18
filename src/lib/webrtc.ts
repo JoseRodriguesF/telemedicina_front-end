@@ -67,6 +67,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   const signalQueue: Array<{ ev: SignalEvent, payload?: any }> = [];
 
   const emitSignal = (ev: SignalEvent, payload?: any) => {
+    console.log(`[WebRTC] Emit Signal: ${ev}`, payload);
     if (onSignalEv) {
       onSignalEv(ev, payload);
     } else {
@@ -77,6 +78,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   const pendingIceCandidates: RTCIceCandidateInit[] = [];
   const outgoingIceQueue: SignalMessage[] = [];
   let isMakingOffer = false;
+  let isNegotiating = false;
 
   const waitForOpen = () =>
     new Promise<void>((resolve, reject) => {
@@ -114,16 +116,19 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
 
   pc.ontrack = (e) => {
     const stream = e.streams[0];
+    console.log('[WebRTC] Remote track received:', e.track.kind, 'Stream ID:', stream?.id);
     if (onRemote && stream) {
       onRemote(stream);
     }
   };
 
   pc.onconnectionstatechange = () => {
+    console.log('[WebRTC] Connection state:', pc.connectionState);
     if (onConnState) onConnState(pc.connectionState);
   };
 
   pc.oniceconnectionstatechange = () => {
+    console.log('[WebRTC] ICE state:', pc.iceConnectionState);
     if (onIceState) onIceState(pc.iceConnectionState);
     if (pc.iceConnectionState === 'failed') {
       console.warn('[WebRTC] ICE failed, attempting restart');
@@ -132,26 +137,31 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   };
 
   pc.onnegotiationneeded = async () => {
-    // Both roles can initiate negotiation if tracks change after initial connection.
-    // However, we usually prefer medico to start.
-    // If stable and tracks changed, or if medico and initial, we offer.
-    if (args.role === 'medico' || (pc.remoteDescription && pc.signalingState === 'stable')) {
-      try {
-        isMakingOffer = true;
+    if (isNegotiating) return;
+    try {
+      isNegotiating = true;
+      console.log('[WebRTC] Negotiation needed. State:', pc.signalingState);
+      if (args.role === 'medico' || (pc.remoteDescription && pc.signalingState === 'stable')) {
         await createAndSendOffer();
-      } catch (err) {
-        console.error('[WebRTC] Error during negotiation offer', err);
-      } finally {
-        isMakingOffer = false;
       }
+    } catch (err) {
+      console.error('[WebRTC] Error during negotiation offer', err);
+    } finally {
+      isNegotiating = false;
     }
   };
 
+  // Pre-adicionar transceivers se for médico para garantir que a oferta inclua áudio/vídeo
+  if (args.role === 'medico') {
+    pc.addTransceiver('video', { direction: 'sendrecv' });
+    pc.addTransceiver('audio', { direction: 'sendrecv' });
+  }
+
   ws.onopen = () => {
+    console.log('[WebRTC] Signaling socket opened. Joining room:', args.roomId);
     const joinMsg: SignalMessage = { type: 'join', role: args.role };
     ws.send(JSON.stringify(joinMsg));
 
-    // Despachar candidatos ICE que foram gerados antes do socket estar pronto
     while (outgoingIceQueue.length > 0) {
       const msg = outgoingIceQueue.shift();
       if (msg) ws.send(JSON.stringify(msg));
@@ -164,7 +174,6 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
 
       if (msg.type === 'joined') {
         emitSignal('joined', msg);
-        // Se já existem 2 ou mais participantes, o canal está pronto para o handshake
         if (msg.participants && msg.participants.length >= 2) {
           emitSignal('ready');
         }
@@ -177,9 +186,9 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
       } else if (msg.type === 'doctor-disconnecting') {
         emitSignal('doctor-disconnecting', msg);
       } else if (msg.type === 'offer') {
+        console.log('[WebRTC] Offer received');
         emitSignal('offerReceived', msg);
-        // Collision prevention (ignore if we are making offer and have higher precedence, 
-        // though here medico is usually the only offerer)
+
         await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
 
         while (pendingIceCandidates.length > 0) {
@@ -192,6 +201,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
         ws.send(JSON.stringify({ type: 'answer', sdp: answer }));
         emitSignal('answerSent', { sdp: answer });
       } else if (msg.type === 'answer') {
+        console.log('[WebRTC] Answer received');
         await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
         emitSignal('answerReceived', msg);
 
@@ -220,12 +230,19 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   const setLocalStream = (stream: MediaStream | null) => {
     localStream = stream;
     if (stream) {
+      console.log('[WebRTC] Setting local stream, tracks:', stream.getTracks().length);
       stream.getTracks().forEach((t) => {
-        const sender = pc.getSenders().find(s => s.track === t);
-        if (!sender) {
+        const senders = pc.getSenders();
+        const existingSender = senders.find(s => s.track === t || (s.track === null && s.track === null));
+        // Se já existe um sender sem track (criado pelo transceiver), usamos ele
+        const emptySender = senders.find(s => s.track === null && (s as any).track === null);
+
+        if (existingSender && existingSender.track === t) {
+          // Já está lá
+        } else if (emptySender) {
+          emptySender.replaceTrack(t);
+        } else {
           pc.addTrack(t, stream);
-        } else if (sender.track !== t) {
-          sender.replaceTrack(t);
         }
       });
     }
@@ -238,17 +255,21 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   };
 
   const createAndSendOffer = async () => {
-    // Evitar criar oferta se já houver uma negociação em curso,
-    // a menos que estejamos estáveis ou seja o médico iniciando.
+    if (isMakingOffer) return;
+    // Permitimos que o médico envie oferta mesmo se não estiver perfeitamente estável (retry)
     if (pc.signalingState !== 'stable' && args.role !== 'medico') return;
 
     try {
       isMakingOffer = true;
+      console.log('[WebRTC] Creating offer...');
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       const msg: SignalMessage = { type: 'offer', sdp: offer };
       await waitForOpen();
       ws.send(JSON.stringify(msg));
+    } catch (err) {
+      console.error('[WebRTC] Failed to create or send offer:', err);
+      throw err;
     } finally {
       isMakingOffer = false;
     }
