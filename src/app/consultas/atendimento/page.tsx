@@ -181,6 +181,14 @@ function AtendimentoInner() {
 
             router.replace(`/consultas/aguardando?id=${consultaId}`);
           } else {
+            if (data.historiaClinica) {
+              if (Array.isArray(data.historiaClinica)) {
+                const arr = data.historiaClinica as any[];
+                data.historiaClinica = arr.length > 0 ? { id: arr[0].id, conteudo: removeAdministrativeFields(arr[0].conteudo) } : undefined;
+              } else if (data.historiaClinica.conteudo) {
+                data.historiaClinica.conteudo = removeAdministrativeFields(data.historiaClinica.conteudo);
+              }
+            }
             setConsultaDetails(data);
           }
         } catch (err) {
@@ -201,6 +209,14 @@ function AtendimentoInner() {
 
         const data = await getConsulta(curCid, token);
 
+        if (data.historiaClinica) {
+          if (Array.isArray(data.historiaClinica)) {
+            const arr = data.historiaClinica as any[];
+            data.historiaClinica = arr.length > 0 ? { id: arr[0].id, conteudo: removeAdministrativeFields(arr[0].conteudo) } : undefined;
+          } else if (data.historiaClinica.conteudo) {
+            data.historiaClinica.conteudo = removeAdministrativeFields(data.historiaClinica.conteudo);
+          }
+        }
         setConsultaDetails(data);
         if (data.paciente?.notas) {
           setPacienteNotas(data.paciente.notas);
@@ -703,6 +719,9 @@ function AtendimentoInner() {
         offeringInitiatedRef.current = true;
         try {
           console.log('[UI] [Handshake] Enviando oferta WebRTC...');
+          if (sessionRef.current && 'setPeerReady' in sessionRef.current) {
+            (sessionRef.current as any).setPeerReady();
+          }
           await sessionRef.current.createAndSendOffer();
         } catch (err) {
           console.error('[UI] [Handshake] ❌ Erro ao enviar oferta:', err);
@@ -1084,6 +1103,39 @@ function AtendimentoInner() {
     setIsConfirmingEnd(false);
     confirmFinishCall();
   }
+
+  // Função para filtrar campos administrativos do prontuário de triagem
+  const removeAdministrativeFields = (content: string): string => {
+    if (!content) return content;
+    const lines = content.split('\n');
+    const filteredLines: string[] = [];
+    let inHeader = true;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmedLine = line.trim();
+      if (inHeader) {
+        if (
+          trimmedLine.startsWith('---') ||
+          trimmedLine.includes('PRONTUÁRIO DE TRIAGEM') ||
+          trimmedLine.includes('ID DO PACIENTE:') ||
+          trimmedLine.includes('DATA DA TRIAGEM:') ||
+          trimmedLine.includes('RESPONSÁVEL:') ||
+          trimmedLine.includes('⚠️ SÍNTESE DA CONDUTA:') ||
+          trimmedLine.includes('PRÉ-CONSULTA') ||
+          trimmedLine === ''
+        ) {
+          continue;
+        } else {
+          inHeader = false;
+          filteredLines.push(line);
+        }
+      } else {
+        filteredLines.push(line);
+      }
+    }
+    return filteredLines.join('\n').trim();
+  };
 
   // Detectar mensagens não lidas quando o chat está fechado
   useEffect(() => {

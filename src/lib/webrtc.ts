@@ -42,6 +42,7 @@ export type WebRTCSession = {
   onIceConnectionStateChange: (cb: (state: RTCIceConnectionState) => void) => void;
   onSignalEvent: (cb: (ev: SignalEvent, payload?: any) => void) => void;
   sendMessage: (text: string) => void;
+  setPeerReady: () => void;
 };
 
 export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
@@ -79,6 +80,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   const outgoingIceQueue: SignalMessage[] = [];
   let isMakingOffer = false;
   let isNegotiating = false;
+  let peerReady = false;
 
   const waitForOpen = () =>
     new Promise<void>((resolve, reject) => {
@@ -138,6 +140,13 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
 
   pc.onnegotiationneeded = async () => {
     if (isNegotiating) return;
+
+    // GATE: Only negotiate after the peer has joined the room
+    if (!peerReady) {
+      console.log('[WebRTC] Negotiation needed but peer not ready yet. Deferring...');
+      return;
+    }
+
     try {
       isNegotiating = true;
       console.log('[WebRTC] Negotiation needed. State:', pc.signalingState);
@@ -175,11 +184,14 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
       if (msg.type === 'joined') {
         emitSignal('joined', msg);
         if (msg.participants && msg.participants.length >= 2) {
+          peerReady = true;
           emitSignal('ready');
         }
       } else if (msg.type === 'ready') {
+        peerReady = true;
         emitSignal('ready', msg);
       } else if (msg.type === 'peer-joined') {
+        peerReady = true;
         emitSignal('peer-joined', msg);
       } else if (msg.type === 'peer-left') {
         emitSignal('peer-left', msg);
@@ -379,11 +391,16 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     }
   };
 
+  const setPeerReady = () => {
+    console.log('[WebRTC] Manually setting peerReady = true');
+    peerReady = true;
+  };
+
   return {
     pc, ws, localStream,
     startLocalMedia, setLocalStream, createAndSendOffer, createAndSendAnswer,
     end, sendDoctorDisconnecting, restartIce, sendMediaState, onRemoteTrack, onRemoteMediaState, onRemoteEnd,
-    createChatChannel, onChatMessage, sendMessage,
+    createChatChannel, onChatMessage, sendMessage, setPeerReady,
     onConnectionStateChange, onIceConnectionStateChange, onSignalEvent,
   };
 }

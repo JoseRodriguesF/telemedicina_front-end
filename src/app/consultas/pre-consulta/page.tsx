@@ -58,6 +58,7 @@ function PreConsultaInner() {
   const [iaTyping, setIaTyping] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [historiaClinicaId, setHistoriaClinicaId] = useState<number | undefined>(undefined);
+  const historiaClinicaIdRef = useRef<number | undefined>(undefined);
   const [isTriageStarted, setIsTriageStarted] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -126,24 +127,31 @@ function PreConsultaInner() {
 
       const data: ChatIAResponse = await res.json();
       const answer = String(data?.answer ?? 'Sem resposta da IA.');
-      let finalHistoriaId = historiaClinicaId;
+      let finalId = historiaClinicaIdRef.current;
 
       if (data.historiaClinicaId) {
-        finalHistoriaId = data.historiaClinicaId;
+        finalId = data.historiaClinicaId;
+        historiaClinicaIdRef.current = data.historiaClinicaId;
         setHistoriaClinicaId(data.historiaClinicaId);
       }
 
-      setMessages(prev => [...prev, { author: 'Angélica', text: answer }]);
-      setHistory(prev => [
-        ...prev,
-        { role: 'user', content: t },
-        { role: 'assistant', content: answer }
-      ]);
-
       if (data?.completed === true) {
+        // Triagem concluída — não exibir o relatório clínico no chat do paciente
+        setMessages(prev => [...prev, { author: 'Angélica', text: 'Triagem concluída com sucesso! Estou encaminhando você para o atendimento...' }]);
+        setHistory(prev => [
+          ...prev,
+          { role: 'user', content: t },
+          { role: 'assistant', content: answer }
+        ]);
         setCompleted(true);
-        // Chamar handleEnviar imediatamente com o ID mais recente para evitar race condition do state
-        handleEnviar(finalHistoriaId);
+        handleEnviar(finalId);
+      } else {
+        setMessages(prev => [...prev, { author: 'Angélica', text: answer }]);
+        setHistory(prev => [
+          ...prev,
+          { role: 'user', content: t },
+          { role: 'assistant', content: answer }
+        ]);
       }
     } catch (err: any) {
       const msg = String(err?.message ?? 'Erro desconhecido ao chamar a IA');
@@ -166,7 +174,7 @@ function PreConsultaInner() {
       return;
     }
 
-    const currentHistoriaId = forcedHistoriaId || historiaClinicaId;
+    const currentHistoriaId = forcedHistoriaId || historiaClinicaIdRef.current || historiaClinicaId;
 
     if (token) {
       if (flow === 'agendamento') {
