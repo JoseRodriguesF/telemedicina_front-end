@@ -186,13 +186,25 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
         if (msg.participants && msg.participants.length >= 2) {
           peerReady = true;
           emitSignal('ready');
+          // Médico que já está na sala: quando o 2º entra, iniciar negociação
+          if (args.role === 'medico') {
+            setTimeout(() => createAndSendOffer().catch(() => {}), 100);
+          }
         }
-      } else if (msg.type === 'ready') {
+      } else       if (msg.type === 'ready') {
         peerReady = true;
         emitSignal('ready', msg);
+        // Crítico: quando o par entra, o médico deve iniciar a negociação imediatamente.
+        // onnegotiationneeded pode ter sido ignorado antes (peer não estava pronto).
+        if (args.role === 'medico') {
+          setTimeout(() => createAndSendOffer().catch(() => {}), 100);
+        }
       } else if (msg.type === 'peer-joined') {
         peerReady = true;
         emitSignal('peer-joined', msg);
+        if (args.role === 'medico') {
+          setTimeout(() => createAndSendOffer().catch(() => {}), 100);
+        }
       } else if (msg.type === 'peer-left') {
         emitSignal('peer-left', msg);
       } else if (msg.type === 'doctor-disconnecting') {

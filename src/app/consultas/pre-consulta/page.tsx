@@ -35,6 +35,7 @@ function formatIaText(text: string): string {
 
 import { getToken, getUser } from '@/lib/auth';
 import { psCreateRoom } from '@/lib/axios/consultas';
+import { sendChatMessage } from '@/lib/axios/chat';
 
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
@@ -108,24 +109,10 @@ function PreConsultaInner() {
 
     try {
       const currentHistory = messagesToHistory(currentMessages);
-      const res = await fetch('/api/chat-ia', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          message: t,
-          history: currentHistory
-        })
-      });
-
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || 'Erro ao contactar a IA');
-      }
-
-      const data: ChatIAResponse = await res.json();
+      const data = await sendChatMessage(
+        { message: t, history: currentHistory },
+        token
+      );
       const answer = String(data?.answer ?? 'Sem resposta da IA.');
       let finalId = historiaClinicaIdRef.current;
 
@@ -144,6 +131,14 @@ function PreConsultaInner() {
           { role: 'assistant', content: answer }
         ]);
         setCompleted(true);
+        if (data.historiaClinicaSalva === false) {
+          modal.warning(
+            'Triagem concluída parcialmente',
+            'Os dados da triagem não puderam ser salvos automaticamente, mas você pode prosseguir. O médico terá acesso ao que você informou no chat.',
+            () => handleEnviar(finalId)
+          );
+          return;
+        }
         handleEnviar(finalId);
       } else {
         setMessages(prev => [...prev, { author: 'Angélica', text: answer }]);
