@@ -1299,6 +1299,30 @@ function AtendimentoInner() {
                 <div className="panel-header">Ficha de atendimento</div>
                 <div className="panel-content">
                   <Accordion
+                    id="triagem"
+                    title="História Clínica (Triagem)"
+                    isOpen={!!openAccordions['triagem']}
+                    onToggle={toggleAccordion}
+                    isFilled={!!consultaDetails?.historiaClinica}
+                  >
+                    {consultaDetails?.historiaClinica ? (
+                      <div className="triagem-content-wrapper" style={{ padding: '0.5rem 0' }}>
+                        <FormattedText
+                          text={consultaDetails.historiaClinica.conteudo || 'Não informada'}
+                          style={{
+                            fontSize: '1rem',
+                            color: 'var(--text-primary)',
+                            lineHeight: 1.7
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280', fontSize: '0.85rem' }}>
+                        Informações de triagem não encontradas.
+                      </div>
+                    )}
+                  </Accordion>
+                  <Accordion
                     id="historico-consultas"
                     title="Histórico de consultas"
                     isOpen={!!openAccordions['historico-consultas']}
@@ -1880,30 +1904,6 @@ function AtendimentoInner() {
                 </div>
                 <div className="panel-header">Ficha de atendimento</div>
                 <div className="panel-content">
-                  <Accordion
-                    id="triagem"
-                    title="História Clínica (Triagem)"
-                    isOpen={!!openAccordions['triagem']}
-                    onToggle={toggleAccordion}
-                    isFilled={!!consultaDetails?.historiaClinica}
-                  >
-                    {consultaDetails?.historiaClinica ? (
-                      <div className="triagem-content-wrapper" style={{ padding: '0.5rem 0' }}>
-                        <FormattedText
-                          text={consultaDetails.historiaClinica.conteudo || 'Não informada'}
-                          style={{
-                            fontSize: '1rem',
-                            color: 'var(--text-primary)',
-                            lineHeight: 1.7
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280', fontSize: '0.85rem' }}>
-                        Informações de triagem não encontradas.
-                      </div>
-                    )}
-                  </Accordion>
                   <Accordion
                     id="evolucao"
                     title="Evolução"
