@@ -57,6 +57,8 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
 
   let localStream: MediaStream | null = null;
   let onRemote: ((stream: MediaStream) => void) | null = null;
+  /** Stream usado para tracks remotas que chegam sem stream (ex.: oferta do médico com transceivers) */
+  let fallbackRemoteStream: MediaStream | null = null;
   let onRemoteMedia: ((state: { video: boolean; audio: boolean }) => void) | null = null;
   let onRemoteEndCb: (() => void) | null = null;
   let chatChannel: RTCDataChannel | null = null;
@@ -119,9 +121,17 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   pc.ontrack = (e) => {
     const stream = e.streams[0];
     console.log('[WebRTC] Remote track received:', e.track.kind, 'Stream ID:', stream?.id);
-    if (onRemote && stream) {
+    if (!onRemote) return;
+    if (stream) {
       onRemote(stream);
+      return;
     }
+    // Tracks podem vir sem stream quando o par usa replaceTrack em transceivers (ex.: médico)
+    if (!fallbackRemoteStream) {
+      fallbackRemoteStream = new MediaStream();
+    }
+    fallbackRemoteStream.addTrack(e.track);
+    onRemote(fallbackRemoteStream);
   };
 
   pc.onconnectionstatechange = () => {
@@ -356,6 +366,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
         ws.send(JSON.stringify({ type: 'end' }));
       }
     } catch { }
+    fallbackRemoteStream = null;
     pc.close();
     ws.close();
     if (localStream) {
