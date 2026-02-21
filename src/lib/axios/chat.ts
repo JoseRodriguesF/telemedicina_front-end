@@ -2,17 +2,8 @@ import axios from 'axios';
 import type { ChatIAResponse, ChatHistory } from '@/types/chat';
 import { ApiError } from '@/lib/errorHandler';
 
-/**
- * Retorna a URL base da API.
- * Usa URL absoluta quando definida (mais confiável que o proxy do Next.js).
- */
-function getChatApiUrl(): string {
-  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || '').trim();
-  if (apiUrl) {
-    return `${apiUrl.replace(/\/$/, '')}/chat-ia`;
-  }
-  return '/api/chat-ia';
-}
+/** URL do chat-ia via proxy do Next.js (evita CORS em produção). */
+const CHAT_IA_URL = '/api/chat-ia';
 
 export type SendChatMessagePayload = {
   message: string;
@@ -21,16 +12,15 @@ export type SendChatMessagePayload = {
 
 /**
  * Envia uma mensagem para a IA de triagem.
- * Usa a URL da API diretamente quando NEXT_PUBLIC_API_URL está definida,
- * evitando problemas com proxy em diferentes ambientes.
+ * Usa sempre o proxy /api/chat-ia para que o Next.js encaminhe ao backend,
+ * evitando CORS quando o front está em outro domínio (ex: Vercel).
  */
 export async function sendChatMessage(
   payload: SendChatMessagePayload,
   token: string
 ): Promise<ChatIAResponse> {
   try {
-    const url = getChatApiUrl();
-    const res = await axios.post(url, payload, {
+    const res = await axios.post(CHAT_IA_URL, payload, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
