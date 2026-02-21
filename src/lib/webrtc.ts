@@ -186,12 +186,12 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
         if (msg.participants && msg.participants.length >= 2) {
           peerReady = true;
           emitSignal('ready');
-          // Médico que já está na sala: quando o 2º entra, iniciar negociação
+          // Médico: quando já há 2 na sala, inicia oferta. Paciente: marca peerReady para futura renegociação.
           if (args.role === 'medico') {
-            setTimeout(() => createAndSendOffer().catch(() => {}), 100);
+            setTimeout(() => createAndSendOffer().catch(() => {}), 150);
           }
         }
-      } else       if (msg.type === 'ready') {
+      } else if (msg.type === 'ready') {
         peerReady = true;
         emitSignal('ready', msg);
         // Crítico: quando o par entra, o médico deve iniciar a negociação imediatamente.
@@ -212,8 +212,14 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
       } else if (msg.type === 'offer') {
         console.log('[WebRTC] Offer received');
         emitSignal('offerReceived', msg);
+        peerReady = true;
 
-        await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+        const sdp = msg.sdp;
+        if (!sdp || typeof sdp !== 'object') {
+          console.error('[WebRTC] Invalid offer SDP');
+          return;
+        }
+        await pc.setRemoteDescription(new RTCSessionDescription(sdp));
 
         while (pendingIceCandidates.length > 0) {
           const cand = pendingIceCandidates.shift();
@@ -222,11 +228,17 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
 
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        ws.send(JSON.stringify({ type: 'answer', sdp: answer }));
+        const answerMsg = { type: 'answer' as const, sdp: answer };
+        ws.send(JSON.stringify(answerMsg));
         emitSignal('answerSent', { sdp: answer });
       } else if (msg.type === 'answer') {
         console.log('[WebRTC] Answer received');
-        await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+        const sdp = msg.sdp;
+        if (!sdp || typeof sdp !== 'object') {
+          console.error('[WebRTC] Invalid answer SDP');
+          return;
+        }
+        await pc.setRemoteDescription(new RTCSessionDescription(sdp));
         emitSignal('answerReceived', msg);
 
         while (pendingIceCandidates.length > 0) {

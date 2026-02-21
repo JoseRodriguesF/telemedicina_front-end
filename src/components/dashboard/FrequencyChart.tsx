@@ -32,8 +32,8 @@ export default function FrequencyChart({ data }: Props) {
     }
 
     return (
-        <div className="frequency-chart-wrapper" style={{ width: '100%', height: '100%', minHeight: '200px', outline: 'none' }}>
-            <ResponsiveContainer width="100%" height="100%">
+        <div className="frequency-chart-wrapper" style={{ width: '100%', height: '100%', minHeight: 220, outline: 'none' }}>
+            <ResponsiveContainer width="100%" height={220} minHeight={220}>
                 <LineChart
                     data={data}
                     margin={{

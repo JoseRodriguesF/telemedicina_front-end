@@ -111,6 +111,7 @@ function AtendimentoInner() {
   const hasReadySignalRef = useRef(false);
   const isLocalReadyRef = useRef(false);
   const offeringInitiatedRef = useRef(false);
+  const remoteConnectedRef = useRef(false);
   const bypassBeforeUnloadRef = useRef(false);
 
   const localStreamRef = useRef<MediaStream | null>(null);
@@ -277,6 +278,7 @@ function AtendimentoInner() {
 
 
   const handleConnected = () => {
+    remoteConnectedRef.current = true;
     setConnecting(false);
     setConnectionFailed(false);
     setReconnecting(false);
@@ -584,7 +586,8 @@ function AtendimentoInner() {
         }
       }
     };
-    const timerId = window.setInterval(check, 3000); // Aumentado para 3s para ser menos agressivo
+    const intervalMs = 5000; // 5s para reduzir carga na API (evita spam de checkAuth)
+    const timerId = window.setInterval(check, intervalMs);
     pollingRef.current = timerId;
     check();
     return () => {
@@ -841,6 +844,7 @@ function AtendimentoInner() {
         }
 
         if (ev === 'peer-left') {
+          remoteConnectedRef.current = false;
           setRemoteDisconnected(true);
           setRemoteConnected(false);
           setStatusText('O outro usuário saiu da sala.');
@@ -895,6 +899,7 @@ function AtendimentoInner() {
       });
 
       session.onRemoteEnd(() => {
+        remoteConnectedRef.current = false;
         setRemoteDisconnected(true);
         setRemoteConnected(false);
         setStatusText('O outro usuário saiu da chamada.');
@@ -921,14 +926,20 @@ function AtendimentoInner() {
       isLocalReadyRef.current = true;
       checkAndInitiateOffering();
 
-      // Failsafe: se nada aconteceu em 5 segundos, tenta forçar
+      // Failsafe: se nada aconteceu em 5s, força handshake; em 12s repete oferta (caso a primeira se perca no signaling)
       setTimeout(() => {
         if (role === 'medico' && !offeringInitiatedRef.current && isLocalReadyRef.current) {
-
           hasReadySignalRef.current = true;
           checkAndInitiateOffering();
         }
       }, 5000);
+      setTimeout(() => {
+        if (role === 'medico' && !remoteConnectedRef.current && sessionRef.current) {
+          offeringInitiatedRef.current = false;
+          hasReadySignalRef.current = true;
+          checkAndInitiateOffering();
+        }
+      }, 12000);
 
       setStatusText('Conectado.');
 
