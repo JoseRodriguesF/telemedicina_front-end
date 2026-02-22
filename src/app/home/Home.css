@@ -338,7 +338,21 @@
 .feature-icon {
   font-size: 4rem;
   margin-bottom: 1.5rem;
-  display: block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90px;
+}
+
+.feature-icon img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+[data-theme="dark"] .feature-card:nth-child(1) .feature-icon img,
+[data-theme="dark"] .feature-card:nth-child(3) .feature-icon img {
+  filter: brightness(0) invert(1);
 }
 
 .feature-title {
@@ -391,14 +405,20 @@
 
 .benefit-icon-wrapper {
   flex-shrink: 0;
-  width: 60px;
-  height: 60px;
+  width: 70px;
+  height: 70px;
   background: var(--gradient-primary);
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+}
+
+.benefit-icon-wrapper img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 
 .benefit-icon {

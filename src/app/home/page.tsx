@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Header from "@/components/layout/Header/Header";
 import './Home.css';
 
@@ -16,17 +17,17 @@ export default function HomeScreen() {
 		{
 			title: "Atendimento Rápido e Eficiente",
 			description: "Conecte-se com médicos qualificados em minutos, sem sair de casa.",
-			icon: "⚡"
+			icon: "/icons/cronometro.png"
 		},
 		{
 			title: "Profissionais Qualificados",
 			description: "Nossa equipe é composta por médicos certificados e experientes.",
-			icon: "👨‍⚕️"
+			icon: "/icons/verificar.png"
 		},
 		{
 			title: "Segurança e Privacidade",
 			description: "Seus dados médicos protegidos com criptografia de ponta.",
-			icon: "🔒"
+			icon: "/icons/escudo.png"
 		}
 	];
 
@@ -34,22 +35,22 @@ export default function HomeScreen() {
 		{
 			title: "Economia de Tempo",
 			description: "Não perca horas em deslocamento e salas de espera. Consulte de onde estiver.",
-			icon: "⏱️"
+			icon: "/icons/gerenciamento-de-tempo.png"
 		},
 		{
 			title: "Acesso 24/7",
 			description: "Atendimento disponível a qualquer hora, todos os dias da semana.",
-			icon: "🌙"
+			icon: "/icons/relogio-de-24-horas.png"
 		},
 		{
 			title: "Histórico Completo",
 			description: "Acesse todo seu histórico médico em um só lugar, sempre que precisar.",
-			icon: "📋"
+			icon: "/icons/historia.png"
 		},
 		{
 			title: "Prescrições Digitais",
 			description: "Receba receitas médicas digitais válidas em todo território nacional.",
-			icon: "💊"
+			icon: "/icons/comprimido.png"
 		}
 	];
 
@@ -151,7 +152,15 @@ export default function HomeScreen() {
 					<div className="features-grid">
 						{features.map((feature, index) => (
 							<div key={index} className="feature-card hover-lift">
-								<div className="feature-icon">{feature.icon}</div>
+								<div className="feature-icon">
+									<Image
+										src={feature.icon}
+										alt={feature.title}
+										width={80}
+										height={80}
+										style={{ width: '80px', height: '80px' }}
+									/>
+								</div>
 								<h3 className="feature-title">{feature.title}</h3>
 								<p className="feature-description">{feature.description}</p>
 							</div>
@@ -173,7 +182,13 @@ export default function HomeScreen() {
 						{benefits.map((benefit, index) => (
 							<div key={index} className="benefit-card">
 								<div className="benefit-icon-wrapper">
-									<span className="benefit-icon">{benefit.icon}</span>
+									<Image
+										src={benefit.icon}
+										alt={benefit.title}
+										width={64}
+										height={64}
+										style={{ width: '64px', height: '64px' }}
+									/>
 								</div>
 								<div className="benefit-content">
 									<h3 className="benefit-title">{benefit.title}</h3>
