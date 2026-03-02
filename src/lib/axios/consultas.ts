@@ -346,6 +346,11 @@ export type PSFullHistoryItem = {
   plano_terapeutico?: string;
   destino_final?: string;
   repouso?: string;
+  especialidade_seguimento?: string;
+  ambulancia_endereco?: string;
+  ambulancia_complemento?: string;
+  ambulancia_info?: string;
+  ambulancia_telefone?: string;
   medico: {
     nome_completo: string;
   } | null;

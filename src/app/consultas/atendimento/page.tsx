@@ -2435,6 +2435,39 @@ function AtendimentoInner() {
                 <p className="detail-text">{consultaSelecionada.destino_final || 'Não registrado'}</p>
               </div>
             </div>
+
+            {consultaSelecionada.especialidade_seguimento && (
+              <div className="details-section" style={{ background: 'var(--color-primary-50)', padding: '1rem', borderRadius: '8px', marginTop: '1rem' }}>
+                <h4 style={{ color: 'var(--color-primary-700)', marginBottom: '0.25rem' }}>Seguimento Recomendado</h4>
+                <p className="detail-text" style={{ fontWeight: 600 }}>{consultaSelecionada.especialidade_seguimento}</p>
+              </div>
+            )}
+
+            {(consultaSelecionada.ambulancia_endereco || consultaSelecionada.ambulancia_telefone) && (
+              <div className="details-section" style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '1rem', borderRadius: '8px', marginTop: '1rem', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                <h4 style={{ color: '#b45309', marginBottom: '0.5rem' }}>Dados para Ambulância</h4>
+                <div className="details-grid" style={{ gridTemplateColumns: '1fr' }}>
+                  {consultaSelecionada.ambulancia_endereco && (
+                    <div className="detail-item">
+                      <label>Endereço:</label>
+                      <span>{consultaSelecionada.ambulancia_endereco} {consultaSelecionada.ambulancia_complemento ? ` - ${consultaSelecionada.ambulancia_complemento}` : ''}</span>
+                    </div>
+                  )}
+                  {consultaSelecionada.ambulancia_telefone && (
+                    <div className="detail-item">
+                      <label>Telefone:</label>
+                      <span>{consultaSelecionada.ambulancia_telefone}</span>
+                    </div>
+                  )}
+                  {consultaSelecionada.ambulancia_info && (
+                    <div className="detail-item">
+                      <label>Obaservações:</label>
+                      <span>{consultaSelecionada.ambulancia_info}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </ContentModal>
