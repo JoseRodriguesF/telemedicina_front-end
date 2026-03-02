@@ -161,6 +161,9 @@ function AtendimentoInner() {
   const [pacienteNotas, setPacienteNotas] = useState('');
   const [isSavingNotas, setIsSavingNotas] = useState(false);
   const [isEditingNotas, setIsEditingNotas] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [maxTimeNotified, setMaxTimeNotified] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   // Estados para Prescrição Digital .gov
   const [prescricaoGerada, setPrescricaoGerada] = useState(false);
@@ -285,6 +288,17 @@ function AtendimentoInner() {
     setRemoteDisconnected(false);
     setShowExitMessage(false);
     setRemoteConnected(true);
+    if (!startTime) {
+      const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
+      const saved = sessionStorage.getItem(`startTime_${cid}`);
+      if (saved) {
+        setStartTime(Number(saved));
+      } else {
+        const now = Date.now();
+        setStartTime(now);
+        sessionStorage.setItem(`startTime_${cid}`, String(now));
+      }
+    }
     setStatusText('Em consulta');
     console.log('[UI] Consulta conectada com sucesso.');
   };
@@ -599,6 +613,41 @@ function AtendimentoInner() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role, consultaIdState, consultaId, token, remoteConnected]);
+
+  // Efeito para cronômetro e notificações de tempo máximo
+  useEffect(() => {
+    if (!startTime || !remoteConnected || remoteDisconnected) return;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const diffInSecs = Math.floor((now - startTime) / 1000);
+      setElapsedSeconds(diffInSecs);
+
+      const elapsedMins = diffInSecs / 60;
+      // scheduled=true na URL significa Ambulatorial (50 min)
+      // scheduled=false ou ausente significa Pronto Socorro (15 min)
+      const isPS = !isScheduled;
+      const isAmb = isScheduled;
+
+      if (isPS && elapsedMins >= 15 && !maxTimeNotified) {
+        if (role === 'medico') {
+          modal.info('Atenção', 'A consulta de Pronto Atendimento atingiu 15 minutos. Por favor, finalize o atendimento.');
+        }
+        setMaxTimeNotified(true);
+      } else if (isAmb && elapsedMins >= 50 && !maxTimeNotified) {
+        modal.info('Atenção', `A consulta agendada atingiu 50 minutos.`);
+        setMaxTimeNotified(true);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [startTime, remoteConnected, remoteDisconnected, consultaDetails?.status, maxTimeNotified, role, modal]);
+
+  const formatElapsedTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   // Auto-scroll chat
   useEffect(() => {
@@ -959,6 +1008,16 @@ function AtendimentoInner() {
   }
 
   function requestFinishCall() {
+    // Validação de tempo mínimo (2 minutos)
+    const elapsedMins = startTime ? (Date.now() - startTime) / 1000 / 60 : 0;
+    if (elapsedMins < 2) {
+      modal.error(
+        'Tempo insuficiente',
+        'O atendimento deve ter no mínimo 2 minutos de duração antes de ser encerrado.'
+      );
+      return;
+    }
+
     if (role === 'medico') {
       // Verifica se o médico está anulando o paciente
       const isAnulacao = atendimentoData.destino_final?.toLowerCase().includes('anular');
@@ -1070,6 +1129,7 @@ function AtendimentoInner() {
     try { sessionRef.current?.end(); } catch { }
     try { sessionStorage.removeItem('ps_room'); } catch { }
     try { sessionStorage.removeItem('consulta_reconnect'); } catch { }
+    try { sessionStorage.removeItem(`startTime_${cid}`); } catch { }
 
     // Navegar para a página apropriada
     if (role === 'paciente') {
@@ -1747,7 +1807,7 @@ function AtendimentoInner() {
                 <section className="call-area">
                   <div className="call-header">
                     <span className={`status-dot ${statusColor}`} aria-label={`Status: ${statusColor}`}></span>
-                    {statusText || 'Em consulta'}
+                    {remoteConnected ? `Tempo de consulta: ${formatElapsedTime(elapsedSeconds)}` : (statusText || 'Em consulta')}
                   </div>
                   <div className="call-screen">
                     <div className="call-screen">
@@ -2141,7 +2201,7 @@ function AtendimentoInner() {
             <section className="call-area">
               <div className="call-header">
                 <span className={`status-dot ${statusColor}`} aria-label={`Status: ${statusColor}`}></span>
-                Você está em uma consulta
+                {remoteConnected ? `Tempo de consulta: ${formatElapsedTime(elapsedSeconds)}` : 'Você está em uma consulta'}
               </div>
               <div className="call-screen">
                 <div className="call-screen">

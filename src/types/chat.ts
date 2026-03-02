@@ -10,14 +10,32 @@ export interface ChatIAResponse {
     /** Indica se a triagem foi concluída */
     completed: boolean;
 
-    /** Indica se a história clínica foi salva com sucesso (apenas quando completed=true) */
+    /** Indica se a história clínica foi salva com sucesso */
     historiaClinicaSalva?: boolean;
 
-    /** ID da história clínica salva (apenas quando historiaClinicaSalva=true) */
+    /** ID da história clínica salva */
     historiaClinicaId?: number;
 
-    /** Mensagem de erro caso falhe ao salvar (apenas quando historiaClinicaSalva=false) */
+    /** Mensagem de erro caso falhe ao salvar */
     erro?: string;
+
+    /** Dados estruturados retornados quando completed=true e aguardandoConfirmacao=true */
+    dadosEstruturados?: {
+        queixa_principal?: string;
+        descricao_sintomas?: string;
+        historico_pessoal?: {
+            doencas?: string[];
+            medicamentos?: string[];
+            alergias?: string[];
+        };
+        antecedentes_familiares?: Record<string, string>;
+        estilo_vida?: Record<string, string>;
+        vacinacao?: string;
+        conteudo?: string;
+    };
+
+    /** Quando true, o frontend deve exibir o relatório de confirmação antes de salvar */
+    aguardandoConfirmacao?: boolean;
 }
 
 /**

@@ -12,8 +12,6 @@ export type SendChatMessagePayload = {
 
 /**
  * Envia uma mensagem para a IA de triagem.
- * Usa sempre o proxy /api/chat-ia para que o Next.js encaminhe ao backend,
- * evitando CORS quando o front está em outro domínio (ex: Vercel).
  */
 export async function sendChatMessage(
   payload: SendChatMessagePayload,
@@ -31,3 +29,25 @@ export async function sendChatMessage(
     throw new ApiError(err);
   }
 }
+
+/**
+ * Confirma a triagem e salva a história clínica no banco.
+ * Chamado após o paciente revisar e aprovar o relatório.
+ */
+export async function confirmTriagem(
+  dadosEstruturados: ChatIAResponse['dadosEstruturados'],
+  token: string
+): Promise<{ ok: boolean; historiaClinicaSalva: boolean; historiaClinicaId?: number }> {
+  try {
+    const res = await axios.post(`${CHAT_IA_URL}/confirmar`, { dadosEstruturados }, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.data;
+  } catch (err) {
+    throw new ApiError(err);
+  }
+}
+
