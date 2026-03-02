@@ -322,6 +322,7 @@ function AtendimentoInner() {
     diagnostico: '',
     repouso: '',
     destino_final: '',
+    especialidade_seguimento: '',
     endereco_ambulancia: {
       endereco: '',
       complemento: '',
@@ -2145,6 +2146,22 @@ function AtendimentoInner() {
                               </div>
                             </div>
                           )}
+
+                          {/* Se for seguimento externo e estiver selecionado, mostra campo de especialidade */}
+                          {atendimentoData.destino_final === option && option.toLowerCase().includes('seguimento externo') && (
+                            <div className="ambulance-address-form" style={{ marginTop: '0.5rem' }}>
+                              <div className="address-row">
+                                <span className="input-label-text">Especialidade recomendada</span>
+                                <input
+                                  type="text"
+                                  placeholder="Ex: Cardiologista, Ortopedia..."
+                                  className="atendimento-input-small"
+                                  value={atendimentoData.especialidade_seguimento}
+                                  onChange={(e) => setAtendimentoData(prev => ({ ...prev, especialidade_seguimento: e.target.value }))}
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -2500,6 +2517,19 @@ function AtendimentoInner() {
                   </div>
                 </div>
 
+                {atendimentoData.destino_final.toLowerCase().includes('seguimento externo') && (
+                  <div className="form-group">
+                    <label>Especialidade recomendada</label>
+                    <input
+                      type="text"
+                      className="atendimento-input-small"
+                      placeholder="Ex: Cardiologista, Ortopedia..."
+                      value={atendimentoData.especialidade_seguimento}
+                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, especialidade_seguimento: e.target.value }))}
+                    />
+                  </div>
+                )}
+
                 {atendimentoData.destino_final.toLowerCase().includes('ambulância') && (
                   <div className="confirmation-ambulance-fields" style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
                     <h5 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#b45309' }}>Dados para Envio de Ambulância</h5>
@@ -2587,7 +2617,7 @@ function AtendimentoInner() {
               Confirmar e Finalizar Atendimento
             </Button>
           </div>
-        </div>
+        </div >
       </ContentModal >
 
       <Modal

@@ -208,6 +208,7 @@ export async function listParticipants(consultaId: string, token: string): Promi
 export type EndConsultaData = {
   repouso?: string;
   destino_final?: string;
+  especialidade_seguimento?: string;
   diagnostico?: string;
   evolucao?: string;
   plano_terapeutico?: string;
