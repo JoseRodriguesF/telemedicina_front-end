@@ -1894,19 +1894,19 @@ function AtendimentoInner() {
                       </div>
                       <div className="patient-info-row">
                         <span className="patient-info-label">Gênero:</span>
-                        <span className="patient-info-value" style={{ textTransform: 'capitalize' }}>{consultaDetails.paciente.sexo || '-'}</span>
+                        <span className="patient-info-value" style={{ textTransform: 'capitalize' }}>{consultaDetails.paciente?.sexo || '-'}</span>
                       </div>
                       <div className="patient-info-row">
                         <span className="patient-info-label">Idade:</span>
-                        <span className="patient-info-value">{calculateAge(consultaDetails.paciente.data_nascimento)} anos</span>
+                        <span className="patient-info-value">{calculateAge(consultaDetails.paciente?.data_nascimento)} anos</span>
                       </div>
                       <div className="patient-info-row">
                         <span className="patient-info-label">CPF:</span>
-                        <span className="patient-info-value">{consultaDetails.paciente.cpf || '-'}</span>
+                        <span className="patient-info-value">{consultaDetails.paciente?.cpf || '-'}</span>
                       </div>
                       <div className="patient-info-row">
                         <span className="patient-info-label">Telefone:</span>
-                        <span className="patient-info-value">{consultaDetails.paciente.telefone || '-'}</span>
+                        <span className="patient-info-value">{consultaDetails.paciente?.telefone || '-'}</span>
                       </div>
                     </>
                   ) : (

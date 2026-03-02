@@ -150,7 +150,14 @@ export default function DadosConvenioCard({ onBack, onComplete, userId, pessoais
             const resp = await createPessoais(payload);
             if (resp?.user) {
               try {
-                saveUser(resp.user);
+                const user = resp.user || {};
+                const token = (resp as any).token || user?.token;
+                // ✅ NOVO: Salvar token em localStorage se existir
+                if (token) {
+                  user.token = token;
+                  localStorage.setItem('telemedicina_token', token);
+                }
+                saveUser(user);
               } catch (_) {
                 // ignore storage errors
               }

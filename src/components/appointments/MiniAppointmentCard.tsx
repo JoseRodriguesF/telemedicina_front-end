@@ -29,7 +29,7 @@ export function MiniAppointmentCard({ appointment: appt, isMedico, onAttend, onV
                 <span className="month">{getMonthAbbreviation(appt.data_consulta)}</span>
             </div>
             <div className="appt-details">
-                <h4>{isMedico ? appt.paciente.nome_completo.split(' ')[0] : appt.medico.nome_completo.split(' ')[0]}</h4>
+                <h4>{isMedico ? (appt.paciente?.nome_completo?.split(' ')[0] || 'Paciente') : (appt.medico?.nome_completo?.split(' ')[0] || 'Médico')}</h4>
                 <p>
                     {isMedico ? 'Paciente' : 'Médico'} • {formatTime(appt.hora_inicio)}
                     {!effectiveCanJoin && isToday && !isSolicitada && (

@@ -53,10 +53,11 @@ export default function LoginCard({ onLogin }: Props) {
 
         if (token) {
           user.token = token;
+          // ✅ NOVO: Salvar token em localStorage para que getToken() encontre
+          localStorage.setItem('telemedicina_token', token);
         }
 
-        // Clear standalone tokens to avoid conflicts in getToken
-        localStorage.removeItem('telemedicina_token');
+        // Clear other standalone tokens to avoid conflicts
         localStorage.removeItem('token');
         localStorage.removeItem('auth_token');
 
@@ -89,10 +90,47 @@ export default function LoginCard({ onLogin }: Props) {
       // Não validar domínio aqui (Google garante email); apenas fluxo social.
       const idToken = await signInWithGoogle();
       const resp = await doGoogleAuth({ id_token: idToken });
+
+      // ✅ NOVO: Validações defensivas
+      if (!resp) {
+        throw new Error('Resposta vazia do servidor. Tente novamente.');
+      }
+
+      const token = resp.token || resp.user?.token || resp.accessToken || resp.access_token || resp.jwt || resp.id_token;
       const user = resp?.user || null;
+
+      // Debug logging (remover em produção se necessário)
+      console.log('[GoogleLogin] Response keys:', Object.keys(resp));
+      console.log('[GoogleLogin] Has token:', !!token);
+      console.log('[GoogleLogin] Has user:', !!user);
+      console.log('[GoogleLogin] User keys:', user ? Object.keys(user) : 'no user');
+
+      // ✅ NOVO: Validar token
+      if (!token) {
+        console.error('[GoogleLogin] No token found in response:', resp);
+        throw new Error('Falha na autenticação Google. Token não recebido. Tente novamente ou use email/senha.');
+      }
+
+      // ✅ NOVO: Validar user
+      if (!user) {
+        console.error('[GoogleLogin] No user data in response:', resp);
+        throw new Error('Falha ao carregar dados do usuário. Tente novamente com outra conta Google.');
+      }
+
+      // ✅ NOVO: Validar email (mínimo necessário)
+      if (!user.email) {
+        console.error('[GoogleLogin] User missing email:', user);
+        throw new Error('Sua conta Google não forneceu um email. Tente usar outra conta Google.');
+      }
+
+      user.token = token;
+      // ✅ Salvar token em localStorage para que getToken() encontre
+      localStorage.setItem('telemedicina_token', token);
+
       saveUser(user);
       onLogin?.({ email: user?.email, password: '', user, raw: resp });
     } catch (err: any) {
+      console.error('[GoogleLogin] Error:', err);
       handleApiError(err, { setGlobalError: setError });
     } finally {
       setLoading(false);

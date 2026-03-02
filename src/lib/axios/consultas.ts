@@ -74,11 +74,11 @@ export type ConsultaAgendada = {
   medico: {
     id: number;
     nome_completo: string;
-  };
+  } | null;
   paciente: {
     id: number;
     nome_completo: string;
-  };
+  } | null;
   historiaClinica?: HistoriaClinicaItem[];
 };
 
@@ -149,7 +149,7 @@ export type ConsultaDetails = {
     data_nascimento: string;
     telefone: string;
     notas?: string;
-  };
+  } | null;
   historiaClinica?: Partial<HistoriaClinicaDetails>;
 };
 

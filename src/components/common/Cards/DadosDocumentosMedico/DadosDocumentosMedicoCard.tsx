@@ -113,8 +113,14 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
           if (token && !user.token) {
             user.token = token;
           }
-          // Clear stale tokens
-          localStorage.removeItem('telemedicina_token');
+          // ✅ NOVO: Salvar token em localStorage se existir
+          if (token) {
+            localStorage.setItem('telemedicina_token', token);
+          } else {
+            // Clear only if no token (avoid clearing working token)
+            localStorage.removeItem('telemedicina_token');
+          }
+          // Clear other stale tokens
           localStorage.removeItem('token');
           localStorage.removeItem('auth_token');
 

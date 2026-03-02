@@ -198,7 +198,7 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
           emitSignal('ready');
           // Médico: quando já há 2 na sala, inicia oferta. Paciente: marca peerReady para futura renegociação.
           if (args.role === 'medico') {
-            setTimeout(() => createAndSendOffer().catch(() => {}), 150);
+            setTimeout(() => createAndSendOffer().catch(() => { }), 150);
           }
         }
       } else if (msg.type === 'ready') {
@@ -207,13 +207,13 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
         // Crítico: quando o par entra, o médico deve iniciar a negociação imediatamente.
         // onnegotiationneeded pode ter sido ignorado antes (peer não estava pronto).
         if (args.role === 'medico') {
-          setTimeout(() => createAndSendOffer().catch(() => {}), 100);
+          setTimeout(() => createAndSendOffer().catch(() => { }), 100);
         }
       } else if (msg.type === 'peer-joined') {
         peerReady = true;
         emitSignal('peer-joined', msg);
         if (args.role === 'medico') {
-          setTimeout(() => createAndSendOffer().catch(() => {}), 100);
+          setTimeout(() => createAndSendOffer().catch(() => { }), 100);
         }
       } else if (msg.type === 'peer-left') {
         emitSignal('peer-left', msg);
@@ -298,6 +298,12 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
         if (emptyTransceiver) {
           console.log(`[WebRTC] Using empty ${t.kind} transceiver for track.`);
           emptyTransceiver.sender.replaceTrack(t);
+          // Garantir que a direção permita o envio. Se era 'recvonly' ou 'inactive', mudar para 'sendrecv'
+          // disparará onnegotiationneeded se o estado for estável.
+          if (emptyTransceiver.direction !== 'sendrecv') {
+            console.log(`[WebRTC] Changing ${t.kind} transceiver direction to sendrecv`);
+            emptyTransceiver.direction = 'sendrecv';
+          }
         } else {
           console.log(`[WebRTC] Adding new track ${t.kind} to peer connection.`);
           pc.addTrack(t, stream);

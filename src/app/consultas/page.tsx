@@ -16,6 +16,7 @@ import { useModal } from '@/components/common/Modal/useModal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { formatTime } from '@/lib/utils/dateFormatters';
 import FormattedText from '@/components/common/FormattedText';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 
 // Array vazio estável para evitar re-renders desnecessários
 const EMPTY_ARRAY: any[] = [];
@@ -26,22 +27,28 @@ export default function ConsultasPage() {
   const [isMedico, setIsMedico] = useState<boolean>(false);
 
   // ✅ NOVO: Usar hooks otimizados
-  const { consultas: allConsultasRaw, isLoading: loading, refresh: refreshConsultas } = useConsultasAgendadas();
+  const { consultas: allConsultasRaw, isLoading: loading, error: consultasError, refresh: refreshConsultas } = useConsultasAgendadas();
 
   // Garantir que sempre temos um array válido com referência estável
   const allConsultas = Array.isArray(allConsultasRaw) ? allConsultasRaw : EMPTY_ARRAY;
 
-  // ✅ OTIMIZADO: Filtrar e ordenar consultas
+  // ✅ OTIMIZADO: Filtrar e ordenar consultas com proteção contra dados nulos
   const scheduledAppointments = allConsultas
-    .filter(c => c.status === 'agendada' || c.status === 'solicitada')
+    .filter(c => c && c.status === 'agendada' || c?.status === 'solicitada')
+    .filter(c => c.medico && c.paciente) // ✅ NOVO: Garantir que médico e paciente existem
     .sort((a, b) => {
       const getTimestamp = (c: ConsultaAgendada) => {
-        if (c.hora_inicio.includes('T')) {
+        if (c.hora_inicio?.includes('T')) {
           return new Date(c.hora_inicio).getTime();
         }
         return new Date(`${c.data_consulta}T${c.hora_inicio}`).getTime();
       };
-      return getTimestamp(a) - getTimestamp(b);
+      try {
+        return getTimestamp(a) - getTimestamp(b);
+      } catch (err) {
+        console.error('Erro ao ordenar consultas:', err);
+        return 0;
+      }
     });
 
   // Modal logic for patient details
@@ -170,7 +177,8 @@ export default function ConsultasPage() {
   };
 
   return (
-    <DashboardLayout>
+    <ErrorBoundary>
+      <DashboardLayout>
       <header className="dashboard-header" style={{ marginBottom: '0.75rem' }}>
         <h2>Central de Consultas</h2>
         <p>Olá, {displayName}. Como podemos cuidar de você hoje?</p>
@@ -238,7 +246,29 @@ export default function ConsultasPage() {
               </button>
             )}
             <div className="appointments-list" ref={scrollRef}>
-              {loading ? (
+              {consultasError ? (
+                <div className="appointment-mini-card" style={{ background: 'var(--bg-error, #fee)' }}>
+                  <div className="appt-details">
+                    <p style={{ color: 'var(--color-error, #c33)' }}>
+                      ⚠️ Erro ao carregar consultas. Tente recarregar a página.
+                    </p>
+                    <button
+                      onClick={() => refreshConsultas()}
+                      style={{
+                        marginTop: '0.75rem',
+                        padding: '0.5rem 1rem',
+                        background: 'var(--color-primary)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Tentar novamente
+                    </button>
+                  </div>
+                </div>
+              ) : loading ? (
                 <div className="appointment-mini-card">
                   <div className="appt-details">
                     <p>Carregando informações...</p>
@@ -390,6 +420,7 @@ export default function ConsultasPage() {
         onConfirm={globalModal.onConfirm}
         onCancel={globalModal.onCancel}
       />
-    </DashboardLayout>
+      </DashboardLayout>
+    </ErrorBoundary>
   );
 }
