@@ -185,7 +185,8 @@ export default function MeusAgendamentosPage() {
             createdAt: appt.createdAt,
             updatedAt: appt.updatedAt,
             paciente: {
-                ...appt.paciente,
+                id: appt.paciente?.id ?? 0,
+                nome_completo: appt.paciente?.nome_completo ?? '',
                 cpf: '',
                 sexo: '',
                 data_nascimento: '',
