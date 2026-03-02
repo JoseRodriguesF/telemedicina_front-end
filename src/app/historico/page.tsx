@@ -152,10 +152,27 @@ export default function HistoricoPage() {
   };
 
   // ✅ OTIMIZADO: Usar searchResults da API ou filtro local
-  const dataSource = searchResults !== null ? searchResults : history;
+  const dataSource = (searchResults && searchResults.length > 0) ? searchResults : history;
 
   const filteredHistory = dataSource.filter(item => {
-    const nameMatch = searchResults !== null ? true : getParticipantName(item).toLowerCase().includes(debouncedSearch.toLowerCase());
+    // Se veio da API, o backend já filtrou. Se não, filtramos localmente.
+    let searchMatch = true;
+
+    if ((searchResults === null || searchResults.length === 0) && debouncedSearch.trim()) {
+      const searchLower = debouncedSearch.toLowerCase();
+      const nameMatch = getParticipantName(item).toLowerCase().includes(searchLower);
+
+      let cpfMatch = false;
+      if (userType === 'medico' && item.paciente?.cpf) {
+        const cleanCpf = item.paciente.cpf.replace(/\D/g, '');
+        const cleanSearch = debouncedSearch.replace(/\D/g, '');
+        if (cleanSearch && cleanCpf.includes(cleanSearch)) {
+          cpfMatch = true;
+        }
+      }
+
+      searchMatch = nameMatch || cpfMatch;
+    }
 
     let statusMatch = true;
     if (filterStatus !== 'all') statusMatch = item.status === filterStatus;
@@ -179,7 +196,7 @@ export default function HistoricoPage() {
       }
     }
 
-    return nameMatch && statusMatch && dateMatch;
+    return searchMatch && statusMatch && dateMatch;
   });
 
   // Extrair prescrições das consultas filtradas
@@ -299,7 +316,7 @@ export default function HistoricoPage() {
             <input
               type="text"
               className="history-search-field"
-              placeholder={userType === 'paciente' ? "Buscar por nome do médico..." : "Buscar por nome do paciente..."}
+              placeholder={userType === 'paciente' ? "Buscar por nome do médico..." : "Buscar por nome ou CPF do paciente..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

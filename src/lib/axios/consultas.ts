@@ -350,6 +350,7 @@ export type PSFullHistoryItem = {
   } | null;
   paciente: {
     nome_completo: string;
+    cpf?: string;
   } | null;
   prescricoes: any[]; // Pode trocar por Prescricao[] se importar do outro lib
   historiaClinica?: HistoriaClinicaItem[];
