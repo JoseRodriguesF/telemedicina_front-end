@@ -80,6 +80,17 @@ export type ConsultaAgendada = {
     nome_completo: string;
   } | null;
   historiaClinica?: HistoriaClinicaItem[];
+  // Novos campos estruturais
+  repouso?: string;
+  destino_final?: string;
+  especialidade_seguimento?: string;
+  ambulancia_endereco?: string;
+  ambulancia_complemento?: string;
+  ambulancia_info?: string;
+  ambulancia_telefone?: string;
+  diagnostico?: string;
+  evolucao?: string;
+  plano_terapeutico?: string;
 };
 
 export async function getConsultasAgendadas(token: string): Promise<ConsultaAgendada[]> {
@@ -151,6 +162,17 @@ export type ConsultaDetails = {
     notas?: string;
   } | null;
   historiaClinica?: Partial<HistoriaClinicaDetails>;
+  // Novos campos estruturais
+  repouso?: string;
+  destino_final?: string;
+  especialidade_seguimento?: string;
+  ambulancia_endereco?: string;
+  ambulancia_complemento?: string;
+  ambulancia_info?: string;
+  ambulancia_telefone?: string;
+  diagnostico?: string;
+  evolucao?: string;
+  plano_terapeutico?: string;
 };
 
 export async function getConsulta(consultaId: string, token: string): Promise<ConsultaDetails> {
