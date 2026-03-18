@@ -127,16 +127,29 @@ function PreConsultaInner() {
         // Pequeno delay para mostrar a mensagem antes do relatório
         setTimeout(() => setShowRelatorio(true), 600);
 
-      } else if (data?.completed === true && !data.aguardandoConfirmacao) {
-        // Fallback: completado mas sem dados estruturados
-        setMessages(prev => [...prev, { author: 'Angélica', text: 'Triagem concluída com sucesso! Estou encaminhando você para o atendimento...' }]);
+      } else if (data?.completed === true) {
+        // Fallback: IA completou mas pode ter havido erro no JSON estruturado ou flag faltando
+        setMessages(prev => [...prev, {
+          author: 'Angélica',
+          text: 'Entendido! Sua triagem foi processada. Clique no botão abaixo para revisar e prosseguir.'
+        }]);
         setHistory(prev => [
           ...prev,
           { role: 'user', content: t },
           { role: 'assistant', content: answer }
         ]);
         setCompleted(true);
-        handleEnviar(undefined);
+        // Se tiver dados, mostra o relatório. Se não, permite prosseguir via botão
+        if (data.dadosEstruturados) {
+          setDadosTriagem(data.dadosEstruturados);
+          setTimeout(() => setShowRelatorio(true), 1000);
+        } else {
+          // Caso raro de erro total no JSON
+          setMessages(prev => [...prev, {
+            author: 'Angélica',
+            text: 'Tive um pequeno problema ao estruturar seus dados, mas não se preocupe, o médico poderá ver nossa conversa. Pode prosseguir!'
+          }]);
+        }
       } else {
         setMessages(prev => [...prev, { author: 'Angélica', text: answer }]);
         setHistory(prev => [
@@ -260,7 +273,6 @@ function PreConsultaInner() {
 
         <div className="pc-page-container">
           <div className="pc-centered-layout">
-
             <div className="pc-content-side">
               {showWelcome && (
                 <div className={`pc-welcome-container ${isTriageStarted ? 'fade-out' : ''}`}>
@@ -309,6 +321,18 @@ function PreConsultaInner() {
                         <div className="pc-message-bubble">
                           <span className="typing-dots">...</span>
                         </div>
+                      </div>
+                    )}
+
+                    {completed && !showRelatorio && (
+                      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem', animation: 'fadeIn 0.5s ease' }}>
+                        <button
+                          className="pc-relatorio-btn-iniciar"
+                          onClick={() => handleEnviar(undefined)}
+                          style={{ padding: '0.75rem 2rem' }}
+                        >
+                          Prosseguir para o atendimento
+                        </button>
                       </div>
                     )}
                     <div ref={messagesEndRef} />
