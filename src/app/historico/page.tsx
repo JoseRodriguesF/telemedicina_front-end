@@ -80,7 +80,34 @@ export default function HistoricoPage() {
     setUserType(u?.tipo_usuario || '');
   }, []);
 
-  // ✅ NOVO: Buscar via API quando o termo de busca mudar
+  // ✅ OTIMIZADO: Identificação automática de CPF vs Nome
+  const handleSearchChange = (val: string) => {
+    if (userType !== 'medico') {
+      setSearchTerm(val);
+      setSearchMode('nome');
+      return;
+    }
+
+    const hasDigits = /\d/.test(val);
+    const hasLetters = /[a-zA-Z]/.test(val);
+
+    if (hasDigits && !hasLetters) {
+      setSearchMode('cpf');
+      const masked = formatCpfMask(val);
+      setSearchTerm(masked);
+
+      const digits = masked.replace(/\D/g, '');
+      if (digits.length === 0) setCpfValidationState('idle');
+      else if (digits.length < 11) setCpfValidationState('incomplete');
+      else if (isValidCpf(masked)) setCpfValidationState('valid');
+      else setCpfValidationState('invalid');
+    } else {
+      setSearchMode('nome');
+      setSearchTerm(val);
+      setCpfValidationState('idle');
+    }
+  };
+
   useEffect(() => {
     const performSearch = async () => {
       if (!debouncedSearch.trim()) {
@@ -360,52 +387,11 @@ export default function HistoricoPage() {
         </div>
 
         <div className="history-filters">
-          {/* Toggle de modo de busca (apenas para médicos) */}
-          {userType === 'medico' && (
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>Buscar por:</span>
-              <button
-                onClick={() => { setSearchMode('nome'); setSearchTerm(''); setSearchResults(null); setCpfValidationState('idle'); }}
-                style={{
-                  padding: '0.3rem 0.85rem',
-                  borderRadius: '999px',
-                  border: '1.5px solid',
-                  borderColor: searchMode === 'nome' ? 'var(--primary)' : 'var(--border-color)',
-                  background: searchMode === 'nome' ? 'var(--primary)' : 'transparent',
-                  color: searchMode === 'nome' ? '#fff' : 'var(--text-secondary)',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-              >
-                Nome
-              </button>
-              <button
-                onClick={() => { setSearchMode('cpf'); setSearchTerm(''); setSearchResults(null); setCpfValidationState('idle'); }}
-                style={{
-                  padding: '0.3rem 0.85rem',
-                  borderRadius: '999px',
-                  border: '1.5px solid',
-                  borderColor: searchMode === 'cpf' ? 'var(--primary)' : 'var(--border-color)',
-                  background: searchMode === 'cpf' ? 'var(--primary)' : 'transparent',
-                  color: searchMode === 'cpf' ? '#fff' : 'var(--text-secondary)',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-              >
-                CPF
-              </button>
-            </div>
-          )}
-
           <div className="search-input-wrapper" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0 }}>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '1rem', color: 'var(--text-tertiary)', zIndex: 1 }}>
-                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-              </svg>
+              <div className="search-mode-badge">
+                {searchMode === 'cpf' ? 'CPF' : 'Nome'}
+              </div>
               <input
                 type="text"
                 className={`history-search-field${
@@ -415,26 +401,12 @@ export default function HistoricoPage() {
                 placeholder={
                   userType === 'paciente'
                     ? 'Buscar por nome do médico...'
-                    : searchMode === 'cpf'
-                      ? 'Digite o CPF exato (000.000.000-00)'
-                      : 'Buscar por nome do paciente...'
+                    : 'Busque por nome ou CPF do paciente...'
                 }
                 value={searchTerm}
                 maxLength={searchMode === 'cpf' ? 14 : undefined}
-                onChange={(e) => {
-                  if (userType === 'medico' && searchMode === 'cpf') {
-                    // Detecta se o input parece CPF e aplica máscara
-                    const masked = formatCpfMask(e.target.value);
-                    setSearchTerm(masked);
-                    const digits = masked.replace(/\D/g, '');
-                    if (digits.length === 0) setCpfValidationState('idle');
-                    else if (digits.length < 11) setCpfValidationState('incomplete');
-                    else if (isValidCpf(masked)) setCpfValidationState('valid');
-                    else setCpfValidationState('invalid');
-                  } else {
-                    setSearchTerm(e.target.value);
-                  }
-                }}
+                style={{ paddingLeft: '4.5rem' }}
+                onChange={(e) => handleSearchChange(e.target.value)}
               />
               {/* Ícone de status de CPF */}
               {userType === 'medico' && searchMode === 'cpf' && cpfValidationState === 'valid' && (
