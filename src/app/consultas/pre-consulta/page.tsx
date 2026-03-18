@@ -111,8 +111,8 @@ function PreConsultaInner() {
       );
       const answer = String(data?.answer ?? 'Sem resposta da IA.');
 
-      if (data?.completed === true && data.dadosEstruturados) {
-        // Triagem concluída - mostrar mensagem e exibir relatório
+      if (data?.completed === true) {
+        // Triagem concluída - sempre mostrar o relatório/modal de confirmação
         setMessages(prev => [...prev, {
           author: 'Angélica',
           text: 'Triagem concluída! Revise suas informações abaixo antes de prosseguir.'
@@ -123,25 +123,12 @@ function PreConsultaInner() {
           { role: 'assistant', content: answer }
         ]);
         setCompleted(true);
-        setDadosTriagem(data.dadosEstruturados);
+        
+        // Se a IA não retornou dados estruturados, usamos um objeto vazio para garantir que o modal abra
+        setDadosTriagem(data.dadosEstruturados || {});
+        
         // Pequeno delay para mostrar a mensagem antes do relatório
         setTimeout(() => setShowRelatorio(true), 600);
-
-      } else if (data?.completed === true) {
-        // Fallback: IA completou mas não retornou JSON estruturado (caso raro ou IA simplificada)
-        setMessages(prev => [...prev, {
-          author: 'Angélica',
-          text: 'Entendido! Sua triagem foi processada com sucesso. Estou encaminhando você para o atendimento agora...'
-        }]);
-        setHistory(prev => [
-          ...prev,
-          { role: 'user', content: t },
-          { role: 'assistant', content: answer }
-        ]);
-        setCompleted(true);
-        
-        // Redireciona automaticamente após 1.5s já que não há dados para confirmar
-        setTimeout(() => handleEnviar(undefined), 1500);
       } else {
         setMessages(prev => [...prev, { author: 'Angélica', text: answer }]);
         setHistory(prev => [
@@ -285,7 +272,7 @@ function PreConsultaInner() {
                     </p>
                     <button
                       className="pc-start-btn"
-                      onClick={() => sendMessage('oi', true)}
+                      onClick={() => sendMessage('Olá. Meus dados já estão confirmados, pode iniciar a triagem diretamente.', true)}
                       disabled={isLoading || iaTyping}
                     >
                       {isLoading ? 'Iniciando...' : 'Iniciar triagem'}
@@ -316,17 +303,6 @@ function PreConsultaInner() {
                       </div>
                     )}
 
-                    {completed && !showRelatorio && (
-                      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem', animation: 'fadeIn 0.5s ease' }}>
-                        <button
-                          className="pc-relatorio-btn-iniciar"
-                          onClick={() => handleEnviar(undefined)}
-                          style={{ padding: '0.75rem 2rem' }}
-                        >
-                          Prosseguir para o atendimento
-                        </button>
-                      </div>
-                    )}
                     <div ref={messagesEndRef} />
                   </div>
                 </div>
