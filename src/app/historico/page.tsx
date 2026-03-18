@@ -246,9 +246,12 @@ export default function HistoricoPage() {
           searchMatch = false;
         }
       } else if (searchResults === null || searchResults.length === 0) {
-        // Busca por nome: correspondência parcial (apenas se não houver resultados da API)
-        const searchLower = debouncedSearch.toLowerCase();
-        searchMatch = getParticipantName(item).toLowerCase().includes(searchLower);
+        // Busca por nome: correspondência aproximada por termos (partes do nome)
+        const searchTerms = debouncedSearch.toLowerCase().split(' ').filter(part => part.length > 0);
+        const itemName = getParticipantName(item).toLowerCase();
+        
+        // Verifica se TODOS os termos da pesquisa estão contidos no nome
+        searchMatch = searchTerms.every(term => itemName.includes(term));
       }
     }
 
