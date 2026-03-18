@@ -111,7 +111,7 @@ function PreConsultaInner() {
       );
       const answer = String(data?.answer ?? 'Sem resposta da IA.');
 
-      if (data?.completed === true && data.aguardandoConfirmacao && data.dadosEstruturados) {
+      if (data?.completed === true && data.dadosEstruturados) {
         // Triagem concluída - mostrar mensagem e exibir relatório
         setMessages(prev => [...prev, {
           author: 'Angélica',
@@ -128,10 +128,10 @@ function PreConsultaInner() {
         setTimeout(() => setShowRelatorio(true), 600);
 
       } else if (data?.completed === true) {
-        // Fallback: IA completou mas pode ter havido erro no JSON estruturado ou flag faltando
+        // Fallback: IA completou mas não retornou JSON estruturado (caso raro ou IA simplificada)
         setMessages(prev => [...prev, {
           author: 'Angélica',
-          text: 'Entendido! Sua triagem foi processada. Clique no botão abaixo para revisar e prosseguir.'
+          text: 'Entendido! Sua triagem foi processada com sucesso. Estou encaminhando você para o atendimento agora...'
         }]);
         setHistory(prev => [
           ...prev,
@@ -139,17 +139,9 @@ function PreConsultaInner() {
           { role: 'assistant', content: answer }
         ]);
         setCompleted(true);
-        // Se tiver dados, mostra o relatório. Se não, permite prosseguir via botão
-        if (data.dadosEstruturados) {
-          setDadosTriagem(data.dadosEstruturados);
-          setTimeout(() => setShowRelatorio(true), 1000);
-        } else {
-          // Caso raro de erro total no JSON
-          setMessages(prev => [...prev, {
-            author: 'Angélica',
-            text: 'Tive um pequeno problema ao estruturar seus dados, mas não se preocupe, o médico poderá ver nossa conversa. Pode prosseguir!'
-          }]);
-        }
+        
+        // Redireciona automaticamente após 1.5s já que não há dados para confirmar
+        setTimeout(() => handleEnviar(undefined), 1500);
       } else {
         setMessages(prev => [...prev, { author: 'Angélica', text: answer }]);
         setHistory(prev => [
