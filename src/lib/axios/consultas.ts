@@ -173,6 +173,16 @@ export type ConsultaDetails = {
   diagnostico?: string;
   evolucao?: string;
   plano_terapeutico?: string;
+  anexos?: ConsultaAnexo[];
+};
+
+export type ConsultaAnexo = {
+  id: number;
+  consultaId: number | string;
+  url?: string; // Mantido para compatibilidade no frontend, mas será gerado dinamicamente
+  nome?: string;
+  tipo_mime?: string;
+  createdAt?: string;
 };
 
 export async function getConsulta(consultaId: string, token: string): Promise<ConsultaDetails> {
@@ -504,4 +514,46 @@ export async function updatePacienteNotas(
     throw new ApiError(err);
   }
 }
+
+/**
+ * Envia uma lista de arquivos (em Base64) anexados para uma consulta para serem salvos no banco
+ */
+export async function enviarAnexosConsulta(
+  consultaId: string | number,
+  token: string,
+  anexos: Array<{ data: string; nome?: string; tipo_mime: string }>
+): Promise<{ ok: boolean }> {
+  try {
+    const res = await axios.post(`/api/consultas/${consultaId}/anexos`, { anexos }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  } catch (err) {
+    throw new ApiError(err);
+  }
+}
+
+/**
+ * Busca a lista de anexos de uma consulta e formata a URL de acesso local
+ */
+export async function listAnexosConsulta(
+  consultaId: string | number,
+  token: string
+): Promise<ConsultaAnexo[]> {
+  try {
+    const res = await axios.get(`/api/consultas/${consultaId}/anexos`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const lista = res.data as any[];
+    
+    // Adiciona a URL do endpoint interno para cada anexo para que o frontend possa abrir/baixar
+    return lista.map(item => ({
+      ...item,
+      url: `/api/consultas/anexos/${item.id}/arquivo?token=${token}`
+    })) as ConsultaAnexo[];
+  } catch (err) {
+    throw new ApiError(err);
+  }
+}
+
 

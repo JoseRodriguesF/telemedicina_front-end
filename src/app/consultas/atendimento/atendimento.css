@@ -2353,3 +2353,111 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Chat Attachments Support */
+.chat-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.chat-upload-loading {
+    padding: 6px 12px;
+    background: var(--color-primary-50);
+    color: var(--color-primary-600);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.chat-attach-btn {
+    background: none;
+    border: none;
+    color: var(--text-tertiary, #9ca3af);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.chat-attach-btn:hover:not(:disabled) {
+    background: var(--bg-secondary, #f3f4f6);
+    color: var(--color-primary-600);
+}
+
+.chat-attachment-card {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 10px;
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 180px;
+    max-width: 240px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-msg.patient .chat-attachment-card,
+.chat-msg.doctor .chat-attachment-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.attachment-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+}
+
+.attachment-info svg {
+    flex-shrink: 0;
+    opacity: 0.9;
+}
+
+.attachment-info span {
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+}
+
+.chat-msg.me .attachment-info span {
+    color: white;
+}
+
+.chat-msg.patient .attachment-info span,
+.chat-msg.doctor .attachment-info span {
+    color: var(--text-primary);
+}
+
+.chat-bubble button {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.8rem !important;
+    height: 32px !important;
+}
+
+.chat-msg.me .chat-bubble button {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.chat-msg.me .chat-bubble button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Override for the chat-input existing rule to avoid double padding if needed */
+.chat-input-wrapper .chat-input {
+    border-top: none;
+}

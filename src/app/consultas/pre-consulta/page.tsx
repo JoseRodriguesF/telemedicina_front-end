@@ -28,8 +28,9 @@ function formatIaText(text: string): string {
 }
 
 import { getToken, getUser } from '@/lib/auth';
-import { psCreateRoom } from '@/lib/axios/consultas';
+import { psCreateRoom, enviarAnexosConsulta } from '@/lib/axios/consultas';
 import { sendChatMessage, confirmTriagem } from '@/lib/axios/chat';
+import axios from 'axios';
 
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
@@ -60,7 +61,10 @@ function PreConsultaInner() {
   const [showRelatorio, setShowRelatorio] = useState(false);
   const [dadosTriagem, setDadosTriagem] = useState<TriagemDados | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [anexos, setAnexos] = useState<Array<{ data: string; nome: string; tipo_mime: string }>>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const historiaClinicaIdRef = useRef<number | undefined>(undefined);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesToHistory = (msgs: ChatMsg[]): ChatHistory => {
     return msgs
@@ -173,6 +177,56 @@ function PreConsultaInner() {
     }
   }
 
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const token = getToken();
+    if (!token) return;
+
+    setIsUploading(true);
+    try {
+      const newAnexos = [...anexos];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Limite de segurança: 5MB por arquivo no banco (ajustável)
+        const MAX_SIZE = 5 * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+          modal.warning("Arquivo muito grande", `O arquivo "${file.name}" excede o limite de 5MB.`);
+          continue;
+        }
+
+        // Ler arquivo como Base64
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = error => reject(error);
+        });
+
+        newAnexos.push({
+          data: base64,
+          nome: file.name,
+          tipo_mime: file.type
+        } as any);
+      }
+      
+      setAnexos(newAnexos);
+    } catch (err) {
+      console.error("Erro ao processar arquivos:", err);
+      modal.error("Erro", "Não foi possível processar os arquivos. Tente novamente.");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
+
+  function removeAnexo(index: number) {
+    setAnexos(prev => prev.filter((_, i) => i !== index));
+  }
+
   function handleEditarTriagem() {
     // Volta ao chat para o paciente adicionar/editar informações
     setShowRelatorio(false);
@@ -219,6 +273,17 @@ function PreConsultaInner() {
         historiaClinicaId: currentHistoriaId
       });
       sessionStorage.setItem('ps_room', JSON.stringify({ roomId, consultaId, iceServers }));
+
+      // Se houver anexos, envia agora vinculando à consulta recém-criada
+      if (anexos.length > 0) {
+        try {
+          await enviarAnexosConsulta(consultaId, token, anexos);
+        } catch (err) {
+          console.error("Erro ao vincular anexos:", err);
+          // Não interrompe o fluxo se falhar apenas o anexo
+        }
+      }
+
       router.push(`/consultas/aguardando?id=${encodeURIComponent(consultaId)}`);
     } catch (err: any) {
       const msg = String(err?.message || 'Não foi possível criar sua consulta. Tente novamente.');
@@ -389,6 +454,86 @@ function PreConsultaInner() {
                         <p>{dadosTriagem.vacinacao}</p>
                       </div>
                     )}
+
+                    {/* SEÇÃO DE ANEXOS */}
+                    <div className="pc-relatorio-section" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h3 style={{ margin: 0 }}>📁 Exames e Documentos</h3>
+                        <button 
+                          className="pc-add-file-btn"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploading}
+                          style={{
+                            background: 'var(--color-primary-50)',
+                            color: 'var(--color-primary-600)',
+                            border: '1px dashed var(--color-primary-300)',
+                            padding: '0.5rem 1rem',
+                            borderRadius: 'var(--radius-md)',
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}
+                        >
+                          {isUploading ? 'Carregando...' : (
+                            <>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                              Anexar arquivo
+                            </>
+                          )}
+                        </button>
+                        <input 
+                          type="file" 
+                          ref={fileInputRef} 
+                          style={{ display: 'none' }} 
+                          multiple 
+                          onChange={handleFileUpload}
+                        />
+                      </div>
+
+                      {anexos.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          {anexos.map((file, idx) => (
+                            <div key={idx} style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'space-between',
+                              background: 'var(--bg-secondary)',
+                              padding: '0.75rem',
+                              borderRadius: 'var(--radius-md)',
+                              border: '1px solid var(--border-color)'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
+                                <div style={{ color: 'var(--color-primary-500)' }}>
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                                </div>
+                                <span style={{ fontSize: '0.9rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                                  {file.nome}
+                                </span>
+                              </div>
+                              <button 
+                                onClick={() => removeAnexo(idx)}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: 'var(--color-error-500)',
+                                  cursor: 'pointer',
+                                  padding: '0.25rem'
+                                }}
+                              >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)', fontStyle: 'italic', textAlign: 'center', margin: '1rem 0' }}>
+                          Nenhum arquivo anexado. Você pode enviar exames ou documentos relevantes.
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   <div className="pc-relatorio-disclaimer">

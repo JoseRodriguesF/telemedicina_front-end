@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
-import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta, updatePacienteNotas } from '@/lib/axios/consultas';
+import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta, updatePacienteNotas, listAnexosConsulta, type ConsultaAnexo } from '@/lib/axios/consultas';
 import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas, getPrescricoesByConsulta, deletePrescricao, getPrescricoesByPaciente, Prescricao as PrescricaoType, downloadPrescricaoPdf } from '@/lib/axios/prescricoes';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
@@ -21,7 +21,11 @@ import html2canvas from 'html2canvas';
 import FormattedText from '@/components/common/FormattedText';
 import { buscarCID, type CID10 } from '@/lib/constants/cid10';
 
-type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
+type ChatMessage = { 
+  author: 'Você' | 'Médico' | 'Paciente'; 
+  text?: string;
+  attachment?: { id: number; nome: string; tipo_mime: string; url: string }
+};
 
 function calculateAge(birthDate: string | Date | undefined): string {
   if (!birthDate) return '-';
@@ -109,6 +113,8 @@ function AtendimentoInner() {
   const claimingRef = useRef(false);
   const startedRef = useRef(false);
   const [showChat, setShowChat] = useState(false);
+  const [isUploadingChat, setIsUploadingChat] = useState(false);
+  const fileInputChatRef = useRef<HTMLInputElement>(null);
   const hasReadySignalRef = useRef(false);
   const isLocalReadyRef = useRef(false);
   const offeringInitiatedRef = useRef(false);
@@ -175,6 +181,11 @@ function AtendimentoInner() {
   const [cidSugestoes, setCidSugestoes] = useState<CID10[]>([]);
   const [showCidSugestoes, setShowCidSugestoes] = useState(false);
   const [showCidSugestoesModal, setShowCidSugestoesModal] = useState(false);
+
+  // Estados para Anexos (Arquivos enviados pelo paciente)
+  const [anexos, setAnexos] = useState<ConsultaAnexo[]>([]);
+  const [showAnexosModal, setShowAnexosModal] = useState(false);
+  const [loadingAnexos, setLoadingAnexos] = useState(false);
 
   const isScheduled = search.get('scheduled') === 'true';
 
@@ -683,10 +694,71 @@ function AtendimentoInner() {
 
   function sendMessage() {
     const t = draft.trim();
-    if (!t) return;
+    if (!t || !sessionRef.current) return;
+    
+    // Incrementa unreadMessages para o outro lado? Não, aqui é local
     setMessages((prev) => [...prev, { author: 'Você', text: t }]);
-    sessionRef.current?.sendMessage(t);
+    sessionRef.current.sendMessage(t);
     setDraft('');
+  }
+
+  async function handleChatFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !token || !sessionRef.current) return;
+
+    const curCid = getConsultaIdFromUrl() || consultaIdState || consultaId;
+    if (!curCid) return;
+
+    // Limite de 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      modal.error('Arquivo muito grande', 'O limite para envio de arquivos no chat é de 5MB.');
+      return;
+    }
+
+    setIsUploadingChat(true);
+    try {
+      // 1. Ler como Base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
+      });
+
+      // 2. Salvar no banco (API)
+      const res = await enviarAnexosConsulta(curCid, token, [
+        { data: base64, nome: file.name, tipo_mime: file.type }
+      ]);
+
+      if (res.ok) {
+        // 3. Buscar a lista atualizada para pegar o ID gerado (ou a API poderia retornar o ID)
+        // Como o listarAnexos retorna a URL formatada, usamos ele
+        const lista = await listAnexosConsulta(curCid, token);
+        const novoAnexo = lista[lista.length - 1]; // O último inserido
+
+        if (novoAnexo) {
+          // 4. Enviar via DataChannel como JSON
+          const attachmentMsg = JSON.stringify({
+            type: 'attachment',
+            attachment: novoAnexo
+          });
+
+          sessionRef.current.sendMessage(attachmentMsg);
+          
+          // 5. Adicionar localmente ao chat
+          setMessages((prev) => [...prev, { 
+            author: 'Você', 
+            attachment: novoAnexo 
+          }]);
+        }
+      }
+    } catch (err) {
+      console.error('[Chat] Erro ao enviar arquivo:', err);
+      modal.error('Erro', 'Não foi possível enviar o arquivo.');
+    } finally {
+      setIsUploadingChat(false);
+      if (fileInputChatRef.current) fileInputChatRef.current.value = '';
+    }
   }
 
   async function getRobustLocalMedia() {
@@ -980,13 +1052,27 @@ function AtendimentoInner() {
       });
 
       if (role === 'medico') {
-        session.onChatMessage((text) => {
-          setMessages((prev) => [...prev, { author: 'Paciente', text }]);
+        session.onChatMessage((data) => {
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.type === 'attachment') {
+              setMessages((prev) => [...prev, { author: 'Paciente', attachment: parsed.attachment }]);
+              return;
+            }
+          } catch { }
+          setMessages((prev) => [...prev, { author: 'Paciente', text: data }]);
         });
         session.createChatChannel();
       } else {
-        session.onChatMessage((text) => {
-          setMessages((prev) => [...prev, { author: 'Médico', text }]);
+        session.onChatMessage((data) => {
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.type === 'attachment') {
+              setMessages((prev) => [...prev, { author: 'Médico', attachment: parsed.attachment }]);
+              return;
+            }
+          } catch { }
+          setMessages((prev) => [...prev, { author: 'Médico', text: data }]);
         });
       }
 
@@ -1272,6 +1358,28 @@ function AtendimentoInner() {
     });
     setShowPrescricaoForm(false);
   }
+
+  /**
+   * Abre o modal de arquivos do paciente e faz o fetch dos anexos da consulta atual.
+   * Disponível apenas para o médico durante o atendimento.
+   */
+  async function handleOpenAnexos() {
+    const curCid = getConsultaIdFromUrl() || consultaIdState || consultaId;
+    if (!curCid || !token) return;
+
+    setShowAnexosModal(true);
+    setLoadingAnexos(true);
+    try {
+      const lista = await listAnexosConsulta(curCid, token);
+      setAnexos(lista);
+    } catch (err) {
+      console.error('[Atendimento] Erro ao buscar anexos:', err);
+      setAnexos([]);
+    } finally {
+      setLoadingAnexos(false);
+    }
+  }
+
 
   // Lógica para Gerar e Baixar PDF Profissional
   async function handleGenerateFinalPDF() {
@@ -1960,9 +2068,9 @@ function AtendimentoInner() {
                   </div>
 
                   <div className="video-action-buttons">
-                    <button className="action-btn">Prescrição</button>
-                    <button className="action-btn">Antecedentes</button>
-                    <button className="action-btn">Arquivos</button>
+                    <button className="action-btn" onClick={() => setShowPrescricaoForm(true)}>Prescrição</button>
+                    <button className="action-btn" onClick={() => setOpenAccordions(prev => ({ ...prev, anamsese: true }))}>Antecedentes</button>
+                    <button className="action-btn" onClick={handleOpenAnexos}>Arquivos</button>
                   </div>
                 </div>
               </div>
@@ -2232,21 +2340,56 @@ function AtendimentoInner() {
                       return (
                         <div key={idx} className={cls}>
                           <div className="chat-author">{m.author}</div>
-                          <div className="chat-bubble">{m.text}</div>
+                          <div className="chat-bubble">
+                            {m.text && <div>{m.text}</div>}
+                            {m.attachment && (
+                              <div className="chat-attachment-card">
+                                <div className="attachment-info">
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                                  <span>{m.attachment.nome}</span>
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => window.open(m.attachment?.url, '_blank')}
+                                >
+                                  Abrir
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
                     <div ref={chatEndRef} />
                   </div>
-                  <div className="chat-input">
-                    <input
-                      className="c-input"
-                      placeholder="Digite sua mensagem..."
-                      value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
-                    />
-                    <Button variant="primary" onClick={sendMessage} aria-label="Enviar">➤</Button>
+                  <div className="chat-input-wrapper">
+                    {isUploadingChat && <div className="chat-upload-loading">Subindo arquivo...</div>}
+                    <div className="chat-input">
+                      <input 
+                        type="file" 
+                        ref={fileInputChatRef} 
+                        style={{ display: 'none' }} 
+                        onChange={handleChatFileUpload}
+                      />
+                      <button 
+                        className="chat-attach-btn" 
+                        onClick={() => fileInputChatRef.current?.click()}
+                        title="Anexar arquivo"
+                        disabled={isUploadingChat}
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                      </button>
+                      <input
+                        className="c-input"
+                        placeholder="Digite sua mensagem..."
+                        value={draft}
+                        onChange={(e) => setDraft(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
+                        disabled={isUploadingChat}
+                      />
+                      <Button variant="primary" onClick={sendMessage} aria-label="Enviar" disabled={isUploadingChat}>➤</Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2397,21 +2540,56 @@ function AtendimentoInner() {
                     return (
                       <div key={idx} className={cls}>
                         <div className="chat-author">{m.author}</div>
-                        <div className="chat-bubble">{m.text}</div>
+                        <div className="chat-bubble">
+                          {m.text && <div>{m.text}</div>}
+                          {m.attachment && (
+                            <div className="chat-attachment-card">
+                              <div className="attachment-info">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                                <span>{m.attachment.nome}</span>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => window.open(m.attachment?.url, '_blank')}
+                              >
+                                Abrir
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
                   <div ref={chatEndRef} />
                 </div>
-                <div className="chat-input">
-                  <input
-                    className="c-input"
-                    placeholder="Digite..."
-                    value={draft}
-                    onChange={(e) => setDraft(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
-                  />
-                  <Button variant="primary" onClick={sendMessage} aria-label="Enviar">➤</Button>
+                <div className="chat-input-wrapper">
+                  {isUploadingChat && <div className="chat-upload-loading">Subindo arquivo...</div>}
+                  <div className="chat-input">
+                    <input 
+                      type="file" 
+                      ref={fileInputChatRef} 
+                      style={{ display: 'none' }} 
+                      onChange={handleChatFileUpload}
+                    />
+                    <button 
+                      className="chat-attach-btn" 
+                      onClick={() => fileInputChatRef.current?.click()}
+                      title="Anexar arquivo"
+                      disabled={isUploadingChat}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    </button>
+                    <input
+                      className="c-input"
+                      placeholder="Digite..."
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
+                      disabled={isUploadingChat}
+                    />
+                    <Button variant="primary" onClick={sendMessage} aria-label="Enviar" disabled={isUploadingChat}>➤</Button>
+                  </div>
                 </div>
               </aside>
             )}
@@ -2737,6 +2915,134 @@ function AtendimentoInner() {
           </div>
         </div >
       </ContentModal >
+
+      {/* Modal de Anexos - Arquivos enviados pelo paciente */}
+      <ContentModal
+        isOpen={showAnexosModal}
+        onClose={() => setShowAnexosModal(false)}
+        title="📁 Arquivos Enviados pelo Paciente"
+        size="md"
+      >
+        <div style={{ padding: '0.25rem 0' }}>
+          {loadingAnexos ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem', gap: '1rem' }}>
+              <div className="spinner" style={{ width: '32px', height: '32px' }} />
+              <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Buscando arquivos...</span>
+            </div>
+          ) : anexos.length > 0 ? (
+            <>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', marginBottom: '1rem', padding: '0 0.25rem' }}>
+                {anexos.length} arquivo{anexos.length !== 1 ? 's' : ''} enviado{anexos.length !== 1 ? 's' : ''} pelo paciente para esta consulta.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {anexos.map((file) => {
+                  const isPdf = file.tipo?.includes('pdf');
+                  const isImage = file.tipo?.includes('image');
+                  const iconBg = isPdf ? '#fee2e2' : isImage ? '#e0f2fe' : 'var(--bg-tertiary)';
+                  const iconColor = isPdf ? '#ef4444' : isImage ? '#0ea5e9' : 'var(--color-primary-500)';
+                  const typeLabel = isPdf ? 'PDF' : isImage ? 'Imagem' : (file.tipo?.split('/')[1]?.toUpperCase() || 'Arquivo');
+                  return (
+                    <div key={file.id} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.875rem 1rem',
+                      background: 'var(--bg-secondary)',
+                      borderRadius: '12px',
+                      border: '1px solid var(--border-color)',
+                      transition: 'border-color 0.2s',
+                      gap: '0.75rem'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', minWidth: 0, flex: 1 }}>
+                        {/* Ícone do tipo de arquivo */}
+                        <div style={{
+                          width: '44px',
+                          height: '44px',
+                          background: iconBg,
+                          color: iconColor,
+                          borderRadius: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          {isImage ? (
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/>
+                            </svg>
+                          ) : isPdf ? (
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
+                            </svg>
+                          ) : (
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>
+                            </svg>
+                          )}
+                        </div>
+                        {/* Metadados do arquivo */}
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {file.nome || 'Arquivo sem nome'}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '2px' }}>
+                            <span style={{
+                              display: 'inline-block',
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              color: iconColor,
+                              background: iconBg,
+                              padding: '1px 6px',
+                              borderRadius: '4px',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.03em'
+                            }}>{typeLabel}</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                              {file.createdAt ? formatDate(file.createdAt) : 'Data indisponível'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Botão de ação */}
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn primary"
+                        style={{
+                          padding: '0.5rem 0.875rem',
+                          fontSize: '0.8rem',
+                          textDecoration: 'none',
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.375rem',
+                          borderRadius: '8px'
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Abrir
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-tertiary)' }}>
+              <div style={{ marginBottom: '1rem', opacity: 0.4 }}>
+                <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
+              </div>
+              <p style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Nenhum arquivo enviado</p>
+              <p style={{ fontSize: '0.85rem', lineHeight: 1.6 }}>O paciente não anexou exames ou documentos para esta consulta.</p>
+            </div>
+          )}
+        </div>
+      </ContentModal>
 
       <Modal
         isOpen={modal.isOpen}
