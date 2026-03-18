@@ -245,8 +245,9 @@ export default function HistoricoPage() {
         } else {
           searchMatch = false;
         }
-      } else if (searchResults === null || searchResults.length === 0) {
+      } else {
         // Busca por nome: correspondência aproximada por termos (partes do nome)
+        // Aplicamos SEMPRE a filtragem local como garantia extra de precisão
         const searchTerms = debouncedSearch.toLowerCase().split(' ').filter(part => part.length > 0);
         const itemName = getParticipantName(item).toLowerCase();
         
