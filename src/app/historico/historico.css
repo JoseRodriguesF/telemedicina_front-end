@@ -185,6 +185,24 @@
     outline: none;
 }
 
+/* Estados de validação de CPF */
+.history-search-field.search-field-error {
+    /* Borda vermelha aplicada no wrapper pai */
+    color: var(--text-primary);
+}
+
+.search-input-wrapper:has(.search-field-error) {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input-wrapper:has(.search-field-success) {
+    border-color: #16a34a;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
 @media (max-width: 1100px) {
     .history-filters {
         grid-template-columns: 1fr;

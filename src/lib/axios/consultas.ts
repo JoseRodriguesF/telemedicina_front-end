@@ -234,6 +234,17 @@ export type EndConsultaData = {
   diagnostico?: string;
   evolucao?: string;
   plano_terapeutico?: string;
+  ambulancia_endereco?: string;
+  ambulancia_complemento?: string;
+  ambulancia_info?: string;
+  ambulancia_telefone?: string;
+  // Campo estruturado (frontend-only, será desestruturado antes do envio)
+  endereco_ambulancia?: {
+    endereco?: string;
+    complemento?: string;
+    informacoes_adicionais?: string;
+    telefone?: string;
+  };
 };
 
 export async function endConsulta(
@@ -245,7 +256,18 @@ export async function endConsulta(
   try {
     const body: Partial<EndConsultaData & { hora_fim: string }> = {};
     if (hora_fim) body.hora_fim = hora_fim;
-    if (data) Object.assign(body, data);
+    if (data) {
+      // Desestrutura o campo endereco_ambulancia (objeto do frontend)
+      // nos campos planos que o backend espera
+      const { endereco_ambulancia, ...rest } = data;
+      Object.assign(body, rest);
+      if (endereco_ambulancia) {
+        if (endereco_ambulancia.endereco) body.ambulancia_endereco = endereco_ambulancia.endereco;
+        if (endereco_ambulancia.complemento) body.ambulancia_complemento = endereco_ambulancia.complemento;
+        if (endereco_ambulancia.informacoes_adicionais) body.ambulancia_info = endereco_ambulancia.informacoes_adicionais;
+        if (endereco_ambulancia.telefone) body.ambulancia_telefone = endereco_ambulancia.telefone;
+      }
+    }
     const res = await axios.post(`/api/consultas/${consultaId}/end`, body, { headers: { Authorization: `Bearer ${token}` } });
     return res.data as { ok: boolean };
   } catch (err) {

@@ -34,6 +34,8 @@ export default function HistoricoPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [activeTab, setActiveTab] = useState<'atendimentos' | 'prescricoes'>('atendimentos');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchMode, setSearchMode] = useState<'nome' | 'cpf'>('nome');
+  const [cpfValidationState, setCpfValidationState] = useState<'idle' | 'incomplete' | 'invalid' | 'valid'>('idle');
 
   // ✅ NOVO: Usar hooks otimizados
   const { historico: history, isLoading: loadingInternal } = useHistoricoCompleto();
@@ -43,6 +45,32 @@ export default function HistoricoPage() {
 
   // ✅ NOVO: Debounce na busca para evitar renderizações excessivas
   const debouncedSearch = useDebounce(searchTerm, 300);
+
+  // ─── Utilitários de CPF ───────────────────────────────────────────────────
+
+  /** Aplica a máscara visual ao CPF: 000.000.000-00 */
+  const formatCpfMask = (value: string): string => {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  };
+
+  /** Valida o CPF matematicamente (dígitos verificadores) */
+  const isValidCpf = (cpf: string): boolean => {
+    const digits = cpf.replace(/\D/g, '');
+    if (digits.length !== 11) return false;
+    if (/^(\d)\1{10}$/.test(digits)) return false; // todos iguais
+    const calcDigit = (slice: string, weights: number[]): number => {
+      const sum = slice.split('').reduce((acc, d, i) => acc + parseInt(d) * weights[i], 0);
+      const rem = (sum * 10) % 11;
+      return rem === 10 || rem === 11 ? 0 : rem;
+    };
+    const d1 = calcDigit(digits.slice(0, 9), [10, 9, 8, 7, 6, 5, 4, 3, 2]);
+    const d2 = calcDigit(digits.slice(0, 10), [11, 10, 9, 8, 7, 6, 5, 4, 3, 2]);
+    return d1 === parseInt(digits[9]) && d2 === parseInt(digits[10]);
+  };
 
   const medicoRating = profile?.medico?.avaliacao || null;
 
@@ -57,14 +85,35 @@ export default function HistoricoPage() {
     const performSearch = async () => {
       if (!debouncedSearch.trim()) {
         setSearchResults(null);
+        setCpfValidationState('idle');
         return;
+      }
+
+      // Modo CPF: só busca se o CPF for válido e completo
+      if (searchMode === 'cpf') {
+        const digits = debouncedSearch.replace(/\D/g, '');
+        if (digits.length < 11) {
+          setCpfValidationState('incomplete');
+          setSearchResults(null);
+          return;
+        }
+        if (!isValidCpf(debouncedSearch)) {
+          setCpfValidationState('invalid');
+          setSearchResults(null);
+          return;
+        }
+        setCpfValidationState('valid');
       }
 
       setIsSearching(true);
       try {
         const token = getToken();
         if (token) {
-          const results = await searchHistoricoConsultas(debouncedSearch, token);
+          // Para busca por CPF, envia parâmetro extra para o backend filtrar com precisão
+          const searchParam = searchMode === 'cpf'
+            ? `${debouncedSearch.replace(/\D/g, '')}&type=cpf`
+            : debouncedSearch;
+          const results = await searchHistoricoConsultas(searchParam, token);
           setSearchResults(results);
         }
       } catch (error) {
@@ -76,7 +125,8 @@ export default function HistoricoPage() {
     };
 
     performSearch();
-  }, [debouncedSearch]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, searchMode]);
 
   const getParticipantName = (item: PSFullHistoryItem) => {
     if (userType === 'paciente') {
@@ -158,20 +208,21 @@ export default function HistoricoPage() {
     // Se veio da API, o backend já filtrou. Se não, filtramos localmente.
     let searchMatch = true;
 
-    if ((searchResults === null || searchResults.length === 0) && debouncedSearch.trim()) {
-      const searchLower = debouncedSearch.toLowerCase();
-      const nameMatch = getParticipantName(item).toLowerCase().includes(searchLower);
-
-      let cpfMatch = false;
-      if (userType === 'medico' && item.paciente?.cpf) {
-        const cleanCpf = item.paciente.cpf.replace(/\D/g, '');
-        const cleanSearch = debouncedSearch.replace(/\D/g, '');
-        if (cleanSearch && cleanCpf.includes(cleanSearch)) {
-          cpfMatch = true;
+    if (debouncedSearch.trim()) {
+      if (searchMode === 'cpf') {
+        // Busca por CPF: sempre exige correspondência EXATA (11 dígitos)
+        if (userType === 'medico' && item.paciente?.cpf) {
+          const cleanCpf = item.paciente.cpf.replace(/\D/g, '');
+          const cleanSearch = debouncedSearch.replace(/\D/g, '');
+          searchMatch = cleanCpf === cleanSearch;
+        } else {
+          searchMatch = false;
         }
+      } else if (searchResults === null || searchResults.length === 0) {
+        // Busca por nome: correspondência parcial (apenas se não houver resultados da API)
+        const searchLower = debouncedSearch.toLowerCase();
+        searchMatch = getParticipantName(item).toLowerCase().includes(searchLower);
       }
-
-      searchMatch = nameMatch || cpfMatch;
     }
 
     let statusMatch = true;
@@ -309,17 +360,113 @@ export default function HistoricoPage() {
         </div>
 
         <div className="history-filters">
-          <div className="search-input-wrapper">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '1rem', color: 'var(--text-tertiary)' }}>
-              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-            </svg>
-            <input
-              type="text"
-              className="history-search-field"
-              placeholder={userType === 'paciente' ? "Buscar por nome do médico..." : "Buscar por nome ou CPF do paciente..."}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          {/* Toggle de modo de busca (apenas para médicos) */}
+          {userType === 'medico' && (
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>Buscar por:</span>
+              <button
+                onClick={() => { setSearchMode('nome'); setSearchTerm(''); setSearchResults(null); setCpfValidationState('idle'); }}
+                style={{
+                  padding: '0.3rem 0.85rem',
+                  borderRadius: '999px',
+                  border: '1.5px solid',
+                  borderColor: searchMode === 'nome' ? 'var(--primary)' : 'var(--border-color)',
+                  background: searchMode === 'nome' ? 'var(--primary)' : 'transparent',
+                  color: searchMode === 'nome' ? '#fff' : 'var(--text-secondary)',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Nome
+              </button>
+              <button
+                onClick={() => { setSearchMode('cpf'); setSearchTerm(''); setSearchResults(null); setCpfValidationState('idle'); }}
+                style={{
+                  padding: '0.3rem 0.85rem',
+                  borderRadius: '999px',
+                  border: '1.5px solid',
+                  borderColor: searchMode === 'cpf' ? 'var(--primary)' : 'var(--border-color)',
+                  background: searchMode === 'cpf' ? 'var(--primary)' : 'transparent',
+                  color: searchMode === 'cpf' ? '#fff' : 'var(--text-secondary)',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                CPF
+              </button>
+            </div>
+          )}
+
+          <div className="search-input-wrapper" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0 }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '1rem', color: 'var(--text-tertiary)', zIndex: 1 }}>
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+              </svg>
+              <input
+                type="text"
+                className={`history-search-field${
+                  userType === 'medico' && searchMode === 'cpf' && cpfValidationState === 'invalid' ? ' search-field-error' :
+                  userType === 'medico' && searchMode === 'cpf' && cpfValidationState === 'valid' ? ' search-field-success' : ''
+                }`}
+                placeholder={
+                  userType === 'paciente'
+                    ? 'Buscar por nome do médico...'
+                    : searchMode === 'cpf'
+                      ? 'Digite o CPF exato (000.000.000-00)'
+                      : 'Buscar por nome do paciente...'
+                }
+                value={searchTerm}
+                maxLength={searchMode === 'cpf' ? 14 : undefined}
+                onChange={(e) => {
+                  if (userType === 'medico' && searchMode === 'cpf') {
+                    // Detecta se o input parece CPF e aplica máscara
+                    const masked = formatCpfMask(e.target.value);
+                    setSearchTerm(masked);
+                    const digits = masked.replace(/\D/g, '');
+                    if (digits.length === 0) setCpfValidationState('idle');
+                    else if (digits.length < 11) setCpfValidationState('incomplete');
+                    else if (isValidCpf(masked)) setCpfValidationState('valid');
+                    else setCpfValidationState('invalid');
+                  } else {
+                    setSearchTerm(e.target.value);
+                  }
+                }}
+              />
+              {/* Ícone de status de CPF */}
+              {userType === 'medico' && searchMode === 'cpf' && cpfValidationState === 'valid' && (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', right: '1rem' }}>
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              )}
+              {userType === 'medico' && searchMode === 'cpf' && cpfValidationState === 'invalid' && (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', right: '1rem' }}>
+                  <circle cx="12" cy="12" r="10" /><path d="m15 9-6 6" /><path d="m9 9 6 6" />
+                </svg>
+              )}
+            </div>
+            {/* Mensagem de validação do CPF */}
+            {userType === 'medico' && searchMode === 'cpf' && (
+              <div style={{
+                fontSize: '0.75rem',
+                marginTop: '0.35rem',
+                paddingLeft: '0.25rem',
+                color:
+                  cpfValidationState === 'valid' ? '#16a34a' :
+                  cpfValidationState === 'invalid' ? '#dc2626' :
+                  cpfValidationState === 'incomplete' ? 'var(--text-tertiary)' : 'transparent',
+                minHeight: '1.1rem',
+                transition: 'color 0.2s'
+              }}>
+                {cpfValidationState === 'incomplete' && 'Digite os 11 dígitos completos do CPF'}
+                {cpfValidationState === 'invalid' && 'CPF inválido — verifique o número digitado'}
+                {cpfValidationState === 'valid' && '✓ CPF válido — buscando paciente...'}
+                {cpfValidationState === 'idle' && '\u00a0'}
+              </div>
+            )}
           </div>
 
           <div className="date-filter-wrapper">
@@ -604,6 +751,60 @@ export default function HistoricoPage() {
                 <p className="detail-text">{selectedItem.destino_final || 'Não registrado'}</p>
               </div>
             </div>
+
+            {/* Bloco de dados de ambulância - exibido quando o destino final inclui ambulância */}
+            {(selectedItem.ambulancia_endereco || selectedItem.ambulancia_telefone || selectedItem.ambulancia_info || selectedItem.ambulancia_complemento) && (() => {
+              const isVermelho = selectedItem.destino_final?.toLowerCase().includes('vermelho');
+              const accentColor = isVermelho ? '#dc2626' : '#b45309';
+              const bgColor = isVermelho ? 'rgba(220, 38, 38, 0.06)' : 'rgba(245, 158, 11, 0.06)';
+              const borderColor = isVermelho ? 'rgba(220, 38, 38, 0.25)' : 'rgba(245, 158, 11, 0.25)';
+              const badgeBg = isVermelho ? 'rgba(220, 38, 38, 0.12)' : 'rgba(245, 158, 11, 0.12)';
+              const icon = isVermelho ? '🚨' : '🚑';
+              const label = isVermelho ? 'Alerta Vermelho — Envio de Ambulância' : 'Alerta Amarelo — Envio de Ambulância';
+              return (
+                <div className="details-section" style={{
+                  background: bgColor,
+                  padding: '1rem',
+                  borderRadius: '10px',
+                  marginTop: '1rem',
+                  border: `1px solid ${borderColor}`
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '1.1rem' }}>{icon}</span>
+                    <h4 style={{ color: accentColor, margin: 0, fontSize: '0.95rem', fontWeight: 700 }}>{label}</h4>
+                  </div>
+                  <div style={{ background: badgeBg, borderRadius: '8px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 600, color: accentColor, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>
+                      Ambulância foi enviada para:
+                    </div>
+                    {selectedItem.ambulancia_endereco && (
+                      <div className="detail-item" style={{ margin: 0 }}>
+                        <label style={{ color: accentColor }}>Endereço:</label>
+                        <span style={{ fontWeight: 600 }}>{selectedItem.ambulancia_endereco}</span>
+                      </div>
+                    )}
+                    {selectedItem.ambulancia_complemento && (
+                      <div className="detail-item" style={{ margin: 0 }}>
+                        <label style={{ color: accentColor }}>Complemento:</label>
+                        <span>{selectedItem.ambulancia_complemento}</span>
+                      </div>
+                    )}
+                    {selectedItem.ambulancia_telefone && (
+                      <div className="detail-item" style={{ margin: 0 }}>
+                        <label style={{ color: accentColor }}>Telefone:</label>
+                        <span>{selectedItem.ambulancia_telefone}</span>
+                      </div>
+                    )}
+                    {selectedItem.ambulancia_info && (
+                      <div className="detail-item" style={{ margin: 0 }}>
+                        <label style={{ color: accentColor }}>Observações:</label>
+                        <span>{selectedItem.ambulancia_info}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {selectedItem.prescricoes && selectedItem.prescricoes.length > 0 && (
               <div className="details-section" style={{ marginTop: '1.5rem' }}>

@@ -19,6 +19,7 @@ import ContentModal from '@/components/common/Modal/ContentModal';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import FormattedText from '@/components/common/FormattedText';
+import { buscarCID, type CID10 } from '@/lib/constants/cid10';
 
 type ChatMessage = { author: 'Você' | 'Médico' | 'Paciente'; text: string };
 
@@ -171,6 +172,9 @@ function AtendimentoInner() {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const hiddenFileInputRef = useRef<HTMLInputElement>(null);
   const [isConfirmingEnd, setIsConfirmingEnd] = useState(false);
+  const [cidSugestoes, setCidSugestoes] = useState<CID10[]>([]);
+  const [showCidSugestoes, setShowCidSugestoes] = useState(false);
+  const [showCidSugestoesModal, setShowCidSugestoesModal] = useState(false);
 
   const isScheduled = search.get('scheduled') === 'true';
 
@@ -464,6 +468,26 @@ function AtendimentoInner() {
       }
     } else {
       setShowMarcaSugestoes(false);
+    }
+  };
+
+  const handleDiagnosticoChange = (value: string, isModal = false) => {
+    setAtendimentoData(prev => ({ ...prev, diagnostico: value }));
+    const sugestoes = buscarCID(value);
+    setCidSugestoes(sugestoes);
+    if (isModal) {
+      setShowCidSugestoesModal(value.length >= 2 && sugestoes.length > 0);
+    } else {
+      setShowCidSugestoes(value.length >= 2 && sugestoes.length > 0);
+    }
+  };
+
+  const selectCID = (cid: CID10, isModal = false) => {
+    setAtendimentoData(prev => ({ ...prev, diagnostico: `${cid.codigo} - ${cid.nome}` }));
+    if (isModal) {
+      setShowCidSugestoesModal(false);
+    } else {
+      setShowCidSugestoes(false);
     }
   };
 
@@ -2022,17 +2046,33 @@ function AtendimentoInner() {
                     isFilled={!!atendimentoData.diagnostico}
                     isMissing={showValidation && !atendimentoData.diagnostico.trim()}
                   >
-                    <div className="address-search-wrapper">
+                    <div className="address-search-wrapper" style={{ position: 'relative' }}>
                       <input
                         type="text"
                         className="atendimento-input-small"
-                        placeholder="Buscar ou digitar diagnóstico..."
+                        placeholder="Buscar por CID ou nome da doença..."
                         value={atendimentoData.diagnostico}
-                        onChange={(e) => setAtendimentoData(prev => ({ ...prev, diagnostico: e.target.value }))}
+                        onChange={(e) => handleDiagnosticoChange(e.target.value)}
+                        onBlur={() => setTimeout(() => setShowCidSugestoes(false), 200)}
                       />
                       <span className="search-icon-inside">
                         <img src="/icons/Search.png" alt="Buscar" width="16" height="16" />
                       </span>
+
+                      {showCidSugestoes && cidSugestoes.length > 0 && (
+                        <div className="prescricao-suggestions" style={{ width: '100%', top: '100%', zIndex: 100 }}>
+                          {cidSugestoes.map((cid, idx) => (
+                            <div
+                              key={idx}
+                              className="prescricao-suggestions-item"
+                              style={{ padding: '0.75rem', borderBottom: '1px solid var(--border-color)' }}
+                              onClick={() => selectCID(cid)}
+                            >
+                              <strong style={{ color: 'var(--color-primary-600)' }}>{cid.codigo}</strong> - {cid.nome}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </Accordion>
                   <Accordion
@@ -2443,31 +2483,55 @@ function AtendimentoInner() {
               </div>
             )}
 
-            {(consultaSelecionada.ambulancia_endereco || consultaSelecionada.ambulancia_telefone) && (
-              <div className="details-section" style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '1rem', borderRadius: '8px', marginTop: '1rem', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-                <h4 style={{ color: '#b45309', marginBottom: '0.5rem' }}>Dados para Ambulância</h4>
-                <div className="details-grid" style={{ gridTemplateColumns: '1fr' }}>
-                  {consultaSelecionada.ambulancia_endereco && (
-                    <div className="detail-item">
-                      <label>Endereço:</label>
-                      <span>{consultaSelecionada.ambulancia_endereco} {consultaSelecionada.ambulancia_complemento ? ` - ${consultaSelecionada.ambulancia_complemento}` : ''}</span>
+            {(consultaSelecionada.ambulancia_endereco || consultaSelecionada.ambulancia_telefone || consultaSelecionada.ambulancia_info || consultaSelecionada.ambulancia_complemento) && (() => {
+              const isVermelho = consultaSelecionada.destino_final?.toLowerCase().includes('vermelho');
+              const accentColor = isVermelho ? '#dc2626' : '#b45309';
+              const bgColor = isVermelho ? 'rgba(220, 38, 38, 0.06)' : 'rgba(245, 158, 11, 0.06)';
+              const borderColor = isVermelho ? 'rgba(220, 38, 38, 0.25)' : 'rgba(245, 158, 11, 0.25)';
+              const badgeBg = isVermelho ? 'rgba(220, 38, 38, 0.12)' : 'rgba(245, 158, 11, 0.12)';
+              const icon = isVermelho ? '🚨' : '🚑';
+              const label = isVermelho ? 'Alerta Vermelho — Envio de Ambulância' : 'Alerta Amarelo — Envio de Ambulância';
+              return (
+                <div className="details-section" style={{ background: bgColor, padding: '1rem', borderRadius: '8px', marginTop: '1rem', border: `1px solid ${borderColor}` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '1.1rem' }}>{icon}</span>
+                    <h4 style={{ color: accentColor, margin: 0, fontSize: '0.95rem', fontWeight: 700 }}>{label}</h4>
+                  </div>
+                  <div style={{ background: badgeBg, borderRadius: '8px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 600, color: accentColor, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>
+                      Ambulância foi enviada para:
                     </div>
-                  )}
-                  {consultaSelecionada.ambulancia_telefone && (
-                    <div className="detail-item">
-                      <label>Telefone:</label>
-                      <span>{consultaSelecionada.ambulancia_telefone}</span>
+                    <div className="details-grid" style={{ gridTemplateColumns: '1fr' }}>
+                      {consultaSelecionada.ambulancia_endereco && (
+                        <div className="detail-item">
+                          <label style={{ color: accentColor }}>Endereço:</label>
+                          <span style={{ fontWeight: 600 }}>{consultaSelecionada.ambulancia_endereco}</span>
+                        </div>
+                      )}
+                      {consultaSelecionada.ambulancia_complemento && (
+                        <div className="detail-item">
+                          <label style={{ color: accentColor }}>Complemento:</label>
+                          <span>{consultaSelecionada.ambulancia_complemento}</span>
+                        </div>
+                      )}
+                      {consultaSelecionada.ambulancia_telefone && (
+                        <div className="detail-item">
+                          <label style={{ color: accentColor }}>Telefone:</label>
+                          <span>{consultaSelecionada.ambulancia_telefone}</span>
+                        </div>
+                      )}
+                      {consultaSelecionada.ambulancia_info && (
+                        <div className="detail-item">
+                          <label style={{ color: accentColor }}>Observações:</label>
+                          <span>{consultaSelecionada.ambulancia_info}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {consultaSelecionada.ambulancia_info && (
-                    <div className="detail-item">
-                      <label>Obaservações:</label>
-                      <span>{consultaSelecionada.ambulancia_info}</span>
-                    </div>
-                  )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
+
           </div>
         )}
       </ContentModal>
@@ -2516,14 +2580,35 @@ function AtendimentoInner() {
                     onChange={(e) => setAtendimentoData(prev => ({ ...prev, plano_terapeutico: e.target.value }))}
                   />
                 </div>
-                <div className="form-group">
-                  <label>Diagnóstico</label>
-                  <input
-                    type="text"
-                    className="atendimento-input-small"
-                    value={atendimentoData.diagnostico}
-                    onChange={(e) => setAtendimentoData(prev => ({ ...prev, diagnostico: e.target.value }))}
-                  />
+                <div className="form-group" style={{ position: 'relative' }}>
+                  <label>Diagnóstico (CID)</label>
+                  <div className="address-search-wrapper">
+                    <input
+                      type="text"
+                      className="atendimento-input-small"
+                      placeholder="Buscar por CID ou nome da doença..."
+                      value={atendimentoData.diagnostico}
+                      onChange={(e) => handleDiagnosticoChange(e.target.value, true)}
+                      onBlur={() => setTimeout(() => setShowCidSugestoesModal(false), 200)}
+                    />
+                    <span className="search-icon-inside">
+                      <img src="/icons/Search.png" alt="Buscar" width="16" height="16" />
+                    </span>
+                  </div>
+                  {showCidSugestoesModal && cidSugestoes.length > 0 && (
+                    <div className="prescricao-suggestions" style={{ width: '100%', top: '100%', zIndex: 100 }}>
+                      {cidSugestoes.map((cid, idx) => (
+                        <div
+                          key={idx}
+                          className="prescricao-suggestions-item"
+                          style={{ padding: '0.75rem', borderBottom: '1px solid var(--border-color)' }}
+                          onClick={() => selectCID(cid, true)}
+                        >
+                          <strong style={{ color: 'var(--color-primary-600)' }}>{cid.codigo}</strong> - {cid.nome}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="form-row">
                   <div className="form-group">
