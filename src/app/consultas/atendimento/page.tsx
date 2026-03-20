@@ -179,6 +179,7 @@ function AtendimentoInner() {
   const hiddenFileInputRef = useRef<HTMLInputElement>(null);
   const [isConfirmingEnd, setIsConfirmingEnd] = useState(false);
   const [cidSugestoes, setCidSugestoes] = useState<CID10[]>([]);
+  const [cidSearch, setCidSearch] = useState('');
   const [showCidSugestoes, setShowCidSugestoes] = useState(false);
   const [showCidSugestoesModal, setShowCidSugestoesModal] = useState(false);
 
@@ -186,6 +187,7 @@ function AtendimentoInner() {
   const [anexos, setAnexos] = useState<ConsultaAnexo[]>([]);
   const [showAnexosModal, setShowAnexosModal] = useState(false);
   const [loadingAnexos, setLoadingAnexos] = useState(false);
+  const [loadingAnexosHistory, setLoadingAnexosHistory] = useState(false);
 
   const isScheduled = search.get('scheduled') === 'true';
 
@@ -274,6 +276,23 @@ function AtendimentoInner() {
 
   // Buscar histórico de prescrições do paciente se for médico
   useEffect(() => {
+    async function fetchAnexosHistory() {
+      if (consultaSelecionada && !consultaSelecionada.anexos && token) {
+        setLoadingAnexosHistory(true);
+        try {
+          const list = await listAnexosConsulta(consultaSelecionada.id, token);
+          setConsultaSelecionada(prev => prev ? { ...prev, anexos: list } : null);
+        } catch (err) {
+          console.error('Erro ao buscar anexos do histórico:', err);
+        } finally {
+          setLoadingAnexosHistory(false);
+        }
+      }
+    }
+    fetchAnexosHistory();
+  }, [consultaSelecionada?.id, token]);
+
+  useEffect(() => {
     async function fetchPrescriptionHistory() {
       if (consultaDetails && token && user?.tipo_usuario === 'medico' && isClaimed) {
         const pacienteId = consultaDetails.pacienteId;
@@ -338,6 +357,7 @@ function AtendimentoInner() {
     repouso: '',
     destino_final: '',
     especialidade_seguimento: '',
+    selectedCIDs: [] as CID10[],
     endereco_ambulancia: {
       endereco: '',
       complemento: '',
@@ -483,23 +503,52 @@ function AtendimentoInner() {
   };
 
   const handleDiagnosticoChange = (value: string, isModal = false) => {
-    setAtendimentoData(prev => ({ ...prev, diagnostico: value }));
+    setCidSearch(value);
     const sugestoes = buscarCID(value);
     setCidSugestoes(sugestoes);
     if (isModal) {
-      setShowCidSugestoesModal(value.length >= 2 && sugestoes.length > 0);
+      setShowCidSugestoesModal(value.length >= 1 && sugestoes.length > 0);
     } else {
-      setShowCidSugestoes(value.length >= 2 && sugestoes.length > 0);
+      setShowCidSugestoes(value.length >= 1 && sugestoes.length > 0);
     }
   };
 
   const selectCID = (cid: CID10, isModal = false) => {
-    setAtendimentoData(prev => ({ ...prev, diagnostico: `${cid.codigo} - ${cid.nome}` }));
+    // Adicionar à lista se não existir
+    setAtendimentoData(prev => {
+      const alreadyExists = prev.selectedCIDs.some(c => c.codigo === cid.codigo);
+      if (alreadyExists) return prev;
+
+      const newCIDs = [...prev.selectedCIDs, cid];
+      // Atualizar o campo de texto diagnostico também para compatibilidade no envio
+      const diagnosticoText = newCIDs.map(c => `${c.codigo} - ${c.nome}`).join(', ');
+      
+      return { 
+        ...prev, 
+        selectedCIDs: newCIDs,
+        diagnostico: diagnosticoText
+      };
+    });
+
+    setCidSearch('');
     if (isModal) {
       setShowCidSugestoesModal(false);
     } else {
       setShowCidSugestoes(false);
     }
+  };
+
+  const removeCID = (cidCodigo: string) => {
+    setAtendimentoData(prev => {
+      const newCIDs = prev.selectedCIDs.filter(c => c.codigo !== cidCodigo);
+      const diagnosticoText = newCIDs.map(c => `${c.codigo} - ${c.nome}`).join(', ');
+      
+      return { 
+        ...prev, 
+        selectedCIDs: newCIDs,
+        diagnostico: diagnosticoText
+      };
+    });
   };
 
   // Handler para deletar uma prescrição
@@ -2157,33 +2206,68 @@ function AtendimentoInner() {
                     isFilled={!!atendimentoData.diagnostico}
                     isMissing={showValidation && !atendimentoData.diagnostico.trim()}
                   >
-                    <div className="address-search-wrapper" style={{ position: 'relative' }}>
-                      <input
-                        type="text"
-                        className="atendimento-input-small"
-                        placeholder="Buscar por CID ou nome da doença..."
-                        value={atendimentoData.diagnostico}
-                        onChange={(e) => handleDiagnosticoChange(e.target.value)}
-                        onBlur={() => setTimeout(() => setShowCidSugestoes(false), 200)}
-                      />
-                      <span className="search-icon-inside">
-                        <img src="/icons/Search.png" alt="Buscar" width="16" height="16" />
-                      </span>
-
-                      {showCidSugestoes && cidSugestoes.length > 0 && (
-                        <div className="prescricao-suggestions" style={{ width: '100%', top: '100%', zIndex: 100 }}>
-                          {cidSugestoes.map((cid, idx) => (
-                            <div
-                              key={idx}
-                              className="prescricao-suggestions-item"
-                              style={{ padding: '0.75rem', borderBottom: '1px solid var(--border-color)' }}
-                              onClick={() => selectCID(cid)}
+                    <div className="cid-selection-container">
+                      <div className="cid-chips-wrapper">
+                        {atendimentoData.selectedCIDs.map(cid => (
+                          <div key={cid.codigo} className="cid-chip">
+                            <span className="cid-chip-code">{cid.codigo}</span>
+                            <span className="cid-chip-name">{cid.nome}</span>
+                            <button 
+                              className="cid-chip-remove" 
+                              onClick={() => removeCID(cid.codigo)}
+                              type="button"
+                              title="Remover CID"
                             >
-                              <strong style={{ color: 'var(--color-primary-600)' }}>{cid.codigo}</strong> - {cid.nome}
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="address-search-wrapper" style={{ position: 'relative' }}>
+                        <input
+                          type="text"
+                          className="atendimento-input-small"
+                          placeholder={atendimentoData.selectedCIDs.length > 0 ? "Adicionar outro CID..." : "Buscar por CID ou nome da doença..."}
+                          value={cidSearch}
+                          onChange={(e) => handleDiagnosticoChange(e.target.value)}
+                          onBlur={() => setTimeout(() => setShowCidSugestoes(false), 200)}
+                        />
+                        <span className="search-icon-inside">
+                          <img src="/icons/Search.png" alt="Buscar" width="16" height="16" />
+                        </span>
+
+                        {showCidSugestoes && cidSugestoes.length > 0 && (
+                          <div className="prescricao-suggestions" style={{ width: '100%', top: '100%', zIndex: 100 }}>
+                            {cidSugestoes.map((cid, idx) => (
+                              <div
+                                key={idx}
+                                className="prescricao-suggestions-item"
+                                style={{ padding: '0.75rem', borderBottom: '1px solid var(--border-color)' }}
+                                onClick={() => selectCID(cid)}
+                              >
+                                <strong style={{ color: 'var(--color-primary-600)' }}>{cid.codigo}</strong> - {cid.nome}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="diagnostico-manual-wrapper" style={{ marginTop: '12px' }}>
+                        <span className="input-label-text">Observações do Diagnóstico</span>
+                        <textarea
+                          className="atendimento-textarea"
+                          style={{ minHeight: '60px', padding: '8px', fontSize: '0.85rem' }}
+                          placeholder="Complemento manual do diagnóstico (opcional)..."
+                          value={atendimentoData.diagnostico.split(', ').filter(s => !atendimentoData.selectedCIDs.some(c => `${c.codigo} - ${c.nome}` === s)).join(', ')}
+                          onChange={(e) => {
+                            const manualText = e.target.value;
+                            const cidText = atendimentoData.selectedCIDs.map(c => `${c.codigo} - ${c.nome}`).join(', ');
+                            const fullText = cidText ? (manualText ? `${cidText}, ${manualText}` : cidText) : manualText;
+                            setAtendimentoData(prev => ({ ...prev, diagnostico: fullText }));
+                          }}
+                        />
+                      </div>
                     </div>
                   </Accordion>
                   <Accordion
@@ -2709,6 +2793,56 @@ function AtendimentoInner() {
               );
             })()}
 
+            {(consultaSelecionada.anexos && consultaSelecionada.anexos.length > 0) || loadingAnexosHistory ? (
+              <div className="details-section" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+                <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-primary-600)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                  Arquivos da Consulta
+                </h4>
+                {loadingAnexosHistory ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '1rem', color: '#6b7280', fontSize: '0.9rem' }}>
+                    <div className="mini-spinner"></div>
+                    Pesquisando anexos...
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+                    {consultaSelecionada.anexos?.map((file, idx) => (
+                      <div key={idx} className="anexo-item-history" style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        padding: '10px 14px',
+                        background: 'var(--bg-secondary)',
+                        borderRadius: '10px',
+                        border: '1px solid var(--border-color)'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-primary-500)' }}><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{file.nome}</span>
+                        </div>
+                        <button 
+                          className="btn-open-anexo"
+                          onClick={() => window.open(file.url, '_blank')}
+                          style={{
+                            background: 'var(--color-primary-50)',
+                            color: 'var(--color-primary-600)',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Abrir
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
+
           </div>
         )}
       </ContentModal>
@@ -2759,12 +2893,21 @@ function AtendimentoInner() {
                 </div>
                 <div className="form-group" style={{ position: 'relative' }}>
                   <label>Diagnóstico (CID)</label>
+                  <div className="cid-chips-wrapper" style={{ marginBottom: '8px' }}>
+                    {atendimentoData.selectedCIDs.map(cid => (
+                      <div key={cid.codigo} className="cid-chip">
+                        <span className="cid-chip-code">{cid.codigo}</span>
+                        <span className="cid-chip-name" style={{ maxWidth: '120px' }}>{cid.nome}</span>
+                        <button className="cid-chip-remove" onClick={() => removeCID(cid.codigo)} type="button">✕</button>
+                      </div>
+                    ))}
+                  </div>
                   <div className="address-search-wrapper">
                     <input
                       type="text"
                       className="atendimento-input-small"
-                      placeholder="Buscar por CID ou nome da doença..."
-                      value={atendimentoData.diagnostico}
+                      placeholder="Adicionar CID..."
+                      value={cidSearch}
                       onChange={(e) => handleDiagnosticoChange(e.target.value, true)}
                       onBlur={() => setTimeout(() => setShowCidSugestoesModal(false), 200)}
                     />
@@ -2778,7 +2921,6 @@ function AtendimentoInner() {
                         <div
                           key={idx}
                           className="prescricao-suggestions-item"
-                          style={{ padding: '0.75rem', borderBottom: '1px solid var(--border-color)' }}
                           onClick={() => selectCID(cid, true)}
                         >
                           <strong style={{ color: 'var(--color-primary-600)' }}>{cid.codigo}</strong> - {cid.nome}
@@ -2786,6 +2928,18 @@ function AtendimentoInner() {
                       ))}
                     </div>
                   )}
+                  <textarea
+                    className="atendimento-textarea"
+                    style={{ minHeight: '60px', marginTop: '8px', fontSize: '0.85rem' }}
+                    placeholder="Complemento manual..."
+                    value={atendimentoData.diagnostico.split(', ').filter(s => !atendimentoData.selectedCIDs.some(c => `${c.codigo} - ${c.nome}` === s)).join(', ')}
+                    onChange={(e) => {
+                      const manualText = e.target.value;
+                      const cidText = atendimentoData.selectedCIDs.map(c => `${c.codigo} - ${c.nome}`).join(', ');
+                      const fullText = cidText ? (manualText ? `${cidText}, ${manualText}` : cidText) : manualText;
+                      setAtendimentoData(prev => ({ ...prev, diagnostico: fullText }));
+                    }}
+                  />
                 </div>
                 <div className="form-row">
                   <div className="form-group">

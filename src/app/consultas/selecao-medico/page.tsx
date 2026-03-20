@@ -82,7 +82,7 @@ function SelecaoMedicoInner() {
         }
         setLoading(true);
         try {
-            const { agendarConsulta } = await import('@/lib/axios/consultas');
+            const { agendarConsulta, enviarAnexosConsulta } = await import('@/lib/axios/consultas');
             const payload = {
                 medico_id: doc.id,
                 paciente_id: user.id,
@@ -90,7 +90,24 @@ function SelecaoMedicoInner() {
                 hora_inicio: time,
                 historiaClinicaId: historiaId ? Number(historiaId) : undefined
             };
-            await agendarConsulta(payload, token);
+            const result = await agendarConsulta(payload, token);
+            const consultaId = result.consultaId || result.id;
+
+            // ✅ NOVO: Verificar se houveram anexos na triagem prévia
+            if (consultaId) {
+                const pendingAnexosStr = sessionStorage.getItem('pending_anexos');
+                if (pendingAnexosStr) {
+                    try {
+                        const pendingAnexos = JSON.parse(pendingAnexosStr);
+                        if (Array.isArray(pendingAnexos) && pendingAnexos.length > 0) {
+                            await enviarAnexosConsulta(consultaId, token, pendingAnexos);
+                        }
+                        sessionStorage.removeItem('pending_anexos');
+                    } catch (e) {
+                        console.error('Erro ao enviar anexos pendentes:', e);
+                    }
+                }
+            }
 
             modal.success(
                 'Solicitação Enviada',

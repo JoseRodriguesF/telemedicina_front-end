@@ -414,6 +414,7 @@ export type PSFullHistoryItem = {
   } | null;
   prescricoes: any[]; // Pode trocar por Prescricao[] se importar do outro lib
   historiaClinica?: HistoriaClinicaItem[];
+  anexos?: ConsultaAnexo[];
 };
 
 export async function psGetFullHistory(token: string): Promise<PSFullHistoryItem[]> {

@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
-import { PSFullHistoryItem, searchHistoricoConsultas } from '@/lib/axios/consultas';
+import { PSFullHistoryItem, searchHistoricoConsultas, listAnexosConsulta, ConsultaAnexo } from '@/lib/axios/consultas';
 // ✅ NOVO: Importar hooks otimizados
 import { useHistoricoCompleto, useUserProfile } from '@/hooks/useApiData';
 import { useDebounce } from '@/hooks/useOptimization';
@@ -36,6 +36,7 @@ export default function HistoricoPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchMode, setSearchMode] = useState<'nome' | 'cpf'>('nome');
   const [cpfValidationState, setCpfValidationState] = useState<'idle' | 'incomplete' | 'invalid' | 'valid'>('idle');
+  const [loadingAnexos, setLoadingAnexos] = useState(false);
 
   // ✅ NOVO: Usar hooks otimizados
   const { historico: history, isLoading: loadingInternal } = useHistoricoCompleto();
@@ -154,6 +155,26 @@ export default function HistoricoPage() {
     performSearch();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, searchMode]);
+
+  useEffect(() => {
+    async function fetchAnexos() {
+      if (selectedItem && showDetails && !selectedItem.anexos) {
+        setLoadingAnexos(true);
+        try {
+          const token = getToken();
+          if (token) {
+            const list = await listAnexosConsulta(selectedItem.id, token);
+            setSelectedItem(prev => prev ? { ...prev, anexos: list } : null);
+          }
+        } catch (err) {
+          console.error('Erro ao buscar anexos:', err);
+        } finally {
+          setLoadingAnexos(false);
+        }
+      }
+    }
+    fetchAnexos();
+  }, [selectedItem?.id, showDetails]);
 
   const getParticipantName = (item: PSFullHistoryItem) => {
     if (userType === 'paciente') {
@@ -794,6 +815,59 @@ export default function HistoricoPage() {
                 </div>
               </div>
             )}
+
+            {/* Seção de Anexos */}
+            {(selectedItem.anexos && selectedItem.anexos.length > 0) || loadingAnexos ? (
+              <div className="details-section" style={{ marginTop: '1.5rem' }}>
+                <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                  Arquivos da Consulta
+                </h4>
+                {loadingAnexos ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '1rem', color: 'var(--text-tertiary)' }}>
+                    <div className="mini-spinner"></div>
+                    <span>Carregando arquivos...</span>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {selectedItem.anexos?.map((file, idx) => (
+                      <div key={idx} style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        background: 'var(--bg-secondary)',
+                        padding: '0.85rem 1rem',
+                        borderRadius: '12px',
+                        border: '1px solid var(--border-color)'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', overflow: 'hidden' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: 'var(--color-primary-500)' }}><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                          <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                            {file.nome}
+                          </span>
+                        </div>
+                        <button 
+                          onClick={() => window.open(file.url, '_blank')}
+                          className="btn-ver-anexo"
+                          style={{
+                            background: 'var(--color-primary-50)',
+                            border: 'none',
+                            color: 'var(--color-primary-600)',
+                            cursor: 'pointer',
+                            padding: '0.4rem 0.8rem',
+                            borderRadius: '6px',
+                            fontSize: '0.8rem',
+                            fontWeight: 600
+                          }}
+                        >
+                          Abrir
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         )}
       </ContentModal>
