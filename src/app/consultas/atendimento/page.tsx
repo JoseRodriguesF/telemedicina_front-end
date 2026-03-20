@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
-import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta, updatePacienteNotas, listAnexosConsulta, type ConsultaAnexo } from '@/lib/axios/consultas';
+import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta, updatePacienteNotas, listAnexosConsulta, type ConsultaAnexo, enviarAnexosConsulta } from '@/lib/axios/consultas';
 import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas, getPrescricoesByConsulta, deletePrescricao, getPrescricoesByPaciente, Prescricao as PrescricaoType, downloadPrescricaoPdf } from '@/lib/axios/prescricoes';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
@@ -24,7 +24,7 @@ import { buscarCID, type CID10 } from '@/lib/constants/cid10';
 type ChatMessage = { 
   author: 'Você' | 'Médico' | 'Paciente'; 
   text?: string;
-  attachment?: { id: number; nome: string; tipo_mime: string; url: string }
+  attachment?: { id?: number; nome?: string; tipo_mime?: string; url?: string }
 };
 
 function calculateAge(birthDate: string | Date | undefined): string {
@@ -1364,13 +1364,18 @@ function AtendimentoInner() {
    * Disponível apenas para o médico durante o atendimento.
    */
   async function handleOpenAnexos() {
+    console.log('[Atendimento] Abrindo modal de anexos...');
     const curCid = getConsultaIdFromUrl() || consultaIdState || consultaId;
-    if (!curCid || !token) return;
+    if (!curCid || !token) {
+      console.warn('[Atendimento] Consulta ID ou token ausente:', { curCid, hasToken: !!token });
+      return;
+    }
 
     setShowAnexosModal(true);
     setLoadingAnexos(true);
     try {
       const lista = await listAnexosConsulta(curCid, token);
+      console.log('[Atendimento] Anexos buscados:', lista.length);
       setAnexos(lista);
     } catch (err) {
       console.error('[Atendimento] Erro ao buscar anexos:', err);
@@ -1943,7 +1948,6 @@ function AtendimentoInner() {
                     {remoteConnected ? `Tempo de consulta: ${formatElapsedTime(elapsedSeconds)}` : (statusText || 'Em consulta')}
                   </div>
                   <div className="call-screen">
-                    <div className="call-screen">
                       <video
                         ref={remoteRef}
                         className="remote-video large"
@@ -2039,8 +2043,7 @@ function AtendimentoInner() {
                         )}
                       </div>
                     </div>
-                  </div>
-                </section>
+                  </section>
 
                 <div className="medico-actions-toolbar">
                   <div className="call-controls">
@@ -2350,7 +2353,6 @@ function AtendimentoInner() {
                                 </div>
                                 <Button 
                                   variant="ghost" 
-                                  size="sm" 
                                   onClick={() => window.open(m.attachment?.url, '_blank')}
                                 >
                                   Abrir
@@ -2404,7 +2406,6 @@ function AtendimentoInner() {
                 {remoteConnected ? `Tempo de consulta: ${formatElapsedTime(elapsedSeconds)}` : 'Você está em uma consulta'}
               </div>
               <div className="call-screen">
-                <div className="call-screen">
                   <video
                     ref={remoteRef}
                     className="remote-video large"
@@ -2524,8 +2525,7 @@ function AtendimentoInner() {
                     <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
                   </button>
                 </div>
-              </div>
-            </section>
+              </section>
 
             {showChat && (
               <aside className="chat-panel" aria-label="Chat da consulta">
@@ -2550,7 +2550,6 @@ function AtendimentoInner() {
                               </div>
                               <Button 
                                 variant="ghost" 
-                                size="sm" 
                                 onClick={() => window.open(m.attachment?.url, '_blank')}
                               >
                                 Abrir
@@ -2913,8 +2912,8 @@ function AtendimentoInner() {
               Confirmar e Finalizar Atendimento
             </Button>
           </div>
-        </div >
-      </ContentModal >
+        </div>
+      </ContentModal>
 
       {/* Modal de Anexos - Arquivos enviados pelo paciente */}
       <ContentModal
@@ -2936,11 +2935,11 @@ function AtendimentoInner() {
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {anexos.map((file) => {
-                  const isPdf = file.tipo?.includes('pdf');
-                  const isImage = file.tipo?.includes('image');
+                  const isPdf = file.tipo_mime?.includes('pdf');
+                  const isImage = file.tipo_mime?.includes('image');
                   const iconBg = isPdf ? '#fee2e2' : isImage ? '#e0f2fe' : 'var(--bg-tertiary)';
                   const iconColor = isPdf ? '#ef4444' : isImage ? '#0ea5e9' : 'var(--color-primary-500)';
-                  const typeLabel = isPdf ? 'PDF' : isImage ? 'Imagem' : (file.tipo?.split('/')[1]?.toUpperCase() || 'Arquivo');
+                  const typeLabel = isPdf ? 'PDF' : isImage ? 'Imagem' : (file.tipo_mime?.split('/')[1]?.toUpperCase() || 'Arquivo');
                   return (
                     <div key={file.id} style={{
                       display: 'flex',
@@ -3134,7 +3133,7 @@ function AtendimentoInner() {
           </div>
         </div>
       </div>
-    </div >
+    </div>
   );
 }
 
