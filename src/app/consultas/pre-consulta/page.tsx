@@ -461,39 +461,63 @@ function PreConsultaInner() {
                       </div>
                     )}
 
-                    {/* SEÇÃO DE ANEXOS */}
-                    <div className="pc-relatorio-section" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem', marginTop: '1rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                        <h3 style={{ margin: 0 }}>📁 Exames e Documentos</h3>
+
+                  </div>
+
+                  <div className="pc-relatorio-disclaimer">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    As informações acima serão compartilhadas com o médico durante o atendimento.
+                  </div>
+
+                  {/* SEÇÃO DE ANEXOS - BOTÃO A PARTE */}
+                  <div className="pc-anexos-container" style={{
+                    marginTop: '1.5rem',
+                    marginBottom: '1rem',
+                    background: 'var(--bg-primary)',
+                    borderRadius: '16px',
+                    padding: '1.25rem',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.04)',
+                    border: '1px solid var(--border-color)',
+                  }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                            Anexar Exames (Opcional)
+                          </h3>
+                          <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Você pode incluir fotos, laudos ou receitas anteriores</p>
+                        </div>
                         <button 
                           className="pc-add-file-btn"
                           onClick={() => fileInputRef.current?.click()}
                           disabled={isUploading}
                           style={{
-                            background: 'var(--color-primary-600)',
-                            color: 'white',
-                            border: 'none',
+                            background: anexos.length > 0 ? 'var(--bg-secondary)' : 'var(--color-primary-600)',
+                            color: anexos.length > 0 ? 'var(--text-primary)' : 'white',
+                            border: anexos.length > 0 ? '1px solid var(--border-color)' : 'none',
                             padding: '0.6rem 1.25rem',
-                            borderRadius: 'var(--radius-full)',
+                            borderRadius: '10px',
                             fontSize: '0.85rem',
-                            fontWeight: 700,
+                            fontWeight: 600,
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.5rem',
-                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.25)',
                             transition: 'all 0.2s ease'
                           }}
                         >
                           {isUploading ? (
                              <>
-                               <span className="pc-btn-spinner" style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white' }} />
+                               <span className="pc-btn-spinner" style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: anexos.length > 0 ? 'var(--color-primary-600)' : 'white' }} />
                                Carregando...
                              </>
                           ) : (
                             <>
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                              Anexar arquivo
+                              {anexos.length > 0 ? 'Adicionar mais' : 'Anexar arquivo'}
                             </>
                           )}
                         </button>
@@ -506,76 +530,54 @@ function PreConsultaInner() {
                         />
                       </div>
 
-                      {anexos.length > 0 ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {anexos.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', borderTop: '1px dashed var(--border-color)', paddingTop: '1rem' }}>
                           {anexos.map((file, idx) => (
                             <div key={idx} style={{ 
                               display: 'flex', 
                               alignItems: 'center', 
                               justifyContent: 'space-between',
                               background: 'var(--bg-secondary)',
-                              padding: '0.85rem 1rem',
-                              borderRadius: '12px',
-                              border: '1px solid var(--border-color)',
-                              boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                              padding: '0.75rem 1rem',
+                              borderRadius: '8px',
+                              border: '1px solid var(--border-color)'
                             }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', overflow: 'hidden' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', overflow: 'hidden' }}>
                                 <div style={{ 
-                                  width: '36px', 
-                                  height: '36px', 
-                                  background: 'var(--color-primary-50)', 
                                   color: 'var(--color-primary-600)',
-                                  borderRadius: '8px',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
                                   flexShrink: 0
                                 }}>
-                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
                                 </div>
-                                <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                                <span style={{ fontWeight: 500, fontSize: '0.85rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
                                   {file.nome}
                                 </span>
                               </div>
                               <button 
                                 onClick={() => removeAnexo(idx)}
                                 style={{
-                                  background: 'rgba(239, 68, 68, 0.08)',
+                                  background: 'none',
                                   border: 'none',
-                                  color: '#ef4444',
+                                  color: 'var(--text-tertiary)',
                                   cursor: 'pointer',
-                                  padding: '0.5rem',
-                                  borderRadius: '8px',
-                                  transition: 'all 0.2s'
+                                  padding: '0.25rem',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transition: 'color 0.2s'
                                 }}
                                 title="Remover"
                               >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                               </button>
                             </div>
                           ))}
                         </div>
-                      ) : (
-                        <div style={{ 
-                          textAlign: 'center', 
-                          padding: '2rem 1rem', 
-                          background: 'var(--bg-tertiary)', 
-                          borderRadius: '12px',
-                          border: '1px dashed var(--border-color)'
-                        }}>
-                          <p style={{ fontSize: '0.85rem', color: 'var(--text-tertiary)', margin: 0 }}>
-                            Nenhum arquivo anexado ainda.
-                          </p>
-                        </div>
                       )}
                     </div>
-                  </div>
-
-                  <div className="pc-relatorio-disclaimer">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
-                    As informações acima serão compartilhadas com o médico durante o atendimento.
                   </div>
 
                   <div className="pc-relatorio-actions">
