@@ -3,7 +3,8 @@ export type CID10 = {
   nome: string;
 };
 
-export const LISTA_CID10: CID10[] = [
+// Keep the old list for very basic/common cases if needed, but the new API is much more comprehensive
+export const LISTA_CID10_BASICA: CID10[] = [
   { codigo: 'A09', nome: 'Diarreia e gastroenterite de origem infecciosa' },
   { codigo: 'B34.9', nome: 'Infecção viral não especificada' },
   { codigo: 'J00', nome: 'Nasofaringite aguda (resfriado comum)' },
@@ -38,31 +39,28 @@ export const LISTA_CID10: CID10[] = [
   { codigo: 'Z00', nome: 'Exame geral e investigação de pessoas sem queixas' },
   { codigo: 'Z02.7', nome: 'Obtenção de atestado médico' },
   { codigo: 'Z76.5', nome: 'Pessoa fingindo ser doente (simulação)' },
-  { codigo: 'B00', nome: 'Infecções pelo vírus do herpes simples' },
-  { codigo: 'B01', nome: 'Varicela (catapora)' },
-  { codigo: 'B02', nome: 'Herpes zoster' },
-  { codigo: 'G43', nome: 'Enxaqueca' },
-  { codigo: 'H10', nome: 'Conjuntivite' },
-  { codigo: 'H66', nome: 'Otite média não supurativa' },
-  { codigo: 'I10', nome: 'Hipertensão essencial (primária)' },
-  { codigo: 'K59.0', nome: 'Constipação' },
-  { codigo: 'L20', nome: 'Dermatite atópica' },
-  { codigo: 'L70', nome: 'Acne' },
-  { codigo: 'N64.4', nome: 'Mastodinia (dor nas mamas)' },
-  { codigo: 'N94.6', nome: 'Dismenorreia não especificada (cólica)' },
-  { codigo: 'R21', nome: 'Erupção cutânea e outras alterações cutâneas' },
-  { codigo: 'R30', nome: 'Dor associada à micção' },
-  { codigo: 'S00', nome: 'Traumatismo superficial da cabeça' },
-  { codigo: 'S60', nome: 'Traumatismo superficial do punho e da mão' },
-  { codigo: 'S90', nome: 'Traumatismo superficial do tornozelo e do pé' },
 ];
 
-export function buscarCID(termo: string): CID10[] {
+/**
+ * Searches for CID-10 codes using the new database.
+ * This function is now ASYNC as it fetches from the server.
+ */
+export async function buscarCID(termo: string): Promise<CID10[]> {
   const t = termo.toLowerCase().trim();
-  if (!t) return [];
-  
-  return LISTA_CID10.filter(cid => 
-    cid.codigo.toLowerCase().includes(t) || 
-    cid.nome.toLowerCase().includes(t)
-  ).slice(0, 10); // Limitar a 10 sugestões para performance e UI
+  if (t.length < 2) return [];
+
+  try {
+    const response = await fetch(`/api/cid10?q=${encodeURIComponent(t)}`);
+    if (!response.ok) throw new Error('Falha ao buscar CID');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error in buscarCID:', error);
+    // Silent fallback to basic list if API fails
+    return LISTA_CID10_BASICA.filter(cid => 
+      cid.codigo.toLowerCase().includes(t) || 
+      cid.nome.toLowerCase().includes(t)
+    ).slice(0, 10);
+  }
 }
+

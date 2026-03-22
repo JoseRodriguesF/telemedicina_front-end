@@ -502,9 +502,9 @@ function AtendimentoInner() {
     }
   };
 
-  const handleDiagnosticoChange = (value: string, isModal = false) => {
+  const handleDiagnosticoChange = async (value: string, isModal = false) => {
     setCidSearch(value);
-    const sugestoes = buscarCID(value);
+    const sugestoes = await buscarCID(value);
     setCidSugestoes(sugestoes);
     if (isModal) {
       setShowCidSugestoesModal(value.length >= 1 && sugestoes.length > 0);

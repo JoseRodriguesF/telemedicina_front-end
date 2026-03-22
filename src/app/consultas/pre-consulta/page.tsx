@@ -63,6 +63,7 @@ function PreConsultaInner() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [anexos, setAnexos] = useState<Array<{ data: string; nome: string; tipo_mime: string }>>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [patientData, setPatientData] = useState<any>(null);
   const historiaClinicaIdRef = useRef<number | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -80,6 +81,11 @@ function PreConsultaInner() {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, iaTyping]);
+
+  useEffect(() => {
+    const user = getUser();
+    if (user) setPatientData(user);
+  }, []);
 
   async function sendMessage(textInput?: string, hidden: boolean = false) {
     if (hidden) {
@@ -108,7 +114,8 @@ function PreConsultaInner() {
     setIaTyping(true);
 
     try {
-      const currentHistory = messagesToHistory(currentMessages);
+      // ✅ CORREÇÃO: Pegamos o histórico SEM a mensagem atual, pois ela é enviada no campo 'message'
+      const currentHistory = messagesToHistory(messages);
       const data = await sendChatMessage(
         { message: t, history: currentHistory },
         token
@@ -389,6 +396,20 @@ function PreConsultaInner() {
                   </div>
 
                   <div className="pc-relatorio-card">
+                    {patientData && (
+                      <div className="pc-relatorio-section">
+                        <h3>👤 Meus Dados</h3>
+                        <div className="pc-relatorio-item">
+                          <span className="pc-relatorio-label">Nome:</span>
+                          <span>{patientData.nome_completo || patientData.nome || '-'}</span>
+                        </div>
+                        <div className="pc-relatorio-item">
+                          <span className="pc-relatorio-label">CPF:</span>
+                          <span>{patientData.cpf || '-'}</span>
+                        </div>
+                      </div>
+                    )}
+                    
                     {dadosTriagem.queixa_principal && (
                       <div className="pc-relatorio-section">
                         <h3>📋 Motivo da Consulta</h3>
@@ -427,6 +448,15 @@ function PreConsultaInner() {
                         {(!dadosTriagem.historico_pessoal.doencas?.length && !dadosTriagem.historico_pessoal.medicamentos?.length && !dadosTriagem.historico_pessoal.alergias?.length) && (
                           <p className="pc-relatorio-vazio">Nenhuma informação registrada.</p>
                         )}
+                      </div>
+                    )}
+
+                    {dadosTriagem.conteudo && (
+                      <div className="pc-relatorio-section">
+                        <h3>📝 Resumo da Triagem</h3>
+                        <div className="pc-relatorio-item" style={{ fontSize: '0.95rem', lineHeight: 1.6 }}>
+                          <span dangerouslySetInnerHTML={{ __html: formatIaText(dadosTriagem.conteudo) }} />
+                        </div>
                       </div>
                     )}
 
@@ -486,7 +516,7 @@ function PreConsultaInner() {
                         <div>
                           <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                            Anexar Exames (Opcional)
+                            Anexar arquivos (Opcional)
                           </h3>
                           <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Você pode incluir fotos, laudos ou receitas anteriores</p>
                         </div>
