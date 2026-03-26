@@ -2,7 +2,7 @@ import axios from 'axios';
 import { ApiError } from '@/lib/errorHandler';
 
 // Tipos de status de consulta
-export type ConsultaStatus = 'solicitada' | 'agendada' | 'scheduled' | 'in_progress' | 'finished' | 'cancelled';
+export type ConsultaStatus = 'solicitada' | 'agendada' | 'scheduled' | 'in_progress' | 'finished' | 'cancelled' | 'expired';
 
 // Comuns
 export type IceServer = {
