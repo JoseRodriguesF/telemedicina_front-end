@@ -16,9 +16,10 @@
 .pc-centered-layout {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 
 /* Right Side: Content & Chat */
@@ -37,6 +38,19 @@
   /* Ensure centering */
   overflow: hidden;
   /* Prevent double scroll */
+}
+
+/* Relatório mode: allow scrolling */
+.pc-content-side--relatorio {
+  justify-content: flex-start;
+  align-items: center;
+  overflow: auto;
+  overflow-x: hidden;
+  padding-top: 1.5rem;
+  padding-bottom: 2rem;
+  /* Thin scrollbar for aesthetics */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color, #e5e7eb) transparent;
 }
 
 /* Welcome Screen State */
@@ -328,15 +342,8 @@
   flex-direction: column;
   gap: 1.25rem;
   animation: fadeIn 0.5s ease-out forwards;
-  height: calc(100vh - 4rem);
-  overflow-y: auto;
-  padding: 1rem 0.5rem 2rem;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.pc-relatorio-container::-webkit-scrollbar {
-  display: none;
+  /* Height is handled by parent scrolling now */
+  padding: 0.5rem 0.5rem 2rem;
 }
 
 .pc-relatorio-header {

@@ -134,10 +134,18 @@ function PreConsultaInner() {
           { role: 'assistant', content: answer }
         ]);
         setCompleted(true);
-        
-        // Se a IA não retornou dados estruturados, usamos um objeto vazio para garantir que o modal abra
-        setDadosTriagem(data.dadosEstruturados || {});
-        
+
+        // Garantir que dadosEstruturados tem ao menos o conteúdo da resposta final da IA
+        const dadosRetornados = data.dadosEstruturados || {};
+        if (!dadosRetornados.conteudo && answer) {
+          dadosRetornados.conteudo = answer;
+        }
+        if (!dadosRetornados.queixa_principal && !dadosRetornados.descricao_sintomas && !dadosRetornados.conteudo) {
+          // Último recurso: mostrar resumo mínimo com base na última resposta
+          dadosRetornados.conteudo = 'Triagem concluída. Seu resumo será enviado ao médico.';
+        }
+        setDadosTriagem(dadosRetornados);
+
         // Pequeno delay para mostrar a mensagem antes do relatório
         setTimeout(() => setShowRelatorio(true), 600);
       } else {
@@ -330,7 +338,7 @@ function PreConsultaInner() {
 
         <div className="pc-page-container">
           <div className="pc-centered-layout">
-            <div className="pc-content-side">
+            <div className={`pc-content-side${showRelatorio ? ' pc-content-side--relatorio' : ''}`}>
               {showWelcome && (
                 <div className={`pc-welcome-container ${isTriageStarted ? 'fade-out' : ''}`}>
                   <div className="pc-welcome-text">
