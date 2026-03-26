@@ -69,7 +69,8 @@ export function AppointmentActionButtons({
                         borderRadius: 'var(--radius-md)',
                         fontSize: '0.9rem',
                         color: 'var(--color-error)',
-                        borderColor: 'var(--color-error)'
+                        borderColor: 'var(--color-error)',
+                        cursor: 'pointer'
                     }}
                     onClick={() => onCancel(id, pacienteNome)}
                     disabled={isConfirming}

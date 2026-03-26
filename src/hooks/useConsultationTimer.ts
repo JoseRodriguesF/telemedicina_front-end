@@ -23,32 +23,23 @@ export function useConsultationTimer(dateStr: string, timeStr: string) {
         // Função auxiliar para criar data seguramente
         const getTargetDate = () => {
             try {
-                // Se timeStr já for uma string ISO completa vinda do banco (UTC), use-a diretamente
-                if (timeStr.includes('T') && timeStr.endsWith('Z')) {
-                    return new Date(timeStr);
-                }
-
-                // Se dateStr for ISO completo, use tbm
-                if (dateStr.includes('T') && dateStr.endsWith('Z')) {
-                    return new Date(dateStr);
-                }
-
                 // Variáveis para extração
                 let finalDateStr = dateStr;
                 let finalTimeStr = timeStr;
 
-                // Extração de partes se necessário
+                // Extração da DATA (YYYY-MM-DD)
                 if (dateStr.includes('T')) {
                     finalDateStr = dateStr.split('T')[0];
                 }
 
+                // Extração da HORA (HH:mm:ss)
                 if (timeStr.includes('T')) {
-                    // Extrai "15:00:00" de "1970-01-01T15:00:00.000Z"
+                    // Extrai "15:00:00" de "1970-01-01T15:00:00.000Z" ou "2026-03-26T15:00:00.000Z"
                     const parts = timeStr.split('T');
                     finalTimeStr = parts[1].split('.')[0].replace('Z', '');
                 }
 
-                // Limpar data
+                // Limpar data (deve ser YYYY-MM-DD)
                 if (!/^\d{4}-\d{2}-\d{2}$/.test(finalDateStr)) return null;
 
                 // Normalizar hora para HH:mm:ss
@@ -57,16 +48,16 @@ export function useConsultationTimer(dateStr: string, timeStr: string) {
                 else if (finalTimeStr.includes('.')) normalizedTime = finalTimeStr.split('.')[0];
 
                 // Re-combinar.
-                // Se era UTC (veio com T), append 'Z' se não tiver.
-                // Se NÃO era UTC (veio raw "10:00"), append '-03:00' para forçar Brasília.
-                const isOriginalUTC = timeStr.includes('T') || dateStr.includes('T');
+                // IMPORTANTE: Se os dados vêm do banco via Prisma (com T), eles estão em UTC.
+                // Se vêm de input manual (sem T), assumimos Brasília (-03:00).
+                const isFromDB = timeStr.includes('T') || dateStr.includes('T');
                 let dateTimeStr = '';
 
-                if (isOriginalUTC) {
-                    // Mantém tratamento UTC
+                if (isFromDB) {
+                    // Trata como UTC para manter consistência com o que foi salvo
                     dateTimeStr = `${finalDateStr}T${normalizedTime}Z`;
                 } else {
-                    // Força Brasília para inputs manuais (YYYY-MM-DD + HH:mm)
+                    // Trata como Brasília para inputs novos/manuais
                     dateTimeStr = `${finalDateStr}T${normalizedTime}-03:00`;
                 }
 
@@ -92,15 +83,14 @@ export function useConsultationTimer(dateStr: string, timeStr: string) {
             // Minutos até o inicio
             const minutesUntilStart = diffMs / (1000 * 60);
 
-
-
-            // A sala abre 5 minutos antes
-            const UNLOCK_MINUTES = 5;
+            // A sala abre 10 minutos antes (ajustado de 5)
+            const UNLOCK_MINUTES = 10;
 
             // Permitir entrar se:
-            // 1. Faltam 5 minutos ou menos para começar (minutesUntilStart <= 5)
-            // 2. A consulta já começou (minutesUntilStart < 0) mas não passou muito tempo (ex: até 10 min depois)
-            const MAX_MINUTES_AFTER_START = 10; // 10 minutos conforme pedido do usuário
+            // 1. Faltam 10 minutos ou menos para começar (minutesUntilStart <= 10)
+            // 2. A consulta já começou (minutesUntilStart < 0) mas não passou muito tempo 
+            //    Aumentamos para 60 minutos (1 hora) de tolerância após o início
+            const MAX_MINUTES_AFTER_START = 60; 
             const isAvailable = minutesUntilStart <= UNLOCK_MINUTES && minutesUntilStart >= -MAX_MINUTES_AFTER_START;
 
             setCanJoin(isAvailable);

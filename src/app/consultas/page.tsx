@@ -484,7 +484,6 @@ export default function ConsultasPage() {
                   <button
                     className="btn danger"
                     onClick={() => handleCancelConsultation(selectedAppt?.id!)}
-                    disabled={!canJoin && selectedAppt?.status !== 'solicitada'}
                     style={{
                       borderRadius: 'var(--radius-lg)',
                       padding: '0.8rem',
@@ -492,8 +491,8 @@ export default function ConsultasPage() {
                       color: 'var(--color-error, #dc2626)',
                       border: '1px solid var(--color-error-border, #fecaca)',
                       fontWeight: 600,
-                      opacity: (!canJoin && selectedAppt?.status !== 'solicitada') ? 0.6 : 1,
-                      cursor: (!canJoin && selectedAppt?.status !== 'solicitada') ? 'not-allowed' : 'pointer'
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
                     }}
                   >
                     {selectedAppt?.status === 'solicitada' ? 'Retirar Solicitação' : 'Desmarcar Consulta'}
