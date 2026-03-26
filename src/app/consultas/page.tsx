@@ -14,6 +14,7 @@ import { MiniAppointmentCard } from '@/components/appointments/MiniAppointmentCa
 import ContentModal from '@/components/common/Modal/ContentModal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { Modal } from '@/components/common/Modal/Modal';
+import { useConsultationTimer } from '@/hooks/useConsultationTimer';
 import { formatTime } from '@/lib/utils/dateFormatters';
 import FormattedText from '@/components/common/FormattedText';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
@@ -57,6 +58,12 @@ export default function ConsultasPage() {
   const [consultaDetails, setConsultaDetails] = useState<ConsultaDetails | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [loadingAnexos, setLoadingAnexos] = useState(false);
+
+  // ✅ NOVO: Monitorar disponibilidade da consulta selecionada
+  const { canJoin, timeRemaining } = useConsultationTimer(
+    selectedAppt?.data_consulta || '',
+    selectedAppt?.hora_inicio || ''
+  );
 
   const handleViewDetails = async (appt: ConsultaAgendada) => {
     setSelectedAppt(appt);
@@ -444,9 +451,25 @@ export default function ConsultasPage() {
                   <button
                     className="btn primary"
                     onClick={() => handleAttend(selectedAppt?.id!)}
-                    style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
+                    disabled={selectedAppt?.status !== 'solicitada' && !canJoin}
+                    style={{ 
+                      borderRadius: 'var(--radius-lg)', 
+                      padding: '0.8rem',
+                      opacity: (selectedAppt?.status !== 'solicitada' && !canJoin) ? 0.6 : 1,
+                      cursor: (selectedAppt?.status !== 'solicitada' && !canJoin) ? 'not-allowed' : 'pointer',
+                      flexDirection: 'column',
+                      height: 'auto',
+                      minHeight: '3rem'
+                    }}
                   >
-                    {selectedAppt?.status === 'solicitada' ? 'Confirmar Agora' : 'Atender agora'}
+                    <span style={{ display: 'block' }}>
+                      {selectedAppt?.status === 'solicitada' ? 'Confirmar Agora' : 'Atender agora'}
+                    </span>
+                    {selectedAppt?.status !== 'solicitada' && !canJoin && (
+                      <span style={{ fontSize: '0.7rem', opacity: 0.9, fontWeight: 400 }}>
+                        {timeRemaining === 'Consulta expirada' ? 'Prazo excedido' : 'Fora do horário'}
+                      </span>
+                    )}
                   </button>
                 </div>
               ) : (
@@ -461,13 +484,16 @@ export default function ConsultasPage() {
                   <button
                     className="btn danger"
                     onClick={() => handleCancelConsultation(selectedAppt?.id!)}
+                    disabled={!canJoin && selectedAppt?.status !== 'solicitada'}
                     style={{
                       borderRadius: 'var(--radius-lg)',
                       padding: '0.8rem',
                       backgroundColor: 'var(--color-error-soft, #fee2e2)',
                       color: 'var(--color-error, #dc2626)',
                       border: '1px solid var(--color-error-border, #fecaca)',
-                      fontWeight: 600
+                      fontWeight: 600,
+                      opacity: (!canJoin && selectedAppt?.status !== 'solicitada') ? 0.6 : 1,
+                      cursor: (!canJoin && selectedAppt?.status !== 'solicitada') ? 'not-allowed' : 'pointer'
                     }}
                   >
                     {selectedAppt?.status === 'solicitada' ? 'Retirar Solicitação' : 'Desmarcar Consulta'}
