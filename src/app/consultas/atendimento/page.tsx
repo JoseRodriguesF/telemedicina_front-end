@@ -21,6 +21,18 @@ import html2canvas from 'html2canvas';
 import FormattedText from '@/components/common/FormattedText';
 import { buscarCID, type CID10 } from '@/lib/constants/cid10';
 
+// Novos sub-componentes refatorados
+import Accordion from '@/components/appointments/atendimento/Accordion';
+import AtendimentoVideoGrid from '@/components/appointments/atendimento/AtendimentoVideoGrid';
+import AtendimentoToolbar from '@/components/appointments/atendimento/AtendimentoToolbar';
+import AtendimentoChat from '@/components/appointments/atendimento/AtendimentoChat';
+import ClinicalPanel from '@/components/appointments/atendimento/ClinicalPanel';
+import AssistancePanel from '@/components/appointments/atendimento/AssistancePanel';
+import AtendimentoModals from '@/components/appointments/atendimento/AtendimentoModals';
+import PrescriptionPDFTemplate from '@/components/appointments/atendimento/PrescriptionPDFTemplate';
+import { socket } from '@/lib/socket';
+import { notify } from '@/components/common/Notification';
+
 type ChatMessage = { 
   author: 'Você' | 'Médico' | 'Paciente'; 
   text?: string;
@@ -39,28 +51,7 @@ function calculateAge(birthDate: string | Date | undefined): string {
   return String(age);
 }
 
-// Componente Accordion fora para evitar perder o foco nos inputs ao re-renderizar
-const Accordion = ({ id, title, isOpen, onToggle, isFilled, isMissing, children }: {
-  id: string;
-  title: string;
-  isOpen: boolean;
-  onToggle: (id: string) => void;
-  isFilled?: boolean;
-  isMissing?: boolean;
-  children: React.ReactNode
-}) => (
-  <div className={`accordion-item ${isOpen ? 'open' : ''} ${isFilled ? 'is-filled' : ''} ${isMissing ? 'is-missing' : ''}`}>
-    <button className="accordion-trigger" onClick={() => onToggle(id)} type="button">
-      <span>{title}</span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m6 9 6 6 6-6" />
-      </svg>
-    </button>
-    <div className="accordion-content">
-      {children}
-    </div>
-  </div>
-);
+// Componente Accordion foi extraído para @/components/appointments/atendimento/Accordion
 
 function AtendimentoInner() {
   const destinoFinalOptions = [
@@ -1338,7 +1329,32 @@ function AtendimentoInner() {
   // Função para filtrar campos administrativos do prontuário de triagem
   const removeAdministrativeFields = (content: string): string => {
     if (!content) return content;
-    const lines = content.split('\n');
+    
+    let cleanText = content;
+
+    // ✅ NOVO: Detectar e extrair JSON se existir (bug reportado de JSON explícito na triagem)
+    if (content.trim().startsWith('{') || content.trim().includes('{"')) {
+      try {
+        const start = content.indexOf('{');
+        const end = content.lastIndexOf('}') + 1;
+        if (start !== -1 && end !== -1) {
+          const jsonPart = content.substring(start, end);
+          const parsed = JSON.parse(jsonPart);
+          if (parsed.conteudo) {
+            cleanText = parsed.conteudo;
+          } else if (parsed.resumo) {
+            cleanText = parsed.resumo;
+          } else if (parsed.queixa_principal) {
+            // Se for o objeto de triagem estruturado, reconstrói um resumo legível
+            cleanText = `Queixa: ${parsed.queixa_principal}\nSintomas: ${parsed.descricao_sintomas || 'Não informados'}`;
+          }
+        }
+      } catch (e) {
+        // Fallback para o texto original se o parse falhar
+      }
+    }
+
+    const lines = cleanText.split('\n');
     const filteredLines: string[] = [];
     let inHeader = true;
 
@@ -1550,1743 +1566,215 @@ function AtendimentoInner() {
       <main className="inicio-main atendimento-main">
         {/* LAYOUT PARA MÉDICO - 3 colunas com painéis */}
         {role === 'medico' ? (
-          <>
-            <div className="atendimento-container medico-layout">
-              {/* Painel Esquerdo - Ficha de Atendimento */}
-              <aside className="side-panel left-panel">
-                <div className="panel-header">Ficha de atendimento</div>
-                <div className="panel-content">
-                  <Accordion
-                    id="triagem"
-                    title="História Clínica (Triagem)"
-                    isOpen={!!openAccordions['triagem']}
-                    onToggle={toggleAccordion}
-                    isFilled={!!consultaDetails?.historiaClinica}
-                  >
-                    {consultaDetails?.historiaClinica ? (
-                      <div className="triagem-content-wrapper" style={{ padding: '0.5rem 0' }}>
-                        <FormattedText
-                          text={consultaDetails.historiaClinica.conteudo || 'Não informada'}
-                          style={{
-                            fontSize: '1rem',
-                            color: 'var(--text-primary)',
-                            lineHeight: 1.7
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280', fontSize: '0.85rem' }}>
-                        Informações de triagem não encontradas.
-                      </div>
-                    )}
-                  </Accordion>
-                  <Accordion
-                    id="historico-consultas"
-                    title="Histórico de consultas"
-                    isOpen={!!openAccordions['historico-consultas']}
-                    onToggle={toggleAccordion}
-                  >
-                    {loadingHistorico ? (
-                      <p className="accordion-placeholder">Carregando histórico...</p>
-                    ) : historicoConsultas.length === 0 ? (
-                      <p className="accordion-placeholder">Nenhuma consulta anterior registrada.</p>
-                    ) : (
-                      <div className="historico-list">
-                        {historicoConsultas.map((consulta) => (
-                          <div key={consulta.id} className="historico-item">
-                            <div className="historico-item-avatar">
-                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
-                            </div>
-                            <div className="historico-item-info">
-                              <div className="historico-item-date">
-                                📅 {formatDate(consulta.data_consulta || consulta.createdAt)}
-                              </div>
-                            </div>
-                            <button
-                              className="historico-item-button"
-                              onClick={() => setConsultaSelecionada(consulta)}
-                            >
-                              Ver
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </Accordion>
+          <div className="atendimento-container medico-layout">
+            <ClinicalPanel
+              openAccordions={openAccordions}
+              toggleAccordion={toggleAccordion}
+              consultaDetails={consultaDetails}
+              loadingHistorico={loadingHistorico}
+              historicoConsultas={historicoConsultas}
+              onSetConsultaSelecionada={setConsultaSelecionada}
+              loadingHistoricoPrescricoes={loadingHistoricoPrescricoes}
+              historicoPrescricoes={historicoPrescricoes}
+              onDownloadPrescricaoPdf={handleDownloadPrescricaoPdf}
+              loadingPrescricoes={loadingPrescricoes}
+              activePrescricoes={activePrescricoes}
+              onDeletePrescricao={handleDeletePrescricao}
+              prescricaoGerada={prescricaoGerada}
+              setPrescricaoGerada={setPrescricaoGerada}
+              showPrescricaoForm={showPrescricaoForm}
+              setShowPrescricaoForm={setShowPrescricaoForm}
+              prescricaoData={prescricaoData}
+              setPrescricaoData={setPrescricaoData}
+              medicamentoSugestoes={medicamentoSugestoes}
+              showMedicamentoSugestoes={showMedicamentoSugestoes}
+              setShowMedicamentoSugestoes={setShowMedicamentoSugestoes}
+              onMedicamentoChange={handleMedicamentoChange}
+              marcaSugestoes={marcaSugestoes}
+              showMarcaSugestoes={showMarcaSugestoes}
+              setShowMarcaSugestoes={setShowMarcaSugestoes}
+              onMarcaChange={handleMarcaChange}
+              onCancelPrescricaoForm={cancelPrescricaoForm}
+              onSubmitPrescricao={handleSubmitPrescricao}
+              isSubmittingPrescricao={isSubmittingPrescricao}
+              onGenerateFinalPDF={handleGenerateFinalPDF}
+              isGeneratingPDF={isGeneratingPDF}
+              signedPdfFile={signedPdfFile}
+              hiddenFileInputRef={hiddenFileInputRef}
+              onSignedPdfUpload={handleSignedPdfUpload}
+              isEditingNotas={isEditingNotas}
+              setIsEditingNotas={setIsEditingNotas}
+              pacienteNotas={pacienteNotas}
+              setPacienteNotas={setPacienteNotas}
+              onSaveNotas={handleSaveNotas}
+              isSavingNotas={isSavingNotas}
+            />
+            <div className="medico-video-column">
+              <AtendimentoVideoGrid
+                remoteRef={remoteRef}
+                localRef={localRef}
+                remoteHasVideo={remoteHasVideo}
+                remoteHasAudio={remoteHasAudio}
+                connectionFailed={connectionFailed}
+                reconnecting={reconnecting}
+                remoteDisconnected={remoteDisconnected}
+                remoteConnected={remoteConnected}
+                showExitMessage={showExitMessage}
+                statusText={statusText}
+                statusColor={statusColor}
+                camEnabled={camEnabled}
+                micEnabled={micEnabled}
+                elapsedSeconds={elapsedSeconds}
+                formatElapsedTime={formatElapsedTime}
+                onFinishCall={requestFinishCall}
+                onGoBack={() => router.push('/consultas')}
+                role="medico"
+              />
 
-                  <Accordion
-                    id="historico-prescricoes"
-                    title="Histórico de prescrições"
-                    isOpen={!!openAccordions['historico-prescricoes']}
-                    onToggle={toggleAccordion}
-                  >
-                    {loadingHistoricoPrescricoes ? (
-                      <p className="accordion-placeholder">Carregando histórico...</p>
-                    ) : historicoPrescricoes.length === 0 ? (
-                      <p className="accordion-placeholder">Nenhuma prescrição anterior registrada.</p>
-                    ) : (
-                      <div className="historico-list">
-                        {historicoPrescricoes.map((prescrito) => (
-                          <div key={prescrito.id} className="historico-item">
-                            <div className="historico-item-avatar" style={{ background: 'var(--color-primary-50)', color: 'var(--color-primary-600)' }}>
-                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
-                                <path d="m8.5 8.5 7 7" />
-                              </svg>
-                            </div>
-                            <div className="historico-item-info">
-                              <div className="historico-item-date" style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.9rem' }}>
-                                {prescrito.medicamento} {prescrito.marca ? `(${prescrito.marca})` : ''}
-                              </div>
-                              <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
-                                {formatDate((prescrito as any).consulta?.data_consulta || (prescrito as any).consulta?.createdAt || prescrito.createdAt)}
-                              </div>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                                {prescrito.dosagem} • {prescrito.frequencia} • {prescrito.duracao}
-                              </div>
-                            </div>
-                            <div className="historico-item-actions">
-                              <button
-                                className="action-btn-secondary"
-                                style={{
-                                  padding: '6px 10px',
-                                  fontSize: '0.75rem',
-                                  opacity: (prescrito as any).tem_pdf ? 1 : 0.4,
-                                  cursor: (prescrito as any).tem_pdf ? 'pointer' : 'not-allowed'
-                                }}
-                                disabled={!(prescrito as any).tem_pdf}
-                                onClick={() => handleDownloadPrescricaoPdf(prescrito.id)}
-                                title={(prescrito as any).tem_pdf ? 'Baixar PDF Assinado' : 'PDF não disponível'}
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
-                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" />
-                                </svg>
-                                PDF
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </Accordion>
-
-                  <Accordion
-                    id="prescricoes"
-                    title="Prescrições"
-                    isOpen={!!openAccordions['prescricoes']}
-                    onToggle={toggleAccordion}
-                    isFilled={activePrescricoes.length > 0 || !!signedPdfFile}
-                  >
-                    {!prescricaoGerada ? (
-                      <>
-                        <div className="prescricoes-list" style={{ marginBottom: activePrescricoes.length > 0 ? '1rem' : '0' }}>
-                          {loadingPrescricoes ? (
-                            <p style={{ fontSize: '0.85rem', color: '#6b7280', textAlign: 'center' }}>Carregando...</p>
-                          ) : activePrescricoes.length === 0 ? (
-                            <p style={{ fontSize: '0.85rem', color: '#9ca3af', textAlign: 'center', fontStyle: 'italic' }}>Nenhuma prescrição adicionada.</p>
-                          ) : (
-                            activePrescricoes.map((p) => (
-                              <div key={p.id} className="prescricao-card">
-                                <div className="prescricao-card-header">
-                                  <div>
-                                    <div className="prescricao-card-medicamento">{p.medicamento}</div>
-                                    {p.marca && <div className="prescricao-card-marca">{p.marca}</div>}
-                                  </div>
-                                  <button
-                                    className="prescricao-card-btn-delete"
-                                    onClick={() => handleDeletePrescricao(p.id)}
-                                    title="Excluir"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                                <div className="prescricao-card-info" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                  <span><strong>Dosagem:</strong> {p.dosagem}</span>
-                                  <span><strong>Frequência:</strong> {p.frequencia}</span>
-                                  <span><strong>Duração:</strong> {p.duracao}</span>
-                                </div>
-                                {p.inclusoConvenio && <div className="prescricao-card-badge">Convênio</div>}
-                              </div>
-                            ))
-                          )}
-                        </div>
-
-                        <div className="prescricao-form">
-                          {!showPrescricaoForm ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                              <button
-                                className="prescricao-add-button"
-                                onClick={() => setShowPrescricaoForm(true)}
-                                style={{ width: '100%' }}
-                              >
-                                <span>+</span> Adicionar Medicamento
-                              </button>
-
-                              {activePrescricoes.length > 0 && (
-                                <button
-                                  className="prescricao-btn prescricao-btn-submit"
-                                  style={{ width: '100%', padding: '12px', background: 'var(--color-primary-600)' }}
-                                  onClick={handleGenerateFinalPDF}
-                                  disabled={isGeneratingPDF}
-                                >
-                                  {isGeneratingPDF ? 'Processando...' : 'Gerar PDF para Assinar'}
-                                </button>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="prescricao-form-inputs">
-                              <div className="prescricao-checkbox-wrapper">
-                                <input
-                                  type="checkbox"
-                                  id="incluso-convenio"
-                                  checked={prescricaoData.inclusoConvenio}
-                                  onChange={(e) => setPrescricaoData(prev => ({ ...prev, inclusoConvenio: e.target.checked }))}
-                                />
-                                <label htmlFor="incluso-convenio">Incluso no convênio</label>
-                              </div>
-
-                              <div className="prescricao-input-wrapper">
-                                <label className="prescricao-input-label">Medicamento *</label>
-                                <input
-                                  type="text"
-                                  className="prescricao-input"
-                                  placeholder="Digite o nome do medicamento..."
-                                  value={prescricaoData.medicamento}
-                                  onChange={(e) => handleMedicamentoChange(e.target.value)}
-                                  onBlur={() => setTimeout(() => setShowMedicamentoSugestoes(false), 200)}
-                                />
-                                {showMedicamentoSugestoes && medicamentoSugestoes.length > 0 && (
-                                  <div className="prescricao-suggestions">
-                                    {medicamentoSugestoes.map((sugestao, idx) => (
-                                      <div
-                                        key={idx}
-                                        className="prescricao-suggestions-item"
-                                        onClick={() => {
-                                          setPrescricaoData(prev => ({ ...prev, medicamento: sugestao }));
-                                          setShowMedicamentoSugestoes(false);
-                                        }}
-                                      >
-                                        {sugestao}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="prescricao-input-wrapper">
-                                <label className="prescricao-input-label">Marca</label>
-                                <input
-                                  type="text"
-                                  className="prescricao-input"
-                                  placeholder="Digite a marca (opcional)..."
-                                  value={prescricaoData.marca}
-                                  onChange={(e) => handleMarcaChange(e.target.value)}
-                                  onBlur={() => setTimeout(() => setShowMarcaSugestoes(false), 200)}
-                                />
-                                {showMarcaSugestoes && marcaSugestoes.length > 0 && (
-                                  <div className="prescricao-suggestions">
-                                    {marcaSugestoes.map((sugestao, idx) => (
-                                      <div
-                                        key={idx}
-                                        className="prescricao-suggestions-item"
-                                        onClick={() => {
-                                          setPrescricaoData(prev => ({ ...prev, marca: sugestao }));
-                                          setShowMarcaSugestoes(false);
-                                        }}
-                                      >
-                                        {sugestao}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="prescricao-input-wrapper">
-                                <label className="prescricao-input-label">Dosagem *</label>
-                                <input
-                                  type="text"
-                                  className="prescricao-input"
-                                  placeholder="Ex: 500mg, 1 comprimido, 5ml..."
-                                  value={prescricaoData.dosagem}
-                                  onChange={(e) => setPrescricaoData(prev => ({ ...prev, dosagem: e.target.value }))}
-                                />
-                              </div>
-
-                              <div className="prescricao-input-wrapper">
-                                <label className="prescricao-input-label">Frequência *</label>
-                                <input
-                                  type="text"
-                                  className="prescricao-input"
-                                  placeholder="Ex: 8/8h, uma vez ao dia, se dor..."
-                                  value={prescricaoData.frequencia}
-                                  onChange={(e) => setPrescricaoData(prev => ({ ...prev, frequencia: e.target.value }))}
-                                />
-                              </div>
-
-                              <div className="prescricao-input-wrapper">
-                                <label className="prescricao-input-label">Duração *</label>
-                                <input
-                                  type="text"
-                                  className="prescricao-input"
-                                  placeholder="Ex: 7 dias, uso contínuo..."
-                                  value={prescricaoData.duracao}
-                                  onChange={(e) => setPrescricaoData(prev => ({ ...prev, duracao: e.target.value }))}
-                                />
-                              </div>
-
-                              <div className="prescricao-form-actions">
-                                <button
-                                  className="prescricao-btn prescricao-btn-cancel"
-                                  onClick={cancelPrescricaoForm}
-                                  disabled={isSubmittingPrescricao}
-                                >
-                                  Cancelar
-                                </button>
-                                <button
-                                  className="prescricao-btn prescricao-btn-submit"
-                                  onClick={handleSubmitPrescricao}
-                                  disabled={isSubmittingPrescricao || !prescricaoData.medicamento || !prescricaoData.dosagem}
-                                >
-                                  {isSubmittingPrescricao ? 'Salvando...' : 'Agregar'}
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    ) : (
-                      <div className="signed-upload-zone" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.5rem 0' }}>
-                        <div style={{
-                          background: 'var(--bg-secondary)',
-                          padding: '1rem',
-                          borderRadius: '12px',
-                          border: '2px dashed var(--border-color)',
-                          textAlign: 'center'
-                        }}>
-                          <input
-                            type="file"
-                            accept=".pdf"
-                            style={{ display: 'none' }}
-                            ref={hiddenFileInputRef}
-                            onChange={handleSignedPdfUpload}
-                          />
-
-                          {signedPdfFile ? (
-                            <div style={{ color: '#22c55e', fontWeight: 600, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                              <span>✅ PDF Assinado Anexado</span>
-                              <button
-                                className="action-btn-secondary"
-                                style={{ fontSize: '0.75rem', padding: '4px 10px' }}
-                                onClick={() => hiddenFileInputRef.current?.click()}
-                              >
-                                Substituir
-                              </button>
-                            </div>
-                          ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
-                                Assine o PDF no <strong>Gov.br</strong> e anexe o arquivo final abaixo.
-                              </p>
-                              <button
-                                className="prescricao-add-button"
-                                style={{ width: '100%', marginTop: '5px' }}
-                                onClick={() => hiddenFileInputRef.current?.click()}
-                              >
-                                Anexar PDF Assinado
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        <button
-                          className="prescricao-btn-cancel"
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            borderBottom: '1px solid currentColor',
-                            fontSize: '0.8rem',
-                            cursor: 'pointer',
-                            alignSelf: 'center',
-                            padding: '2px 0'
-                          }}
-                          onClick={() => setPrescricaoGerada(false)}
-                        >
-                          Voltar para edição de itens
-                        </button>
-                      </div>
-                    )}
-                  </Accordion>
-
-                  <Accordion
-                    id="notas"
-                    title="Notas"
-                    isOpen={!!openAccordions['notas']}
-                    onToggle={toggleAccordion}
-                  >
-                    <div className="notas-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {!isEditingNotas ? (
-                        <>
-                          {pacienteNotas ? (
-                            <div className="prescricao-card" style={{ marginBottom: '8px' }}>
-                              <div className="prescricao-card-header">
-                                <div className="prescricao-card-medicamento">Notas do Paciente</div>
-                              </div>
-                              <div className="prescricao-card-info" style={{ whiteSpace: 'pre-wrap' }}>
-                                {pacienteNotas}
-                              </div>
-                              <button
-                                className="prescricao-add-button"
-                                onClick={() => setIsEditingNotas(true)}
-                                style={{ marginTop: '12px', width: '100%', fontSize: '0.8rem', padding: '6px' }}
-                              >
-                                Editar Notas
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              className="prescricao-add-button"
-                              onClick={() => setIsEditingNotas(true)}
-                              style={{ width: '100%' }}
-                            >
-                              <span>+</span> Adicionar Notas
-                            </button>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <textarea
-                            className="atendimento-textarea"
-                            placeholder="Notas exclusivas do médico sobre este paciente..."
-                            value={pacienteNotas}
-                            onChange={(e) => setPacienteNotas(e.target.value)}
-                            rows={6}
-                            style={{ minHeight: '150px', width: '100%' }}
-                            autoFocus
-                          />
-                          <div style={{ display: 'flex', gap: '8px' }}>
-                            <button
-                              className="prescricao-btn prescricao-btn-cancel"
-                              onClick={() => setIsEditingNotas(false)}
-                              disabled={isSavingNotas}
-                              style={{ flex: 1 }}
-                            >
-                              Cancelar
-                            </button>
-                            <button
-                              className="prescricao-btn prescricao-btn-submit"
-                              onClick={handleSaveNotas}
-                              disabled={isSavingNotas}
-                              style={{ flex: 2 }}
-                            >
-                              {isSavingNotas ? 'Salvando...' : 'Salvar Notas'}
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </Accordion>
-                </div>
-              </aside>
-
-              {/* Coluna Central - Vídeo + Ações */}
-              <div className="medico-video-column">
-                <section className="call-area">
-                  <div className="call-header">
-                    <span className={`status-dot ${statusColor}`} aria-label={`Status: ${statusColor}`}></span>
-                    {remoteConnected ? `Tempo de consulta: ${formatElapsedTime(elapsedSeconds)}` : (statusText || 'Em consulta')}
-                  </div>
-                  <div className="call-screen">
-                      <video
-                        ref={remoteRef}
-                        className="remote-video large"
-                        playsInline
-                        autoPlay
-                        aria-label="Vídeo do paciente"
-                        style={{
-                          opacity: remoteHasVideo && !connectionFailed ? 1 : 0,
-                          filter: (connectionFailed || !remoteHasVideo) ? 'blur(12px)' : undefined,
-                          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
-                        }}
-                      />
-
-                      <div className="call-status-layer">
-                        {connectionFailed ? (
-                          <div className="call-status-content internet-error">
-                            <div className="overlay-icon">🌐</div>
-                            <div className="overlay-content">
-                              <h3>Conexão Perdida</h3>
-                              <p>{reconnecting ? 'Tentando restabelecer sinal...' : 'Verifique sua conexão com a internet.'}</p>
-                            </div>
-                          </div>
-                        ) : remoteDisconnected ? (
-                          <div className="call-status-content peer-disconnected">
-                            <div className="overlay-icon">🔌</div>
-                            <div className="overlay-content">
-                              <h3>Usuário desconectado</h3>
-                              <p>{showExitMessage ? 'A consulta foi encerrada pelo paciente.' : 'O sinal do paciente caiu. Aguardando volta...'}</p>
-                              {showExitMessage && (
-                                <Button variant="primary" onClick={() => router.push('/consultas')} style={{ marginTop: '1.5rem' }}>
-                                  Voltar para Consultas
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        ) : !remoteConnected ? (
-                          <div className="call-status-content waiting">
-                            <div className="call-spinner"></div>
-                            <div className="overlay-content">
-                              <h3>Aguardando Paciente</h3>
-                              <p>A entrada pode levar alguns segundos...</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            {!remoteHasVideo && (
-                              <div className="call-status-content no-video">
-                                <div className="overlay-icon-small">📷</div>
-                                <div className="overlay-content">
-                                  <p>O paciente desligou a câmera</p>
-                                </div>
-                              </div>
-                            )}
-                            <div className="status-alerts-container">
-                              {!remoteHasAudio && (
-                                <div className="remote-mic-alert">
-                                  <span>🔇</span>
-                                  <span>Paciente em silêncio</span>
-                                </div>
-                              )}
-                              {!micEnabled && (
-                                <div className="remote-mic-alert local">
-                                  <span>🔇</span>
-                                  <span>Seu microfone está desligado</span>
-                                </div>
-                              )}
-                              {!camEnabled && (
-                                <div className="remote-mic-alert local cam">
-                                  <span>📷</span>
-                                  <span>Sua câmera está desligada</span>
-                                </div>
-                              )}
-                            </div>
-                          </>
-                        )}
-                      </div>
-
-                      <div className="self-video-container pip">
-                        <video
-                          ref={localRef}
-                          className="self-video"
-                          playsInline
-                          autoPlay
-                          muted
-                          aria-label="Sua câmera"
-                          style={{ opacity: camEnabled ? 1 : 0 }}
-                        />
-                        {!camEnabled && (
-                          <div className="no-camera-placeholder pip-placeholder">
-                            <div className="overlay-icon-small">📷</div>
-                            <div style={{ fontSize: '0.8rem', marginTop: '4px', color: '#94a3b8' }}>Você está sem vídeo</div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </section>
-
-                <div className="medico-actions-toolbar">
-                  <div className="call-controls">
-                    <button className={`control-btn ${!camEnabled ? 'off' : ''}`} onClick={toggleCam} aria-label={camEnabled ? 'Desativar câmera' : 'Ativar câmera'}>
-                      {camEnabled ? (
-                        <svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z" /><rect width="14" height="12" x="2" y="6" rx="2" ry="2" /></svg>
-                      ) : (
-                        <svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z" /><rect width="14" height="12" x="2" y="6" rx="2" ry="2" /><line x1="2" y1="2" x2="22" y2="22" /></svg>
-                      )}
-                    </button>
-                    <button className={`control-btn ${!micEnabled ? 'off' : ''}`} onClick={toggleMic} aria-label={micEnabled ? 'Desativar microfone' : 'Ativar microfone'}>
-                      {micEnabled ? (
-                        <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>
-                      ) : (
-                        <svg viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23" /><path d="M9 9v3a3 3 0 0 0 5.12 2.12" /><path d="M15 9.34V5a3 3 0 0 0-5.94-.6" /><path d="M17 16.95A7 7 0 0 1 5 12v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>
-                      )}
-                    </button>
-                    <button className={`control-btn ${showChat ? 'active' : ''}`} aria-label={showChat ? "Fechar chat" : "Abrir chat"} onClick={() => setShowChat(prev => !prev)}>
-                      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-                      {unreadMessages > 0 && !showChat && <span className="chat-notification-badge"></span>}
-                    </button>
-                    <button className="control-btn end" aria-label="Encerrar chamada" onClick={requestFinishCall}>
-                      <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-                    </button>
-                  </div>
-
-                  <div className="video-action-buttons">
-                    <button className="action-btn" onClick={() => setShowPrescricaoForm(true)}>Prescrição</button>
-                    <button className="action-btn" onClick={() => setOpenAccordions(prev => ({ ...prev, anamsese: true }))}>Antecedentes</button>
-                    <button className="action-btn" onClick={handleOpenAnexos}>Arquivos</button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Painel Direito - Informações do Paciente + Ficha */}
-              <aside className="side-panel right-panel">
-                <div className="panel-header">Informações pessoais do paciente</div>
-                <div className="patient-info">
-                  {consultaDetails ? (
-                    <>
-                      <div className="patient-info-row">
-                        <span className="patient-info-label">Nome:</span>
-                        <span className="patient-info-value">{consultaDetails.paciente?.nome_completo || '-'}</span>
-                      </div>
-                      <div className="patient-info-row">
-                        <span className="patient-info-label">Gênero:</span>
-                        <span className="patient-info-value" style={{ textTransform: 'capitalize' }}>{consultaDetails.paciente?.sexo || '-'}</span>
-                      </div>
-                      <div className="patient-info-row">
-                        <span className="patient-info-label">Idade:</span>
-                        <span className="patient-info-value">{calculateAge(consultaDetails.paciente?.data_nascimento)} anos</span>
-                      </div>
-                      <div className="patient-info-row">
-                        <span className="patient-info-label">CPF:</span>
-                        <span className="patient-info-value">{consultaDetails.paciente?.cpf || '-'}</span>
-                      </div>
-                      <div className="patient-info-row">
-                        <span className="patient-info-label">Telefone:</span>
-                        <span className="patient-info-value">{consultaDetails.paciente?.telefone || '-'}</span>
-                      </div>
-                    </>
-                  ) : (
-                    <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>Carregando dados...</div>
-                  )}
-                </div>
-                <div className="panel-header">Ficha de atendimento</div>
-                <div className="panel-content">
-                  <Accordion
-                    id="evolucao"
-                    title="Evolução"
-                    isOpen={!!openAccordions['evolucao']}
-                    onToggle={toggleAccordion}
-                    isFilled={!!atendimentoData.evolucao}
-                    isMissing={showValidation && !atendimentoData.evolucao.trim()}
-                  >
-                    <textarea
-                      className="atendimento-textarea"
-                      placeholder="Registre a evolução do paciente..."
-                      value={atendimentoData.evolucao}
-                      onChange={(e) => {
-                        setAtendimentoData(prev => ({ ...prev, evolucao: e.target.value }));
-                        e.target.style.height = 'inherit';
-                        e.target.style.height = `${e.target.scrollHeight}px`;
-                      }}
-                    ></textarea>
-                  </Accordion>
-                  <Accordion
-                    id="plano-terapeutico"
-                    title="Plano Terapêutico"
-                    isOpen={!!openAccordions['plano-terapeutico']}
-                    onToggle={toggleAccordion}
-                    isFilled={!!atendimentoData.plano_terapeutico}
-                    isMissing={showValidation && !atendimentoData.plano_terapeutico.trim()}
-                  >
-                    <textarea
-                      className="atendimento-textarea"
-                      placeholder="Defina o plano terapêutico..."
-                      value={atendimentoData.plano_terapeutico}
-                      onChange={(e) => {
-                        setAtendimentoData(prev => ({ ...prev, plano_terapeutico: e.target.value }));
-                        e.target.style.height = 'inherit';
-                        e.target.style.height = `${e.target.scrollHeight}px`;
-                      }}
-                    ></textarea>
-                  </Accordion>
-                  <Accordion
-                    id="diagnostico"
-                    title="Diagnóstico"
-                    isOpen={!!openAccordions['diagnostico']}
-                    onToggle={toggleAccordion}
-                    isFilled={!!atendimentoData.diagnostico}
-                    isMissing={showValidation && !atendimentoData.diagnostico.trim()}
-                  >
-                    <div className="cid-selection-container">
-                      <div className="cid-chips-wrapper">
-                        {atendimentoData.selectedCIDs.map(cid => (
-                          <div key={cid.codigo} className="cid-chip">
-                            <span className="cid-chip-code">{cid.codigo}</span>
-                            <span className="cid-chip-name">{cid.nome}</span>
-                            <button 
-                              className="cid-chip-remove" 
-                              onClick={() => removeCID(cid.codigo)}
-                              type="button"
-                              title="Remover CID"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="address-search-wrapper" style={{ position: 'relative' }}>
-                        <input
-                          type="text"
-                          className="atendimento-input-small"
-                          placeholder={atendimentoData.selectedCIDs.length > 0 ? "Adicionar outro CID..." : "Buscar por CID ou nome da doença..."}
-                          value={cidSearch}
-                          onChange={(e) => handleDiagnosticoChange(e.target.value)}
-                          onBlur={() => setTimeout(() => setShowCidSugestoes(false), 200)}
-                        />
-                        <span className="search-icon-inside">
-                          <img src="/icons/Search.png" alt="Buscar" width="16" height="16" />
-                        </span>
-
-                        {showCidSugestoes && cidSugestoes.length > 0 && (
-                          <div className="prescricao-suggestions" style={{ width: '100%', top: '100%', zIndex: 100 }}>
-                            {cidSugestoes.map((cid, idx) => (
-                              <div
-                                key={idx}
-                                className="prescricao-suggestions-item"
-                                style={{ padding: '0.75rem', borderBottom: '1px solid var(--border-color)' }}
-                                onClick={() => selectCID(cid)}
-                              >
-                                <strong style={{ color: 'var(--color-primary-600)' }}>{cid.codigo}</strong> - {cid.nome}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="diagnostico-manual-wrapper" style={{ marginTop: '12px' }}>
-                        <span className="input-label-text">Observações do Diagnóstico</span>
-                        <textarea
-                          className="atendimento-textarea"
-                          style={{ minHeight: '60px', padding: '8px', fontSize: '0.85rem' }}
-                          placeholder="Complemento manual do diagnóstico (opcional)..."
-                          value={atendimentoData.diagnostico.split(', ').filter(s => !atendimentoData.selectedCIDs.some(c => `${c.codigo} - ${c.nome}` === s)).join(', ')}
-                          onChange={(e) => {
-                            const manualText = e.target.value;
-                            const cidText = atendimentoData.selectedCIDs.map(c => `${c.codigo} - ${c.nome}`).join(', ');
-                            const fullText = cidText ? (manualText ? `${cidText}, ${manualText}` : cidText) : manualText;
-                            setAtendimentoData(prev => ({ ...prev, diagnostico: fullText }));
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </Accordion>
-                  <Accordion
-                    id="repouso"
-                    title="Repouso"
-                    isOpen={!!openAccordions['repouso']}
-                    onToggle={toggleAccordion}
-                    isFilled={!!atendimentoData.repouso}
-                    isMissing={showValidation && !atendimentoData.repouso}
-                  >
-                    <div className="options-grid">
-                      {repousoOptions.map(option => (
-                        <label key={option} className={`option-card ${atendimentoData.repouso === option ? 'selected' : ''}`}>
-                          <input
-                            type="checkbox"
-                            className="hidden-checkbox"
-                            checked={atendimentoData.repouso === option}
-                            onChange={() => handleOptionToggle('repouso', option)}
-                          />
-                          <div className="option-indicator"></div>
-                          <span className="option-text">{option}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </Accordion>
-                  <Accordion
-                    id="destino-final"
-                    title="Destino Final"
-                    isOpen={!!openAccordions['destino-final']}
-                    onToggle={toggleAccordion}
-                    isFilled={!!atendimentoData.destino_final}
-                    isMissing={showValidation && !atendimentoData.destino_final}
-                  >
-                    <div className="options-grid">
-                      {destinoFinalOptions.map(option => (
-                        <div key={option} className="option-container">
-                          <label className={`option-card ${atendimentoData.destino_final === option ? 'selected' : ''}`}>
-                            <input
-                              type="checkbox"
-                              className="hidden-checkbox"
-                              checked={atendimentoData.destino_final === option}
-                              onChange={() => handleOptionToggle('destino_final', option)}
-                            />
-                            <div className="option-indicator"></div>
-                            <span className="option-text">{option}</span>
-                          </label>
-
-                          {/* Se for ambulância e estiver selecionado, mostra formulário de endereço */}
-                          {atendimentoData.destino_final === option && option.toLowerCase().includes('ambulância') && (
-                            <div className="ambulance-address-form">
-                              <div className="address-row">
-                                <span className="input-label-text">Buscar endereço</span>
-                                <div className="address-search-wrapper">
-                                  <AddressAutocomplete
-                                    placeholder="Ex: Av. Paulista, 1000"
-                                    className="atendimento-input-small"
-                                    value={atendimentoData.endereco_ambulancia.endereco}
-                                    onChange={(v) => setAtendimentoData(prev => ({
-                                      ...prev,
-                                      endereco_ambulancia: { ...prev.endereco_ambulancia, endereco: v }
-                                    }))}
-                                  />
-                                  <span className="search-icon-inside">
-                                    <img src="/icons/Search.png" alt="Buscar" width="16" height="16" />
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="address-row">
-                                <span className="input-label-text">Complemento</span>
-                                <input
-                                  type="text"
-                                  placeholder="Ex: Bloco B, Apto 101"
-                                  className="atendimento-input-small"
-                                  value={atendimentoData.endereco_ambulancia.complemento}
-                                  onChange={(e) => setAtendimentoData(prev => ({
-                                    ...prev,
-                                    endereco_ambulancia: { ...prev.endereco_ambulancia, complemento: e.target.value }
-                                  }))}
-                                />
-                              </div>
-
-                              <div className="address-row">
-                                <span className="input-label-text">Informações adicionais</span>
-                                <input
-                                  type="text"
-                                  placeholder="Ponto de referência, observações..."
-                                  className="atendimento-input-small"
-                                  value={atendimentoData.endereco_ambulancia.informacoes_adicionais}
-                                  onChange={(e) => setAtendimentoData(prev => ({
-                                    ...prev,
-                                    endereco_ambulancia: { ...prev.endereco_ambulancia, informacoes_adicionais: e.target.value }
-                                  }))}
-                                />
-                              </div>
-
-                              <div className="address-row">
-                                <div className="input-with-label">
-                                  <span className="input-label-text">Telefone de contato</span>
-                                  <input
-                                    type="text"
-                                    placeholder="(00) 00000-0000"
-                                    className="atendimento-input-small"
-                                    value={atendimentoData.endereco_ambulancia.telefone}
-                                    onChange={(e) => setAtendimentoData(prev => ({
-                                      ...prev,
-                                      endereco_ambulancia: { ...prev.endereco_ambulancia, telefone: e.target.value }
-                                    }))}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Se for seguimento externo e estiver selecionado, mostra campo de especialidade */}
-                          {atendimentoData.destino_final === option && option.toLowerCase().includes('seguimento externo') && (
-                            <div className="ambulance-address-form" style={{ marginTop: '0.5rem' }}>
-                              <div className="address-row">
-                                <span className="input-label-text">Especialidade recomendada</span>
-                                <input
-                                  type="text"
-                                  placeholder="Ex: Cardiologista, Ortopedia..."
-                                  className="atendimento-input-small"
-                                  value={atendimentoData.especialidade_seguimento}
-                                  onChange={(e) => setAtendimentoData(prev => ({ ...prev, especialidade_seguimento: e.target.value }))}
-                                />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </Accordion>
-                </div>
-              </aside>
+              <AtendimentoToolbar
+                camEnabled={camEnabled}
+                micEnabled={micEnabled}
+                showChat={showChat}
+                unreadMessagesCount={unreadMessages}
+                onToggleCam={toggleCam}
+                onToggleMic={toggleMic}
+                onToggleChat={() => setShowChat(prev => !prev)}
+                onEndCall={requestFinishCall}
+                onOpenPrescription={() => setShowPrescricaoForm(true)}
+                onOpenHistory={() => setOpenAccordions(prev => ({ ...prev, anamsese: true }))}
+                onOpenAnexos={handleOpenAnexos}
+                role="medico"
+              />
             </div>
 
-            {/* Chat Modal para Médico */}
-            {showChat && (
-              <div className="chat-modal-overlay" onClick={() => setShowChat(false)}>
-                <div className="chat-modal" onClick={(e) => e.stopPropagation()}>
-                  <div className="chat-header">
-                    <span>Chat da consulta</span>
-                    <button className="chat-close-btn" onClick={() => setShowChat(false)} aria-label="Fechar chat">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="chat-body">
-                    {messages.map((m, idx) => {
-                      let cls = 'chat-msg';
-                      if (m.author === 'Você') cls += ' me';
-                      else cls += ' patient';
+            <AssistancePanel
+              consultaDetails={consultaDetails}
+              calculateAge={calculateAge}
+              openAccordions={openAccordions}
+              toggleAccordion={toggleAccordion}
+              atendimentoData={atendimentoData}
+              setAtendimentoData={setAtendimentoData}
+              showValidation={showValidation}
+              cidSearch={cidSearch}
+              cidSugestoes={cidSugestoes}
+              showCidSugestoes={showCidSugestoes}
+              onDiagnosticoChange={handleDiagnosticoChange}
+              setShowCidSugestoes={setShowCidSugestoes}
+              onSelectCID={selectCID}
+              onRemoveCID={removeCID}
+              repousoOptions={repousoOptions}
+              destinoFinalOptions={destinoFinalOptions}
+              onOptionToggle={handleOptionToggle}
+            />
 
-                      return (
-                        <div key={idx} className={cls}>
-                          <div className="chat-author">{m.author}</div>
-                          <div className="chat-bubble">
-                            {m.text && <div>{m.text}</div>}
-                            {m.attachment && (
-                              <div className="chat-attachment-card">
-                                <div className="attachment-info">
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-                                  <span>{m.attachment.nome}</span>
-                                </div>
-                                <Button 
-                                  variant="ghost" 
-                                  onClick={() => window.open(m.attachment?.url, '_blank')}
-                                >
-                                  Abrir
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div ref={chatEndRef} />
-                  </div>
-                  <div className="chat-input-wrapper">
-                    {isUploadingChat && <div className="chat-upload-loading">Subindo arquivo...</div>}
-                    <div className="chat-input">
-                      <input 
-                        type="file" 
-                        ref={fileInputChatRef} 
-                        style={{ display: 'none' }} 
-                        onChange={handleChatFileUpload}
-                      />
-                      <button 
-                        className="chat-attach-btn" 
-                        onClick={() => fileInputChatRef.current?.click()}
-                        title="Anexar arquivo"
-                        disabled={isUploadingChat}
-                      >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                      </button>
-                      <input
-                        className="c-input"
-                        placeholder="Digite sua mensagem..."
-                        value={draft}
-                        onChange={(e) => setDraft(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
-                        disabled={isUploadingChat}
-                      />
-                      <Button variant="primary" onClick={sendMessage} aria-label="Enviar" disabled={isUploadingChat}>➤</Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
+            <AtendimentoChat
+              messages={messages}
+              draft={draft}
+              isUploadingChat={isUploadingChat}
+              onSendMessage={sendMessage}
+              onDraftChange={setDraft}
+              onFileUpload={handleChatFileUpload}
+              fileInputRef={fileInputChatRef}
+              chatEndRef={chatEndRef}
+              showChat={showChat}
+              onClose={() => setShowChat(false)}
+              variant="modal"
+            />
+          </div>
         ) : (
-          /* LAYOUT PARA PACIENTE - Layout original com chat */
           <div className={`atendimento-container ${!showChat ? 'full-width' : ''}`}>
             <section className="call-area">
-              <div className="call-header">
-                <span className={`status-dot ${statusColor}`} aria-label={`Status: ${statusColor}`}></span>
-                {remoteConnected ? `Tempo de consulta: ${formatElapsedTime(elapsedSeconds)}` : 'Você está em uma consulta'}
-              </div>
-              <div className="call-screen">
-                  <video
-                    ref={remoteRef}
-                    className="remote-video large"
-                    playsInline
-                    autoPlay
-                    aria-label="Vídeo do médico"
-                    style={{
-                      opacity: remoteHasVideo && !connectionFailed ? 1 : 0,
-                      filter: (connectionFailed || !remoteHasVideo) ? 'blur(12px)' : undefined,
-                      transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
-                    }}
-                  />
+              <AtendimentoVideoGrid
+                remoteRef={remoteRef}
+                localRef={localRef}
+                remoteHasVideo={remoteHasVideo}
+                remoteHasAudio={remoteHasAudio}
+                connectionFailed={connectionFailed}
+                reconnecting={reconnecting}
+                remoteDisconnected={remoteDisconnected}
+                remoteConnected={remoteConnected}
+                showExitMessage={showExitMessage}
+                statusText={statusText}
+                statusColor={statusColor}
+                camEnabled={camEnabled}
+                micEnabled={micEnabled}
+                elapsedSeconds={elapsedSeconds}
+                formatElapsedTime={formatElapsedTime}
+                onFinishCall={requestFinishCall}
+                onGoBack={() => router.push('/consultas')}
+                role="paciente"
+              />
 
-                  <div className="call-status-layer">
-                    {connectionFailed ? (
-                      <div className="call-status-content internet-error">
-                        <div className="overlay-icon">🌐</div>
-                        <div className="overlay-content">
-                          <h3>Conexão Perdida</h3>
-                          <p>{reconnecting ? 'Tentando restabelecer sinal...' : 'Verifique sua conexão com a internet.'}</p>
-                        </div>
-                      </div>
-                    ) : remoteDisconnected ? (
-                      <div className="call-status-content peer-disconnected">
-                        <div className="overlay-icon">🔌</div>
-                        <div className="overlay-content">
-                          <h3>Usuário desconectado</h3>
-                          <p>{showExitMessage ? 'A consulta foi encerrada pelo outro participante.' : 'O sinal do outro participante caiu. Aguardando volta...'}</p>
-                          {showExitMessage && (
-                            <Button variant="primary" onClick={confirmFinishCall} style={{ marginTop: '1.5rem' }}>
-                              Voltar para Consultas
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ) : !remoteConnected ? (
-                      <div className="call-status-content waiting">
-                        <div className="call-spinner"></div>
-                        <div className="overlay-content">
-                          <h3>Aguardando Médico</h3>
-                          <p>A entrada pode levar alguns segundos...</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        {!remoteHasVideo && (
-                          <div className="call-status-content no-video">
-                            <div className="overlay-icon-small">📷</div>
-                            <div className="overlay-content">
-                              <p>O médico desligou a câmera</p>
-                            </div>
-                          </div>
-                        )}
-                        <div className="status-alerts-container">
-                          {!remoteHasAudio && (
-                            <div className="remote-mic-alert">
-                              <span>🔇</span>
-                              <span>Médico em silêncio</span>
-                            </div>
-                          )}
-                          {!micEnabled && (
-                            <div className="remote-mic-alert local">
-                              <span>🔇</span>
-                              <span>Seu microfone está desligado</span>
-                            </div>
-                          )}
-                          {!camEnabled && (
-                            <div className="remote-mic-alert local cam">
-                              <span>📷</span>
-                              <span>Sua câmera está desligada</span>
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
-                  </div>
+              <AtendimentoToolbar
+                camEnabled={camEnabled}
+                micEnabled={micEnabled}
+                showChat={showChat}
+                unreadMessagesCount={unreadMessages}
+                onToggleCam={toggleCam}
+                onToggleMic={toggleMic}
+                onToggleChat={() => setShowChat(prev => !prev)}
+                onEndCall={requestFinishCall}
+                role="paciente"
+              />
+            </section>
 
-                  <div className="self-video-container pip">
-                    <video
-                      ref={localRef}
-                      className="self-video"
-                      playsInline
-                      autoPlay
-                      muted
-                      aria-label="Sua câmera"
-                      style={{ opacity: camEnabled ? 1 : 0 }}
-                    />
-                    {!camEnabled && (
-                      <div className="no-camera-placeholder pip-placeholder">
-                        <div className="overlay-icon-small">📷</div>
-                        <div style={{ fontSize: '0.8rem', marginTop: '4px', color: '#94a3b8' }}>Você está sem vídeo</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="call-controls">
-                  <button className={`control-btn ${!camEnabled ? 'off' : ''}`} onClick={toggleCam} aria-label={camEnabled ? 'Desativar câmera' : 'Ativar câmera'}>
-                    {camEnabled ? (
-                      <svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z" /><rect width="14" height="12" x="2" y="6" rx="2" ry="2" /></svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z" /><rect width="14" height="12" x="2" y="6" rx="2" ry="2" /><line x1="2" y1="2" x2="22" y2="22" /></svg>
-                    )}
-                  </button>
-                  <button className={`control-btn ${!micEnabled ? 'off' : ''}`} onClick={toggleMic} aria-label={micEnabled ? 'Desativar microfone' : 'Ativar microfone'}>
-                    {micEnabled ? (
-                      <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24"><line x1="1" y1="1" x2="23" y2="23" /><path d="M9 9v3a3 3 0 0 0 5.12 2.12" /><path d="M15 9.34V5a3 3 0 0 0-5.94-.6" /><path d="M17 16.95A7 7 0 0 1 5 12v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>
-                    )}
-                  </button>
-                  <button className={`control-btn ${showChat ? 'active' : ''}`} aria-label={showChat ? "Esconder chat" : "Mostrar chat"} onClick={() => setShowChat(prev => !prev)}>
-                    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-                    {unreadMessages > 0 && !showChat && <span className="chat-notification-badge"></span>}
-                  </button>
-                  <button className="control-btn end" aria-label="Encerrar chamada" onClick={requestFinishCall}>
-                    <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-                  </button>
-                </div>
-              </section>
-
-            {showChat && (
-              <aside className="chat-panel" aria-label="Chat da consulta">
-                <div className="chat-header">Chat da consulta</div>
-                <div className="chat-body">
-                  {messages.map((m, idx) => {
-                    let cls = 'chat-msg';
-                    if (m.author === 'Você') cls += ' me';
-                    else if (m.author === 'Médico') cls += ' doctor';
-                    else cls += ' patient';
-
-                    return (
-                      <div key={idx} className={cls}>
-                        <div className="chat-author">{m.author}</div>
-                        <div className="chat-bubble">
-                          {m.text && <div>{m.text}</div>}
-                          {m.attachment && (
-                            <div className="chat-attachment-card">
-                              <div className="attachment-info">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-                                <span>{m.attachment.nome}</span>
-                              </div>
-                              <Button 
-                                variant="ghost" 
-                                onClick={() => window.open(m.attachment?.url, '_blank')}
-                              >
-                                Abrir
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  <div ref={chatEndRef} />
-                </div>
-                <div className="chat-input-wrapper">
-                  {isUploadingChat && <div className="chat-upload-loading">Subindo arquivo...</div>}
-                  <div className="chat-input">
-                    <input 
-                      type="file" 
-                      ref={fileInputChatRef} 
-                      style={{ display: 'none' }} 
-                      onChange={handleChatFileUpload}
-                    />
-                    <button 
-                      className="chat-attach-btn" 
-                      onClick={() => fileInputChatRef.current?.click()}
-                      title="Anexar arquivo"
-                      disabled={isUploadingChat}
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                    </button>
-                    <input
-                      className="c-input"
-                      placeholder="Digite..."
-                      value={draft}
-                      onChange={(e) => setDraft(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }}
-                      disabled={isUploadingChat}
-                    />
-                    <Button variant="primary" onClick={sendMessage} aria-label="Enviar" disabled={isUploadingChat}>➤</Button>
-                  </div>
-                </div>
-              </aside>
-            )}
+            <AtendimentoChat
+              messages={messages}
+              draft={draft}
+              isUploadingChat={isUploadingChat}
+              onSendMessage={sendMessage}
+              onDraftChange={setDraft}
+              onFileUpload={handleChatFileUpload}
+              fileInputRef={fileInputChatRef}
+              chatEndRef={chatEndRef}
+              showChat={showChat}
+              onClose={() => setShowChat(false)}
+              variant="side"
+            />
           </div>
         )}
+
+        <AtendimentoModals
+          consultaSelecionada={consultaSelecionada}
+          setConsultaSelecionada={setConsultaSelecionada}
+          loadingAnexosHistory={loadingAnexosHistory}
+          isConfirmingEnd={isConfirmingEnd}
+          setIsConfirmingEnd={setIsConfirmingEnd}
+          atendimentoData={atendimentoData}
+          setAtendimentoData={setAtendimentoData}
+          pacienteNotas={pacienteNotas}
+          setPacienteNotas={setPacienteNotas}
+          cidSearch={cidSearch}
+          onDiagnosticoChange={handleDiagnosticoChange}
+          showCidSugestoesModal={showCidSugestoesModal}
+          setShowCidSugestoesModal={setShowCidSugestoesModal}
+          cidSugestoes={cidSugestoes}
+          onSelectCID={selectCID}
+          onRemoveCID={removeCID}
+          onConfirmFinishWithValidation={confirmFinishWithValidation}
+          activePrescricoes={activePrescricoes}
+          onDeletePrescricao={handleDeletePrescricao}
+          repousoOptions={repousoOptions}
+          destinoFinalOptions={destinoFinalOptions}
+          showAnexosModal={showAnexosModal}
+          setShowAnexosModal={setShowAnexosModal}
+          loadingAnexos={loadingAnexos}
+          anexos={anexos}
+          onOpenAnexo={(url) => window.open(url, '_blank')}
+        />
+
+        <PrescriptionPDFTemplate
+          consultaDetails={consultaDetails}
+          activePrescricoes={activePrescricoes}
+        />
+
+        <Modal
+          isOpen={modal.isOpen}
+          config={modal.config}
+          onConfirm={modal.onConfirm}
+          onCancel={modal.onCancel}
+        />
       </main>
-
-      {/* Modal de Detalhes da Consulta */}
-      <ContentModal
-        isOpen={!!consultaSelecionada}
-        onClose={() => setConsultaSelecionada(null)}
-        title="Detalhes do Atendimento"
-        size="md"
-      >
-        {consultaSelecionada && (
-          <div className="history-details-modal">
-            <div className="details-section">
-              <h4>Informações Gerais</h4>
-              <div className="details-grid">
-                <div className="detail-item">
-                  <label>Data:</label>
-                  <span>{consultaSelecionada.data_consulta ? formatDate(consultaSelecionada.data_consulta) : formatDate(consultaSelecionada.createdAt)}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Médico:</label>
-                  <span>{consultaSelecionada.medico?.nome_completo || '-'}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Hora Início:</label>
-                  <span>{consultaSelecionada.hora_inicio ? new Date(consultaSelecionada.hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Hora Fim:</label>
-                  <span>{consultaSelecionada.hora_fim ? new Date(consultaSelecionada.hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="details-section">
-              <h4>Diagnóstico</h4>
-              <p className="detail-text">{consultaSelecionada.diagnostico || 'Não registrado'}</p>
-            </div>
-
-            <div className="details-section">
-              <h4>Evolução</h4>
-              <p className="detail-text">{consultaSelecionada.evolucao || 'Não registrada'}</p>
-            </div>
-
-            <div className="details-section">
-              <h4>Plano Terapêutico</h4>
-              <p className="detail-text">{consultaSelecionada.plano_terapeutico || 'Não registrado'}</p>
-            </div>
-
-            <div className="details-grid-bottom">
-              <div className="details-section">
-                <h4>Repouso</h4>
-                <p className="detail-text">{consultaSelecionada.repouso || 'Não registrado'}</p>
-              </div>
-              <div className="details-section">
-                <h4>Destino Final</h4>
-                <p className="detail-text">{consultaSelecionada.destino_final || 'Não registrado'}</p>
-              </div>
-            </div>
-
-            {consultaSelecionada.especialidade_seguimento && (
-              <div className="details-section" style={{ background: 'var(--color-primary-50)', padding: '1rem', borderRadius: '8px', marginTop: '1rem' }}>
-                <h4 style={{ color: 'var(--color-primary-700)', marginBottom: '0.25rem' }}>Seguimento Recomendado</h4>
-                <p className="detail-text" style={{ fontWeight: 600 }}>{consultaSelecionada.especialidade_seguimento}</p>
-              </div>
-            )}
-
-            {(consultaSelecionada.ambulancia_endereco || consultaSelecionada.ambulancia_telefone || consultaSelecionada.ambulancia_info || consultaSelecionada.ambulancia_complemento) && (() => {
-              const isVermelho = consultaSelecionada.destino_final?.toLowerCase().includes('vermelho');
-              const accentColor = isVermelho ? '#dc2626' : '#b45309';
-              const bgColor = isVermelho ? 'rgba(220, 38, 38, 0.06)' : 'rgba(245, 158, 11, 0.06)';
-              const borderColor = isVermelho ? 'rgba(220, 38, 38, 0.25)' : 'rgba(245, 158, 11, 0.25)';
-              const badgeBg = isVermelho ? 'rgba(220, 38, 38, 0.12)' : 'rgba(245, 158, 11, 0.12)';
-              const icon = isVermelho ? '🚨' : '🚑';
-              const label = isVermelho ? 'Alerta Vermelho — Envio de Ambulância' : 'Alerta Amarelo — Envio de Ambulância';
-              return (
-                <div className="details-section" style={{ background: bgColor, padding: '1rem', borderRadius: '8px', marginTop: '1rem', border: `1px solid ${borderColor}` }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-                    <span style={{ fontSize: '1.1rem' }}>{icon}</span>
-                    <h4 style={{ color: accentColor, margin: 0, fontSize: '0.95rem', fontWeight: 700 }}>{label}</h4>
-                  </div>
-                  <div style={{ background: badgeBg, borderRadius: '8px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 600, color: accentColor, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>
-                      Ambulância foi enviada para:
-                    </div>
-                    <div className="details-grid" style={{ gridTemplateColumns: '1fr' }}>
-                      {consultaSelecionada.ambulancia_endereco && (
-                        <div className="detail-item">
-                          <label style={{ color: accentColor }}>Endereço:</label>
-                          <span style={{ fontWeight: 600 }}>{consultaSelecionada.ambulancia_endereco}</span>
-                        </div>
-                      )}
-                      {consultaSelecionada.ambulancia_complemento && (
-                        <div className="detail-item">
-                          <label style={{ color: accentColor }}>Complemento:</label>
-                          <span>{consultaSelecionada.ambulancia_complemento}</span>
-                        </div>
-                      )}
-                      {consultaSelecionada.ambulancia_telefone && (
-                        <div className="detail-item">
-                          <label style={{ color: accentColor }}>Telefone:</label>
-                          <span>{consultaSelecionada.ambulancia_telefone}</span>
-                        </div>
-                      )}
-                      {consultaSelecionada.ambulancia_info && (
-                        <div className="detail-item">
-                          <label style={{ color: accentColor }}>Observações:</label>
-                          <span>{consultaSelecionada.ambulancia_info}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {(consultaSelecionada.anexos && consultaSelecionada.anexos.length > 0) || loadingAnexosHistory ? (
-              <div className="details-section" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
-                <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-primary-600)' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                  Arquivos da Consulta
-                </h4>
-                {loadingAnexosHistory ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '1rem', color: '#6b7280', fontSize: '0.9rem' }}>
-                    <div className="mini-spinner"></div>
-                    Pesquisando anexos...
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
-                    {consultaSelecionada.anexos?.map((file, idx) => (
-                      <div key={idx} className="anexo-item-history" style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'space-between',
-                        padding: '10px 14px',
-                        background: 'var(--bg-secondary)',
-                        borderRadius: '10px',
-                        border: '1px solid var(--border-color)'
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-primary-500)' }}><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
-                          <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{file.nome}</span>
-                        </div>
-                        <button 
-                          className="btn-open-anexo"
-                          onClick={() => window.open(file.url, '_blank')}
-                          style={{
-                            background: 'var(--color-primary-50)',
-                            color: 'var(--color-primary-600)',
-                            border: 'none',
-                            padding: '6px 12px',
-                            borderRadius: '6px',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Abrir
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : null}
-
-          </div>
-        )}
-      </ContentModal>
-
-      {/* Modal de Confirmação de Finalização (Médico) */}
-      <ContentModal
-        isOpen={isConfirmingEnd}
-        onClose={() => setIsConfirmingEnd(false)}
-        title="Confirmar Informações do Atendimento"
-        size="xl"
-      >
-        <div className="confirmation-screen">
-          <p className="confirmation-description">
-            Revise abaixo todas as informações inseridas durante a consulta. Você pode editá-las antes de finalizar definitivamente.
-          </p>
-
-          <div className="confirmation-grid">
-            <div className="confirmation-section">
-              <h4>Ficha de Atendimento</h4>
-              <div className="confirmation-form">
-                <div className="form-group">
-                  <label>Evolução</label>
-                  <textarea
-                    className="atendimento-textarea"
-                    style={{ minHeight: '100px' }}
-                    value={atendimentoData.evolucao}
-                    onChange={(e) => setAtendimentoData(prev => ({ ...prev, evolucao: e.target.value }))}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Notas Privadas (Sobre o Paciente)</label>
-                  <textarea
-                    className="atendimento-textarea"
-                    style={{ minHeight: '80px', borderLeft: '4px solid var(--color-primary-500)' }}
-                    placeholder="Notas exclusivas para seu controle..."
-                    value={pacienteNotas}
-                    onChange={(e) => setPacienteNotas(e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Plano Terapêutico</label>
-                  <textarea
-                    className="atendimento-textarea"
-                    style={{ minHeight: '100px' }}
-                    value={atendimentoData.plano_terapeutico}
-                    onChange={(e) => setAtendimentoData(prev => ({ ...prev, plano_terapeutico: e.target.value }))}
-                  />
-                </div>
-                <div className="form-group" style={{ position: 'relative' }}>
-                  <label>Diagnóstico (CID)</label>
-                  <div className="cid-chips-wrapper" style={{ marginBottom: '8px' }}>
-                    {atendimentoData.selectedCIDs.map(cid => (
-                      <div key={cid.codigo} className="cid-chip">
-                        <span className="cid-chip-code">{cid.codigo}</span>
-                        <span className="cid-chip-name" style={{ maxWidth: '120px' }}>{cid.nome}</span>
-                        <button className="cid-chip-remove" onClick={() => removeCID(cid.codigo)} type="button">✕</button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="address-search-wrapper">
-                    <input
-                      type="text"
-                      className="atendimento-input-small"
-                      placeholder="Adicionar CID..."
-                      value={cidSearch}
-                      onChange={(e) => handleDiagnosticoChange(e.target.value, true)}
-                      onBlur={() => setTimeout(() => setShowCidSugestoesModal(false), 200)}
-                    />
-                    <span className="search-icon-inside">
-                      <img src="/icons/Search.png" alt="Buscar" width="16" height="16" />
-                    </span>
-                  </div>
-                  {showCidSugestoesModal && cidSugestoes.length > 0 && (
-                    <div className="prescricao-suggestions" style={{ width: '100%', top: '100%', zIndex: 100 }}>
-                      {cidSugestoes.map((cid, idx) => (
-                        <div
-                          key={idx}
-                          className="prescricao-suggestions-item"
-                          onClick={() => selectCID(cid, true)}
-                        >
-                          <strong style={{ color: 'var(--color-primary-600)' }}>{cid.codigo}</strong> - {cid.nome}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <textarea
-                    className="atendimento-textarea"
-                    style={{ minHeight: '60px', marginTop: '8px', fontSize: '0.85rem' }}
-                    placeholder="Complemento manual..."
-                    value={atendimentoData.diagnostico.split(', ').filter(s => !atendimentoData.selectedCIDs.some(c => `${c.codigo} - ${c.nome}` === s)).join(', ')}
-                    onChange={(e) => {
-                      const manualText = e.target.value;
-                      const cidText = atendimentoData.selectedCIDs.map(c => `${c.codigo} - ${c.nome}`).join(', ');
-                      const fullText = cidText ? (manualText ? `${cidText}, ${manualText}` : cidText) : manualText;
-                      setAtendimentoData(prev => ({ ...prev, diagnostico: fullText }));
-                    }}
-                  />
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Repouso</label>
-                    <select
-                      className="atendimento-input-small"
-                      value={atendimentoData.repouso}
-                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, repouso: e.target.value }))}
-                    >
-                      <option value="">Selecione...</option>
-                      {repousoOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Destino Final</label>
-                    <select
-                      className="atendimento-input-small"
-                      value={atendimentoData.destino_final}
-                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, destino_final: e.target.value }))}
-                    >
-                      <option value="">Selecione...</option>
-                      {destinoFinalOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
-                  </div>
-                </div>
-
-                {atendimentoData.destino_final.toLowerCase().includes('seguimento externo') && (
-                  <div className="form-group">
-                    <label>Especialidade recomendada</label>
-                    <input
-                      type="text"
-                      className="atendimento-input-small"
-                      placeholder="Ex: Cardiologista, Ortopedia..."
-                      value={atendimentoData.especialidade_seguimento}
-                      onChange={(e) => setAtendimentoData(prev => ({ ...prev, especialidade_seguimento: e.target.value }))}
-                    />
-                  </div>
-                )}
-
-                {atendimentoData.destino_final.toLowerCase().includes('ambulância') && (
-                  <div className="confirmation-ambulance-fields" style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-                    <h5 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#b45309' }}>Dados para Envio de Ambulância</h5>
-                    <div className="form-group">
-                      <label>Endereço Completo</label>
-                      <input
-                        type="text"
-                        className="atendimento-input-small"
-                        value={atendimentoData.endereco_ambulancia.endereco}
-                        onChange={(e) => setAtendimentoData(prev => ({
-                          ...prev,
-                          endereco_ambulancia: { ...prev.endereco_ambulancia, endereco: e.target.value }
-                        }))}
-                      />
-                    </div>
-                    <div className="form-row" style={{ marginTop: '0.75rem' }}>
-                      <div className="form-group">
-                        <label>Complemento</label>
-                        <input
-                          type="text"
-                          className="atendimento-input-small"
-                          value={atendimentoData.endereco_ambulancia.complemento}
-                          onChange={(e) => setAtendimentoData(prev => ({
-                            ...prev,
-                            endereco_ambulancia: { ...prev.endereco_ambulancia, complemento: e.target.value }
-                          }))}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Telefone de Contato</label>
-                        <input
-                          type="text"
-                          className="atendimento-input-small"
-                          value={atendimentoData.endereco_ambulancia.telefone}
-                          onChange={(e) => setAtendimentoData(prev => ({
-                            ...prev,
-                            endereco_ambulancia: { ...prev.endereco_ambulancia, telefone: e.target.value }
-                          }))}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="confirmation-section">
-              <h4>Prescrições</h4>
-              <div className="confirmation-prescriptions">
-                {activePrescricoes.length === 0 ? (
-                  <p className="no-prescriptions">Nenhuma prescrição adicionada.</p>
-                ) : (
-                  <div className="prescricao-list">
-                    {activePrescricoes.map((p) => (
-                      <div key={p.id} className="prescricao-card">
-                        <div className="prescricao-card-header">
-                          <div className="prescricao-card-medicamento">{p.medicamento}</div>
-                          <button
-                            className="prescricao-delete-btn"
-                            onClick={() => handleDeletePrescricao(p.id)}
-                          >
-                            Excluir
-                          </button>
-                        </div>
-                        <div className="prescricao-card-info">
-                          {p.dosagem} - {p.frequencia} - {p.duracao}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: 'auto', textAlign: 'center' }}>
-                  Para adicionar novas prescrições, utilize o painel lateral durante a consulta.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="confirmation-actions">
-            <Button variant="ghost" onClick={() => setIsConfirmingEnd(false)}>
-              Voltar
-            </Button>
-            <Button variant="primary" onClick={confirmFinishWithValidation}>
-              Confirmar e Finalizar Atendimento
-            </Button>
-          </div>
-        </div>
-      </ContentModal>
-
-      {/* Modal de Anexos - Arquivos enviados pelo paciente */}
-      <ContentModal
-        isOpen={showAnexosModal}
-        onClose={() => setShowAnexosModal(false)}
-        title="📁 Arquivos Enviados pelo Paciente"
-        size="md"
-      >
-        <div style={{ padding: '0.25rem 0' }}>
-          {loadingAnexos ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem', gap: '1rem' }}>
-              <div className="spinner" style={{ width: '32px', height: '32px' }} />
-              <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Buscando arquivos...</span>
-            </div>
-          ) : anexos.length > 0 ? (
-            <>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', marginBottom: '1rem', padding: '0 0.25rem' }}>
-                {anexos.length} arquivo{anexos.length !== 1 ? 's' : ''} enviado{anexos.length !== 1 ? 's' : ''} pelo paciente para esta consulta.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {anexos.map((file) => {
-                  const isPdf = file.tipo_mime?.includes('pdf');
-                  const isImage = file.tipo_mime?.includes('image');
-                  const iconBg = isPdf ? '#fee2e2' : isImage ? '#e0f2fe' : 'var(--bg-tertiary)';
-                  const iconColor = isPdf ? '#ef4444' : isImage ? '#0ea5e9' : 'var(--color-primary-500)';
-                  const typeLabel = isPdf ? 'PDF' : isImage ? 'Imagem' : (file.tipo_mime?.split('/')[1]?.toUpperCase() || 'Arquivo');
-                  return (
-                    <div key={file.id} style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0.875rem 1rem',
-                      background: 'var(--bg-secondary)',
-                      borderRadius: '12px',
-                      border: '1px solid var(--border-color)',
-                      transition: 'border-color 0.2s',
-                      gap: '0.75rem'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', minWidth: 0, flex: 1 }}>
-                        {/* Ícone do tipo de arquivo */}
-                        <div style={{
-                          width: '44px',
-                          height: '44px',
-                          background: iconBg,
-                          color: iconColor,
-                          borderRadius: '10px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0
-                        }}>
-                          {isImage ? (
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/>
-                            </svg>
-                          ) : isPdf ? (
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/>
-                            </svg>
-                          ) : (
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>
-                            </svg>
-                          )}
-                        </div>
-                        {/* Metadados do arquivo */}
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {file.nome || 'Arquivo sem nome'}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '2px' }}>
-                            <span style={{
-                              display: 'inline-block',
-                              fontSize: '0.7rem',
-                              fontWeight: 700,
-                              color: iconColor,
-                              background: iconBg,
-                              padding: '1px 6px',
-                              borderRadius: '4px',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.03em'
-                            }}>{typeLabel}</span>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                              {file.createdAt ? formatDate(file.createdAt) : 'Data indisponível'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      {/* Botão de ação */}
-                      <a
-                        href={file.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn primary"
-                        style={{
-                          padding: '0.5rem 0.875rem',
-                          fontSize: '0.8rem',
-                          textDecoration: 'none',
-                          flexShrink: 0,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.375rem',
-                          borderRadius: '8px'
-                        }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                        Abrir
-                      </a>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-tertiary)' }}>
-              <div style={{ marginBottom: '1rem', opacity: 0.4 }}>
-                <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-                </svg>
-              </div>
-              <p style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Nenhum arquivo enviado</p>
-              <p style={{ fontSize: '0.85rem', lineHeight: 1.6 }}>O paciente não anexou exames ou documentos para esta consulta.</p>
-            </div>
-          )}
-        </div>
-      </ContentModal>
-
-      <Modal
-        isOpen={modal.isOpen}
-        config={modal.config}
-        onConfirm={modal.onConfirm}
-        onCancel={modal.onCancel}
-      />
-
-      {/* Template para o PDF (Invisível) - Design de Prescrição Realista */}
-      <div id="atendimento-prescription-pdf-template" style={{ position: 'fixed', left: '-9999px', top: '-9999px' }}>
-        <div id="prescription-pdf-template">
-          <div className="pdf-inner-border"></div>
-
-          <div className="pdf-header">
-            <div className="pdf-logo-wrapper">
-              <div className="pdf-logo-circle">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22v-5" /><path d="M12 12V2" /><path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" /><path d="m15 13-3-3-3 3" />
-                </svg>
-              </div>
-              <div className="pdf-logo-text">
-                <h1>JJ Telemedicina</h1>
-                <p>Cuidado Digital de Excelência</p>
-              </div>
-            </div>
-            <div className="pdf-header-meta">
-              <div>JJ Serviços Médicos e Tecnológicos Ltda.</div>
-              <div>CNPJ: 00.000.000/0001-00</div>
-              <div>contato@jjtelemedicina.com.br</div>
-              <div>www.jjtelemedicina.com.br</div>
-            </div>
-          </div>
-
-          <div className="pdf-title-section">
-            <h2 className="pdf-title-main">Receituário</h2>
-            <p className="pdf-title-sub">Prescrição Médica Digital</p>
-          </div>
-
-          <div className="pdf-patient-section">
-            <span className="pdf-patient-label">Para:</span>
-            <p className="pdf-patient-name">{consultaDetails?.paciente?.nome_completo || 'Paciente'}</p>
-          </div>
-
-          <div className="pdf-prescription-body">
-            {activePrescricoes.map((p, index) => (
-              <div key={p.id} className="pdf-med-item">
-                <span className="pdf-med-number">{index + 1}.</span>
-                <div className="pdf-med-name-row">
-                  <span className="pdf-med-name">{p.medicamento} {p.dosagem}</span>
-                  <span className="pdf-med-quantity">1 Unidade</span>
-                </div>
-
-                <div className="pdf-instructions-box">
-                  <div className="pdf-instruction-line">
-                    <span className="pdf-instruction-label">Uso:</span>
-                    Tomar conforme orientação: {p.frequencia} por {p.duracao}.
-                  </div>
-                  {p.marca && (
-                    <div className="pdf-instruction-line" style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>
-                      <span className="pdf-instruction-label">Obs:</span> Preferência por marca {p.marca}.
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="pdf-footer">
-            <div className="pdf-seal-wrapper">
-              <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
-            </div>
-            <div className="pdf-signature-area">
-              <div className="pdf-signature-line"></div>
-              <p className="pdf-doctor-name">Dr(a). {getUser()?.nome || 'Médico'}</p>
-              <p className="pdf-doctor-info">CRM/UF: 000000 - Especialista em Telemedicina</p>
-            </div>
-
-            <div className="pdf-auth-footer">
-              <div>
-                Emitido em: <strong>{formatDate(new Date())} às {formatTime(new Date())}</strong>
-              </div>
-              <div className="pdf-auth-code">
-                CÓD: {Math.random().toString(36).substring(2, 10).toUpperCase()}-{consultaDetails?.id || 'REF'}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

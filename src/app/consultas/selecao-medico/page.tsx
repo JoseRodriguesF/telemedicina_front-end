@@ -26,9 +26,15 @@ type Doctor = {
 function SelecaoMedicoInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const date = searchParams.get('date');
-    const time = searchParams.get('time');
+    const dateParam = searchParams.get('date');
+    const timeParam = searchParams.get('time');
+    const isPS = searchParams.get('ps') === 'true';
     const historiaId = searchParams.get('historiaId');
+
+    // ✅ Para Pronto Atendimento, se não houver data/hora, assume AGORA
+    const date = dateParam || (isPS ? new Date().toISOString().split('T')[0] : null);
+    const time = timeParam || (isPS ? new Date().toTimeString().slice(0, 5) : null);
+    
     const modal = useModal();
 
     const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -110,8 +116,10 @@ function SelecaoMedicoInner() {
             }
 
             modal.success(
-                'Solicitação Enviada',
-                `Solicitação enviada com sucesso! Aguarde a confirmação do Dr(a). ${doc.nome} para o dia ${formatDate(date)} às ${time}.`,
+                isPS ? 'Solicitação de Atendimento' : 'Solicitação Enviada',
+                isPS 
+                    ? `Sua solicitação de atendimento imediato foi enviada para o Dr(a). ${doc.nome}. Por favor, aguarde o início da chamada.`
+                    : `Solicitação enviada com sucesso! Aguarde a confirmação do Dr(a). ${doc.nome} para o dia ${formatDate(date || '')} às ${time}.`,
                 () => router.push('/consultas')
             );
         } catch (err: any) {

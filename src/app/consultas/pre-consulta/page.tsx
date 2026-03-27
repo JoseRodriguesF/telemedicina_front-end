@@ -55,6 +55,7 @@ function PreConsultaInner() {
   const [completed, setCompleted] = useState(false);
   const [isTriageStarted, setIsTriageStarted] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [isNavigating, setIsNavigating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // Estados para o relatório de confirmação
@@ -149,11 +150,28 @@ function PreConsultaInner() {
         // Pequeno delay para mostrar a mensagem antes do relatório
         setTimeout(() => setShowRelatorio(true), 600);
       } else {
-        setMessages(prev => [...prev, { author: 'Angélica', text: answer }]);
+        // ✅ CORREÇÃO: Tratar possíveis respostas em JSON
+        let displayAnswer = answer;
+        if (displayAnswer.trim().startsWith('{') || displayAnswer.trim().includes('```json')) {
+          try {
+            let jsonStr = displayAnswer.trim();
+            if (jsonStr.includes('```json')) {
+              jsonStr = jsonStr.split('```json')[1].split('```')[0].trim();
+            }
+            const parsed = JSON.parse(jsonStr);
+            displayAnswer = parsed.answer || parsed.message || parsed.text || parsed.content || displayAnswer;
+            // Se ainda assim parecer JSON, talvez seja melhor não mostrar se já tivermos a resposta estruturada
+            if (typeof displayAnswer === 'object') displayAnswer = "Entendi. Pode continuar.";
+          } catch (e) {
+            console.warn("Falha ao parsear JSON da IA:", e);
+          }
+        }
+
+        setMessages(prev => [...prev, { author: 'Angélica', text: displayAnswer }]);
         setHistory(prev => [
           ...prev,
           { role: 'user', content: t },
-          { role: 'assistant', content: answer }
+          { role: 'assistant', content: displayAnswer }
         ]);
       }
     } catch (err: any) {
@@ -175,7 +193,7 @@ function PreConsultaInner() {
       if (result.historiaClinicaId) {
         historiaClinicaIdRef.current = result.historiaClinicaId;
       }
-      setShowRelatorio(false);
+      setIsNavigating(true);
       handleEnviar(result.historiaClinicaId);
     } catch (err: any) {
       // Mesmo que falhe ao salvar, permite prosseguir
@@ -289,33 +307,16 @@ function PreConsultaInner() {
       return;
     }
 
-    try {
-      const { roomId, consultaId, iceServers } = await psCreateRoom(token, {
-        historiaClinicaId: currentHistoriaId
-      });
-      sessionStorage.setItem('ps_room', JSON.stringify({ roomId, consultaId, iceServers }));
-
-      // Se houver anexos, envia agora vinculando à consulta recém-criada
-      if (anexos.length > 0) {
-        try {
-          await enviarAnexosConsulta(consultaId, token, anexos);
-        } catch (err) {
-          console.error("Erro ao vincular anexos:", err);
-          // Não interrompe o fluxo se falhar apenas o anexo
-        }
-      }
-
-      router.push(`/consultas/aguardando?id=${encodeURIComponent(consultaId)}`);
-    } catch (err: any) {
-      const msg = String(err?.message || 'Não foi possível criar sua consulta. Tente novamente.');
-      if (msg.includes('forbidden_only_paciente_can_create_room')) {
-        modal.error('Acesso Negado', 'Apenas pacientes podem criar consulta no pronto socorro.');
-      } else if (msg.includes('paciente_record_not_found_for_usuario')) {
-        modal.error('Cadastro Incompleto', 'Seu usuário não está vinculado a um cadastro de Paciente. Complete o cadastro para continuar.');
-      } else {
-        modal.error('Erro', msg);
-      }
+    // Pronto Atendimento (PS) - NOVO COMPORTAMENTO
+    // Ao invés de criar a sala genérica que cai na fila, redireciona direto para seleção de médicos
+    setIsNavigating(true);
+    
+    // Salvar anexos se existirem
+    if (anexos.length > 0) {
+      sessionStorage.setItem('pending_anexos', JSON.stringify(anexos));
     }
+
+    router.push(`/consultas/selecao-medico?historiaId=${encodeURIComponent(currentHistoriaId || '')}&ps=true`);
   }
 
   // Limpar ao desmontar
@@ -335,7 +336,6 @@ function PreConsultaInner() {
         className={isTriageStarted ? 'sidebar-hidden' : ''}
       />
       <main className="inicio-main" style={{ padding: 0 }}>
-
         <div className="pc-page-container">
           <div className="pc-centered-layout">
             <div className={`pc-content-side${showRelatorio ? ' pc-content-side--relatorio' : ''}`}>
@@ -367,7 +367,7 @@ function PreConsultaInner() {
                 </div>
               )}
 
-              {isTriageStarted && !showRelatorio && (
+              {isTriageStarted && !showRelatorio && !isNavigating && (
                 <div className="pc-chat-history-container">
                   <div className="pc-chat-messages">
                     {messages.map((m, i) => (
@@ -394,8 +394,40 @@ function PreConsultaInner() {
                 </div>
               )}
 
+              {/* ✅ NOVO: Tela de carregamento durante a transição */}
+              {isNavigating && (
+                <div className="pc-transition-container" style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4rem 2rem',
+                  textAlign: 'center',
+                  background: 'var(--bg-primary)',
+                  borderRadius: '24px',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+                  margin: '2.5rem auto',
+                  maxWidth: '500px'
+                }}>
+                  <div className="pc-loading-spinner" style={{
+                    width: '48px',
+                    height: '48px',
+                    border: '4px solid var(--bg-secondary)',
+                    borderTopColor: 'var(--color-primary-600)',
+                    borderRadius: '50%',
+                    animation: 'pc-spin 1s linear infinite',
+                    marginBottom: '1.5rem'
+                  }} />
+                  <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-primary)', fontSize: '1.25rem' }}>Preparando seu atendimento</h3>
+                  <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Aguarde um momento enquanto redirecionamos você...</p>
+                  <style>{`
+                    @keyframes pc-spin { to { transform: rotate(360deg); } }
+                  `}</style>
+                </div>
+              )}
+
               {/* Relatório de Confirmação */}
-              {showRelatorio && dadosTriagem && (
+              {showRelatorio && dadosTriagem && !isNavigating && (
                 <div className="pc-relatorio-container">
                   <div className="pc-relatorio-header">
                     <div className="pc-relatorio-icon">✅</div>
@@ -418,21 +450,21 @@ function PreConsultaInner() {
                       </div>
                     )}
                     
-                    {dadosTriagem.queixa_principal && (
+                    {dadosTriagem?.queixa_principal && (
                       <div className="pc-relatorio-section">
                         <h3>📋 Motivo da Consulta</h3>
                         <p>{dadosTriagem.queixa_principal}</p>
                       </div>
                     )}
 
-                    {dadosTriagem.descricao_sintomas && (
+                    {dadosTriagem?.descricao_sintomas && (
                       <div className="pc-relatorio-section">
                         <h3>🩺 Descrição dos Sintomas</h3>
                         <p>{dadosTriagem.descricao_sintomas}</p>
                       </div>
                     )}
 
-                    {dadosTriagem.historico_pessoal && (
+                    {dadosTriagem?.historico_pessoal && (
                       <div className="pc-relatorio-section">
                         <h3>📁 Histórico Médico Pessoal</h3>
                         {dadosTriagem.historico_pessoal.doencas && dadosTriagem.historico_pessoal.doencas.length > 0 && (
@@ -459,7 +491,7 @@ function PreConsultaInner() {
                       </div>
                     )}
 
-                    {dadosTriagem.conteudo && (
+                    {dadosTriagem?.conteudo && (
                       <div className="pc-relatorio-section">
                         <h3>📝 Resumo da Triagem</h3>
                         <div className="pc-relatorio-item" style={{ fontSize: '0.95rem', lineHeight: 1.6 }}>
@@ -468,7 +500,7 @@ function PreConsultaInner() {
                       </div>
                     )}
 
-                    {dadosTriagem.antecedentes_familiares && Object.keys(dadosTriagem.antecedentes_familiares).length > 0 && (
+                    {dadosTriagem?.antecedentes_familiares && Object.keys(dadosTriagem.antecedentes_familiares).length > 0 && (
                       <div className="pc-relatorio-section">
                         <h3>👨‍👩‍👧 Antecedentes Familiares</h3>
                         {Object.entries(dadosTriagem.antecedentes_familiares).map(([familiar, doenca]) => (
@@ -480,7 +512,7 @@ function PreConsultaInner() {
                       </div>
                     )}
 
-                    {dadosTriagem.estilo_vida && Object.keys(dadosTriagem.estilo_vida).length > 0 && (
+                    {dadosTriagem?.estilo_vida && Object.keys(dadosTriagem.estilo_vida).length > 0 && (
                       <div className="pc-relatorio-section">
                         <h3>🏃 Estilo de Vida</h3>
                         {Object.entries(dadosTriagem.estilo_vida).map(([key, valor]) => (
@@ -492,14 +524,12 @@ function PreConsultaInner() {
                       </div>
                     )}
 
-                    {dadosTriagem.vacinacao && dadosTriagem.vacinacao.trim() && !dadosTriagem.vacinacao.toLowerCase().includes('não coletado') && (
+                    {dadosTriagem?.vacinacao && dadosTriagem.vacinacao.trim() && !dadosTriagem.vacinacao.toLowerCase().includes('não coletado') && (
                       <div className="pc-relatorio-section">
                         <h3>💉 Vacinação</h3>
                         <p>{dadosTriagem.vacinacao}</p>
                       </div>
                     )}
-
-
                   </div>
 
                   <div className="pc-relatorio-disclaimer">
@@ -509,7 +539,6 @@ function PreConsultaInner() {
                     As informações acima serão compartilhadas com o médico durante o atendimento.
                   </div>
 
-                  {/* SEÇÃO DE ANEXOS - BOTÃO A PARTE */}
                   <div className="pc-anexos-container" style={{
                     marginTop: '1.5rem',
                     marginBottom: '1rem',
@@ -653,8 +682,8 @@ function PreConsultaInner() {
                 </div>
               )}
 
-              {/* Input Area — mostrar somente durante o chat (não no relatório) */}
-              {isTriageStarted && !showRelatorio && (
+              {/* Input Area — mostrar somente durante o chat (não no relatório ou transição) */}
+              {isTriageStarted && !showRelatorio && !isNavigating && (
                 <div className="pc-input-wrapper">
                   <div className="pc-input-container">
                     <input 
