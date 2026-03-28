@@ -1727,7 +1727,7 @@ function AtendimentoInner() {
               chatEndRef={chatEndRef}
               showChat={showChat}
               onClose={() => setShowChat(false)}
-              variant="side"
+              variant="panel"
             />
           </div>
         )}

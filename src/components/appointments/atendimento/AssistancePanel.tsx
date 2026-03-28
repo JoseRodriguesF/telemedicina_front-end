@@ -21,7 +21,7 @@ interface AssistancePanelProps {
   onRemoveCID: (code: string) => void;
   repousoOptions: string[];
   destinoFinalOptions: string[];
-  onOptionToggle: (field: string, option: string) => void;
+  onOptionToggle: (field: 'repouso' | 'destino_final', option: string) => void;
 }
 
 const AssistancePanel: React.FC<AssistancePanelProps> = ({
