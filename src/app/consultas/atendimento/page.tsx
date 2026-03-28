@@ -30,7 +30,6 @@ import ClinicalPanel from '@/components/appointments/atendimento/ClinicalPanel';
 import AssistancePanel from '@/components/appointments/atendimento/AssistancePanel';
 import AtendimentoModals from '@/components/appointments/atendimento/AtendimentoModals';
 import PrescriptionPDFTemplate from '@/components/appointments/atendimento/PrescriptionPDFTemplate';
-import { socket } from '@/lib/socket';
 import { notify } from '@/components/common/Notification';
 
 type ChatMessage = { 
