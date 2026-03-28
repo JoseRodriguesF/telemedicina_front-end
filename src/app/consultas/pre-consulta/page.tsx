@@ -289,6 +289,7 @@ function PreConsultaInner() {
 
     const currentHistoriaId = forcedHistoriaId || historiaClinicaIdRef.current;
 
+    // ─── Fluxo de Agendamento ───────────────────────────────────────────
     if (flow === 'agendamento') {
       const queryParams = new URLSearchParams({
         date: dateStr || '',
@@ -298,7 +299,7 @@ function PreConsultaInner() {
         queryParams.append('historiaId', String(currentHistoriaId));
       }
 
-      // ✅ NOVO: Salvar anexos temporariamente para serem enviados após a criação da consulta agendada
+      // Salvar anexos temporariamente para serem enviados após a criação da consulta agendada
       if (anexos.length > 0) {
         sessionStorage.setItem('pending_anexos', JSON.stringify(anexos));
       }
@@ -307,16 +308,34 @@ function PreConsultaInner() {
       return;
     }
 
-    // Pronto Atendimento (PS) - NOVO COMPORTAMENTO
-    // Ao invés de criar a sala genérica que cai na fila, redireciona direto para seleção de médicos
+    // ─── Fluxo de Pronto Atendimento (PS) ──────────────────────────────
+    // Cria a sala na fila PS e redireciona para a tela de espera.
+    // Um médico em /consultas/pacientes verá a solicitação e fará o claim.
     setIsNavigating(true);
-    
-    // Salvar anexos se existirem
-    if (anexos.length > 0) {
-      sessionStorage.setItem('pending_anexos', JSON.stringify(anexos));
-    }
+    try {
+      const room = await psCreateRoom(token, {
+        historiaClinicaId: currentHistoriaId
+      });
 
-    router.push(`/consultas/selecao-medico?historiaId=${encodeURIComponent(currentHistoriaId || '')}&ps=true`);
+      // Enviar anexos pendentes vinculados à nova consulta PS
+      if (anexos.length > 0 && room.consultaId) {
+        try {
+          await enviarAnexosConsulta(room.consultaId, token, anexos);
+        } catch (e) {
+          console.error('[PA] Erro ao enviar anexos:', e);
+        }
+      }
+
+      router.push(`/consultas/aguardando?id=${room.consultaId}`);
+    } catch (err: any) {
+      setIsNavigating(false);
+      const msg = err?.response?.data?.error || err?.message || 'Erro desconhecido';
+      if (msg?.toLowerCase().includes('cadastro') || msg?.toLowerCase().includes('paciente')) {
+        modal.error('Cadastro Incompleto', 'Seu usuário não está vinculado a um cadastro de Paciente. Complete o cadastro para continuar.');
+      } else {
+        modal.error('Erro ao entrar na fila', msg);
+      }
+    }
   }
 
   // Limpar ao desmontar
