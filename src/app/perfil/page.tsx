@@ -422,11 +422,7 @@ export default function PerfilPage() {
               </div>
             </div>
 
-            <div style={{ marginTop: '1.5rem', padding: '0.75rem', background: 'rgba(239, 68, 68, 0.08)', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-              <h5 style={{ color: 'var(--color-error)', margin: 0, fontSize: '0.9rem', fontWeight: 700 }}>Zona de Perigo</h5>
-              <p style={{ color: 'var(--text-tertiary)', fontSize: '0.8rem', margin: '0.5rem 0' }}>A exclusão da conta é permanente.</p>
-              <button style={{ color: 'var(--color-error)', background: 'none', border: 'none', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', padding: 0, opacity: 0.7 }}>Excluir minha conta</button>
-            </div>
+
           </aside>
         </div>
       </div>
