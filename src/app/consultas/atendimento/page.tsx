@@ -1680,41 +1680,32 @@ function AtendimentoInner() {
             />
           </div>
         ) : (
-          <div className={`atendimento-container ${!showChat ? 'full-width' : ''}`}>
-            <section className="call-area">
-              <AtendimentoVideoGrid
-                remoteRef={remoteRef}
-                localRef={localRef}
-                remoteHasVideo={remoteHasVideo}
-                remoteHasAudio={remoteHasAudio}
-                connectionFailed={connectionFailed}
-                reconnecting={reconnecting}
-                remoteDisconnected={remoteDisconnected}
-                remoteConnected={remoteConnected}
-                showExitMessage={showExitMessage}
-                statusText={statusText}
-                statusColor={statusColor}
-                camEnabled={camEnabled}
-                micEnabled={micEnabled}
-                elapsedSeconds={elapsedSeconds}
-                formatElapsedTime={formatElapsedTime}
-                onFinishCall={requestFinishCall}
-                onGoBack={() => router.push('/consultas')}
-                role="paciente"
-              />
-
-              <AtendimentoToolbar
-                camEnabled={camEnabled}
-                micEnabled={micEnabled}
-                showChat={showChat}
-                unreadMessagesCount={unreadMessages}
-                onToggleCam={toggleCam}
-                onToggleMic={toggleMic}
-                onToggleChat={() => setShowChat(prev => !prev)}
-                onEndCall={requestFinishCall}
-                role="paciente"
-              />
-            </section>
+          <div className={`atendimento-container paciente-layout ${!showChat ? 'full-width' : ''}`}>
+            <AtendimentoVideoGrid
+              remoteRef={remoteRef}
+              localRef={localRef}
+              remoteHasVideo={remoteHasVideo}
+              remoteHasAudio={remoteHasAudio}
+              connectionFailed={connectionFailed}
+              reconnecting={reconnecting}
+              remoteDisconnected={remoteDisconnected}
+              remoteConnected={remoteConnected}
+              showExitMessage={showExitMessage}
+              statusText={statusText}
+              statusColor={statusColor}
+              camEnabled={camEnabled}
+              micEnabled={micEnabled}
+              elapsedSeconds={elapsedSeconds}
+              formatElapsedTime={formatElapsedTime}
+              onFinishCall={requestFinishCall}
+              onGoBack={() => router.push('/consultas')}
+              role="paciente"
+              showChat={showChat}
+              unreadMessagesCount={unreadMessages}
+              onToggleCam={toggleCam}
+              onToggleMic={toggleMic}
+              onToggleChat={() => setShowChat(prev => !prev)}
+            />
 
             <AtendimentoChat
               messages={messages}
