@@ -525,7 +525,6 @@ export default function PerfilPage() {
         </div>
       </Modal>
 
-      {/* Document Viewer Modal */}
       <ContentModal
         isOpen={documentViewerOpen}
         onClose={() => {
@@ -536,62 +535,53 @@ export default function PerfilPage() {
         size="lg"
       >
         {currentDocument?.url && (
-          <div className="pdf-viewer-container">
-            {(currentDocument.mimetype === 'application/pdf') ? (
-              <object
-                data={`${currentDocument.url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
-                type="application/pdf"
-                className="pdf-object-view"
-              >
-                <div className="pdf-fallback">
-                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14.5 2 14.5 7.5 20 7.5" /><path d="M12 12v6" /><path d="m15 15-3 3-3-3" /></svg>
-                  <div className="pdf-error-title">Visualização indisponível no navegador</div>
-                  <p>Não foi possível carregar o visualizador de PDF diretamente. Você pode baixar o documento para visualizá-lo em seu dispositivo.</p>
-                  <a
-                    href={currentDocument.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-pdf-download"
-                    download
-                  >
-                    Baixar Documento (PDF)
-                  </a>
-                </div>
-              </object>
-            ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <img
-                  src={currentDocument.url}
-                  alt={currentDocument.title}
-                  style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                />
-              </div>
-            )}
-
-            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+          <div className="viewer-actions-wrapper">
+            {/* Floating Action Button */}
+            <div className="viewer-floating-actions">
               <button
-                className="btn-profile secondary"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 24px',
-                  fontSize: '0.9rem',
-                  fontWeight: 600,
-                  transition: 'all 0.2s',
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)',
-                  color: 'var(--text-primary)'
-                }}
+                className="btn-floating-action"
                 onClick={() => {
                   const inputId = `upload-${currentDocument.fieldName.replace('_url', '').replace('assinatura_digital', 'assinatura').replace('seguro_responsabilidade', 'seguro')}`;
                   document.getElementById(inputId)?.click();
                   setDocumentViewerOpen(false);
                 }}
+                title="Substituir este documento por um novo arquivo"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
                 Alterar Documento
               </button>
+            </div>
+
+            <div className="pdf-viewer-container">
+              {currentDocument.mimetype === 'application/pdf' ? (
+                <object
+                  data={`${currentDocument.url}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+                  type="application/pdf"
+                  className="pdf-object-view"
+                >
+                  <div className="pdf-fallback">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                      <polyline points="14.5 2 14.5 7.5 20 7.5" />
+                      <path d="M12 12v6" />
+                      <path d="m15 15-3 3-3-3" />
+                    </svg>
+                    <div className="pdf-error-title">Visualização indisponível no navegador</div>
+                    <p>Não foi possível carregar o visualizador de PDF diretamente. Você pode baixar o documento para visualizá-lo em seu dispositivo.</p>
+                    <a href={currentDocument.url} target="_blank" rel="noopener noreferrer" className="btn-pdf-download" download>
+                      Baixar Documento (PDF)
+                    </a>
+                  </div>
+                </object>
+              ) : (
+                <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <img src={currentDocument.url} alt={currentDocument.title} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                </div>
+              )}
             </div>
           </div>
         )}

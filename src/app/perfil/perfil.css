@@ -548,3 +548,64 @@
     color: white;
     border-color: var(--color-primary-500);
 }
+
+/* Floating Actions for Document Viewer */
+.viewer-actions-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.viewer-floating-actions {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 100;
+    display: flex;
+    gap: 0.75rem;
+    pointer-events: none;
+}
+
+.btn-floating-action {
+    pointer-events: auto;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-full);
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-floating-action:hover {
+    transform: translateY(-4px) scale(1.02);
+    background: var(--color-primary-500);
+    border-color: var(--color-primary-400);
+    box-shadow: 0 15px 30px rgba(59, 130, 246, 0.4);
+}
+
+.btn-floating-action svg {
+    transition: transform 0.3s ease;
+}
+
+.btn-floating-action:hover svg {
+    transform: rotate(15deg);
+}
+
+@media (max-width: 640px) {
+    .viewer-floating-actions {
+        top: auto;
+        bottom: 2rem;
+        right: 50%;
+        transform: translateX(50%);
+        width: max-content;
+    }
+}
