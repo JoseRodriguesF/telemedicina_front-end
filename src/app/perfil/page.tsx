@@ -29,7 +29,7 @@ export default function PerfilPage() {
 
   // States for Document Viewer
   const [documentViewerOpen, setDocumentViewerOpen] = useState(false);
-  const [currentDocument, setCurrentDocument] = useState<{ title: string; url: string; mimetype?: string } | null>(null);
+  const [currentDocument, setCurrentDocument] = useState<{ title: string; url: string; mimetype?: string; fieldName: string } | null>(null);
   const [pdfPage, setPdfPage] = useState(1);
 
   // States for Uploads
@@ -81,10 +81,10 @@ export default function PerfilPage() {
     setIsEditing(true);
   };
 
-  const handleDocumentView = (title: string, url: string, mimetype?: string) => {
+  const handleDocumentView = (title: string, url: string, mimetype: string | undefined, fieldName: string) => {
     if (!url) return;
     setPdfPage(1); // Reset to first page
-    setCurrentDocument({ title, url, mimetype });
+    setCurrentDocument({ title, url, mimetype, fieldName });
     setDocumentViewerOpen(true);
   };
 
@@ -292,7 +292,7 @@ export default function PerfilPage() {
 
                   <div
                     className={`document-card ${profile.medico?.tem_diploma ? 'active' : ''}`}
-                    onClick={() => profile.medico?.tem_diploma ? handleDocumentView('Diploma Médico', getDocUrl('diploma'), profile.medico?.diploma_mimetype) : document.getElementById('upload-diploma')?.click()}
+                    onClick={() => profile.medico?.tem_diploma ? handleDocumentView('Diploma Médico', getDocUrl('diploma'), profile.medico?.diploma_mimetype, 'diploma_url') : document.getElementById('upload-diploma')?.click()}
                   >
                     {uploadingDoc === 'diploma_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -317,7 +317,7 @@ export default function PerfilPage() {
 
                   <div
                     className={`document-card ${profile.medico?.tem_assinatura ? 'active' : ''}`}
-                    onClick={() => profile.medico?.tem_assinatura ? handleDocumentView('Assinatura Digital', getDocUrl('assinatura'), profile.medico?.assinatura_digital_mimetype) : document.getElementById('upload-assinatura')?.click()}
+                    onClick={() => profile.medico?.tem_assinatura ? handleDocumentView('Assinatura Digital', getDocUrl('assinatura'), profile.medico?.assinatura_digital_mimetype, 'assinatura_digital_url') : document.getElementById('upload-assinatura')?.click()}
                   >
                     {uploadingDoc === 'assinatura_digital_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -342,7 +342,7 @@ export default function PerfilPage() {
 
                   <div
                     className={`document-card ${profile.medico?.tem_especializacao ? 'active' : ''}`}
-                    onClick={() => profile.medico?.tem_especializacao ? handleDocumentView('Especialização / RQE', getDocUrl('especializacao'), profile.medico?.especializacao_mimetype) : document.getElementById('upload-especializacao')?.click()}
+                    onClick={() => profile.medico?.tem_especializacao ? handleDocumentView('Especialização / RQE', getDocUrl('especializacao'), profile.medico?.especializacao_mimetype, 'especializacao_url') : document.getElementById('upload-especializacao')?.click()}
                   >
                     {uploadingDoc === 'especializacao_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -367,7 +367,7 @@ export default function PerfilPage() {
 
                   <div
                     className={`document-card ${profile.medico?.tem_seguro ? 'active' : ''}`}
-                    onClick={() => profile.medico?.tem_seguro ? handleDocumentView('Seguro Profissional', getDocUrl('seguro'), profile.medico?.seguro_responsabilidade_mimetype) : document.getElementById('upload-seguro')?.click()}
+                    onClick={() => profile.medico?.tem_seguro ? handleDocumentView('Seguro Profissional', getDocUrl('seguro'), profile.medico?.seguro_responsabilidade_mimetype, 'seguro_responsabilidade_url') : document.getElementById('upload-seguro')?.click()}
                   >
                     {uploadingDoc === 'seguro_responsabilidade_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -567,6 +567,32 @@ export default function PerfilPage() {
                 />
               </div>
             )}
+
+            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+              <button
+                className="btn-profile secondary"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 24px',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                  transition: 'all 0.2s',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-primary)'
+                }}
+                onClick={() => {
+                  const inputId = `upload-${currentDocument.fieldName.replace('_url', '').replace('assinatura_digital', 'assinatura').replace('seguro_responsabilidade', 'seguro')}`;
+                  document.getElementById(inputId)?.click();
+                  setDocumentViewerOpen(false);
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                Alterar Documento
+              </button>
+            </div>
           </div>
         )}
       </ContentModal>
