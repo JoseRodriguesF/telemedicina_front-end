@@ -91,6 +91,7 @@ export type ConsultaAgendada = {
   diagnostico?: string;
   evolucao?: string;
   plano_terapeutico?: string;
+  resumo_consulta?: string;
 };
 
 export async function getConsultasAgendadas(token: string): Promise<ConsultaAgendada[]> {
@@ -173,6 +174,7 @@ export type ConsultaDetails = {
   diagnostico?: string;
   evolucao?: string;
   plano_terapeutico?: string;
+  resumo_consulta?: string;
   anexos?: ConsultaAnexo[];
 };
 
@@ -244,6 +246,7 @@ export type EndConsultaData = {
   diagnostico?: string;
   evolucao?: string;
   plano_terapeutico?: string;
+  resumo_consulta?: string;
   ambulancia_endereco?: string;
   ambulancia_complemento?: string;
   ambulancia_info?: string;
@@ -405,6 +408,7 @@ export type PSFullHistoryItem = {
   ambulancia_complemento?: string;
   ambulancia_info?: string;
   ambulancia_telefone?: string;
+  resumo_consulta?: string;
   medico: {
     nome_completo: string;
   } | null;

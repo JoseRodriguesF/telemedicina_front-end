@@ -748,6 +748,29 @@ export default function HistoricoPage() {
               </div>
             </div>
 
+            {selectedItem.resumo_consulta && (
+              <div className="details-section">
+                <h4>📋 Resumo da Consulta</h4>
+                <div style={{
+                  padding: '1.25rem',
+                  background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.04) 0%, rgba(14, 165, 233, 0.04) 100%)',
+                  borderRadius: '16px',
+                  border: '1px solid var(--color-primary-100)',
+                  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)'
+                }}>
+                  <p className="detail-text" style={{ 
+                    whiteSpace: 'pre-wrap', 
+                    fontSize: '0.95rem', 
+                    lineHeight: 1.7,
+                    color: 'var(--text-primary)',
+                    margin: 0
+                  }}>
+                    {selectedItem.resumo_consulta}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Bloco de dados de ambulância - exibido quando o destino final inclui ambulância */}
             {(selectedItem.ambulancia_endereco || selectedItem.ambulancia_telefone || selectedItem.ambulancia_info || selectedItem.ambulancia_complemento) && (() => {
               const isVermelho = selectedItem.destino_final?.toLowerCase().includes('vermelho');

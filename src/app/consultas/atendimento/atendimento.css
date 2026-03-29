@@ -2337,11 +2337,222 @@
 
 .confirmation-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     gap: 1rem;
     margin-top: 1rem;
     padding-top: 1.5rem;
     border-top: 1px solid var(--border-color);
+}
+
+/* ============================================
+   STEPPER DE PROGRESSO - Modal de Finalizaçao
+   ============================================ */
+
+.confirmation-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 0.25rem;
+    padding: 1rem 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+}
+
+.stepper-step {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    flex-shrink: 0;
+}
+
+.stepper-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    background: var(--bg-tertiary, #e5e7eb);
+    color: var(--text-tertiary);
+    border: 2px solid var(--border-color);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.stepper-circle svg {
+    width: 14px;
+    height: 14px;
+}
+
+.stepper-step.active .stepper-circle {
+    background: var(--color-primary-600, #2563EB);
+    color: white;
+    border-color: var(--color-primary-600, #2563EB);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+.stepper-step.done .stepper-circle {
+    background: #22c55e;
+    color: white;
+    border-color: #22c55e;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+}
+
+.stepper-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    transition: color 0.3s ease;
+    white-space: nowrap;
+}
+
+.stepper-step.active .stepper-label {
+    color: var(--color-primary-700, #1d4ed8);
+}
+
+.stepper-step.done .stepper-label {
+    color: #15803d;
+}
+
+.stepper-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border-color);
+    margin: 0 1rem;
+    border-radius: 999px;
+    transition: background 0.3s ease;
+    min-width: 40px;
+}
+
+.stepper-line.done {
+    background: #22c55e;
+}
+
+/* ============================================
+   RESUMO DA CONSULTA (ETAPA 2)
+   ============================================ */
+
+.resumo-consulta-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.03) 0%, rgba(14, 165, 233, 0.03) 100%);
+    border: 1px solid var(--color-primary-100, #dbeafe);
+    border-radius: 18px;
+}
+
+.resumo-consulta-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+}
+
+.resumo-icon {
+    width: 52px;
+    height: 52px;
+    background: var(--color-primary-600, #2563EB);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+}
+
+.resumo-icon svg {
+    width: 24px;
+    height: 24px;
+    stroke: white;
+}
+
+.resumo-consulta-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.resumo-consulta-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.resumo-consulta-subtitle strong {
+    color: var(--color-primary-700);
+}
+
+.resumo-confidencial-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(239, 68, 68, 0.08);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    width: fit-content;
+    letter-spacing: 0.01em;
+}
+
+.resumo-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.25rem;
+}
+
+.resumo-textarea {
+    min-height: 220px !important;
+    max-height: 400px !important;
+    resize: vertical !important;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    border-color: var(--color-primary-200, #bfdbfe) !important;
+    background: #ffffff !important;
+}
+
+.resumo-textarea:focus {
+    border-color: var(--color-primary-500, #3b82f6) !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12), inset 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.resumo-char-count {
+    font-size: 0.78rem;
+    color: var(--text-tertiary);
+    text-align: right;
+    margin-top: -0.25rem;
+}
+
+@media (max-width: 700px) {
+    .confirmation-stepper {
+        gap: 0;
+        padding: 0.75rem 1rem;
+    }
+    .stepper-label {
+        display: none;
+    }
+    .stepper-line {
+        min-width: 24px;
+        margin: 0 0.5rem;
+    }
+    .resumo-consulta-header {
+        flex-direction: column;
+    }
+    .resumo-icon {
+        width: 44px;
+        height: 44px;
+    }
 }
 
 @media (max-width: 900px) {

@@ -346,6 +346,7 @@ function AtendimentoInner() {
     repouso: '',
     destino_final: '',
     especialidade_seguimento: '',
+    resumo_consulta: '',
     selectedCIDs: [] as CID10[],
     endereco_ambulancia: {
       endereco: '',
@@ -354,6 +355,9 @@ function AtendimentoInner() {
       telefone: ''
     }
   });
+
+  // Etapa do modal de confirmação: 1 = dados da consulta, 2 = resumo da consulta
+  const [confirmationStep, setConfirmationStep] = useState(1);
 
   // Pre-fill address if ambulance is selected
   useEffect(() => {
@@ -1209,7 +1213,8 @@ function AtendimentoInner() {
         console.error('[Atendimento] Erro ao notificar paciente:', err);
       }
 
-      // Abrir modal de confirmação para o médico
+      // Abrir modal de confirmação para o médico (início pela etapa 1)
+      setConfirmationStep(1);
       setIsConfirmingEnd(true);
     } else {
       confirmFinishCall();
@@ -1750,6 +1755,8 @@ function AtendimentoInner() {
           loadingAnexos={loadingAnexos}
           anexos={anexos}
           onOpenAnexo={(url) => window.open(url, '_blank')}
+          confirmationStep={confirmationStep}
+          setConfirmationStep={setConfirmationStep}
         />
 
         <PrescriptionPDFTemplate
