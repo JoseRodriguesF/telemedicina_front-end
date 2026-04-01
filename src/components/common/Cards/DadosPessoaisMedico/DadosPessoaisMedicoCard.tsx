@@ -12,6 +12,8 @@ export type DadosPessoaisMedico = {
   cpf: string;
   gender: string;
   birthDate: string;
+  crm_uf: string;
+  rqe?: string;
 };
 
 type Props = {
@@ -25,12 +27,15 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
   const [cpf, setCpf] = useState('');
   const [gender, setGender] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [crmUf, setCrmUf] = useState('');
+  const [rqe, setRqe] = useState('');
 
   const [nameError, setNameError] = useState('');
   const [crmError, setCrmError] = useState('');
   const [cpfError, setCpfError] = useState('');
   const [genderError, setGenderError] = useState('');
   const [birthDateError, setBirthDateError] = useState('');
+  const [crmUfError, setCrmUfError] = useState('');
 
   function validateAll() {
     setNameError('');
@@ -38,6 +43,7 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
     setCpfError('');
     setGenderError('');
     setBirthDateError('');
+    setCrmUfError('');
 
     let ok = true;
     if (!isValidName(name)) {
@@ -46,6 +52,10 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
     }
     if (!crm.trim()) {
       setCrmError('Informe o CRM.');
+      ok = false;
+    }
+    if (!crmUf.trim()) {
+      setCrmUfError('Informe a UF do CRM.');
       ok = false;
     }
     if (!isValidCPF(cpf)) {
@@ -100,6 +110,23 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
           />
           {crmError && <div className="error-text">{crmError}</div>}
         </label>
+        
+        <label className="form-label">
+           <span className="label-title">UF do CRM <span className="required-asterisk">*</span></span>
+           <select className="c-input" value={crmUf} onChange={(e) => { setCrmUf(e.target.value); setCrmUfError(''); }}>
+             <option value="">UF</option>
+             {['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'].map(uf => (
+               <option key={uf} value={uf}>{uf}</option>
+             ))}
+           </select>
+           {crmUfError && <div className="error-text">{crmUfError}</div>}
+        </label>
+
+        <label className="form-label">
+           <span className="label-title">RQE (Opcional)</span>
+           <Input placeholder="Nº do RQE" value={rqe} onChange={(e) => setRqe(e.target.value)} />
+           <div className="input-tip">Obrigatório para anunciar especialidade</div>
+        </label>
 
         <label className="form-label">
           <span className="label-title">CPF <span className="required-asterisk">*</span></span>
@@ -147,7 +174,7 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
                   setCrmError('CRM inválido. Formato: 0000000-0/UF (UF brasileira válida, ex.: 1234567-8/SP).');
                   return;
                 }
-                if (ok) onComplete?.({ name, crm, cpf, gender, birthDate });
+                if (ok) onComplete?.({ name, crm, cpf, gender, birthDate, crm_uf: crmUf, rqe });
               }}
             >
               Próximo

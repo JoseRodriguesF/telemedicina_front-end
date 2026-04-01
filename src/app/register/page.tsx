@@ -171,6 +171,7 @@ export default function RegisterPage() {
                   const v = (pessoaisData?.guardianContact || '')?.replace(/\D/g, '') || '';
                   return v ? v : null;
                 })(),
+                aceitou_tcle: true,
               };
 
               const resp = await createPessoais(payload);

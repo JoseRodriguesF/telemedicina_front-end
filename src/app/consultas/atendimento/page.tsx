@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
-import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta, updatePacienteNotas, listAnexosConsulta, type ConsultaAnexo, enviarAnexosConsulta } from '@/lib/axios/consultas';
+import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta, updatePacienteNotas, listAnexosConsulta, type ConsultaAnexo, enviarAnexosConsulta, logEventoTecnico } from '@/lib/axios/consultas';
 import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas, getPrescricoesByConsulta, deletePrescricao, getPrescricoesByPaciente, Prescricao as PrescricaoType, downloadPrescricaoPdf } from '@/lib/axios/prescricoes';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
@@ -1008,6 +1008,14 @@ function AtendimentoInner() {
         } else if (state === 'failed') {
           setStatusText('Falha de conexão grave. Tentando reiniciar...');
           setConnectionFailed(true);
+          // CFM Art 10: Log de falha de conexão
+          if (token && cid) {
+            logEventoTecnico(token, {
+              consultaId: Number(cid),
+              tipo: 'FAIL_CONNECTION',
+              observacao: 'Conexão ICE falhou (ICE Connection State Failed)'
+            }).catch(() => {});
+          }
           // Tentar um ICE Restart suave antes de forçar o refresh
           session.restartIce();
         }
@@ -1079,6 +1087,42 @@ function AtendimentoInner() {
           setRemoteHasAudio(stream.getAudioTracks().length > 0);
         };
         handleConnected();
+
+        // CFM Art 10: Iniciar monitoramento de qualidade técnica periódico
+        if (token && cid) {
+          const statsInterval = setInterval(async () => {
+            if (!sessionRef.current || sessionRef.current.pc.iceConnectionState !== 'connected') {
+              clearInterval(statsInterval);
+              return;
+            }
+
+            try {
+              const stats = await sessionRef.current.pc.getStats();
+              let inboundStats: any = {};
+              stats.forEach(report => {
+                if (report.type === 'inbound-rtp' && (report.kind === 'video' || report.kind === 'audio')) {
+                  inboundStats[report.kind] = {
+                    packetsLost: report.packetsLost,
+                    jitter: report.jitter,
+                    bytesReceived: report.bytesReceived,
+                    frameWidth: report.frameWidth,
+                    frameHeight: report.frameHeight
+                  };
+                }
+              });
+
+              // Log de qualidade a cada 1 minuto ou se houver perda de pacotes significativa
+              await logEventoTecnico(token, {
+                consultaId: Number(cid),
+                tipo: 'QUALITY_STATS',
+                status_info: inboundStats,
+                observacao: `Monitoramento periódico de qualidade (WebRTC)`
+              });
+            } catch (err) {
+              console.warn('[Audit] Erro ao coletar stats:', err);
+            }
+          }, 60000); // 1 minuto
+        }
       });
 
       session.onRemoteMediaState((st) => {
@@ -1264,6 +1308,13 @@ function AtendimentoInner() {
         console.log('[Atendimento] Finalizando consulta...');
         await endConsulta(cid, token, hora_fim, atendimentoData);
         console.log('[Atendimento] Consulta finalizada com sucesso');
+
+        // CFM Art 10: Log de encerramento normal
+        logEventoTecnico(token, {
+          consultaId: Number(cid),
+          tipo: 'SESSION_END',
+          observacao: 'Consulta finalizada normalmente pelo médico'
+        }).catch(() => {});
 
         // Limpar estados locais
         setSignedPdfFile(null);

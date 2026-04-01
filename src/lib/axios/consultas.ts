@@ -175,6 +175,7 @@ export type ConsultaDetails = {
   evolucao?: string;
   plano_terapeutico?: string;
   resumo_consulta?: string;
+  observacaoTecnica?: string;
   anexos?: ConsultaAnexo[];
 };
 
@@ -561,4 +562,19 @@ export async function listAnexosConsulta(
   }
 }
 
-
+/**
+ * Registra um evento técnico (quedas, qualidade, erros) para fins de conformidade CFM Art. 10
+ */
+export async function logEventoTecnico(
+  token: string,
+  payload: { consultaId: number; tipo: string; status_info?: any; observacao?: string }
+): Promise<{ ok: boolean }> {
+  try {
+    const res = await axios.post('/api/audit/tecnico', payload, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  } catch (err) {
+    throw new ApiError(err);
+  }
+}

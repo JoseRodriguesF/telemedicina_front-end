@@ -72,6 +72,8 @@ export default function PerfilPage() {
       data_nascimento: (commonData as any).data_nascimento ? (commonData as any).data_nascimento.split('T')[0] : '',
       sexo: (commonData as any).sexo || '',
       crm: (commonData as any).crm || '',
+      crm_uf: (commonData as any).crm_uf || '',
+      rqe: (commonData as any).rqe || '',
       endereco: {
         endereco: addr.endereco || '',
         numero: addr.numero || '',
@@ -214,10 +216,18 @@ export default function PerfilPage() {
 
             <div className="profile-form-grid">
               {profile?.tipo_usuario === 'medico' && (
-                <div className="field-group">
-                  <label>CRM</label>
-                  <div className="field-value">{(userData as any).crm || '-'}</div>
-                </div>
+                <>
+                  <div className="field-group">
+                    <label>CRM</label>
+                    <div className="field-value">{(userData as any).crm || '-'} / {(userData as any).crm_uf || '-'}</div>
+                  </div>
+                  {(userData as any).rqe && (
+                    <div className="field-group">
+                      <label>RQE</label>
+                      <div className="field-value">{(userData as any).rqe}</div>
+                    </div>
+                  )}
+                </>
               )}
               {profile?.tipo_usuario === 'paciente' && (
                 <div className="field-group">
@@ -511,16 +521,40 @@ export default function PerfilPage() {
           )}
 
           {profile?.tipo_usuario === 'medico' && (
-            <div className="field-group">
-              <label>Data Nascimento</label>
-              <input
-                type="date"
-                className="field-value"
-                style={{ width: '100%', background: 'var(--bg-tertiary)' }}
-                value={editData.data_nascimento}
-                onChange={(e) => setEditData({ ...editData, data_nascimento: e.target.value })}
-              />
-            </div>
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="field-group">
+                  <label>UF do CRM</label>
+                  <input
+                    className="field-value"
+                    style={{ width: '100%', background: 'var(--bg-tertiary)' }}
+                    maxLength={2}
+                    value={editData.crm_uf}
+                    onChange={(e) => setEditData({ ...editData, crm_uf: e.target.value.toUpperCase() })}
+                  />
+                </div>
+                <div className="field-group">
+                  <label>RQE</label>
+                  <input
+                    className="field-value"
+                    style={{ width: '100%', background: 'var(--bg-tertiary)' }}
+                    value={editData.rqe}
+                    onChange={(e) => setEditData({ ...editData, rqe: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="field-group">
+                <label>Data Nascimento</label>
+                <input
+                  type="date"
+                  className="field-value"
+                  style={{ width: '100%', background: 'var(--bg-tertiary)' }}
+                  value={editData.data_nascimento}
+                  onChange={(e) => setEditData({ ...editData, data_nascimento: e.target.value })}
+                />
+              </div>
+            </>
           )}
         </div>
       </Modal>

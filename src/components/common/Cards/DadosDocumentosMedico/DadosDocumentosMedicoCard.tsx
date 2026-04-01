@@ -88,6 +88,8 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
         cpf: (pd?.cpf || '').toString().replace(/\D/g, ''),
         sexo: (pd?.gender || pd?.sexo || '').toString().toLowerCase(),
         crm: pd?.crm || '',
+        crm_uf: pd?.crm_uf || '',
+        rqe: pd?.rqe || null,
         // Documentos direto para o banco
         diploma,
         especializacao,
