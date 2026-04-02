@@ -1208,56 +1208,40 @@ function AtendimentoInner() {
     // Validação de tempo mínimo (2 minutos)
     const elapsedMins = startTime ? (Date.now() - startTime) / 1000 / 60 : 0;
     if (elapsedMins < 2) {
-      modal.error(
-        'Tempo insuficiente',
-        'O atendimento deve ter no mínimo 2 minutos de duração antes de ser encerrado.'
-      );
+      modal.error('Tempo insuficiente', 'O atendimento deve ter no mínimo 2 minutos de duração antes de ser encerrado.');
       return;
     }
 
     if (role === 'medico') {
-      // Verifica se o médico está anulando o paciente
-      const isAnulacao = atendimentoData.destino_final?.toLowerCase().includes('anular');
-
-      // Se for anulação, apenas verifica se o destino final foi preenchido
-      if (isAnulacao) {
-        if (!atendimentoData.destino_final) {
-          setShowValidation(true);
-          modal.error(
-            'Campos pendentes',
-            'Por favor, selecione o motivo da anulação no campo Destino Final.'
-          );
-          return;
-        }
-        // Se destino final de anulação está preenchido, permite encerrar
-      } else {
-        // Validação completa para casos normais
-        const missing = [];
-        if (!atendimentoData.evolucao.trim()) missing.push('Evolução');
-        if (!atendimentoData.plano_terapeutico.trim()) missing.push('Plano Terapêutico');
-        if (!atendimentoData.diagnostico.trim()) missing.push('Diagnóstico');
-        if (!atendimentoData.repouso) missing.push('Repouso');
-        if (!atendimentoData.destino_final) missing.push('Destino Final');
-
-        if (missing.length > 0) {
-          setShowValidation(true);
-          modal.error(
-            'Campos pendentes',
-            `Por favor, preencha os seguintes campos antes de finalizar: ${missing.join(', ')}.`
-          );
-          return;
+      console.log('[Atendimento] Médico clicou em Desligar. Encerrando WebRTC e Transcrição...');
+      
+      // 1. Parar a Transcrição Automática e processar último chunk
+      if (isRecording && mediaRecorderRef.current) {
+        try {
+          mediaRecorderRef.current.stop();
+          setIsRecording(false);
+        } catch (e) {
+          console.error('[AI] Erro ao parar gravador:', e);
         }
       }
 
-      // Notificar o paciente que o médico está desligando
+      // 2. Encerrar Mídia e Conexão WebRTC (Manda o paciente para a avaliação)
       try {
         sessionRef.current?.sendDoctorDisconnecting();
-        console.log('[Atendimento] Notificação enviada ao paciente: médico desligando');
+        sessionRef.current?.end();
       } catch (err) {
-        console.error('[Atendimento] Erro ao notificar paciente:', err);
+        console.error('[Atendimento] Erro ao encerrar WebRTC:', err);
       }
 
-      // Abrir modal de confirmação para o médico (início pela etapa 1)
+      // Parar tracks de mídia local para desligar a luz da câmera/mic
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+        localStreamRef.current = null;
+      }
+      setRemoteConnected(false);
+      setRemoteDisconnected(true);
+
+      // 3. Abrir modal de confirmação para o médico revisar os dados calmamente
       setConfirmationStep(1);
       setIsConfirmingEnd(true);
     } else {
@@ -1271,15 +1255,14 @@ function AtendimentoInner() {
 
     const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
 
-    // Se for médico, salvar dados ANTES de terminar a chamada
+    // Se for médico, salvar dados AGORA (o WebRTC já foi encerrado no requestFinishCall)
     if (role === 'medico' && cid && token) {
       try {
-        console.log('[Atendimento] Médico: iniciando salvamento dos dados...');
+        console.log('[Atendimento] Médico: iniciando salvamento final dos dados e encerramento administrativo...');
 
         // Salvar Prescrições
         const newPrescricoes = activePrescricoes.filter((p: any) => p.isNew);
         if (newPrescricoes.length > 0) {
-          console.log(`[Atendimento] Salvando ${newPrescricoes.length} prescrições...`);
           for (let i = 0; i < newPrescricoes.length; i++) {
             const p = newPrescricoes[i];
             await createPrescricao({
@@ -1292,28 +1275,23 @@ function AtendimentoInner() {
               inclusoConvenio: p.inclusoConvenio,
               pdf: (i === 0) ? (signedPdfFile || undefined) : undefined
             }, token);
-            console.log(`[Atendimento] Prescrição ${i + 1}/${newPrescricoes.length} salva`);
           }
         }
 
         // Salvar Notas
         if (pacienteNotas) {
-          console.log('[Atendimento] Salvando notas do paciente...');
           await updatePacienteNotas(cid, token, pacienteNotas);
-          console.log('[Atendimento] Notas salvas com sucesso');
         }
 
-        // Finalizar Consulta
+        // Finalizar Consulta definitivamente no Banco de Dados
         const hora_fim = new Date().toTimeString().slice(0, 8);
-        console.log('[Atendimento] Finalizando consulta...');
         await endConsulta(cid, token, hora_fim, atendimentoData);
-        console.log('[Atendimento] Consulta finalizada com sucesso');
 
         // CFM Art 10: Log de encerramento normal
         logEventoTecnico(token, {
           consultaId: Number(cid),
           tipo: 'SESSION_END',
-          observacao: 'Consulta finalizada normalmente pelo médico'
+          observacao: 'Consulta finalizada administrativamente pelo médico após revisão'
         }).catch(() => {});
 
         // Limpar estados locais
@@ -1322,26 +1300,19 @@ function AtendimentoInner() {
         console.error('[Atendimento] ERRO ao salvar dados:', err);
         modal.error(
           'Erro ao Salvar',
-          'Houve um erro ao salvar os dados da consulta. Por favor, verifique sua conexão e tente novamente.'
+          'Houve um erro ao salvar os dados finais. Verifique sua conexão e tente novamente.'
         );
-        // Não prosseguir se houver erro no salvamento
         bypassBeforeUnloadRef.current = false;
         return;
       }
     }
 
-    // Terminar a chamada WebRTC
-    try { sessionRef.current?.end(); } catch { }
+    // Limpeza final de sessão (WebRTC já parou)
     try { sessionStorage.removeItem('ps_room'); } catch { }
     try { sessionStorage.removeItem('consulta_reconnect'); } catch { }
     try { sessionStorage.removeItem(`startTime_${cid}`); } catch { }
 
-    // Navegar para a página apropriada
-    if (role === 'paciente') {
-      router.push(`/inicio?showRating=true&consultaId=${cid}`);
-    } else {
-      router.push('/consultas');
-    }
+    router.push(role === 'paciente' ? `/inicio?showRating=true&consultaId=${cid}` : '/consultas');
   }
 
   async function confirmFinishWithValidation() {
@@ -1597,19 +1568,139 @@ function AtendimentoInner() {
     }
   }
 
-  // Determine status color:
-  // Red: default / disconnected / failed / error
-  // Yellow: connecting / local media ready but !remoteConnected
-  // Green: remoteConnected
+  // Determine status color
   let statusColor = 'red';
   if (remoteConnected) {
     statusColor = 'green';
   } else if (localStreamRef.current && !remoteConnected) {
-    // If we have local stream and are waiting, yellow
     statusColor = 'yellow';
   } else if (connecting) {
     statusColor = 'yellow';
   }
+
+  // --- Estados para Transcrição Automática e Contínua ---
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessingAudio, setIsProcessingAudio] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const mixedStreamDestRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const transcriptionBufferRef = useRef<string>(''); // Acumula texto transcrito
+
+  const handleToggleTranscription = () => {
+    if (isRecording) {
+      if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    } else {
+      startAutomaticRecording();
+    }
+  };
+
+  // Iniciar gravação automática quando a conexão é estabelecida
+  useEffect(() => {
+    if (remoteConnected && role === 'medico' && !isRecording && !isProcessingAudio) {
+      console.log('[AI] Conexão detectada. Iniciando transcrição automática...');
+      startAutomaticRecording();
+    }
+  }, [remoteConnected]);
+
+  const startAutomaticRecording = async () => {
+    if (!localStreamRef.current || !remoteStream) {
+      console.warn('[AI] Streams não disponíveis para gravação.');
+      return;
+    }
+
+    try {
+      // 1. Setup Audio Mixing (Médico + Paciente)
+      const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
+      const audioContext = new AudioContextClass();
+      audioContextRef.current = audioContext;
+
+      const dest = audioContext.createMediaStreamDestination();
+      mixedStreamDestRef.current = dest;
+
+      // Fonte Local (Médico)
+      const localSource = audioContext.createMediaStreamSource(localStreamRef.current);
+      localSource.connect(dest);
+
+      // Fonte Remota (Paciente) - Pegando do stream remoto do WebRTC
+      const remoteSource = audioContext.createMediaStreamSource(remoteStream);
+      remoteSource.connect(dest);
+
+      // 2. Setup MediaRecorder
+      const recorder = new MediaRecorder(dest.stream, { mimeType: 'audio/webm' });
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      // Processamento "Contínuo" via rotação de blocos a cada 4 minutos para segurança
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        await processAudioChunk(audioBlob);
+        
+        // Se ainda estivermos conectados e em modo automático, reinicia para o próximo bloco
+        if (remoteConnected && !isProcessingAudio) {
+          audioChunksRef.current = [];
+          recorder.start();
+        }
+      };
+
+      // Inicia gravação com "ping" frequente para manter stream vivo
+      recorder.start();
+      setIsRecording(true);
+
+      // Agendar "rotação" periódica do arquivo para processamento incremental
+      const rotationInterval = setInterval(() => {
+        if (recorder.state === 'recording') {
+          recorder.stop(); // Isso dispara o onstop que processa o chunk e reinicia
+        } else {
+          clearInterval(rotationInterval);
+        }
+      }, 4 * 60 * 1000); // 4 minutos por bloco (seguro para Whisper 25MB)
+
+    } catch (err) {
+      console.error('[AI] Erro ao configurar mixagem/gravação:', err);
+    }
+  };
+
+  const processAudioChunk = async (blob: Blob) => {
+    if (!token) return;
+    // Não travamos a UI com "isProcessingAudio" para chunks automáticos de fundo
+    
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        const base64Audio = (reader.result as string).split(',')[1];
+        
+        const response = await fetch(`${apiUrl}/chat-ia/transcrever`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ audio: base64Audio, filename: `chunk_${Date.now()}.webm` })
+        });
+
+        const data = await response.json();
+        if (data.ok && data.resumo) {
+          // Atualiza o resumo de forma incremental
+          setAtendimentoData(prev => ({ 
+            ...prev, 
+            resumo_consulta: (prev.resumo_consulta ? prev.resumo_consulta + '\n\n---\n' : '') + data.resumo 
+          }));
+          
+          // Garante que o accordion de resumo esteja aberto para o médico ver o progresso
+          setOpenAccordions(prev => ({ ...prev, resumo: true }));
+        }
+      };
+    } catch (err) {
+      console.error('[AI] Erro ao processar bloco de áudio:', err);
+    }
+  };
 
   return (
     <div className="inicio-page">
@@ -1697,6 +1788,9 @@ function AtendimentoInner() {
                 onOpenPrescription={() => setShowPrescricaoForm(true)}
                 onOpenHistory={() => setOpenAccordions(prev => ({ ...prev, anamsese: true }))}
                 onOpenAnexos={handleOpenAnexos}
+                onToggleTranscription={handleToggleTranscription}
+                isRecording={isRecording}
+                isProcessingAudio={isProcessingAudio}
                 role="medico"
               />
             </div>
