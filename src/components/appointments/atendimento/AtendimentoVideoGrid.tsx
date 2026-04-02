@@ -19,6 +19,14 @@ interface VideoGridProps {
   onFinishCall: () => void;
   onGoBack: () => void;
   role: 'medico' | 'paciente';
+  // Informações para conformidade CFM Art. 4
+  medicoInfo?: {
+    nome?: string;
+    crm?: string;
+  };
+  pacienteInfo?: {
+    nome?: string;
+  };
   // Props extras para o paciente - controles integrados ao vídeo
   showChat?: boolean;
   unreadMessagesCount?: number;
@@ -46,6 +54,8 @@ const AtendimentoVideoGrid: React.FC<VideoGridProps> = ({
   onFinishCall,
   onGoBack,
   role,
+  medicoInfo,
+  pacienteInfo,
   showChat,
   unreadMessagesCount = 0,
   onToggleCam,
@@ -55,9 +65,27 @@ const AtendimentoVideoGrid: React.FC<VideoGridProps> = ({
   return (
     <section className="call-area">
       <div className="call-header">
-        <span className={`status-dot ${statusColor}`} aria-label={`Status: ${statusColor}`}></span>
-        {remoteConnected ? `Tempo de consulta: ${formatElapsedTime(elapsedSeconds)}` : (statusText || 'Em consulta')}
+        <div className="header-status">
+          <span className={`status-dot ${statusColor}`} aria-label={`Status: ${statusColor}`}></span>
+          <span className="timer-text">{remoteConnected ? formatElapsedTime(elapsedSeconds) : (statusText || 'Conectando...')}</span>
+        </div>
+        
+        {/* CONFORMIDADE CFM: Identificação do profissional para o paciente */}
+        {role === 'paciente' && medicoInfo?.nome && (
+          <div className="professional-id-badge">
+            <span className="prof-name">{medicoInfo.nome}</span>
+            {medicoInfo.crm && <span className="prof-crm">CRM: {medicoInfo.crm}</span>}
+          </div>
+        )}
+
+        {/* Identificação do paciente para o médico */}
+        {role === 'medico' && pacienteInfo?.nome && (
+          <div className="professional-id-badge patient">
+            <span className="prof-name">Paciente: {pacienteInfo.nome}</span>
+          </div>
+        )}
       </div>
+
       <div className="call-screen">
         <video
           ref={remoteRef}

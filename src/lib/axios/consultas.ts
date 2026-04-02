@@ -540,7 +540,7 @@ export async function enviarAnexosConsulta(
 }
 
 /**
- * Busca a lista de anexos de uma consulta e formata a URL de acesso local
+ * Busca a lista de anexos de uma consulta
  */
 export async function listAnexosConsulta(
   consultaId: string | number,
@@ -550,13 +550,38 @@ export async function listAnexosConsulta(
     const res = await axios.get(`/api/consultas/${consultaId}/anexos`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    const lista = res.data as any[];
+    return res.data as ConsultaAnexo[];
+  } catch (err) {
+    throw new ApiError(err);
+  }
+}
+
+/**
+ * Faz o download seguro de um anexo usando o token no header (Blob)
+ * Previne exposição do JWT na URL/Histórico.
+ */
+export async function downloadAnexo(
+  anexoId: number,
+  token: string,
+  fileName: string = 'arquivo'
+): Promise<void> {
+  try {
+    const response = await axios.get(`/api/consultas/anexos/${anexoId}/arquivo`, {
+      headers: { Authorization: `Bearer ${token}` },
+      responseType: 'blob'
+    });
+
+    // Criar um link temporário para download do blob
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
     
-    // Adiciona a URL do endpoint interno para cada anexo para que o frontend possa abrir/baixar
-    return lista.map(item => ({
-      ...item,
-      url: `/api/consultas/anexos/${item.id}/arquivo?token=${token}`
-    })) as ConsultaAnexo[];
+    // Cleanup
+    link.parentNode?.removeChild(link);
+    window.URL.revokeObjectURL(url);
   } catch (err) {
     throw new ApiError(err);
   }

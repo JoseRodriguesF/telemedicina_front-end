@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
-import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta, updatePacienteNotas, listAnexosConsulta, type ConsultaAnexo, enviarAnexosConsulta, logEventoTecnico } from '@/lib/axios/consultas';
+import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta, updatePacienteNotas, listAnexosConsulta, type ConsultaAnexo, enviarAnexosConsulta, logEventoTecnico, downloadAnexo } from '@/lib/axios/consultas';
 import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas, getPrescricoesByConsulta, deletePrescricao, getPrescricoesByPaciente, Prescricao as PrescricaoType, downloadPrescricaoPdf } from '@/lib/axios/prescricoes';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
@@ -1567,6 +1567,16 @@ function AtendimentoInner() {
       modal.error('Erro', 'Não foi possível processar o arquivo.');
     }
   }
+
+  const handleOpenAnexo = async (file: any) => {
+    if (!token || !file.id) return;
+    try {
+      await downloadAnexo(file.id, token, file.nome);
+    } catch (err) {
+      console.error('Erro ao baixar anexo:', err);
+      modal.error('Erro', 'Não foi possível baixar o arquivo.');
+    }
+  };
 
   // Determine status color
   let statusColor = 'red';

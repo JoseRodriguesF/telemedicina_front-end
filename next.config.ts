@@ -6,14 +6,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   async rewrites() {
     // During development or production, proxy client requests under /api/* to the remote API
-    // EXCEPT for local routes like /api/upload
     const target = (process.env.NEXT_PUBLIC_API_URL || 'https://telemedicina-api-774w.onrender.com').replace(/\/$/, '');
 
     return [
       {
-        // This regex ensures we don't proxy /api/upload but proxy everything else under /api
-        source: '/api/:path((?!upload).*)',
-        destination: `${target}/:path`,
+        source: '/api/:path*',
+        destination: `${target}/:path*`,
       },
     ];
   },
