@@ -1641,14 +1641,16 @@ function AtendimentoInner() {
       const dest = audioContext.createMediaStreamDestination();
       mixedStreamDestRef.current = dest;
 
-      // Fonte Local (Médico)
-      if (localStreamRef.current.getAudioTracks().length > 0) {
+      // Fonte Local (Médico) - Conectar sempre para garantir captura contínua
+      if (localStreamRef.current) {
+        console.log('[AI] Conectando áudio local (médico) ao mixer...');
         const localSource = audioContext.createMediaStreamSource(localStreamRef.current);
         localSource.connect(dest);
       }
 
-      // Fonte Remota (Paciente)
-      if (remoteStream.getAudioTracks().length > 0) {
+      // Fonte Remota (Paciente) - Conectar sempre para garantir captura do áudio do paciente
+      if (remoteStream) {
+        console.log('[AI] Conectando áudio remoto (paciente) ao mixer...');
         const remoteSource = audioContext.createMediaStreamSource(remoteStream);
         remoteSource.connect(dest);
       }
