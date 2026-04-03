@@ -121,14 +121,41 @@ function PreConsultaInner() {
         { message: t, history: currentHistory },
         token
       );
-      const answer = String(data?.answer ?? 'Sem resposta da IA.');
+      
+      let answer = String(data?.answer ?? 'Sem resposta da IA.');
+
+      // ✅ MELHORIA: Função robusta para limpar qualquer resquício de JSON ou Markdown JSON da resposta
+      const cleanJsonFromText = (text: string): string => {
+        let cleaned = text.trim();
+        // Remove blocos de código markdown json
+        if (cleaned.includes('```json')) {
+          cleaned = cleaned.split('```json')[1].split('```')[0].trim();
+        } else if (cleaned.includes('```')) {
+          cleaned = cleaned.split('```')[1].split('```')[0].trim();
+        }
+        
+        // Se ainda parecer um objeto JSON, tenta extrair apenas o campo de texto
+        if (cleaned.startsWith('{') && cleaned.endsWith('}')) {
+          try {
+            const parsed = JSON.parse(cleaned);
+            return parsed.answer || parsed.message || parsed.text || parsed.content || "Entendi. Pode continuar.";
+          } catch (e) {
+            // Se falhar o parse, remove chaves e tenta limpar manualmente
+            return cleaned.replace(/\{"?[^"]+"?:\s*"/g, '').replace(/"\s*\}$/g, '').trim();
+          }
+        }
+        return cleaned;
+      };
+
+      answer = cleanJsonFromText(answer);
 
       if (data?.completed === true) {
-        // Triagem concluída - sempre mostrar o relatório/modal de confirmação
+        // Triagem concluída
         setMessages(prev => [...prev, {
           author: 'Angélica',
-          text: 'Triagem concluída! Revise suas informações abaixo antes de prosseguir.'
+          text: 'Triagem concluída! Por favor, revise o resumo das suas informações abaixo.'
         }]);
+        
         setHistory(prev => [
           ...prev,
           { role: 'user', content: t },
@@ -136,42 +163,37 @@ function PreConsultaInner() {
         ]);
         setCompleted(true);
 
-        // Garantir que dadosEstruturados tem ao menos o conteúdo da resposta final da IA
+        // ✅ ALINHAMENTO: Organizar dados para evitar redundância
         const dadosRetornados = data.dadosEstruturados || {};
-        if (!dadosRetornados.conteudo && answer) {
-          dadosRetornados.conteudo = answer;
+        
+        // Se a IA não gerou um resumo amigável no campo 'conteudo', nós construímos um básico
+        // para evitar que o campo fique vazio ou com JSON
+        if (!dadosRetornados.conteudo || dadosRetornados.conteudo.trim().startsWith('{')) {
+          let constructedContent = '';
+          if (dadosRetornados.queixa_principal) constructedContent += `### QUEIXA PRINCIPAL\n${dadosRetornados.queixa_principal}\n\n`;
+          if (dadosRetornados.descricao_sintomas) constructedContent += `### SINTOMAS\n${dadosRetornados.descricao_sintomas}\n\n`;
+          
+          if (dadosRetornados.historico_pessoal) {
+            const hp = dadosRetornados.historico_pessoal;
+            if (hp.doencas?.length || hp.medicamentos?.length || hp.alergias?.length) {
+              constructedContent += `### HISTÓRICO MÉDICO\n`;
+              if (hp.doencas?.length) constructedContent += `- Doenças: ${hp.doencas.join(', ')}\n`;
+              if (hp.medicamentos?.length) constructedContent += `- Medicamentos: ${hp.medicamentos.join(', ')}\n`;
+              if (hp.alergias?.length) constructedContent += `- **ALERGIAS**: ${hp.alergias.join(', ')}\n`;
+            }
+          }
+          
+          dadosRetornados.conteudo = constructedContent || answer;
         }
-        if (!dadosRetornados.queixa_principal && !dadosRetornados.descricao_sintomas && !dadosRetornados.conteudo) {
-          // Último recurso: mostrar resumo mínimo com base na última resposta
-          dadosRetornados.conteudo = 'Triagem concluída. Seu resumo será enviado ao médico.';
-        }
-        setDadosTriagem(dadosRetornados);
 
-        // Pequeno delay para mostrar a mensagem antes do relatório
+        setDadosTriagem(dadosRetornados);
         setTimeout(() => setShowRelatorio(true), 600);
       } else {
-        // ✅ CORREÇÃO: Tratar possíveis respostas em JSON
-        let displayAnswer = answer;
-        if (displayAnswer.trim().startsWith('{') || displayAnswer.trim().includes('```json')) {
-          try {
-            let jsonStr = displayAnswer.trim();
-            if (jsonStr.includes('```json')) {
-              jsonStr = jsonStr.split('```json')[1].split('```')[0].trim();
-            }
-            const parsed = JSON.parse(jsonStr);
-            displayAnswer = parsed.answer || parsed.message || parsed.text || parsed.content || displayAnswer;
-            // Se ainda assim parecer JSON, talvez seja melhor não mostrar se já tivermos a resposta estruturada
-            if (typeof displayAnswer === 'object') displayAnswer = "Entendi. Pode continuar.";
-          } catch (e) {
-            console.warn("Falha ao parsear JSON da IA:", e);
-          }
-        }
-
-        setMessages(prev => [...prev, { author: 'Angélica', text: displayAnswer }]);
+        setMessages(prev => [...prev, { author: 'Angélica', text: answer }]);
         setHistory(prev => [
           ...prev,
           { role: 'user', content: t },
-          { role: 'assistant', content: displayAnswer }
+          { role: 'assistant', content: answer }
         ]);
       }
     } catch (err: any) {
@@ -461,10 +483,6 @@ function PreConsultaInner() {
                         <div className="pc-relatorio-item">
                           <span className="pc-relatorio-label">Nome:</span>
                           <span>{patientData.nome_completo || patientData.nome || '-'}</span>
-                        </div>
-                        <div className="pc-relatorio-item">
-                          <span className="pc-relatorio-label">CPF:</span>
-                          <span>{patientData.cpf || '-'}</span>
                         </div>
                       </div>
                     )}

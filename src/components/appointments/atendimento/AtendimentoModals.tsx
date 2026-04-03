@@ -212,7 +212,7 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
                   <div>
                     <h3 className="resumo-consulta-title">Resumo da Consulta</h3>
                     <p className="resumo-consulta-subtitle">
-                      Este campo é <strong>exclusivo para médicos</strong> e não é visível ao paciente. Registre aqui um relatório completo da consulta, incluindo observações clínicas, condutas adotadas e qualquer informação relevante para o prontuário.
+                      Este campo contém a <strong>transcrição automática e o resumo gerado pela IA</strong> durante o atendimento. Revise-o cuidadosamente, pois ele será anexado ao prontuário.
                     </p>
                   </div>
                 </div>
@@ -226,10 +226,11 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
                 </div>
 
                 <div className="form-group" style={{ marginTop: '1.25rem' }}>
-                  <label className="resumo-label">Relatório Completo da Consulta</label>
+                  <label className="resumo-label">Relatório Completo da Consulta (IA)</label>
                   <textarea
                     className="atendimento-textarea resumo-textarea"
-                    placeholder="Descreva detalhadamente o atendimento realizado: queixas do paciente, exame clínico, hipóteses diagnósticas, condutas adotadas, orientações fornecidas, encaminhamentos, evolução esperada e qualquer outra observação relevante para o prontuário médico..."
+                    style={{ minHeight: '300px', borderLeft: '4px solid var(--color-primary-500)', background: 'var(--bg-secondary)' }}
+                    placeholder="O resumo da transcrição da consulta aparecerá aqui..."
                     value={atendimentoData.resumo_consulta}
                     onChange={(e) => setAtendimentoData(prev => ({ ...prev, resumo_consulta: e.target.value }))}
                   />

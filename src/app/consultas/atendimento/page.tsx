@@ -1621,6 +1621,7 @@ function AtendimentoInner() {
     }
 
     try {
+      console.log('[AI] Configurando mixagem de áudio para transcrição...');
       // 1. Setup Audio Mixing (Médico + Paciente)
       const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
       const audioContext = new AudioContextClass();
@@ -1630,15 +1631,26 @@ function AtendimentoInner() {
       mixedStreamDestRef.current = dest;
 
       // Fonte Local (Médico)
-      const localSource = audioContext.createMediaStreamSource(localStreamRef.current);
-      localSource.connect(dest);
+      if (localStreamRef.current.getAudioTracks().length > 0) {
+        const localSource = audioContext.createMediaStreamSource(localStreamRef.current);
+        localSource.connect(dest);
+      }
 
-      // Fonte Remota (Paciente) - Pegando do stream remoto do WebRTC
-      const remoteSource = audioContext.createMediaStreamSource(remoteStream);
-      remoteSource.connect(dest);
+      // Fonte Remota (Paciente)
+      if (remoteStream.getAudioTracks().length > 0) {
+        const remoteSource = audioContext.createMediaStreamSource(remoteStream);
+        remoteSource.connect(dest);
+      }
 
-      // 2. Setup MediaRecorder
-      const recorder = new MediaRecorder(dest.stream, { mimeType: 'audio/webm' });
+      // 2. Setup MediaRecorder com detecção de tipo suportado
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+        ? 'audio/webm;codecs=opus' 
+        : MediaRecorder.isTypeSupported('audio/webm') 
+          ? 'audio/webm' 
+          : 'audio/ogg;codecs=opus';
+
+      console.log(`[AI] Iniciando MediaRecorder com mimeType: ${mimeType}`);
+      const recorder = new MediaRecorder(dest.stream, { mimeType });
       mediaRecorderRef.current = recorder;
       audioChunksRef.current = [];
 
@@ -1646,30 +1658,33 @@ function AtendimentoInner() {
         if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
 
-      // Processamento "Contínuo" via rotação de blocos a cada 4 minutos para segurança
       recorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await processAudioChunk(audioBlob);
+        if (audioChunksRef.current.length > 0) {
+          const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+          processAudioChunk(audioBlob);
+        }
         
-        // Se ainda estivermos conectados e em modo automático, reinicia para o próximo bloco
-        if (remoteConnected && !isProcessingAudio) {
+        // Reinicia para o próximo bloco se ainda estivermos gravando
+        if (isRecording && remoteConnected) {
           audioChunksRef.current = [];
-          recorder.start();
+          if (recorder.state === 'inactive') {
+            recorder.start();
+          }
         }
       };
 
-      // Inicia gravação com "ping" frequente para manter stream vivo
+      // Inicia gravação
       recorder.start();
       setIsRecording(true);
 
-      // Agendar "rotação" periódica do arquivo para processamento incremental
+      // Agendar "rotação" periódica a cada 2 minutos (mais frequente para feedback rápido)
       const rotationInterval = setInterval(() => {
-        if (recorder.state === 'recording') {
-          recorder.stop(); // Isso dispara o onstop que processa o chunk e reinicia
-        } else {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          mediaRecorderRef.current.stop(); // Dispara processamento e reinício no onstop
+        } else if (!isRecording) {
           clearInterval(rotationInterval);
         }
-      }, 4 * 60 * 1000); // 4 minutos por bloco (seguro para Whisper 25MB)
+      }, 2 * 60 * 1000);
 
     } catch (err) {
       console.error('[AI] Erro ao configurar mixagem/gravação:', err);
@@ -1678,37 +1693,48 @@ function AtendimentoInner() {
 
   const processAudioChunk = async (blob: Blob) => {
     if (!token) return;
-    // Não travamos a UI com "isProcessingAudio" para chunks automáticos de fundo
     
     try {
+      console.log(`[AI] Processando bloco de áudio (${(blob.size / 1024).toFixed(1)} KB)...`);
       const reader = new FileReader();
       reader.readAsDataURL(blob);
       reader.onloadend = async () => {
         const base64Audio = (reader.result as string).split(',')[1];
         
-        const response = await fetch(`${apiUrl}/chat-ia/transcrever`, {
+        // ✅ CORREÇÃO: Usar o prefixo /api para passar pelo proxy do Next.js
+        const response = await fetch('/api/chat-ia/transcrever', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ audio: base64Audio, filename: `chunk_${Date.now()}.webm` })
+          body: JSON.stringify({ 
+            audio: base64Audio, 
+            filename: `chunk_${Date.now()}.webm` 
+          })
         });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('[AI] Erro na resposta da API:', errorData);
+          return;
+        }
 
         const data = await response.json();
         if (data.ok && data.resumo) {
-          // Atualiza o resumo de forma incremental
+          console.log('[AI] Novo resumo parcial recebido.');
+          // Atualiza o resumo de forma incremental com separador visual claro
           setAtendimentoData(prev => ({ 
             ...prev, 
-            resumo_consulta: (prev.resumo_consulta ? prev.resumo_consulta + '\n\n---\n' : '') + data.resumo 
+            resumo_consulta: (prev.resumo_consulta ? prev.resumo_consulta + '\n\n' : '') + data.resumo 
           }));
           
-          // Garante que o accordion de resumo esteja aberto para o médico ver o progresso
+          // Garante que o accordion de resumo esteja aberto
           setOpenAccordions(prev => ({ ...prev, resumo: true }));
         }
       };
     } catch (err) {
-      console.error('[AI] Erro ao processar bloco de áudio:', err);
+      console.error('[AI] Erro ao enviar bloco de áudio para transcrição:', err);
     }
   };
 
