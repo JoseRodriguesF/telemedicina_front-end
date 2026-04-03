@@ -1216,10 +1216,11 @@ function AtendimentoInner() {
       console.log('[Atendimento] Médico clicou em Desligar. Encerrando WebRTC e Transcrição...');
       
       // 1. Parar a Transcrição Automática e processar último chunk
-      if (isRecording && mediaRecorderRef.current) {
+      if (isRecordingRef.current && mediaRecorderRef.current) {
         try {
           mediaRecorderRef.current.stop();
           setIsRecording(false);
+          isRecordingRef.current = false;
         } catch (e) {
           console.error('[AI] Erro ao parar gravador:', e);
         }
@@ -1590,6 +1591,8 @@ function AtendimentoInner() {
 
   // --- Estados para Transcrição Automática e Contínua ---
   const [isRecording, setIsRecording] = useState(false);
+  const isRecordingRef = useRef(false); // Ref para evitar stale closures no MediaRecorder
+  const hasAutoStartedRef = useRef(false); // Ref para garantir que o auto-start só ocorra uma vez por sessão
   const [isProcessingAudio, setIsProcessingAudio] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -1598,21 +1601,23 @@ function AtendimentoInner() {
   const transcriptionBufferRef = useRef<string>(''); // Acumula texto transcrito
 
   const handleToggleTranscription = () => {
-    if (isRecording) {
+    if (isRecordingRef.current) {
       if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
       setIsRecording(false);
+      isRecordingRef.current = false;
     } else {
       startAutomaticRecording();
     }
   };
 
-  // Iniciar gravação automática quando a conexão é estabelecida
+  // Iniciar gravação automática quando a conexão é estabelecida e os streams estão prontos
   useEffect(() => {
-    if (remoteConnected && role === 'medico' && !isRecording && !isProcessingAudio) {
-      console.log('[AI] Conexão detectada. Iniciando transcrição automática...');
+    if (remoteConnected && remoteStream && localStreamRef.current && role === 'medico' && !isRecordingRef.current && !hasAutoStartedRef.current) {
+      console.log('[AI] Conexão detectada e streams prontos. Iniciando transcrição automática...');
+      hasAutoStartedRef.current = true;
       startAutomaticRecording();
     }
-  }, [remoteConnected]);
+  }, [remoteConnected, remoteStream, role]);
 
   const startAutomaticRecording = async () => {
     if (!localStreamRef.current || !remoteStream) {
@@ -1625,6 +1630,12 @@ function AtendimentoInner() {
       // 1. Setup Audio Mixing (Médico + Paciente)
       const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
       const audioContext = new AudioContextClass();
+      
+      // Garantir que o contexto de áudio não esteja suspenso (política de autoplay)
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      
       audioContextRef.current = audioContext;
 
       const dest = audioContext.createMediaStreamDestination();
@@ -1665,7 +1676,7 @@ function AtendimentoInner() {
         }
         
         // Reinicia para o próximo bloco se ainda estivermos gravando
-        if (isRecording && remoteConnected) {
+        if (isRecordingRef.current && remoteConnected) {
           audioChunksRef.current = [];
           if (recorder.state === 'inactive') {
             recorder.start();
@@ -1676,21 +1687,22 @@ function AtendimentoInner() {
       // Inicia gravação
       recorder.start();
       setIsRecording(true);
+      isRecordingRef.current = true;
 
       // Agendar "rotação" periódica a cada 2 minutos (mais frequente para feedback rápido)
       const rotationInterval = setInterval(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
           mediaRecorderRef.current.stop(); // Dispara processamento e reinício no onstop
-        } else if (!isRecording) {
+        } else if (!isRecordingRef.current) {
           clearInterval(rotationInterval);
-        }
-      }, 2 * 60 * 1000);
+          }
+          }, 2 * 60 * 1000);
 
-    } catch (err) {
-      console.error('[AI] Erro ao configurar mixagem/gravação:', err);
-    }
-  };
-
+          } catch (err) {
+          console.error('[AI] Erro ao configurar mixagem/gravação:', err);
+          }
+          };
+          
   const processAudioChunk = async (blob: Blob) => {
     if (!token) return;
     
