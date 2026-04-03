@@ -45,6 +45,7 @@
     font-weight: 500;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     font-size: 0.9rem;
     position: absolute;
     top: 0;
@@ -54,17 +55,39 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+.header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
 .status-dot {
-    width: 8px;
-    height: 8px;
+    display: inline-block;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    margin-right: 12px;
+    margin-right: 10px;
     box-shadow: 0 0 12px currentColor;
+    flex-shrink: 0;
 }
 
 .status-dot.green {
     background-color: #10b981;
     color: #10b981;
+    animation: status-pulse 2s infinite;
+}
+
+@keyframes status-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
 }
 
 .status-dot.yellow {
@@ -76,6 +99,7 @@
     background-color: #ef4444;
     color: #ef4444;
 }
+
 
 .call-screen {
     position: relative;
