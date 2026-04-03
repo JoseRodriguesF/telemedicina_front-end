@@ -527,16 +527,6 @@ function PreConsultaInner() {
                         )}
                       </div>
                     )}
-
-                    {dadosTriagem?.conteudo && (
-                      <div className="pc-relatorio-section">
-                        <h3>📝 Resumo da Triagem</h3>
-                        <div className="pc-relatorio-item" style={{ fontSize: '0.95rem', lineHeight: 1.6 }}>
-                          <span dangerouslySetInnerHTML={{ __html: formatIaText(dadosTriagem.conteudo) }} />
-                        </div>
-                      </div>
-                    )}
-
                     {dadosTriagem?.antecedentes_familiares && Object.keys(dadosTriagem.antecedentes_familiares).length > 0 && (
                       <div className="pc-relatorio-section">
                         <h3>👨‍👩‍👧 Antecedentes Familiares</h3>
