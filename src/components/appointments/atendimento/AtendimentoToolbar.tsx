@@ -10,7 +10,7 @@ interface ToolbarProps {
   onToggleChat: () => void;
   onEndCall: () => void;
   onOpenPrescription?: () => void;
-  onOpenHistory?: () => void;
+  onOpenTranscription?: () => void;
   onOpenAnexos?: () => void;
   onToggleTranscription?: () => void;
   isRecording?: boolean;
@@ -28,7 +28,7 @@ const AtendimentoToolbar: React.FC<ToolbarProps> = ({
   onToggleChat,
   onEndCall,
   onOpenPrescription,
-  onOpenHistory,
+  onOpenTranscription,
   onOpenAnexos,
   onToggleTranscription,
   isRecording,
@@ -82,11 +82,12 @@ const AtendimentoToolbar: React.FC<ToolbarProps> = ({
       {role === 'medico' && (
         <div className="video-action-buttons">
           <button className="action-btn" onClick={onOpenPrescription}>Prescrição</button>
-          <button className="action-btn" onClick={onOpenHistory}>Antecedentes</button>
+          <button className="action-btn" onClick={onOpenTranscription}>Transcrição</button>
           <button className="action-btn" onClick={onOpenAnexos}>Arquivos</button>
         </div>
       )}
     </div>
+
   );
 };
 

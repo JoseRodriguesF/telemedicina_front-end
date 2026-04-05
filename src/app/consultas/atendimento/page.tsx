@@ -3,26 +3,20 @@
 import './atendimento.css';
 import '@/app/inicio/inicio.css';
 import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
-import Button from '@/components/common/Buttons/Button';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
-import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, avaliarConsulta, updatePacienteNotas, listAnexosConsulta, type ConsultaAnexo, enviarAnexosConsulta, logEventoTecnico, downloadAnexo } from '@/lib/axios/consultas';
+import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, updatePacienteNotas, listAnexosConsulta, type ConsultaAnexo, enviarAnexosConsulta, logEventoTecnico, downloadAnexo } from '@/lib/axios/consultas';
 import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas, getPrescricoesByConsulta, deletePrescricao, getPrescricoesByPaciente, Prescricao as PrescricaoType, downloadPrescricaoPdf } from '@/lib/axios/prescricoes';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
-import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
-import AddressAutocomplete from '@/components/common/Inputs/AddressAutocomplete';
-import ContentModal from '@/components/common/Modal/ContentModal';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import FormattedText from '@/components/common/FormattedText';
 import { buscarCID, type CID10 } from '@/lib/constants/cid10';
 
 // Novos sub-componentes refatorados
-import Accordion from '@/components/appointments/atendimento/Accordion';
 import AtendimentoVideoGrid from '@/components/appointments/atendimento/AtendimentoVideoGrid';
 import AtendimentoToolbar from '@/components/appointments/atendimento/AtendimentoToolbar';
 import AtendimentoChat from '@/components/appointments/atendimento/AtendimentoChat';
@@ -102,6 +96,8 @@ function AtendimentoInner() {
   const claimingRef = useRef(false);
   const startedRef = useRef(false);
   const [showChat, setShowChat] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const lastMessageCountRef = useRef(0);
   const [isUploadingChat, setIsUploadingChat] = useState(false);
   const fileInputChatRef = useRef<HTMLInputElement>(null);
   const hasReadySignalRef = useRef(false);
@@ -134,10 +130,6 @@ function AtendimentoInner() {
   const [loadingHistoricoPrescricoes, setLoadingHistoricoPrescricoes] = useState(false);
 
   const [isClaimed, setIsClaimed] = useState(false);
-
-  // Estados para mensagens não lidas no chat
-  const [unreadMessages, setUnreadMessages] = useState(0);
-  const lastMessageCountRef = useRef(0);
 
   // Estados para prescrições
   const [showPrescricaoForm, setShowPrescricaoForm] = useState(false);
@@ -177,6 +169,9 @@ function AtendimentoInner() {
   const [showAnexosModal, setShowAnexosModal] = useState(false);
   const [loadingAnexos, setLoadingAnexos] = useState(false);
   const [loadingAnexosHistory, setLoadingAnexosHistory] = useState(false);
+
+  // Estado para Modal de Transcrição IA
+  const [showTranscriptionModal, setShowTranscriptionModal] = useState(false);
 
   const isScheduled = search.get('scheduled') === 'true';
 
@@ -659,7 +654,7 @@ function AtendimentoInner() {
           // Se o polling detecta 2 pessoas mas não estamos conectados, reforça o sinal de 'ready'
           if (!remoteConnected) {
             if (!hasReadySignalRef.current) {
-              console.log('[UI] Polling detectou participantes. Ativando handshake...');
+              console.log('[UI] Polling detectou participantes. Ativando handshake hand...');
               hasReadySignalRef.current = true;
             }
             // Chama independentemente para garantir que um médico entrando depois dispare a oferta
@@ -1691,19 +1686,19 @@ function AtendimentoInner() {
       setIsRecording(true);
       isRecordingRef.current = true;
 
-      // Agendar "rotação" periódica a cada 2 minutos (mais frequente para feedback rápido)
+      // Agendar "rotação" periódica a cada 30 segundos (mais frequente para evitar perda de dados e feedback mais rápido)
       const rotationInterval = setInterval(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
           mediaRecorderRef.current.stop(); // Dispara processamento e reinício no onstop
         } else if (!isRecordingRef.current) {
           clearInterval(rotationInterval);
-          }
-          }, 2 * 60 * 1000);
+        }
+      }, 30 * 1000);
 
-          } catch (err) {
-          console.error('[AI] Erro ao configurar mixagem/gravação:', err);
-          }
-          };
+    } catch (err) {
+      console.error('[AI] Erro ao configurar mixagem/gravação:', err);
+    }
+  };
           
   const processAudioChunk = async (blob: Blob) => {
     if (!token) return;
@@ -1743,8 +1738,7 @@ function AtendimentoInner() {
             resumo_consulta: (prev.resumo_consulta ? prev.resumo_consulta + '\n\n' : '') + data.resumo 
           }));
           
-          // Garante que o accordion de resumo esteja aberto
-          setOpenAccordions(prev => ({ ...prev, resumo: true }));
+          // O modal de transcrição da IA agora mostra o conteúdo de atendimentoData.resumo_consulta
         }
       };
     } catch (err) {
@@ -1836,7 +1830,7 @@ function AtendimentoInner() {
                 onToggleChat={() => setShowChat(prev => !prev)}
                 onEndCall={requestFinishCall}
                 onOpenPrescription={() => setShowPrescricaoForm(true)}
-                onOpenHistory={() => setOpenAccordions(prev => ({ ...prev, anamsese: true }))}
+                onOpenTranscription={() => setShowTranscriptionModal(true)}
                 onOpenAnexos={handleOpenAnexos}
                 onToggleTranscription={handleToggleTranscription}
                 isRecording={isRecording}
@@ -1929,6 +1923,8 @@ function AtendimentoInner() {
           loadingAnexosHistory={loadingAnexosHistory}
           isConfirmingEnd={isConfirmingEnd}
           setIsConfirmingEnd={setIsConfirmingEnd}
+          showTranscriptionModal={showTranscriptionModal}
+          setShowTranscriptionModal={setShowTranscriptionModal}
           atendimentoData={atendimentoData}
           setAtendimentoData={setAtendimentoData}
           pacienteNotas={pacienteNotas}

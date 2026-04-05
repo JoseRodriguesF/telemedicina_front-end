@@ -10,6 +10,8 @@ interface ModalsProps {
   loadingAnexosHistory: boolean;
   isConfirmingEnd: boolean;
   setIsConfirmingEnd: (v: boolean) => void;
+  showTranscriptionModal: boolean;
+  setShowTranscriptionModal: (v: boolean) => void;
   atendimentoData: any;
   setAtendimentoData: (updater: (prev: any) => any) => void;
   pacienteNotas: string;
@@ -41,6 +43,8 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
   loadingAnexosHistory,
   isConfirmingEnd,
   setIsConfirmingEnd,
+  showTranscriptionModal,
+  setShowTranscriptionModal,
   atendimentoData,
   setAtendimentoData,
   pacienteNotas,
@@ -104,6 +108,63 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
             )}
           </div>
         )}
+      </ContentModal>
+
+      {/* Modal de Transcrição da IA */}
+      <ContentModal 
+        isOpen={showTranscriptionModal} 
+        onClose={() => setShowTranscriptionModal(false)} 
+        title="📋 Transcrição e Resumo da Consulta (IA)" 
+        size="lg"
+      >
+        <div className="resumo-consulta-section" style={{ padding: '1rem 0' }}>
+          <div className="resumo-consulta-header" style={{ marginBottom: '1.5rem' }}>
+            <div className="resumo-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="resumo-consulta-title">Relatório de IA</h3>
+              <p className="resumo-consulta-subtitle">
+                Abaixo está o resumo gerado automaticamente pela IA a partir da transcrição do áudio da consulta. Você pode editar este conteúdo livremente.
+              </p>
+            </div>
+          </div>
+
+          <div className="resumo-confidencial-badge" style={{ marginBottom: '1rem' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            Confidencial — Visível apenas para médicos
+          </div>
+
+          <div className="form-group">
+            <label className="resumo-label">Transcrição Acumulada / Resumo Parcial</label>
+            <textarea
+              className="atendimento-textarea resumo-textarea"
+              style={{ minHeight: '400px', borderLeft: '4px solid var(--color-primary-500)', background: 'var(--bg-secondary)', fontSize: '0.95rem', lineHeight: '1.6' }}
+              placeholder="O resumo da transcrição da consulta aparecerá aqui conforme a conversa progride..."
+              value={atendimentoData.resumo_consulta}
+              onChange={(e) => setAtendimentoData(prev => ({ ...prev, resumo_consulta: e.target.value }))}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+              <span className="resumo-char-count">{atendimentoData.resumo_consulta?.length || 0} caracteres</span>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: 0, fontStyle: 'italic' }}>
+                Este conteúdo será revisado novamente antes da finalização.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
+            <Button variant="primary" onClick={() => setShowTranscriptionModal(false)}>Fechar e Voltar</Button>
+          </div>
+        </div>
       </ContentModal>
 
       {/* Modal de Finalização em 2 Etapas (Médico) */}

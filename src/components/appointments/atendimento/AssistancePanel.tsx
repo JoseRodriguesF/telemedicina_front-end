@@ -103,29 +103,6 @@ const AssistancePanel: React.FC<AssistancePanelProps> = ({
         </Accordion>
 
         <Accordion
-          id="resumo"
-          title="Resumo da Consulta (AI)"
-          isOpen={!!openAccordions['resumo']}
-          onToggle={toggleAccordion}
-          isFilled={!!atendimentoData.resumo_consulta}
-        >
-          <textarea
-            className="atendimento-textarea"
-            placeholder="O resumo gerado pela transcrição aparecerá aqui..."
-            value={atendimentoData.resumo_consulta}
-            onChange={(e) => {
-              setAtendimentoData(prev => ({ ...prev, resumo_consulta: e.target.value }));
-              // Auto-expand
-              e.target.style.height = 'inherit';
-              e.target.style.height = `${e.target.scrollHeight}px`;
-            }}
-          />
-          <p style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', marginTop: '4px', fontStyle: 'italic' }}>
-            Este campo pode ser preenchido automaticamente pela transcrição de áudio.
-          </p>
-        </Accordion>
-
-        <Accordion
           id="diagnostico"
           title="Diagnóstico"
           isOpen={!!openAccordions['diagnostico']}
