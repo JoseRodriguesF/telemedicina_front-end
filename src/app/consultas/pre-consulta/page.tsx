@@ -435,38 +435,6 @@ function PreConsultaInner() {
                 </div>
               )}
 
-              {/* ✅ NOVO: Tela de carregamento durante a transição */}
-              {isNavigating && (
-                <div className="pc-transition-container" style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '4rem 2rem',
-                  textAlign: 'center',
-                  background: 'var(--bg-primary)',
-                  borderRadius: '24px',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
-                  margin: '2.5rem auto',
-                  maxWidth: '500px'
-                }}>
-                  <div className="pc-loading-spinner" style={{
-                    width: '48px',
-                    height: '48px',
-                    border: '4px solid var(--bg-secondary)',
-                    borderTopColor: 'var(--color-primary-600)',
-                    borderRadius: '50%',
-                    animation: 'pc-spin 1s linear infinite',
-                    marginBottom: '1.5rem'
-                  }} />
-                  <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-primary)', fontSize: '1.25rem' }}>Preparando seu atendimento</h3>
-                  <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Aguarde um momento enquanto redirecionamos você...</p>
-                  <style>{`
-                    @keyframes pc-spin { to { transform: rotate(360deg); } }
-                  `}</style>
-                </div>
-              )}
-
               {/* Relatório de Confirmação */}
               {showRelatorio && dadosTriagem && !isNavigating && (
                 <div className="pc-relatorio-container">
