@@ -16,14 +16,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://telemedicina-jj.com.br"),
   title: {
-    default: "Telemedicina JJ - Consultas Online com Especialistas",
-    template: "%s | Telemedicina JJ"
+    default: "Matriarca - Soluções em Saúde Online com Especialistas",
+    template: "%s | Matriarca"
   },
-  description: "Agende consultas online com médicos especialistas. Atendimento rápido, seguro e sem sair de casa. Telemedicina de qualidade para você e sua família.",
-  keywords: ["telemedicina", "consulta online", "médico online", "saúde digital", "atendimento médico", "cardiologista online", "clínico geral online"],
-  authors: [{ name: "JJ Telemedicina" }],
-  creator: "JJ Telemedicina",
-  publisher: "JJ Telemedicina",
+  description: "Matriarca: Acesso imediato a especialistas de alto nível através de uma plataforma segura e intuitiva. Atendimento rápido, seguro e no conforto da sua casa.",
+  keywords: ["matriarca", "saúde online", "telemedicina moderna", "consulta online", "médico online", "saúde digital", "atendimento médico"],
+  authors: [{ name: "Matriarca Soluções em Saúde" }],
+  creator: "Matriarca",
+  publisher: "Matriarca",
   robots: {
     index: true,
     follow: true,
@@ -31,24 +31,24 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    url: "https://telemedicina-jj.com.br",
-    title: "Telemedicina JJ - Saúde ao seu alcance",
-    description: "Plataforma de telemedicina para agendamento de consultas online com médicos qualificados.",
-    siteName: "Telemedicina JJ",
+    url: "https://matriarcasaude.com.br",
+    title: "Matriarca - Soluções em Saúde",
+    description: "Plataforma de telemedicina Matriarca para agendamento de consultas online com médicos qualificados.",
+    siteName: "Matriarca",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/images/logo_matriarca.png",
         width: 1200,
         height: 630,
-        alt: "Telemedicina JJ"
+        alt: "Matriarca"
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Telemedicina JJ",
-    description: "Consultas médicas online rápidas e seguras.",
-    images: ["/twitter-image.jpg"],
+    title: "Matriarca",
+    description: "Consultas médicas online rápidas e seguras com Matriarca.",
+    images: ["/images/logo_matriarca.png"],
   },
 };
 

@@ -27,24 +27,24 @@
 .logo-inner {
   width: 48px;
   height: 48px;
-  background: var(--gradient-primary);
+  background: transparent;
   border-radius: var(--radius-xl);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-glow);
   cursor: pointer;
   transition: transform var(--transition-base);
+  overflow: hidden;
 }
 
 .logo-inner:hover {
   transform: scale(1.05);
 }
 
-.logo-t {
-  color: #ffffff;
-  font-size: 1.5rem;
-  font-weight: 800;
+.logo-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .inicio-nav {

@@ -4,23 +4,23 @@
    ============================================ */
 
 /* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap');
 
 /* ============================================
    CSS VARIABLES - Design Tokens
    ============================================ */
 :root {
-	/* Primary Colors - Vibrant Light Blue */
+	/* Primary Colors - Matriarca Teal / Modern Blue Hierarchy */
 	--color-primary-50: #f0f9ff;
 	--color-primary-100: #e0f2fe;
 	--color-primary-200: #bae6fd;
 	--color-primary-300: #7dd3fc;
 	--color-primary-400: #38bdf8;
-	--color-primary-500: #0ea5e9;
-	--color-primary-600: #0284c7;
-	--color-primary-700: #0369a1;
-	--color-primary-800: #075985;
-	--color-primary-900: #0c4a6e;
+	--color-primary-500: #005bbf;  /* Creative blue */
+	--color-primary-600: #004b61;  /* Matriarca Brand Teal */
+	--color-primary-700: #003a4b;
+	--color-primary-800: #002834;
+	--color-primary-900: #00171e;
 
 	/* Accent Colors - Light Blue Contrast */
 	--color-accent-500: #06b6d4;
@@ -52,11 +52,11 @@
 	--color-info-soft: #eff6ff;
 	--color-info-border: #dbeafe;
 
-	/* Gradients - Pure Light Blue */
-	--gradient-primary: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
-	--gradient-primary-hover: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
-	--gradient-subtle: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-	--gradient-dark: linear-gradient(135deg, #0c4a6e 0%, #075985 100%);
+	/* Gradients - Matriarca Premium Gradient */
+	--gradient-primary: linear-gradient(135deg, #005bbf 0%, #004b61 100%);
+	--gradient-primary-hover: linear-gradient(135deg, #0284c7 0%, #003a4b 100%);
+	--gradient-subtle: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+	--gradient-dark: linear-gradient(135deg, #002834 0%, #00171e 100%);
 
 	/* Spacing */
 	--spacing-xs: 0.25rem;
@@ -91,7 +91,8 @@
 
 
 	/* Typography */
-	--font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	--font-family: 'Inter', sans-serif;
+	--font-display: 'Manrope', sans-serif;
 	--font-size-xs: 0.75rem;
 	--font-size-sm: 0.875rem;
 	--font-size-base: 1rem;

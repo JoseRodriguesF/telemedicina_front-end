@@ -10,7 +10,7 @@ const PrescriptionPDFTemplate: React.FC<TemplateProps> = ({ consultaDetails, act
     <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
       <div id="atendimento-prescription-pdf-template" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', background: '#ffffff', color: '#000000', fontFamily: 'Arial, sans-serif' }}>
         <header style={{ borderBottom: '2px solid #2563eb', paddingBottom: '5mm', marginBottom: '8mm', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div><h1 style={{ fontSize: '24pt', fontWeight: 800, color: '#2563eb', marginBottom: '2mm' }}>JJ Telemedicina</h1><p style={{ fontSize: '10pt', color: '#64748b' }}>Atendimento Médico Digital</p></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4mm' }}><img src="/images/logo_matriarca.png" alt="Matriarca" width={60} height={60} style={{ borderRadius: '8px', objectFit: 'contain' }} /><div><h1 style={{ fontSize: '24pt', fontWeight: 800, color: '#1a5c5c', marginBottom: '2mm' }}>Matriarca</h1><p style={{ fontSize: '10pt', color: '#64748b' }}>Soluções em Saúde</p></div></div>
           <div style={{ textAlign: 'right' }}><div style={{ fontSize: '11pt', fontWeight: 600 }}>PRESCRICAO MÉDICA</div><div style={{ fontSize: '9pt', color: '#64748b' }}>{new Date().toLocaleDateString('pt-BR')}</div></div>
         </header>
 

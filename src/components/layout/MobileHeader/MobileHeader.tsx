@@ -36,9 +36,9 @@ export default function MobileHeader() {
         <>
             <header className="site-header mobile-app-header">
                 <div className="header-inner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h1 className="brand">
-                        <Link href="/inicio">Telemedicina</Link>
-                    </h1>
+                    <Link href="/inicio" style={{ display: 'flex', alignItems: 'center' }}>
+                        <img src="/images/logo_matriarca_icon.png" alt="Matriarca" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
+                    </Link>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <ThemeToggle minimal />
                         <button

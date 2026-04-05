@@ -962,7 +962,7 @@ export default function HistoricoPage() {
             )}
 
             <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
-              Prescrição gerada via Plataforma JJ Telemedicina
+              Prescrição gerada via Plataforma Matriarca
             </div>
           </div>
         )}
@@ -975,21 +975,19 @@ export default function HistoricoPage() {
 
           <div className="pdf-header">
             <div className="pdf-logo-wrapper">
-              <div className="pdf-logo-circle">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22v-5" /><path d="M12 12V2" /><path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" /><path d="m15 13-3-3-3 3" />
-                </svg>
+              <div className="pdf-logo-circle" style={{ background: 'transparent', boxShadow: 'none' }}>
+                <img src="/images/logo_matriarca.png" alt="Matriarca" width={48} height={48} style={{ borderRadius: '8px', objectFit: 'contain' }} />
               </div>
               <div className="pdf-logo-text">
-                <h1>JJ Telemedicina</h1>
-                <p>Cuidado Digital de Excelência</p>
+                <h1>Matriarca</h1>
+                <p>Soluções em Saúde</p>
               </div>
             </div>
             <div className="pdf-header-meta">
-              <div>JJ Serviços Médicos e Tecnológicos Ltda.</div>
+              <div>Matriarca Soluções em Saúde Ltda.</div>
               <div>CNPJ: 00.000.000/0001-00</div>
-              <div>contato@jjtelemedicina.com.br</div>
-              <div>www.jjtelemedicina.com.br</div>
+              <div>contato@matriarcasaude.com.br</div>
+              <div>www.matriarcasaude.com.br</div>
             </div>
           </div>
 
