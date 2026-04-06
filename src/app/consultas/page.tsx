@@ -359,21 +359,27 @@ export default function ConsultasPage() {
                 </div>
               </div>
 
-              {consultaDetails.historiaClinica ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '0.5rem' }}>
-                  <div className="detail-group">
-                    <h4 style={{ margin: '0 0 0.75rem', color: 'var(--color-primary-500)', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14.5 2 14.5 7.5 20 7.5" /></svg>
-                      História Clínica (Triagem)
-                    </h4>
-                    <ClinicalStructuredView data={consultaDetails.historiaClinica} />
+              <div className="pc-relatorio-container" style={{ padding: 0, marginTop: '1rem' }}>
+                <div className="clinical-report-card">
+                  <div className="clinical-report-section">
+                    <h3>👤 Dados do Paciente</h3>
+                    <div className="clinical-report-item">
+                      <span className="clinical-report-label">Nome:</span>
+                      <span>{selectedAppt?.paciente?.nome_completo || consultaDetails.paciente?.nome_completo || 'Paciente'}</span>
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-xl)', color: 'var(--text-tertiary)', border: '2px dashed var(--border-color)' }}>
-                  <p>Informações de triagem não encontradas.</p>
-                </div>
-              )}
+
+                {consultaDetails.historiaClinica ? (
+                  <ClinicalStructuredView data={consultaDetails.historiaClinica} variant="report" />
+                ) : (
+                  <div className="clinical-report-card">
+                    <div className="clinical-report-section" style={{ textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', color: 'var(--text-tertiary)', border: '2px dashed var(--border-color)', borderRadius: '1.25rem' }}>
+                      <p style={{ margin: 0 }}>Informações de triagem não encontradas.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Seção de Anexos */}
               {(consultaDetails?.anexos && consultaDetails.anexos.length > 0) || loadingAnexos ? (

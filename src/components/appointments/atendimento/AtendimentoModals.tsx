@@ -76,30 +76,40 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
       <ContentModal isOpen={!!consultaSelecionada} onClose={() => setConsultaSelecionada(null)} title="Detalhes do Atendimento" size="md">
         {consultaSelecionada && (
           <div className="history-details-modal">
-            <div className="details-section">
-              <h4>Informações Gerais</h4>
-              <div className="details-grid">
-                <div className="detail-item"><label>Data:</label><span>{consultaSelecionada.data_consulta ? formatDate(consultaSelecionada.data_consulta) : formatDate(consultaSelecionada.createdAt)}</span></div>
-                <div className="detail-item"><label>Médico:</label><span>{consultaSelecionada.medico?.nome_completo || '-'}</span></div>
-                <div className="detail-item"><label>Hora Início:</label><span>{consultaSelecionada.hora_inicio ? new Date(consultaSelecionada.hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span></div>
-                <div className="detail-item"><label>Hora Fim:</label><span>{consultaSelecionada.hora_fim ? new Date(consultaSelecionada.hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span></div>
+            <div className="pc-relatorio-container" style={{ padding: 0 }}>
+              <div className="clinical-report-card">
+                <div className="clinical-report-section">
+                  <h3>🗓️ Informações Gerais</h3>
+                  <div className="clinical-report-item">
+                    <span className="clinical-report-label">Data:</span>
+                    <span>{consultaSelecionada.data_consulta ? formatDate(consultaSelecionada.data_consulta) : formatDate(consultaSelecionada.createdAt)}</span>
+                  </div>
+                  <div className="clinical-report-item">
+                    <span className="clinical-report-label">Médico:</span>
+                    <span>{consultaSelecionada.medico?.nome_completo || '-'}</span>
+                  </div>
+                  <div className="clinical-report-item">
+                    <span className="clinical-report-label">Horário:</span>
+                    <span>
+                      {consultaSelecionada.hora_inicio ? new Date(consultaSelecionada.hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                      {consultaSelecionada.hora_fim ? ` - ${new Date(consultaSelecionada.hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : ''}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Nova Seção de Triagem/História Clínica */}
-            {(consultaSelecionada.historiaClinica || (Array.isArray(consultaSelecionada.historiaClinica) && consultaSelecionada.historiaClinica.length > 0)) && (
-              <div className="details-section" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem', marginTop: '1rem' }}>
-                <h4 style={{ marginBottom: '1rem', color: 'var(--color-primary-600)' }}>
-                  🏥 História Clínica / Triagem
-                </h4>
-                <ClinicalStructuredView 
-                  data={Array.isArray(consultaSelecionada.historiaClinica) 
-                    ? consultaSelecionada.historiaClinica[0] 
-                    : consultaSelecionada.historiaClinica
-                  } 
-                />
-              </div>
-            )}
+              {(consultaSelecionada.historiaClinica || (Array.isArray(consultaSelecionada.historiaClinica) && consultaSelecionada.historiaClinica.length > 0)) && (
+                <div style={{ marginTop: '1rem' }}>
+                  <ClinicalStructuredView 
+                    data={Array.isArray(consultaSelecionada.historiaClinica) 
+                      ? consultaSelecionada.historiaClinica[0] 
+                      : consultaSelecionada.historiaClinica
+                    } 
+                    variant="report"
+                  />
+                </div>
+              )}
+            </div>
 
             <div className="details-section"><h4>Diagnóstico</h4><p className="detail-text">{consultaSelecionada.diagnostico || 'Não registrado'}</p></div>
             <div className="details-section"><h4>Evolução</h4><p className="detail-text">{consultaSelecionada.evolucao || 'Não registrada'}</p></div>

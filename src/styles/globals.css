@@ -216,6 +216,37 @@ html {
 }
 
 /* ============================================
+   SMOOTH THEME TRANSITION
+   ============================================ */
+*,
+*::before,
+*::after {
+	transition: background-color var(--transition-base), 
+                border-color var(--transition-base), 
+                color var(--transition-base), 
+                box-shadow var(--transition-base),
+                fill var(--transition-base),
+                stroke var(--transition-base);
+}
+
+/* Disable transitions for media and specific heavy elements to prevent lag */
+img, 
+video, 
+canvas, 
+svg,
+.no-transition {
+    transition: none !important;
+}
+
+/* Ensure SVG paths inside SVG still transition if needed, but not the SVG container itself if it causes issues */
+svg path, 
+svg circle, 
+svg rect, 
+svg line {
+    transition: fill var(--transition-base), stroke var(--transition-base), color var(--transition-base);
+}
+
+/* ============================================
    SCROLLBAR — Hidden globally but still functional
    ============================================ */
 * {
@@ -245,7 +276,12 @@ body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	overflow-x: hidden;
-	transition: background-color var(--transition-base), color var(--transition-base);
+	transition: background-color var(--transition-base), 
+				border-color var(--transition-base), 
+                color var(--transition-base), 
+                box-shadow var(--transition-base),
+                fill var(--transition-base),
+                stroke var(--transition-base);
 }
 
 /* ============================================

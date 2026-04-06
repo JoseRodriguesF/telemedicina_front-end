@@ -379,39 +379,37 @@ export default function MeusAgendamentosPage() {
                     </div>
                 ) : consultaDetails ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', paddingBottom: '0.5rem' }}>
-                        <div style={{ background: 'var(--bg-secondary)', padding: '1.25rem', borderRadius: 'var(--radius-xl)', border: '1px solid var(--border-color)' }}>
-                            <h4 style={{ margin: '0 0 0.5rem', color: 'var(--text-tertiary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Paciente</h4>
-                            <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                                {consultaDetails.paciente?.nome_completo || 'Paciente'}
-                            </p>
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
-                                <h4 style={{ margin: '0 0 0.25rem', color: 'var(--text-tertiary)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Data</h4>
-                                <p style={{ margin: 0, fontWeight: 600 }}>{selectedAppt && new Date(selectedAppt.data_consulta).toLocaleDateString('pt-BR')}</p>
-                            </div>
-                            <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)' }}>
-                                <h4 style={{ margin: '0 0 0.25rem', color: 'var(--text-tertiary)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Horário</h4>
-                                <p style={{ margin: 0, fontWeight: 600 }}>{selectedAppt && formatTime(selectedAppt.hora_inicio)}</p>
-                            </div>
-                        </div>
-
-                        {consultaDetails.historiaClinica ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '0.5rem' }}>
-                                <div className="detail-group">
-                                    <h4 style={{ margin: '0 0 0.75rem', color: 'var(--color-primary-600)', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14.5 2 14.5 7.5 20 7.5" /></svg>
-                                        História Clínica (Triagem)
-                                    </h4>
-                                    <ClinicalStructuredView data={consultaDetails.historiaClinica} />
+                        <div className="clinical-report-card">
+                            <div className="clinical-report-section">
+                                <h3>👤 Dados do Paciente</h3>
+                                <div className="clinical-report-item">
+                                    <span className="clinical-report-label">Nome:</span>
+                                    <span>{consultaDetails.paciente?.nome_completo || 'Paciente'}</span>
                                 </div>
                             </div>
-                        ) : (
-                            <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-xl)', color: 'var(--text-tertiary)', border: '2px dashed var(--border-color)' }}>
-                                <p>Informações de triagem não encontradas.</p>
+                            <div className="clinical-report-section" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div className="clinical-report-item" style={{ flexDirection: 'column', gap: '2px' }}>
+                                    <span className="clinical-report-label" style={{ fontSize: '0.75rem' }}>Data:</span>
+                                    <span style={{ fontWeight: 600 }}>{selectedAppt && new Date(selectedAppt.data_consulta).toLocaleDateString('pt-BR')}</span>
+                                </div>
+                                <div className="clinical-report-item" style={{ flexDirection: 'column', gap: '2px' }}>
+                                    <span className="clinical-report-label" style={{ fontSize: '0.75rem' }}>Horário:</span>
+                                    <span style={{ fontWeight: 600 }}>{selectedAppt && formatTime(selectedAppt.hora_inicio)}</span>
+                                </div>
                             </div>
-                        )}
+                        </div>
+
+                        <div className="pc-relatorio-container" style={{ padding: 0, marginTop: '1rem' }}>
+                            {consultaDetails.historiaClinica ? (
+                                <ClinicalStructuredView data={consultaDetails.historiaClinica} variant="report" />
+                            ) : (
+                                <div className="clinical-report-card">
+                                    <div className="clinical-report-section" style={{ textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', color: 'var(--text-tertiary)', border: '2px dashed var(--border-color)', borderRadius: '1.25rem' }}>
+                                        <p style={{ margin: 0 }}>Informações de triagem não encontradas.</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
 
                         <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                             <button

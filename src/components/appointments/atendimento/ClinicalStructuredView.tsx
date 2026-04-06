@@ -6,12 +6,14 @@ interface ClinicalStructuredViewProps {
   data: HistoriaClinicaItem | null | undefined;
   title?: string;
   showTitle?: boolean;
+  variant?: 'compact' | 'report';
 }
 
 const ClinicalStructuredView: React.FC<ClinicalStructuredViewProps> = ({ 
   data, 
   title = "Triagem Inteligente", 
-  showTitle = false 
+  showTitle = false,
+  variant = 'compact'
 }) => {
   if (!data) return <p className="csv-empty">Nenhum dado clínico disponível.</p>;
 
@@ -23,6 +25,104 @@ const ClinicalStructuredView: React.FC<ClinicalStructuredViewProps> = ({
     if (typeof val === 'string') return val.trim().length > 0 && !/^(não|nenhum|nega|n\/a|não informado)/i.test(val.trim());
     return true;
   };
+
+  if (variant === 'report') {
+    return (
+      <div className="clinical-report-card">
+        {/* Seção 1: Queixa e Sintomas */}
+        {hasValue(data.queixaPrincipal) && (
+          <div className="clinical-report-section">
+            <h3>📋 Motivo da Consulta</h3>
+            <p>{data.queixaPrincipal}</p>
+          </div>
+        )}
+
+        {hasValue(data.descricaoSintomas) && (
+          <div className="clinical-report-section">
+            <h3>🩺 Descrição dos Sintomas</h3>
+            <p>{data.descricaoSintomas}</p>
+          </div>
+        )}
+
+        {/* Seção 2: Histórico Pessoal */}
+        {hasValue(data.historicoPessoal) && (
+          <div className="clinical-report-section">
+            <h3>📁 Histórico Médico Pessoal</h3>
+            {hasValue(data.historicoPessoal.doencas) && (
+              <div className="clinical-report-item">
+                <span className="clinical-report-label">Doenças crônicas:</span>
+                <span>
+                  {Array.isArray(data.historicoPessoal.doencas) 
+                    ? data.historicoPessoal.doencas.join(', ') 
+                    : data.historicoPessoal.doencas}
+                </span>
+              </div>
+            )}
+            {hasValue(data.historicoPessoal.medicamentos) && (
+              <div className="clinical-report-item">
+                <span className="clinical-report-label">Medicamentos em uso:</span>
+                <span>
+                  {Array.isArray(data.historicoPessoal.medicamentos) 
+                    ? data.historicoPessoal.medicamentos.join(', ') 
+                    : data.historicoPessoal.medicamentos}
+                </span>
+              </div>
+            )}
+            {hasValue(data.historicoPessoal.alergias) && (
+              <div className="clinical-report-item">
+                <span className="clinical-report-label alerta">⚠️ Alergias:</span>
+                <span className="clinical-report-value alerta">
+                  {Array.isArray(data.historicoPessoal.alergias) 
+                    ? data.historicoPessoal.alergias.join(', ') 
+                    : data.historicoPessoal.alergias}
+                </span>
+              </div>
+            )}
+            {hasValue(data.historicoPessoal.vacinacao) && (
+              <div className="clinical-report-item">
+                <span className="clinical-report-label">Vacinação:</span>
+                <span>{data.historicoPessoal.vacinacao}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Seção 3: Antecedentes Familiares */}
+        {hasValue(data.antecedentesFamiliares) && (
+          <div className="clinical-report-section">
+            <h3>👨‍👩‍👧 Antecedentes Familiares</h3>
+            {Object.entries(data.antecedentesFamiliares).map(([key, val]: [string, any]) => (
+              <div key={key} className="clinical-report-item">
+                <span className="clinical-report-label">{key}:</span>
+                <span>{val}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Seção 4: Estilo de Vida */}
+        {hasValue(data.estiloVida) && (
+          <div className="clinical-report-section">
+            <h3>🏃 Estilo de Vida</h3>
+            {Object.entries(data.estiloVida).map(([key, val]: [string, any]) => (
+              <div key={key} className="clinical-report-item">
+                <span className="clinical-report-label">{key}:</span>
+                <span>{val}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Fallback */}
+        {(!hasValue(data.queixaPrincipal) && !hasValue(data.historicoPessoal)) && data.conteudo && (
+          <div className="clinical-report-section">
+            <h3>📝 Resumo Clínico</h3>
+            <FormattedText text={data.conteudo} />
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="clinical-structured-view">
@@ -136,7 +236,7 @@ const ClinicalStructuredView: React.FC<ClinicalStructuredViewProps> = ({
         </div>
       )}
 
-      {/* Fallback para conteúdo em texto caso os campos estruturados estejam vazios */}
+      {/* Fallback */}
       {!hasValue(data.queixaPrincipal) && !hasValue(data.historicoPessoal) && data.conteudo && (
         <div className="csv-section">
           <div className="csv-section-title">Resumo Clínico</div>

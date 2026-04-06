@@ -15,6 +15,7 @@ import { downloadPrescricaoPdf } from '@/lib/axios/prescricoes';
 import ContentModal from '@/components/common/Modal/ContentModal';
 import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
 import FormattedText from '@/components/common/FormattedText';
+import ClinicalStructuredView from '@/components/appointments/atendimento/ClinicalStructuredView';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -679,48 +680,37 @@ export default function HistoricoPage() {
       >
         {selectedItem && (
           <div className="history-details-modal">
-            <div className="details-section">
-              <h4>Informações Gerais</h4>
-              <div className="details-grid">
-                <div className="detail-item">
-                  <label>Data:</label>
-                  <span>{selectedItem.data_consulta ? formatDate(selectedItem.data_consulta) : formatDate(selectedItem.createdAt)}</span>
-                </div>
-                <div className="detail-item">
-                  <label>{userType === 'paciente' ? 'Médico:' : 'Paciente:'}</label>
-                  <span>{getParticipantName(selectedItem)}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Hora Início:</label>
-                  <span>{selectedItem.hora_inicio ? formatTime(selectedItem.hora_inicio) : '-'}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Hora Fim:</label>
-                  <span>{selectedItem.hora_fim ? formatTime(selectedItem.hora_fim) : '-'}</span>
+            <div className="pc-relatorio-container" style={{ padding: 0 }}>
+              <div className="clinical-report-card">
+                <div className="clinical-report-section">
+                  <h3>🗓️ Informações Gerais</h3>
+                  <div className="clinical-report-item">
+                    <span className="clinical-report-label">Data:</span>
+                    <span>{selectedItem.data_consulta ? formatDate(selectedItem.data_consulta) : formatDate(selectedItem.createdAt)}</span>
+                  </div>
+                  <div className="clinical-report-item">
+                    <span className="clinical-report-label">{userType === 'paciente' ? 'Médico:' : 'Paciente:'}</span>
+                    <span>{getParticipantName(selectedItem)}</span>
+                  </div>
+                  <div className="clinical-report-item">
+                    <span className="clinical-report-label">Horário:</span>
+                    <span>
+                      {selectedItem.hora_inicio ? formatTime(selectedItem.hora_inicio) : '-'}
+                      {selectedItem.hora_fim ? ` - ${formatTime(selectedItem.hora_fim)}` : ''}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {selectedItem.historiaClinica && selectedItem.historiaClinica.length > 0 && (
-              <div className="details-section">
-                <h4>História Clínica (Triagem)</h4>
-                <div style={{
-                  padding: '1rem',
-                  background: 'var(--bg-secondary)',
-                  borderRadius: 'var(--radius-lg)',
-                  border: '1px solid var(--border-color)',
-                }}>
-                  <FormattedText
-                    text={removeAdministrativeFields(selectedItem.historiaClinica[0].conteudo) || 'Não informada'}
-                    style={{
-                      fontSize: '0.95rem',
-                      color: 'var(--text-primary)',
-                      lineHeight: 1.6
-                    }}
+              {selectedItem.historiaClinica && selectedItem.historiaClinica.length > 0 && (
+                <div style={{ marginTop: '1rem' }}>
+                  <ClinicalStructuredView 
+                    data={selectedItem.historiaClinica[0]} 
+                    variant="report"
                   />
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             <div className="details-section">
               <h4>Diagnóstico</h4>
