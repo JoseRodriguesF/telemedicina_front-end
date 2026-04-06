@@ -1,6 +1,7 @@
 import React from 'react';
 import ContentModal from '@/components/common/Modal/ContentModal';
 import Button from '@/components/common/Buttons/Button';
+import ClinicalStructuredView from './ClinicalStructuredView';
 import { formatDate } from '@/lib/utils/dateFormatters';
 import { CID10 } from '@/lib/constants/cid10';
 
@@ -84,6 +85,22 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
                 <div className="detail-item"><label>Hora Fim:</label><span>{consultaSelecionada.hora_fim ? new Date(consultaSelecionada.hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}</span></div>
               </div>
             </div>
+
+            {/* Nova Seção de Triagem/História Clínica */}
+            {(consultaSelecionada.historiaClinica || (Array.isArray(consultaSelecionada.historiaClinica) && consultaSelecionada.historiaClinica.length > 0)) && (
+              <div className="details-section" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem', marginTop: '1rem' }}>
+                <h4 style={{ marginBottom: '1rem', color: 'var(--color-primary-600)' }}>
+                  🏥 História Clínica / Triagem
+                </h4>
+                <ClinicalStructuredView 
+                  data={Array.isArray(consultaSelecionada.historiaClinica) 
+                    ? consultaSelecionada.historiaClinica[0] 
+                    : consultaSelecionada.historiaClinica
+                  } 
+                />
+              </div>
+            )}
+
             <div className="details-section"><h4>Diagnóstico</h4><p className="detail-text">{consultaSelecionada.diagnostico || 'Não registrado'}</p></div>
             <div className="details-section"><h4>Evolução</h4><p className="detail-text">{consultaSelecionada.evolucao || 'Não registrada'}</p></div>
             <div className="details-section"><h4>Plano Terapêutico</h4><p className="detail-text">{consultaSelecionada.plano_terapeutico || 'Não registrado'}</p></div>

@@ -189,7 +189,7 @@ function AtendimentoInner() {
             if (data.historiaClinica) {
               if (Array.isArray(data.historiaClinica)) {
                 const arr = data.historiaClinica as any[];
-                data.historiaClinica = arr.length > 0 ? { id: arr[0].id, conteudo: removeAdministrativeFields(arr[0].conteudo) } : undefined;
+                data.historiaClinica = arr.length > 0 ? { ...arr[0], conteudo: removeAdministrativeFields(arr[0].conteudo) } : undefined;
               } else if (data.historiaClinica.conteudo) {
                 data.historiaClinica.conteudo = removeAdministrativeFields(data.historiaClinica.conteudo);
               }
@@ -217,7 +217,7 @@ function AtendimentoInner() {
         if (data.historiaClinica) {
           if (Array.isArray(data.historiaClinica)) {
             const arr = data.historiaClinica as any[];
-            data.historiaClinica = arr.length > 0 ? { id: arr[0].id, conteudo: removeAdministrativeFields(arr[0].conteudo) } : undefined;
+            data.historiaClinica = arr.length > 0 ? { ...arr[0], conteudo: removeAdministrativeFields(arr[0].conteudo) } : undefined;
           } else if (data.historiaClinica.conteudo) {
             data.historiaClinica.conteudo = removeAdministrativeFields(data.historiaClinica.conteudo);
           }

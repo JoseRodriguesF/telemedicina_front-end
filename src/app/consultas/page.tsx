@@ -12,6 +12,7 @@ import { ConsultaAgendada, ConsultaDetails, confirmarConsulta, cancelarConsulta,
 import { useConsultasAgendadas } from '@/hooks/useApiData';
 import { MiniAppointmentCard } from '@/components/appointments/MiniAppointmentCard';
 import ContentModal from '@/components/common/Modal/ContentModal';
+import ClinicalStructuredView from '@/components/appointments/atendimento/ClinicalStructuredView';
 import { useModal } from '@/components/common/Modal/useModal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useConsultationTimer } from '@/hooks/useConsultationTimer';
@@ -88,6 +89,7 @@ export default function ConsultasPage() {
         telefone: ''
       },
       historiaClinica: hClinica ? {
+        ...hClinica,
         conteudo: hClinica.conteudo
       } : undefined
     };
@@ -364,21 +366,7 @@ export default function ConsultasPage() {
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14.5 2 14.5 7.5 20 7.5" /></svg>
                       História Clínica (Triagem)
                     </h4>
-                    <div style={{
-                      padding: '1.25rem',
-                      background: 'var(--bg-tertiary)',
-                      borderRadius: 'var(--radius-lg)',
-                      border: '1px solid var(--border-color)',
-                    }}>
-                      <FormattedText
-                        text={consultaDetails.historiaClinica.conteudo || 'Não informada'}
-                        style={{
-                          fontSize: '1rem',
-                          color: 'var(--text-primary)',
-                          lineHeight: 1.7
-                        }}
-                      />
-                    </div>
+                    <ClinicalStructuredView data={consultaDetails.historiaClinica} />
                   </div>
                 </div>
               ) : (

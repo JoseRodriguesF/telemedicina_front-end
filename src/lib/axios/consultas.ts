@@ -162,7 +162,7 @@ export type ConsultaDetails = {
     telefone: string;
     notas?: string;
   } | null;
-  historiaClinica?: Partial<HistoriaClinicaDetails>;
+  historiaClinica?: HistoriaClinicaItem;
   // Novos campos estruturais
   repouso?: string;
   destino_final?: string;
@@ -374,12 +374,14 @@ export async function psListActiveRooms(token: string, userId?: string): Promise
 export type HistoriaClinicaItem = {
   id: number;
   conteudo: string;
+  queixaPrincipal?: string;
+  descricaoSintomas?: string;
+  historicoPessoal?: any;
+  antecedentesFamiliares?: any;
+  estiloVida?: any;
 };
 
-export type HistoriaClinicaDetails = {
-  id: number;
-  conteudo: string;
-};
+export type HistoriaClinicaDetails = HistoriaClinicaItem;
 
 export async function getHistoriaClinica(id: number, token: string): Promise<HistoriaClinicaDetails> {
   try {

@@ -344,6 +344,13 @@ textarea:focus,
 select:focus {
 	border-color: var(--color-primary-500);
 	box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+	background: var(--card-bg);
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus {
+	background: var(--bg-secondary) !important;
 }
 
 /* Date/time pickers — force theme colors on the input itself */
@@ -366,6 +373,23 @@ input[type="week"] {
 	background: var(--bg-secondary);
 	color: var(--text-primary);
 	border-color: var(--border-color);
+}
+
+/* Fix for AI parsed headers (like ANTECEDENTES FAMILIARES) being too dark in dark mode */
+[data-theme="dark"] h3[style*="var(--color-primary-600)"],
+[data-theme="dark"] h4[style*="var(--color-primary-600)"],
+[data-theme="dark"] .detail-text h3,
+[data-theme="dark"] .detail-text h4,
+[data-theme="dark"] .triagem-text h3,
+[data-theme="dark"] .triagem-text h4,
+[data-theme="dark"] .triagem-content-wrapper h3 {
+	color: var(--color-primary-300) !important;
+}
+
+[data-theme="dark"] strong[style*="var(--color-primary-600)"],
+[data-theme="dark"] .detail-text strong,
+[data-theme="dark"] .triagem-text strong {
+	color: var(--color-primary-300) !important;
 }
 
 /* Select — custom dropdown arrow */

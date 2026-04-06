@@ -1,6 +1,7 @@
 import React from 'react';
 import Accordion from './Accordion';
 import FormattedText from '@/components/common/FormattedText';
+import ClinicalStructuredView from './ClinicalStructuredView';
 import { formatDate } from '@/lib/utils/dateFormatters';
 import { ConsultaDetails } from '@/lib/axios/consultas';
 import { Prescricao as PrescricaoType } from '@/lib/axios/prescricoes';
@@ -109,10 +110,9 @@ const ClinicalPanel: React.FC<LeftPanelProps> = ({
           isFilled={!!consultaDetails?.historiaClinica}
         >
           {consultaDetails?.historiaClinica ? (
-            <div className="triagem-content-wrapper" style={{ padding: '0.5rem 0' }}>
-              <FormattedText
-                text={(consultaDetails.historiaClinica as any).conteudo || 'Não informada'}
-                style={{ fontSize: '1rem', color: 'var(--text-primary)', lineHeight: 1.7 }}
+            <div className="triagem-content-wrapper" style={{ padding: '0.25rem 0' }}>
+              <ClinicalStructuredView 
+                data={consultaDetails.historiaClinica} 
               />
             </div>
           ) : (

@@ -55,7 +55,6 @@ function PreConsultaInner() {
   const [completed, setCompleted] = useState(false);
   const [isTriageStarted, setIsTriageStarted] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
-  const [isNavigating, setIsNavigating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // Estados para o relatório de confirmação
@@ -215,7 +214,6 @@ function PreConsultaInner() {
       if (result.historiaClinicaId) {
         historiaClinicaIdRef.current = result.historiaClinicaId;
       }
-      setIsNavigating(true);
       handleEnviar(result.historiaClinicaId);
     } catch (err: any) {
       // Mesmo que falhe ao salvar, permite prosseguir
@@ -330,10 +328,8 @@ function PreConsultaInner() {
       return;
     }
 
-    // ─── Fluxo de Pronto Atendimento (PS) ──────────────────────────────
     // Cria a sala na fila PS e redireciona para a tela de espera.
     // Um médico em /consultas/pacientes verá a solicitação e fará o claim.
-    setIsNavigating(true);
     try {
       const room = await psCreateRoom(token, {
         historiaClinicaId: currentHistoriaId
@@ -350,7 +346,6 @@ function PreConsultaInner() {
 
       router.push(`/consultas/aguardando?id=${room.consultaId}`);
     } catch (err: any) {
-      setIsNavigating(false);
       const msg = err?.response?.data?.error || err?.message || 'Erro desconhecido';
       if (msg?.toLowerCase().includes('cadastro') || msg?.toLowerCase().includes('paciente')) {
         modal.error('Cadastro Incompleto', 'Seu usuário não está vinculado a um cadastro de Paciente. Complete o cadastro para continuar.');
@@ -408,7 +403,7 @@ function PreConsultaInner() {
                 </div>
               )}
 
-              {isTriageStarted && !showRelatorio && !isNavigating && (
+              {isTriageStarted && !showRelatorio && (
                 <div className="pc-chat-history-container">
                   <div className="pc-chat-messages">
                     {messages.map((m, i) => (
@@ -436,7 +431,7 @@ function PreConsultaInner() {
               )}
 
               {/* Relatório de Confirmação */}
-              {showRelatorio && dadosTriagem && !isNavigating && (
+              {showRelatorio && dadosTriagem && (
                 <div className="pc-relatorio-container">
                   <div className="pc-relatorio-header">
                     <div className="pc-relatorio-icon">✅</div>
@@ -678,7 +673,7 @@ function PreConsultaInner() {
               )}
 
               {/* Input Area — mostrar somente durante o chat (não no relatório ou transição) */}
-              {isTriageStarted && !showRelatorio && !isNavigating && (
+              {isTriageStarted && !showRelatorio && !completed && (
                 <div className="pc-input-wrapper">
                   <div className="pc-input-container">
                     <input 
