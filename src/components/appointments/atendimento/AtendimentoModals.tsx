@@ -83,18 +83,18 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
             <div className="pc-relatorio-container" style={{ padding: 0 }}>
               <div className="clinical-report-card">
                 <div className="clinical-report-section">
-                  <h3>🗓️ Informações Gerais</h3>
+                  <h3>Informações Gerais</h3>
                   <div className="clinical-report-item">
-                    <span className="clinical-report-label">Data:</span>
-                    <span>{consultaSelecionada.data_consulta ? formatDate(consultaSelecionada.data_consulta) : formatDate(consultaSelecionada.createdAt)}</span>
+                    <span className="clinical-report-label">Data</span>
+                    <span className="clinical-report-value">{consultaSelecionada.data_consulta ? formatDate(consultaSelecionada.data_consulta) : formatDate(consultaSelecionada.createdAt)}</span>
                   </div>
                   <div className="clinical-report-item">
-                    <span className="clinical-report-label">Médico:</span>
-                    <span>{consultaSelecionada.medico?.nome_completo || '-'}</span>
+                    <span className="clinical-report-label">Médico</span>
+                    <span className="clinical-report-value">{consultaSelecionada.medico?.nome_completo || '-'}</span>
                   </div>
                   <div className="clinical-report-item">
-                    <span className="clinical-report-label">Horário:</span>
-                    <span>
+                    <span className="clinical-report-label">Horário</span>
+                    <span className="clinical-report-value">
                       {consultaSelecionada.hora_inicio ? new Date(consultaSelecionada.hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}
                       {consultaSelecionada.hora_fim ? ` - ${new Date(consultaSelecionada.hora_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : ''}
                     </span>
@@ -120,7 +120,7 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
             <div className="details-section"><h4>Plano Terapêutico</h4><p className="detail-text">{consultaSelecionada.plano_terapeutico || 'Não registrado'}</p></div>
             {consultaSelecionada.resumo_consulta && (
               <div className="details-section">
-                <h4>📋 Resumo da Consulta</h4>
+                <h4>Resumo da Consulta</h4>
                 <p className="detail-text">{consultaSelecionada.resumo_consulta}</p>
               </div>
             )}
@@ -131,7 +131,6 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
             {consultaSelecionada.observacaoTecnica && (
               <div className="details-section" style={{ borderLeft: '4px solid #ef4444', paddingLeft: '1rem', background: '#fef2f2', marginTop: '1rem', borderRadius: '4px' }}>
                 <h4 style={{ color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                   Relatório Técnico (CFM Art. 10)
                 </h4>
                 <p className="detail-text" style={{ color: '#b91c1c', fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}>{consultaSelecionada.observacaoTecnica}</p>
