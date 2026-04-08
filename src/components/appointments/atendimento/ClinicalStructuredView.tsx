@@ -32,14 +32,14 @@ const ClinicalStructuredView: React.FC<ClinicalStructuredViewProps> = ({
         {/* Seção 1: Queixa e Sintomas */}
         {hasValue(data.queixaPrincipal) && (
           <div className="clinical-report-section">
-            <h3>📋 Motivo da Consulta</h3>
+            <h3>Motivo da Consulta</h3>
             <p>{data.queixaPrincipal}</p>
           </div>
         )}
 
         {hasValue(data.descricaoSintomas) && (
           <div className="clinical-report-section">
-            <h3>🩺 Descrição dos Sintomas</h3>
+            <h3>Descrição dos Sintomas</h3>
             <p>{data.descricaoSintomas}</p>
           </div>
         )}
@@ -47,11 +47,11 @@ const ClinicalStructuredView: React.FC<ClinicalStructuredViewProps> = ({
         {/* Seção 2: Histórico Pessoal */}
         {hasValue(data.historicoPessoal) && (
           <div className="clinical-report-section">
-            <h3>📁 Histórico Médico Pessoal</h3>
+            <h3>Histórico Médico Pessoal</h3>
             {hasValue(data.historicoPessoal.doencas) && (
               <div className="clinical-report-item">
-                <span className="clinical-report-label">Doenças crônicas:</span>
-                <span>
+                <span className="clinical-report-label">Doenças crônicas</span>
+                <span className="clinical-report-value">
                   {Array.isArray(data.historicoPessoal.doencas) 
                     ? data.historicoPessoal.doencas.join(', ') 
                     : data.historicoPessoal.doencas}
@@ -60,8 +60,8 @@ const ClinicalStructuredView: React.FC<ClinicalStructuredViewProps> = ({
             )}
             {hasValue(data.historicoPessoal.medicamentos) && (
               <div className="clinical-report-item">
-                <span className="clinical-report-label">Medicamentos em uso:</span>
-                <span>
+                <span className="clinical-report-label">Medicamentos em uso</span>
+                <span className="clinical-report-value">
                   {Array.isArray(data.historicoPessoal.medicamentos) 
                     ? data.historicoPessoal.medicamentos.join(', ') 
                     : data.historicoPessoal.medicamentos}
@@ -70,7 +70,7 @@ const ClinicalStructuredView: React.FC<ClinicalStructuredViewProps> = ({
             )}
             {hasValue(data.historicoPessoal.alergias) && (
               <div className="clinical-report-item">
-                <span className="clinical-report-label alerta">⚠️ Alergias:</span>
+                <span className="clinical-report-label alerta">Alergias</span>
                 <span className="clinical-report-value alerta">
                   {Array.isArray(data.historicoPessoal.alergias) 
                     ? data.historicoPessoal.alergias.join(', ') 
@@ -80,8 +80,8 @@ const ClinicalStructuredView: React.FC<ClinicalStructuredViewProps> = ({
             )}
             {hasValue(data.historicoPessoal.vacinacao) && (
               <div className="clinical-report-item">
-                <span className="clinical-report-label">Vacinação:</span>
-                <span>{data.historicoPessoal.vacinacao}</span>
+                <span className="clinical-report-label">Vacinação</span>
+                <span className="clinical-report-value">{data.historicoPessoal.vacinacao}</span>
               </div>
             )}
           </div>
@@ -90,11 +90,11 @@ const ClinicalStructuredView: React.FC<ClinicalStructuredViewProps> = ({
         {/* Seção 3: Antecedentes Familiares */}
         {hasValue(data.antecedentesFamiliares) && (
           <div className="clinical-report-section">
-            <h3>👨‍👩‍👧 Antecedentes Familiares</h3>
+            <h3>Antecedentes Familiares</h3>
             {Object.entries(data.antecedentesFamiliares).map(([key, val]: [string, any]) => (
               <div key={key} className="clinical-report-item">
-                <span className="clinical-report-label">{key}:</span>
-                <span>{val}</span>
+                <span className="clinical-report-label" style={{ textTransform: 'capitalize' }}>{key.replace('_', ' ')}</span>
+                <span className="clinical-report-value">{val}</span>
               </div>
             ))}
           </div>
@@ -103,11 +103,11 @@ const ClinicalStructuredView: React.FC<ClinicalStructuredViewProps> = ({
         {/* Seção 4: Estilo de Vida */}
         {hasValue(data.estiloVida) && (
           <div className="clinical-report-section">
-            <h3>🏃 Estilo de Vida</h3>
+            <h3>Estilo de Vida</h3>
             {Object.entries(data.estiloVida).map(([key, val]: [string, any]) => (
               <div key={key} className="clinical-report-item">
-                <span className="clinical-report-label">{key}:</span>
-                <span>{val}</span>
+                <span className="clinical-report-label" style={{ textTransform: 'capitalize' }}>{key.replace('_', ' ')}</span>
+                <span className="clinical-report-value">{val}</span>
               </div>
             ))}
           </div>
@@ -116,7 +116,7 @@ const ClinicalStructuredView: React.FC<ClinicalStructuredViewProps> = ({
         {/* Fallback */}
         {(!hasValue(data.queixaPrincipal) && !hasValue(data.historicoPessoal)) && data.conteudo && (
           <div className="clinical-report-section">
-            <h3>📝 Resumo Clínico</h3>
+            <h3>Resumo Clínico</h3>
             <FormattedText text={data.conteudo} />
           </div>
         )}

@@ -1405,6 +1405,41 @@ function AtendimentoInner() {
     return filteredLines.join('\n').trim();
   };
 
+  const [isSummarizing, setIsSummarizing] = useState(false);
+
+  // Função para resumir a transcrição completa no final
+  const handleSummarize = async () => {
+    if (!atendimentoData.resumo_consulta || !token) {
+      modal.warning('Aviso', 'Não há transcrição disponível para resumir.');
+      return;
+    }
+
+    setIsSummarizing(true);
+    try {
+      const response = await fetch('/api/chat-ia/resumir', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ transcricao: atendimentoData.resumo_consulta })
+      });
+
+      if (!response.ok) throw new Error('Falha na API de resumo');
+
+      const data = await response.json();
+      if (data.ok && data.resumo) {
+        setAtendimentoData(prev => ({ ...prev, resumo_consulta: data.resumo }));
+        modal.success('Sucesso', 'Um resumo clínico foi gerado a partir da transcrição completa.');
+      }
+    } catch (err) {
+      console.error('[AI] Erro ao gerar resumo final:', err);
+      modal.error('Erro', 'Não foi possível gerar o resumo. Tente novamente.');
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
   // Detectar mensagens não lidas quando o chat está fechado
   useEffect(() => {
     if (!showChat && messages.length > lastMessageCountRef.current) {
@@ -1730,15 +1765,13 @@ function AtendimentoInner() {
         }
 
         const data = await response.json();
-        if (data.ok && data.resumo) {
-          console.log('[AI] Novo resumo parcial recebido.');
-          // Atualiza o resumo de forma incremental com separador visual claro
+        if (data.ok && data.transcricao) {
+          console.log('[AI] Nova transcrição diarizada recebida.');
+          // Atualiza a transcrição acumulada de forma incremental
           setAtendimentoData(prev => ({ 
             ...prev, 
-            resumo_consulta: (prev.resumo_consulta ? prev.resumo_consulta + '\n\n' : '') + data.resumo 
+            resumo_consulta: (prev.resumo_consulta ? prev.resumo_consulta + '\n' : '') + data.transcricao 
           }));
-          
-          // O modal de transcrição da IA agora mostra o conteúdo de atendimentoData.resumo_consulta
         }
       };
     } catch (err) {
@@ -1948,6 +1981,8 @@ function AtendimentoInner() {
           onOpenAnexo={(url) => window.open(url, '_blank')}
           confirmationStep={confirmationStep}
           setConfirmationStep={setConfirmationStep}
+          onSummarize={handleSummarize}
+          isSummarizing={isSummarizing}
         />
 
         <PrescriptionPDFTemplate

@@ -36,6 +36,8 @@ interface ModalsProps {
   onOpenAnexo: (url: string) => void;
   confirmationStep: number;
   setConfirmationStep: (v: number) => void;
+  onSummarize?: () => void;
+  isSummarizing?: boolean;
 }
 
 const AtendimentoModals: React.FC<ModalsProps> = ({
@@ -69,6 +71,8 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
   onOpenAnexo,
   confirmationStep,
   setConfirmationStep,
+  onSummarize,
+  isSummarizing,
 }) => {
   return (
     <>
@@ -180,11 +184,21 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
               value={atendimentoData.resumo_consulta}
               onChange={(e) => setAtendimentoData(prev => ({ ...prev, resumo_consulta: e.target.value }))}
             />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-              <span className="resumo-char-count">{atendimentoData.resumo_consulta?.length || 0} caracteres</span>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: 0, fontStyle: 'italic' }}>
-                Este conteúdo será revisado novamente antes da finalização.
-              </p>
+            <div className="summarize-action-bar">
+              <div className="summarize-info">
+                <span className="summarize-title">Transcrição — {atendimentoData.resumo_consulta?.length || 0} caracteres</span>
+                <p className="summarize-description">
+                  Registro bruto da conversa. Clique para gerar um resumo clínico organizado.
+                </p>
+              </div>
+              <Button 
+                variant="primary" 
+                className="btn-summarize"
+                onClick={onSummarize} 
+                disabled={isSummarizing || !atendimentoData.resumo_consulta}
+              >
+                {isSummarizing ? 'Resumindo...' : <><span className="ia-icon-pulse">✨</span> Resumir Transcrição</>}
+              </Button>
             </div>
           </div>
 
@@ -317,12 +331,25 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
                   <label className="resumo-label">Relatório Completo da Consulta (IA)</label>
                   <textarea
                     className="atendimento-textarea resumo-textarea"
-                    style={{ minHeight: '300px', borderLeft: '4px solid var(--color-primary-500)', background: 'var(--bg-secondary)' }}
-                    placeholder="O resumo da transcrição da consulta aparecerá aqui..."
+                    style={{ minHeight: '300px', borderLeft: '4px solid var(--color-primary-500)', background: 'var(--bg-secondary)', fontSize: '0.95rem', lineHeight: '1.6' }}
+                    placeholder="A transcrição completa ou resumo aparecerá aqui..."
                     value={atendimentoData.resumo_consulta}
                     onChange={(e) => setAtendimentoData(prev => ({ ...prev, resumo_consulta: e.target.value }))}
                   />
-                  <span className="resumo-char-count">{atendimentoData.resumo_consulta?.length || 0} caracteres</span>
+                  <div className="summarize-action-bar">
+                    <div className="summarize-info">
+                      <span className="summarize-title">Geração de Resumo — {atendimentoData.resumo_consulta?.length || 0} caracteres</span>
+                      <p className="summarize-description">Consolidar a transcrição diarizada em um relatório clínico estruturado.</p>
+                    </div>
+                    <Button 
+                      variant="primary" 
+                      className="btn-summarize"
+                      onClick={onSummarize} 
+                      disabled={isSummarizing || !atendimentoData.resumo_consulta}
+                    >
+                      {isSummarizing ? 'Resumindo...' : <><span className="ia-icon-pulse">✨</span> Gerar Resumo da Transcrição</>}
+                    </Button>
+                  </div>
                 </div>
               </div>
 

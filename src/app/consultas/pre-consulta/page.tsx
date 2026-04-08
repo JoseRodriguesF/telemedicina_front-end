@@ -8,6 +8,7 @@ import Sidebar from '@/components/layout/Sidebar/Sidebar';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState, useRef, useEffect } from 'react';
 import type { ChatIAResponse, ChatHistory, ChatMessage as ChatMsg } from '@/types/chat';
+import ClinicalStructuredView from '@/components/appointments/atendimento/ClinicalStructuredView';
 
 // Função simples para converter markdown básico em HTML seguro
 function formatIaText(text: string): string {

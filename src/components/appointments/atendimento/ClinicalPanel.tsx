@@ -113,6 +113,7 @@ const ClinicalPanel: React.FC<LeftPanelProps> = ({
             <div className="triagem-content-wrapper" style={{ padding: '0.25rem 0' }}>
               <ClinicalStructuredView 
                 data={consultaDetails.historiaClinica} 
+                variant="report"
               />
             </div>
           ) : (
