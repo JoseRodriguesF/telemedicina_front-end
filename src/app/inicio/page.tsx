@@ -126,6 +126,13 @@ function InicioPageContent() {
   // ✅ OTIMIZADO: Inicialização do usuário
   useEffect(() => {
     const u = getUser();
+    
+    // Admins devem ser redirecionados diretamente para o Dashboard Administrativo
+    if (u?.tipo_usuario === 'admin') {
+      router.replace('/admin/dashboard');
+      return;
+    }
+
     setDisplayName(getUserFirstName(u));
     const isMed = (u?.tipo_usuario || '').toLowerCase() === 'medico';
     setIsMedico(isMed);

@@ -26,8 +26,7 @@ const baseItems: SidebarItem[] = [
 ];
 
 const adminItems: SidebarItem[] = [
-  { id: 'inicio', label: 'Início', icon: '/images/home-06.svg', href: '/inicio' },
-  { id: 'consultas', label: 'Dashboard Admin', icon: '/images/chart-line.png', href: '/admin/dashboard' },
+  { id: 'inicio', label: 'Início', icon: '/images/home-06.svg', href: '/admin/dashboard' },
   { id: 'perfil', label: 'Verificar Médicos', icon: '/images/users-01.png', href: '/admin/medicos' },
 ];
 
@@ -44,7 +43,7 @@ export default function Sidebar({ activeId: propActiveId, className = '' }: Prop
     if (pathname.startsWith('/historico')) return 'historico';
     if (pathname.startsWith('/perfil')) return 'perfil';
     if (pathname.startsWith('/configuracoes')) return 'configuracoes';
-    if (pathname.startsWith('/admin/dashboard')) return 'consultas';
+    if (pathname.startsWith('/admin/dashboard')) return 'inicio';
     if (pathname.startsWith('/admin/medicos')) return 'perfil';
     return 'inicio';
   }, [propActiveId, pathname]);

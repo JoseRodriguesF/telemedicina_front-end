@@ -209,12 +209,6 @@
 	padding: 0;
 }
 
-html {
-	scroll-behavior: smooth;
-	-webkit-text-size-adjust: 100%;
-	overflow-x: hidden;
-}
-
 /* ============================================
    SMOOTH THEME TRANSITION
    ============================================ */
@@ -247,22 +241,40 @@ svg line {
 }
 
 /* ============================================
-   SCROLLBAR — Hidden globally but still functional
+   SCROLLBAR — Modern & Minimalist
    ============================================ */
 * {
-	scrollbar-width: none; /* Firefox */
-	-ms-overflow-style: none; /* IE / Edge */
+	scrollbar-width: thin;
+	scrollbar-color: #cbd5e1 transparent;
 }
 
 *::-webkit-scrollbar {
-	display: none; /* Chrome / Safari / Opera */
+	width: 8px;
 }
 
+*::-webkit-scrollbar-track {
+	background: transparent;
+}
 
+*::-webkit-scrollbar-thumb {
+	background-color: #cbd5e1;
+	border-radius: 20px;
+	border: 2px solid var(--bg-primary);
+}
+
+/* ============================================
+   ROOT LAYOUT & SCROLLING
+   ============================================ */
 html,
 body,
 #__next {
 	height: 100%;
+}
+
+html {
+	scroll-behavior: smooth;
+	-webkit-text-size-adjust: 100%;
+	scroll-padding-top: 100px;
 }
 
 body {
@@ -276,12 +288,10 @@ body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	overflow-x: hidden;
-	transition: background-color var(--transition-base), 
-				border-color var(--transition-base), 
-                color var(--transition-base), 
-                box-shadow var(--transition-base),
-                fill var(--transition-base),
-                stroke var(--transition-base);
+}
+
+[data-theme="dark"] * {
+    scrollbar-color: var(--bg-tertiary) transparent;
 }
 
 /* ============================================
