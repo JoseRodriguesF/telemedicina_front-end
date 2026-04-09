@@ -76,9 +76,9 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
   return (
     <section className="register-card dados-pessoais-medico-card">
       <div className="register-brand">
-        <img src="/images/logo_matriarca.png" alt="Matriarca" height={50} style={{ objectFit: 'contain' }} />
+        <img src="/images/logo_matriarca_icon.png" alt="Matriarca" width={36} height={36} style={{ borderRadius: '8px', objectFit: 'contain' }} />
         <p>Dados profissionais para cadastro médico</p>
-      </div>
+       </div>
 
       <h1 className="register-title">Dados Pessoais</h1>
       <p className="register-subtitle">Etapa 2 de 3</p>
