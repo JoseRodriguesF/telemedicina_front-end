@@ -106,31 +106,31 @@ export default function AdminDashboard() {
                 <div className="stat-info">
                     <span className="stat-label">Consultas Totais</span>
                     <h2 className="stat-value">{stats?.totalConsultations || 0}</h2>
-                    <span className="stat-delta positive">+12% este mês</span>
+                    <span className="stat-delta positive">Geral da Plataforma</span>
                 </div>
             </div>
             <div className="summary-stat-card glass">
                 <div className="stat-icon doctors">🩺</div>
                 <div className="stat-info">
-                    <span className="stat-label">Médicos Ativos</span>
-                    <h2 className="stat-value">{(stats?.totalConsultations / 4).toFixed(0)}</h2>
-                    <span className="stat-delta">Especialistas validados</span>
+                    <span className="stat-label">Corpo Clínico</span>
+                    <h2 className="stat-value">{stats?.totalDoctors || 0}</h2>
+                    <span className="stat-delta">Médicos Cadastrados</span>
                 </div>
             </div>
             <div className="summary-stat-card glass">
-                <div className="stat-icon avg-time">🕒</div>
+                <div className="stat-icon avg-time">👥</div>
                 <div className="stat-info">
-                    <span className="stat-label">Média Diária</span>
-                    <h2 className="stat-value">{(stats?.totalConsultations / 30).toFixed(1)}</h2>
-                    <span className="stat-delta">Tendência estável</span>
+                    <span className="stat-label">Total de Pacientes</span>
+                    <h2 className="stat-value">{stats?.totalPatients || 0}</h2>
+                    <span className="stat-delta">Vidas na Plataforma</span>
                 </div>
             </div>
             <div className="summary-stat-card glass highlight">
-                <div className="stat-icon uptime">⚡</div>
+                <div className="stat-icon uptime">🛡️</div>
                 <div className="stat-info">
-                    <span className="stat-label">Status do Sistema</span>
+                    <span className="stat-label">Conformidade LGPD</span>
                     <h2 className="stat-value">100%</h2>
-                    <span className="stat-delta">Uptime Operacional</span>
+                    <span className="stat-delta">Criptografia Ativa</span>
                 </div>
             </div>
         </section>
