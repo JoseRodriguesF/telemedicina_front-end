@@ -28,6 +28,14 @@ export default function LoginPage() {
         return;
       }
     }
+    // determine where to go based on user type
+    const tipo = String(user.tipo_usuario || user.tipo || '').toLowerCase();
+    
+    if (tipo === 'admin') {
+      router.push('/admin/dashboard');
+      return;
+    }
+
     // otherwise go to inicio
     router.push('/inicio');
   }

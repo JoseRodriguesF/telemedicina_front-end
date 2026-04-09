@@ -1,0 +1,136 @@
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem 0;
+}
+
+.admin-header h1 {
+  font-family: var(--font-display, 'Manrope', sans-serif);
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: var(--color-on-surface);
+  margin-bottom: 0.25rem;
+}
+
+.admin-header p {
+  color: var(--color-on-surface-variant);
+  font-size: 0.9375rem;
+}
+
+.admin-filters {
+  display: flex;
+  gap: 1rem;
+}
+
+.admin-select {
+  padding: 0.625rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 91, 191, 0.1);
+  background: white;
+  color: var(--color-on-surface);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.admin-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(0, 91, 191, 0.1);
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.admin-card {
+  padding: 1.5rem;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-card.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.card-header h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-on-surface);
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  background: rgba(0, 91, 191, 0.05);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 99px;
+}
+
+.chart-container {
+  flex: 1;
+  width: 100%;
+}
+
+.summary-card {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #003a8c 100%) !important;
+  color: white;
+}
+
+.summary-card h3 {
+  color: white;
+}
+
+.summary-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2rem;
+  flex: 1;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-item .label {
+  font-size: 0.875rem;
+  opacity: 0.8;
+  margin-bottom: 0.5rem;
+}
+
+.stat-item .value {
+  font-size: 2.5rem;
+  font-weight: 800;
+}
+
+@media (max-width: 1024px) {
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+}

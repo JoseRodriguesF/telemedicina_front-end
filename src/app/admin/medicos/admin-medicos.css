@@ -1,0 +1,75 @@
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--color-on-surface-variant);
+  border-bottom: 1px solid rgba(0, 91, 191, 0.1);
+  font-weight: 600;
+}
+
+.admin-table td {
+  padding: 1rem;
+  font-size: 0.9375rem;
+  color: var(--color-on-surface);
+  border-bottom: 1px solid rgba(0, 91, 191, 0.05);
+}
+
+.loading-state, .empty-state {
+  padding: 4rem;
+  text-align: center;
+  color: var(--color-on-surface-variant);
+}
+
+.review-modal-content {
+  padding: 1rem;
+}
+
+.review-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+.review-section h4, .documents-section h4 {
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+}
+
+.review-section p {
+  margin-bottom: 0.5rem;
+  font-size: 0.9375rem;
+}
+
+.doc-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(0, 91, 191, 0.1);
+}
+
+.btn-reject {
+  color: var(--color-error) !important;
+  border-color: var(--color-error) !important;
+}
+
+.btn-reject:hover {
+  background: rgba(211, 47, 47, 0.05) !important;
+}

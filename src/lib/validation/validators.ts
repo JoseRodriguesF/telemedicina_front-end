@@ -10,7 +10,10 @@ export const DEFAULT_ALLOWED_DOMAINS = [
   'aol.com',
   'zoho.com',
   'yandex.com',
-  'gmx.com'
+  'gmx.com',
+  'matriarca.com.br',
+  'matriarca.com',
+  'telemedicina.com.br'
 ];
 
 /**
@@ -18,8 +21,9 @@ export const DEFAULT_ALLOWED_DOMAINS = [
  */
 export function isEmailFormatValid(email: string): boolean {
   if (!email || typeof email !== 'string') return false;
-  // formato básico — não tenta capturar todos os casos RFC, é intencionalmente simples
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const trimmed = email.trim();
+  // Standard permissive email regex
+  return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(trimmed);
 }
 
 /**
@@ -28,8 +32,10 @@ export function isEmailFormatValid(email: string): boolean {
  * @param allowedDomains lista de domínios permitidos (ex: gmail.com)
  */
 export function isEmailAllowedDomain(email: string, allowedDomains: string[] = DEFAULT_ALLOWED_DOMAINS): boolean {
-  if (!isEmailFormatValid(email)) return false;
-  const parts = email.split('@');
+  if (!email) return false;
+  const trimmed = email.trim();
+  if (!isEmailFormatValid(trimmed)) return false;
+  const parts = trimmed.split('@');
   if (parts.length !== 2) return false;
   const domain = parts[1].toLowerCase();
   const normalized = allowedDomains.map((d) => d.toLowerCase());

@@ -25,6 +25,12 @@ const baseItems: SidebarItem[] = [
   { id: 'historico', label: 'Histórico', icon: '/images/clock.svg', href: '/historico' },
 ];
 
+const adminItems: SidebarItem[] = [
+  { id: 'inicio', label: 'Início', icon: '/images/home-06.svg', href: '/inicio' },
+  { id: 'consultas', label: 'Dashboard Admin', icon: '/images/chart-line.png', href: '/admin/dashboard' },
+  { id: 'perfil', label: 'Verificar Médicos', icon: '/images/users-01.png', href: '/admin/medicos' },
+];
+
 export default function Sidebar({ activeId: propActiveId, className = '' }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -38,8 +44,15 @@ export default function Sidebar({ activeId: propActiveId, className = '' }: Prop
     if (pathname.startsWith('/historico')) return 'historico';
     if (pathname.startsWith('/perfil')) return 'perfil';
     if (pathname.startsWith('/configuracoes')) return 'configuracoes';
+    if (pathname.startsWith('/admin/dashboard')) return 'consultas';
+    if (pathname.startsWith('/admin/medicos')) return 'perfil';
     return 'inicio';
   }, [propActiveId, pathname]);
+
+  const items = useMemo(() => {
+    if (user?.tipo_usuario === 'admin') return adminItems;
+    return baseItems;
+  }, [user]);
 
   useEffect(() => {
     setMounted(true);
@@ -69,7 +82,7 @@ export default function Sidebar({ activeId: propActiveId, className = '' }: Prop
       </div>
 
       <nav className="inicio-nav">
-        {baseItems.map((it) => (
+        {items.map((it) => (
           <button
             key={it.id}
             type="button"
@@ -78,7 +91,11 @@ export default function Sidebar({ activeId: propActiveId, className = '' }: Prop
             title={it.label}
           >
             <span className="nav-icon">
-              <Image src={it.icon} alt={it.label} width={22} height={22} />
+              {it.icon.endsWith('.svg') ? (
+                <Image src={it.icon} alt={it.label} width={22} height={22} />
+              ) : (
+                <img src={it.icon} alt={it.label} width={22} height={22} />
+              )}
             </span>
             <span className="nav-label">{it.label}</span>
           </button>
