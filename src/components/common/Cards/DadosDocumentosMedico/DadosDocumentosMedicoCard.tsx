@@ -143,7 +143,7 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
   return (
     <section className="register-card dados-documentos-medico-card">
       <div className="register-brand">
-        <h1>Telemedicina</h1>
+        <img src="/images/logo_matriarca.png" alt="Matriarca" height={50} style={{ objectFit: 'contain' }} />
         <p>Documentação necessária para verificação</p>
       </div>
 

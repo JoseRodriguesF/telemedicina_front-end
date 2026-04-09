@@ -136,7 +136,7 @@ export default function LoginCard({ onLogin }: Props) {
   return (
     <section className="register-card dados-acesso-card">
       <div className="login-brand">
-        <h1>Telemedicina</h1>
+        <img src="/images/logo_matriarca.png" alt="Matriarca" height={50} style={{ objectFit: 'contain' }} />
       </div>
 
       <h2 className="register-title">Bem-vindo(a) de volta!</h2>

@@ -109,7 +109,7 @@ export default function DadosAcessoPacienteCard({ onNext, tipoUsuario }: Props) 
   return (
     <section className="register-card dados-acesso-card">
       <div className="register-brand">
-        <h1>Telemedicina</h1>
+        <img src="/images/logo_matriarca.png" alt="Matriarca" height={50} style={{ objectFit: 'contain' }} />
       </div>
 
       <h1 className="register-title">Cadastro</h1>
