@@ -10,7 +10,7 @@ import { getToken } from '@/lib/auth';
 import axios from '@/lib/axios/config';
 import './admin-dashboard.css';
 
-const COLORS = ['#005bbf', '#00c49f', '#ffbb28', '#ff8042', '#9c27b0'];
+const COLORS = ['#005bbf', '#00c49f', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
@@ -60,8 +60,8 @@ export default function AdminDashboard() {
                     value={filter.periodo} 
                     onChange={(e) => setFilter({...filter, periodo: e.target.value})}
                 >
-                    <option value="mensal">Visão Mensal</option>
-                    <option value="anual">Visão Anual</option>
+                    <option value="mensal">Mensal</option>
+                    <option value="anual">Anual</option>
                 </select>
             </div>
 
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
                 >
                     {Array.from({ length: 12 }, (_, i) => (
                     <option key={i + 1} value={i + 1}>
-                        {new Date(0, i).toLocaleString('pt-BR', { month: 'long' })}
+                        {new Date(0, i).toLocaleString('pt-BR', { month: 'short' })}
                     </option>
                     ))}
                 </select>
@@ -101,36 +101,36 @@ export default function AdminDashboard() {
 
         {/* Quick Insights Cards */}
         <section className="top-stats-grid">
-            <div className="summary-stat-card glass">
+            <div className="summary-stat-card">
                 <div className="stat-icon consultations">📈</div>
                 <div className="stat-info">
                     <span className="stat-label">Consultas Totais</span>
                     <h2 className="stat-value">{stats?.totalConsultations || 0}</h2>
-                    <span className="stat-delta positive">Geral da Plataforma</span>
+                    <span className="stat-delta">Geral da Plataforma</span>
                 </div>
             </div>
-            <div className="summary-stat-card glass">
+            <div className="summary-stat-card">
                 <div className="stat-icon doctors">🩺</div>
                 <div className="stat-info">
                     <span className="stat-label">Corpo Clínico</span>
                     <h2 className="stat-value">{stats?.totalDoctors || 0}</h2>
-                    <span className="stat-delta">Médicos Cadastrados</span>
+                    <span className="stat-delta">Médicos Ativos</span>
                 </div>
             </div>
-            <div className="summary-stat-card glass">
+            <div className="summary-stat-card">
                 <div className="stat-icon avg-time">👥</div>
                 <div className="stat-info">
-                    <span className="stat-label">Total de Pacientes</span>
+                    <span className="stat-label">Pacientes</span>
                     <h2 className="stat-value">{stats?.totalPatients || 0}</h2>
-                    <span className="stat-delta">Vidas na Plataforma</span>
+                    <span className="stat-delta">Vidas Cadastradas</span>
                 </div>
             </div>
-            <div className="summary-stat-card glass highlight">
+            <div className="summary-stat-card highlight">
                 <div className="stat-icon uptime">🛡️</div>
                 <div className="stat-info">
-                    <span className="stat-label">Conformidade LGPD</span>
+                    <span className="stat-label">Segurança</span>
                     <h2 className="stat-value">100%</h2>
-                    <span className="stat-delta">Criptografia Ativa</span>
+                    <span className="stat-delta">Auditado LGPD</span>
                 </div>
             </div>
         </section>
@@ -184,9 +184,9 @@ export default function AdminDashboard() {
                   <YAxis dataKey="specialty" type="category" width={100} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={{ borderRadius: '16px', border: 'none' }} />
                   <Legend iconType="circle" />
-                  <Bar dataKey="Masculino" stackId="a" fill="#005bbf" radius={[0, 0, 0, 0]} barSize={20} />
-                  <Bar dataKey="Feminino" stackId="a" fill="#ff4081" radius={[0, 0, 0, 0]} barSize={20} />
-                  <Bar dataKey="Outro" stackId="a" fill="#9c27b0" radius={[0, 4, 4, 0]} barSize={20} />
+                  <Bar dataKey="Masculino" stackId="a" fill="var(--color-primary-500)" radius={[0, 0, 0, 0]} barSize={20} />
+                  <Bar dataKey="Feminino" stackId="a" fill="#e91e63" radius={[0, 0, 0, 0]} barSize={20} />
+                  <Bar dataKey="Outro" stackId="a" fill="#9c27b0" radius={[4, 4, 4, 4]} barSize={20} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
