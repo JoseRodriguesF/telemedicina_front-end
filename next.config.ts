@@ -4,9 +4,11 @@ const nextConfig: NextConfig = {
   /* config options here */
   // Disable React StrictMode to prevent double rendering in development
   reactStrictMode: false,
+  // Standalone output para Docker — gera build autocontido e leve (~100MB)
+  output: 'standalone',
   async rewrites() {
-    // During development or production, proxy client requests under /api/* to the remote API
-    const target = (process.env.NEXT_PUBLIC_API_URL || 'https://telemedicina-api-774w.onrender.com').replace(/\/$/, '');
+    // Proxy /api/* para a API backend (Cloud Run ou localhost)
+    const target = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/$/, '');
 
     return [
       {

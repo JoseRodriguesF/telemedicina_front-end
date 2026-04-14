@@ -1,0 +1,12 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+    '--build-arg', 'NEXT_PUBLIC_API_URL=${_API_URL}',
+    '--build-arg', 'NEXT_PUBLIC_GOOGLE_CLIENT_ID=${_GOOGLE_CLIENT_ID}',
+    '--build-arg', 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${_GOOGLE_MAPS_API_KEY}',
+    '-t', 'southamerica-east1-docker.pkg.dev/${PROJECT_ID}/matriarca/frontend:latest',
+    '.'
+  ]
+images:
+- 'southamerica-east1-docker.pkg.dev/${PROJECT_ID}/matriarca/frontend:latest'
