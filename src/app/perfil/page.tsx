@@ -160,17 +160,11 @@ export default function PerfilPage() {
   const addresses = profile?.enderecos || [];
   const mainAddress = addresses[0] || null;
 
-  const getDocUrl = (type: string, page?: number) => {
+  const getDocUrl = (type: string) => {
     if (!profile?.medico) return '';
     const token = getToken();
-    let url = `/api/usuarios/me/documentos/${type}${token ? `?token=${token}` : ''}`;
-
-    // PDF specific customization for clean viewing
-    if (page && (profile.medico as any)[`${type}_mimetype`] === 'application/pdf') {
-      url += `#page=${page}&toolbar=0&navpanes=0&scrollbar=1&view=FitH`;
-    }
-
-    return url;
+    // A rota da API agora faz o redirect para o GCS
+    return `/api/usuarios/me/documentos/${type}${token ? `?token=${token}` : ''}`;
   };
 
   return (
@@ -302,7 +296,7 @@ export default function PerfilPage() {
 
                   <div
                     className={`document-card ${profile.medico?.tem_diploma ? 'active' : ''}`}
-                    onClick={() => profile.medico?.tem_diploma ? handleDocumentView('Diploma Médico', getDocUrl('diploma'), profile.medico?.diploma_mimetype, 'diploma_url') : document.getElementById('upload-diploma')?.click()}
+                    onClick={() => profile.medico?.tem_diploma ? handleDocumentView('Diploma Médico', getDocUrl('diploma'), 'application/pdf', 'diploma_url') : document.getElementById('upload-diploma')?.click()}
                   >
                     {uploadingDoc === 'diploma_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -327,7 +321,7 @@ export default function PerfilPage() {
 
                   <div
                     className={`document-card ${profile.medico?.tem_assinatura ? 'active' : ''}`}
-                    onClick={() => profile.medico?.tem_assinatura ? handleDocumentView('Assinatura Digital', getDocUrl('assinatura'), profile.medico?.assinatura_digital_mimetype, 'assinatura_digital_url') : document.getElementById('upload-assinatura')?.click()}
+                    onClick={() => profile.medico?.tem_assinatura ? handleDocumentView('Assinatura Digital', getDocUrl('assinatura'), 'application/pdf', 'assinatura_digital_url') : document.getElementById('upload-assinatura')?.click()}
                   >
                     {uploadingDoc === 'assinatura_digital_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -352,7 +346,7 @@ export default function PerfilPage() {
 
                   <div
                     className={`document-card ${profile.medico?.tem_especializacao ? 'active' : ''}`}
-                    onClick={() => profile.medico?.tem_especializacao ? handleDocumentView('Especialização / RQE', getDocUrl('especializacao'), profile.medico?.especializacao_mimetype, 'especializacao_url') : document.getElementById('upload-especializacao')?.click()}
+                    onClick={() => profile.medico?.tem_especializacao ? handleDocumentView('Especialização / RQE', getDocUrl('especializacao'), 'application/pdf', 'especializacao_url') : document.getElementById('upload-especializacao')?.click()}
                   >
                     {uploadingDoc === 'especializacao_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
@@ -377,7 +371,7 @@ export default function PerfilPage() {
 
                   <div
                     className={`document-card ${profile.medico?.tem_seguro ? 'active' : ''}`}
-                    onClick={() => profile.medico?.tem_seguro ? handleDocumentView('Seguro Profissional', getDocUrl('seguro'), profile.medico?.seguro_responsabilidade_mimetype, 'seguro_responsabilidade_url') : document.getElementById('upload-seguro')?.click()}
+                    onClick={() => profile.medico?.tem_seguro ? handleDocumentView('Seguro Profissional', getDocUrl('seguro'), 'application/pdf', 'seguro_responsabilidade_url') : document.getElementById('upload-seguro')?.click()}
                   >
                     {uploadingDoc === 'seguro_responsabilidade_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
                     <div className="document-icon">
