@@ -14,7 +14,9 @@ export type UserProfile = {
         sexo: string;
         estado_civil: string;
         telefone: string;
-        responsavel_legal?: string;
+        nome_mae?: string;
+        peso?: number;
+        altura?: number;
         telefone_responsavel?: string;
         historia_clinica?: string;
     };
@@ -33,7 +35,7 @@ export type UserProfile = {
         especializacao_url?: string;
         assinatura_digital_url?: string;
         seguro_responsabilidade_url?: string;
-        telefone?: string;
+        telefone_celular?: string;
         avaliacao?: number;
         resumo_profissional?: string;
         especialidade?: string;

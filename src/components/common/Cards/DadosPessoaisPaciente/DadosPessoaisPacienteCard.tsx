@@ -23,11 +23,15 @@ export type DadosPessoais = {
   gender: string;
   marital: string;
   address: string;
-  addressNumber?: number;
+  addressNumber?: string;
   complement?: string;
+  bairro?: string;
+  cidade?: string;
+  estado?: string;
+  cep?: string;
   number: string;
-  guardian: string;
-  guardianContact: string;
+  motherName: string;
+  motherContact?: string;
 };
 
 const schema = z.object({
@@ -47,34 +51,18 @@ const schema = z.object({
     .min(1, 'Informe o número')
     .refine(v => !isNaN(Number(v)), 'Número inválido'),
   complement: z.string().optional(),
+  bairro: z.string().optional(),
+  cidade: z.string().optional(),
+  estado: z.string().optional(),
+  cep: z.string().optional(),
   number: z.string()
     .min(1, 'Informe o telefone')
     .refine(isValidPhone, 'Telefone inválido.'),
-  guardian: z.string().optional(),
-  guardianContact: z.string().optional(),
+  motherName: z.string()
+    .min(1, 'Nome da mãe é obrigatório para emissão de receitas.'),
+  motherContact: z.string().optional(),
 }).superRefine((data, ctx) => {
-  if (isMinor(data.birthDate)) {
-    if (!data.guardian?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Preencha o nome do responsável.',
-        path: ['guardian']
-      });
-    }
-    if (!data.guardianContact?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Preencha o contato do responsável.',
-        path: ['guardianContact']
-      });
-    } else if (!isValidPhone(data.guardianContact)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Contato do responsável inválido.',
-        path: ['guardianContact']
-      });
-    }
-  }
+  // motherName is already handled by required in schema
 });
 
 function parseBirthDate(value: string): Date | null {
@@ -135,29 +123,26 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
       address: '',
       addressNumber: '',
       complement: '',
+      bairro: '',
+      cidade: '',
+      estado: '',
+      cep: '',
       number: '',
-      guardian: '',
-      guardianContact: '',
+      motherName: '',
+      motherContact: '',
     }
   });
 
   const birthDate = watch('birthDate');
   const minor = isMinor(birthDate);
 
-  // Clear guardian info if not minor anymore (typing)
+  // No longer linked to minor condition for Mevo compliance
   useEffect(() => {
-    if (!minor) {
-      setValue('guardian', '');
-      setValue('guardianContact', '');
-    }
-  }, [minor, setValue]);
+    // keeping effect if needed for other logic
+  }, []);
 
   const onSubmit = (data: any) => {
-    const finalData: DadosPessoais = {
-      ...data,
-      addressNumber: data.addressNumber ? Number(data.addressNumber) : undefined,
-    };
-    onComplete?.(finalData);
+    onComplete?.(data);
   };
 
   return (
@@ -265,6 +250,15 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
                 placeholder="Rua, bairro, cidade - UF"
                 value={field.value}
                 onChange={field.onChange}
+                onPlaceSelected={(payload) => {
+                  if (payload.components) {
+                    if (payload.components.street_number) setValue('addressNumber', payload.components.street_number);
+                    if (payload.components.neighborhood) setValue('bairro', payload.components.neighborhood);
+                    if (payload.components.city) setValue('cidade', payload.components.city);
+                    if (payload.components.state) setValue('estado', payload.components.state);
+                    if (payload.components.zip) setValue('cep', payload.components.zip);
+                  }
+                }}
               />
             )}
           />
@@ -315,36 +309,32 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
           </div>
         </label>
 
-        {minor && (
-          <>
-            <label className="form-label">
-              Responsável legal
-              <Input
-                placeholder="Nome do responsável"
-                {...register('guardian')}
-                className={errors.guardian ? 'c-input--error' : ''}
-              />
-              {errors.guardian && <div className="error-text">{errors.guardian.message as string}</div>}
-            </label>
+        <label className="form-label">
+          <span className="label-title">Nome da Mãe <span className="required-asterisk">*</span></span>
+          <Input
+            placeholder="Nome completo da mãe"
+            {...register('motherName')}
+            className={errors.motherName ? 'c-input--error' : ''}
+          />
+          {errors.motherName && <div className="error-text">{errors.motherName.message as string}</div>}
+        </label>
 
-            <label className="form-label">
-              Contato do responsável
-              <Controller
-                control={control}
-                name="guardianContact"
-                render={({ field }) => (
-                  <Input
-                    mask="phone"
-                    placeholder="(00) 00000-0000"
-                    {...field}
-                    className={errors.guardianContact ? 'c-input--error' : ''}
-                  />
-                )}
+        <label className="form-label">
+          <span className="label-title">Contato da Mãe (Opcional)</span>
+          <Controller
+            control={control}
+            name="motherContact"
+            render={({ field }) => (
+              <Input
+                mask="phone"
+                placeholder="(00) 00000-0000"
+                {...field}
+                className={errors.motherContact ? 'c-input--error' : ''}
               />
-              {errors.guardianContact && <div className="error-text">{errors.guardianContact.message as string}</div>}
-            </label>
-          </>
-        )}
+            )}
+          />
+          {errors.motherContact && <div className="error-text">{errors.motherContact.message as string}</div>}
+        </label>
 
         <div className="form-actions actions-full two-equal">
           <div className="left-actions">

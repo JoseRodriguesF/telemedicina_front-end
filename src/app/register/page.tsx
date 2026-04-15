@@ -152,23 +152,16 @@ export default function RegisterPage() {
                 telefone: (pessoaisData?.number || '')?.replace(/\D/g, '') || '',
                 endereco: {
                   endereco: pessoaisData?.address || pessoaisData?.endereco || '',
-                  numero: (() => {
-                    const n = (pessoaisData?.addressNumber ?? pessoaisData?.numero);
-                    if (n === null || n === undefined) return null;
-                    const v = Number(String(n).replace(/\D/g, ''));
-                    return Number.isFinite(v) ? v : null;
-                  })(),
-                  complemento: (() => {
-                    const v = (pessoaisData?.complement || pessoaisData?.complemento || '').trim();
-                    return v ? v : null;
-                  })(),
+                  numero: String(pessoaisData?.addressNumber || '').replace(/\D/g, ''),
+                  complemento: (pessoaisData?.complement || '').trim() || null,
+                  bairro: (pessoaisData?.bairro || '').trim() || null,
+                  cep: (pessoaisData?.cep || '').replace(/\D/g, '') || null,
+                  cidade: (pessoaisData?.cidade || '').trim() || null,
+                  estado: (pessoaisData?.estado || '').trim() || null,
                 },
-                responsavel_legal: (() => {
-                  const v = (pessoaisData?.guardian || '').trim();
-                  return v ? v : null;
-                })(),
+                nome_mae: (pessoaisData?.motherName || '').trim(),
                 telefone_responsavel: (() => {
-                  const v = (pessoaisData?.guardianContact || '')?.replace(/\D/g, '') || '';
+                  const v = (pessoaisData?.motherContact || '')?.replace(/\D/g, '') || '';
                   return v ? v : null;
                 })(),
                 aceitou_tcle: true,

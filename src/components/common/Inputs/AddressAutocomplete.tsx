@@ -4,7 +4,18 @@ import { useEffect, useRef } from 'react';
 type Props = {
   value: string;
   onChange: (v: string) => void;
-  onPlaceSelected?: (payload: { description: string; placeId: string }) => void;
+  onPlaceSelected?: (payload: { 
+    description: string; 
+    placeId: string;
+    components?: {
+      street_number?: string;
+      route?: string;
+      neighborhood?: string;
+      city?: string;
+      state?: string;
+      zip?: string;
+    }
+  }) => void;
   placeholder?: string;
   className?: string;
 };
@@ -36,8 +47,23 @@ export default function AddressAutocomplete({
         const place = ac.getPlace();
         const description = place.formatted_address || value;
         onChange(description || '');
+        
         if (onPlaceSelected && place.place_id) {
-          onPlaceSelected({ description: description || '', placeId: place.place_id });
+          const comps: any = {};
+          place.address_components?.forEach((c: any) => {
+            if (c.types.includes('street_number')) comps.street_number = c.long_name;
+            if (c.types.includes('route')) comps.route = c.long_name;
+            if (c.types.includes('sublocality_level_1') || c.types.includes('neighborhood')) comps.neighborhood = c.long_name;
+            if (c.types.includes('administrative_area_level_2') || c.types.includes('locality')) comps.city = c.long_name;
+            if (c.types.includes('administrative_area_level_1')) comps.state = c.short_name;
+            if (c.types.includes('postal_code')) comps.zip = c.long_name;
+          });
+
+          onPlaceSelected({ 
+            description: description || '', 
+            placeId: place.place_id,
+            components: comps
+          });
         }
       });
     }

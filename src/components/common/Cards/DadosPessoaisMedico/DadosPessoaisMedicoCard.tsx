@@ -12,6 +12,7 @@ export type DadosPessoaisMedico = {
   cpf: string;
   gender: string;
   birthDate: string;
+  telefone_celular: string;
   crm_uf: string;
   rqe?: string;
 };
@@ -27,6 +28,7 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
   const [cpf, setCpf] = useState('');
   const [gender, setGender] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [telefoneCelular, setTelefoneCelular] = useState('');
   const [crmUf, setCrmUf] = useState('');
   const [rqe, setRqe] = useState('');
 
@@ -35,6 +37,7 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
   const [cpfError, setCpfError] = useState('');
   const [genderError, setGenderError] = useState('');
   const [birthDateError, setBirthDateError] = useState('');
+  const [telefoneCelularError, setTelefoneCelularError] = useState('');
   const [crmUfError, setCrmUfError] = useState('');
 
   function validateAll() {
@@ -43,6 +46,7 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
     setCpfError('');
     setGenderError('');
     setBirthDateError('');
+    setTelefoneCelularError('');
     setCrmUfError('');
 
     let ok = true;
@@ -68,6 +72,10 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
     }
     if (!isValidDate(birthDate)) {
       setBirthDateError('Data de nascimento inválida.');
+      ok = false;
+    }
+    if (!telefoneCelular.trim() || telefoneCelular.replace(/\D/g, '').length < 10) {
+      setTelefoneCelularError('Informe um celular válido para assinar receitas.');
       ok = false;
     }
     return ok;
@@ -160,6 +168,22 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
           {birthDateError && <div className="error-text">{birthDateError}</div>}
         </label>
 
+        <label className="form-label">
+          <span className="label-title">Celular para MFA <span className="required-asterisk">*</span></span>
+          <Input
+            mask="phone"
+            placeholder="(00) 00000-0000"
+            value={telefoneCelular}
+            onChange={(e) => {
+              setTelefoneCelular(e.target.value);
+              setTelefoneCelularError('');
+            }}
+            className={telefoneCelularError ? 'c-input--error' : ''}
+          />
+          <div className="input-tip">Onde você receberá o SMS para assinar</div>
+          {telefoneCelularError && <div className="error-text">{telefoneCelularError}</div>}
+        </label>
+
         <div className="form-actions actions-full two-equal">
           <div className="left-actions">
             <Button type="button" variant="ghost" onClick={onBack}>Voltar</Button>
@@ -174,7 +198,7 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
                   setCrmError('CRM inválido. Formato: 0000000-0/UF (UF brasileira válida, ex.: 1234567-8/SP).');
                   return;
                 }
-                if (ok) onComplete?.({ name, crm, cpf, gender, birthDate, crm_uf: crmUf, rqe });
+                if (ok) onComplete?.({ name, crm, cpf, gender, birthDate, telefone_celular: telefoneCelular, crm_uf: crmUf, rqe });
               }}
             >
               Próximo

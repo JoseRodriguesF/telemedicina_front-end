@@ -35,6 +35,9 @@ export default function PerfilPage() {
   // States for Uploads
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
 
+  // Mevo: Complete Profile Modal
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -49,6 +52,13 @@ export default function PerfilPage() {
       }
       const data = await getMyProfile(token);
       setProfile(data);
+
+      // Mevo: Verificação automática de perfil completo para pacientes
+      if (data.tipo_usuario === 'paciente' && data.paciente) {
+        if (!data.paciente.peso || !data.paciente.altura) {
+          setShowCompleteModal(true);
+        }
+      }
     } catch (error: any) {
       console.error('Erro ao buscar perfil:', error);
       // Handle Unauthorized
@@ -71,6 +81,10 @@ export default function PerfilPage() {
       telefone: (commonData as any).telefone || '',
       data_nascimento: (commonData as any).data_nascimento ? (commonData as any).data_nascimento.split('T')[0] : '',
       sexo: (commonData as any).sexo || '',
+      nome_mae: (profile.paciente as any)?.nome_mae || '',
+      peso: (profile.paciente as any)?.peso || '',
+      altura: (profile.paciente as any)?.altura || '',
+      telefone_celular: (profile.medico as any)?.telefone_celular || '',
       crm: (commonData as any).crm || '',
       crm_uf: (commonData as any).crm_uf || '',
       rqe: (commonData as any).rqe || '',
@@ -247,6 +261,30 @@ export default function PerfilPage() {
                 <label>CPF</label>
                 <div className="field-value">{(userData as any).cpf || '-'}</div>
               </div>
+
+              {profile?.tipo_usuario === 'paciente' && (
+                <>
+                  <div className="field-group">
+                    <label>Nome da Mãe</label>
+                    <div className="field-value">{(userData as any).nome_mae || '-'}</div>
+                  </div>
+                  <div className="field-group">
+                    <label>Peso (kg)</label>
+                    <div className="field-value">{(userData as any).peso ? `${(userData as any).peso} kg` : '-'}</div>
+                  </div>
+                  <div className="field-group">
+                    <label>Altura (cm)</label>
+                    <div className="field-value">{(userData as any).altura ? `${(userData as any).altura} cm` : '-'}</div>
+                  </div>
+                </>
+              )}
+
+              {profile?.tipo_usuario === 'medico' && (
+                <div className="field-group">
+                  <label>Telefone Celular (MFA)</label>
+                  <div className="field-value">{(userData as any).telefone_celular || '-'}</div>
+                </div>
+              )}
             </div>
 
             {profile?.tipo_usuario === 'paciente' && (
@@ -479,6 +517,40 @@ export default function PerfilPage() {
                   />
                 </div>
               </div>
+
+              <div className="field-group">
+                <label>Nome da Mãe</label>
+                <input
+                  className="field-value"
+                  style={{ width: '100%', background: 'var(--bg-tertiary)' }}
+                  value={editData.nome_mae}
+                  onChange={(e) => setEditData({ ...editData, nome_mae: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="field-group">
+                  <label>Peso (kg)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    className="field-value"
+                    style={{ width: '100%', background: 'var(--bg-tertiary)' }}
+                    value={editData.peso}
+                    onChange={(e) => setEditData({ ...editData, peso: parseFloat(e.target.value) })}
+                  />
+                </div>
+                <div className="field-group">
+                  <label>Altura (cm)</label>
+                  <input
+                    type="number"
+                    className="field-value"
+                    style={{ width: '100%', background: 'var(--bg-tertiary)' }}
+                    value={editData.altura}
+                    onChange={(e) => setEditData({ ...editData, altura: parseInt(e.target.value) })}
+                  />
+                </div>
+              </div>
               <div className="section-header" style={{ marginBottom: '0.5rem', marginTop: '0.5rem' }}>
                 <h4 style={{ fontSize: '1rem' }}>Endereço</h4>
               </div>
@@ -536,6 +608,16 @@ export default function PerfilPage() {
                     onChange={(e) => setEditData({ ...editData, rqe: e.target.value })}
                   />
                 </div>
+              </div>
+
+              <div className="field-group">
+                <label>Telefone Celular (MFA)</label>
+                <input
+                  className="field-value"
+                  style={{ width: '100%', background: 'var(--bg-tertiary)' }}
+                  value={editData.telefone_celular}
+                  onChange={(e) => setEditData({ ...editData, telefone_celular: e.target.value })}
+                />
               </div>
 
               <div className="field-group">
@@ -614,6 +696,24 @@ export default function PerfilPage() {
           </div>
         )}
       </ContentModal>
+
+      {/* Complete Profile Modal (Mevo) */}
+      <Modal
+        isOpen={showCompleteModal}
+        config={{
+          type: 'info',
+          title: 'Complete seu Perfil',
+          message: 'Para emitirmos suas receitas digitais, precisamos do seu peso e altura.',
+          confirmText: 'Atualizar Agora',
+          cancelText: 'Pular',
+          showCancel: true
+        }}
+        onConfirm={() => {
+          setShowCompleteModal(false);
+          handleEditOpen();
+        }}
+        onCancel={() => setShowCompleteModal(false)}
+      />
 
       <Modal
         isOpen={modal.isOpen}
