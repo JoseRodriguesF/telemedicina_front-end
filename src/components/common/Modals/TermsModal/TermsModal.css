@@ -76,20 +76,62 @@
 .tm-accept {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 1rem 0;
-  border-top: 1px solid var(--border-color);
+  gap: 12px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
   color: var(--text-primary);
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.tm-accept input {
-  width: 1.2rem;
-  height: 1.2rem;
+.tm-accept:hover {
+  border-color: var(--color-primary-400);
+  background: var(--bg-tertiary);
+}
+
+.tm-checkbox {
+  position: relative;
+  width: 1.4rem;
+  height: 1.4rem;
+  flex-shrink: 0;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tm-checkbox.checked {
+  background: var(--color-primary-500);
+  border-color: var(--color-primary-500);
+}
+
+.tm-checkbox input {
+  position: absolute;
+  opacity: 0;
   cursor: pointer;
-  accent-color: var(--color-primary-500);
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  z-index: 2;
+}
+
+.tm-checkbox svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: white;
+  z-index: 1;
+}
+
+.tm-accept span {
+  user-select: none;
 }
 
 .tm-actions {

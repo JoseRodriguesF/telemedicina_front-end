@@ -45,8 +45,19 @@ export default function TermsModal({ open, title = 'Termos de Uso e Consentiment
           <div className="tm-terms">{termsHtml || DefaultTerms}</div>
 
           <label className="tm-accept">
-            <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} />{' '}
-            Eu aceito os termos de uso e consentimento.
+            <div className={`tm-checkbox ${accepted ? 'checked' : ''}`}>
+              <input 
+                type="checkbox" 
+                checked={accepted} 
+                onChange={(e) => setAccepted(e.target.checked)} 
+              />
+              {accepted && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+            </div>
+            <span>Eu aceito os termos de uso e consentimento.</span>
           </label>
         </div>
 

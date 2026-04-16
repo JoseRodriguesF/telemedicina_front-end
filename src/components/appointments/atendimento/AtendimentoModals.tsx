@@ -147,47 +147,113 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
         title="📋 Transcrição e Resumo da Consulta (IA)" 
         size="lg"
       >
-        <div className="resumo-consulta-section" style={{ padding: '1rem 0' }}>
-          <div className="resumo-consulta-header" style={{ marginBottom: '1.5rem' }}>
-            <div className="resumo-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <div className="resumo-consulta-section" style={{ padding: '0.5rem 0' }}>
+          <div className="resumo-consulta-header" style={{ 
+            marginBottom: '1.5rem', 
+            padding: '1.25rem', 
+            background: 'var(--bg-secondary)', 
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid var(--border-color)',
+            display: 'flex',
+            gap: '1rem',
+            alignItems: 'center'
+          }}>
+            <div className="resumo-icon" style={{ 
+              background: 'var(--color-primary-100)', 
+              color: 'var(--color-primary-600)',
+              padding: '0.75rem',
+              borderRadius: '12px'
+            }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
                 <line x1="16" y1="13" x2="8" y2="13" />
                 <line x1="16" y1="17" x2="8" y2="17" />
-                <polyline points="10 9 9 9 8 9" />
               </svg>
             </div>
             <div>
-              <h3 className="resumo-consulta-title">Relatório de IA</h3>
-              <p className="resumo-consulta-subtitle">
-                Abaixo está o resumo gerado automaticamente pela IA a partir da transcrição do áudio da consulta. Você pode editar este conteúdo livremente.
+              <h3 className="resumo-consulta-title" style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Relatório de Inteligência Artificial</h3>
+              <p className="resumo-consulta-subtitle" style={{ margin: '4px 0 0 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                Resumo gerado automaticamente a partir da transcrição em tempo real.
               </p>
             </div>
           </div>
 
-          <div className="resumo-confidencial-badge" style={{ marginBottom: '1rem' }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            Confidencial — Visível apenas para médicos
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <div className="resumo-confidencial-badge" style={{ 
+              background: 'var(--bg-tertiary)', 
+              padding: '0.4rem 0.75rem', 
+              borderRadius: 'var(--radius-full)',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: 'var(--text-secondary)',
+              border: '1px solid var(--border-color)'
+            }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              CONTEÚDO CONFIDENCIAL
+            </div>
+            <button 
+              onClick={() => {
+                navigator.clipboard.writeText(atendimentoData.resumo_consulta || '');
+                alert('Copiado para a área de transferência!');
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--color-primary-600)',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              Copiar
+            </button>
           </div>
 
           <div className="form-group">
-            <label className="resumo-label">Transcrição Acumulada / Resumo Parcial</label>
             <textarea
               className="atendimento-textarea resumo-textarea"
-              style={{ minHeight: '400px', borderLeft: '4px solid var(--color-primary-500)', background: 'var(--bg-secondary)', fontSize: '0.95rem', lineHeight: '1.6' }}
-              placeholder="O resumo da transcrição da consulta aparecerá aqui conforme a conversa progride..."
+              style={{ 
+                minHeight: '400px', 
+                border: '2px solid var(--border-color)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '1.25rem',
+                fontSize: '0.95rem', 
+                lineHeight: '1.7',
+                background: 'var(--bg-primary)',
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+              }}
+              placeholder="O resumo da transcrição da consulta aparecerá aqui..."
               value={atendimentoData.resumo_consulta}
               onChange={(e) => setAtendimentoData(prev => ({ ...prev, resumo_consulta: e.target.value }))}
             />
-            <div className="summarize-action-bar">
-              <div className="summarize-info">
-                <span className="summarize-title">Transcrição — {atendimentoData.resumo_consulta?.length || 0} caracteres</span>
-                <p className="summarize-description">
-                  Registro bruto da conversa. Clique para gerar um resumo clínico organizado.
+            <div className="summarize-action-bar" style={{ 
+              marginTop: '1rem', 
+              padding: '1.25rem', 
+              background: 'var(--bg-secondary)', 
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border-color)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '1.5rem'
+            }}>
+              <div className="summarize-info" style={{ flex: 1 }}>
+                <span className="summarize-title" style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                  {atendimentoData.resumo_consulta?.length || 0} caracteres registrados
+                </span>
+                <p className="summarize-description" style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
+                  Clique para processar a transcrição bruta e gerar um relatório estruturado.
                 </p>
               </div>
               <Button 
@@ -195,14 +261,15 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
                 className="btn-summarize"
                 onClick={onSummarize} 
                 disabled={isSummarizing || !atendimentoData.resumo_consulta}
+                style={{ padding: '0.75rem 1.5rem', whiteSpace: 'nowrap' }}
               >
-                {isSummarizing ? 'Resumindo...' : <><span className="ia-icon-pulse">✨</span> Resumir Transcrição</>}
+                {isSummarizing ? 'Processando...' : <><span className="ia-icon-pulse" style={{ marginRight: '8px' }}>✨</span> Refinar Resumo</>}
               </Button>
             </div>
           </div>
 
           <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
-            <Button variant="primary" onClick={() => setShowTranscriptionModal(false)}>Fechar e Voltar</Button>
+            <Button variant="ghost" onClick={() => setShowTranscriptionModal(false)}>Concluir Revisão</Button>
           </div>
         </div>
       </ContentModal>
@@ -211,54 +278,57 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
       <ContentModal
         isOpen={isConfirmingEnd}
         onClose={() => setIsConfirmingEnd(false)}
-        title={confirmationStep === 1 ? 'Etapa 1 de 2 — Confirmar Dados da Consulta' : 'Etapa 2 de 2 — Resumo da Consulta'}
+        title={confirmationStep === 1 ? 'Finalizar Atendimento — Revisão' : 'Finalizar Atendimento — Resumo Clínico'}
         size="xl"
       >
         <div className="confirmation-screen">
 
           {/* Stepper de progresso */}
-          <div className="confirmation-stepper">
+          <div className="confirmation-stepper" style={{ marginBottom: '2.5rem' }}>
             <div className={`stepper-step ${confirmationStep >= 1 ? 'active' : ''} ${confirmationStep > 1 ? 'done' : ''}`}>
               <div className="stepper-circle">
                 {confirmationStep > 1 ? (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 ) : '1'}
               </div>
-              <span className="stepper-label">Dados da Consulta</span>
+              <span className="stepper-label">Revisão de Dados</span>
             </div>
             <div className={`stepper-line ${confirmationStep > 1 ? 'done' : ''}`} />
             <div className={`stepper-step ${confirmationStep >= 2 ? 'active' : ''}`}>
               <div className="stepper-circle">2</div>
-              <span className="stepper-label">Resumo da Consulta</span>
+              <span className="stepper-label">Relatório IA</span>
             </div>
           </div>
 
           {/* ─── ETAPA 1: Revisão dos dados da ficha ─── */}
           {confirmationStep === 1 && (
             <>
-              <p className="confirmation-description">Revise abaixo todas as informações inseridas durante a consulta. Você pode editá-las antes de continuar.</p>
               <div className="confirmation-grid">
                 <div className="confirmation-section">
-                  <h4>Ficha de Atendimento</h4>
+                  <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                    Ficha de Atendimento
+                  </h4>
                   <div className="confirmation-form">
-                    <div className="form-group"><label>Evolução</label><textarea className="atendimento-textarea" style={{ minHeight: '100px' }} value={atendimentoData.evolucao} onChange={(e) => setAtendimentoData(prev => ({ ...prev, evolucao: e.target.value }))} /></div>
-                    <div className="form-group"><label>Notas Privadas</label><textarea className="atendimento-textarea" style={{ minHeight: '80px', borderLeft: '4px solid var(--color-primary-500)' }} value={pacienteNotas} onChange={(e) => setPacienteNotas(e.target.value)} /></div>
+                    <div className="form-group"><label>Evolução Clínica</label><textarea className="atendimento-textarea" style={{ minHeight: '120px' }} value={atendimentoData.evolucao} onChange={(e) => setAtendimentoData(prev => ({ ...prev, evolucao: e.target.value }))} /></div>
+                    <div className="form-group"><label>Notas Privadas (Apenas Médico)</label><textarea className="atendimento-textarea" style={{ minHeight: '80px', borderLeft: '4px solid var(--color-primary-500)' }} value={pacienteNotas} onChange={(e) => setPacienteNotas(e.target.value)} /></div>
                     <div className="form-group"><label>Plano Terapêutico</label><textarea className="atendimento-textarea" style={{ minHeight: '100px' }} value={atendimentoData.plano_terapeutico} onChange={(e) => setAtendimentoData(prev => ({ ...prev, plano_terapeutico: e.target.value }))} /></div>
                     {/* CID in Modal */}
                     <div className="form-group" style={{ position: 'relative' }}>
-                      <label>Diagnóstico (CID)</label>
-                      <div className="cid-chips-wrapper" style={{ marginBottom: '8px' }}>
+                      <label>Diagnóstico (CID-10)</label>
+                      <div className="cid-chips-wrapper" style={{ marginBottom: '10px' }}>
                         {atendimentoData.selectedCIDs.map((cid: CID10) => (
-                          <div key={cid.codigo} className="cid-chip">
-                            <span className="cid-chip-code">{cid.codigo}</span><span className="cid-chip-name" style={{ maxWidth: '120px' }}>{cid.nome}</span>
+                          <div key={cid.codigo} className="cid-chip" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+                            <span className="cid-chip-code" style={{ background: 'var(--color-primary-500)' }}>{cid.codigo}</span>
+                            <span className="cid-chip-name" style={{ maxWidth: '150px' }}>{cid.nome}</span>
                             <button className="cid-chip-remove" onClick={() => onRemoveCID(cid.codigo)} type="button">✕</button>
                           </div>
                         ))}
                       </div>
                       <div className="address-search-wrapper">
-                        <input type="text" className="atendimento-input-small" placeholder="Adicionar CID..." value={cidSearch} onChange={(e) => onDiagnosticoChange(e.target.value, true)} onBlur={() => setTimeout(() => setShowCidSugestoesModal(false), 200)} />
+                        <input type="text" className="atendimento-input-small" placeholder="Pesquisar por código ou descrição do CID..." value={cidSearch} onChange={(e) => onDiagnosticoChange(e.target.value, true)} onBlur={() => setTimeout(() => setShowCidSugestoesModal(false), 200)} />
                         <span className="search-icon-inside"><img src="/icons/Search.png" alt="Buscar" width="16" height="16" /></span>
                       </div>
                       {showCidSugestoesModal && cidSugestoes.length > 0 && (
@@ -268,29 +338,42 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
                       )}
                     </div>
                     <div className="form-row">
-                      <div className="form-group"><label>Repouso</label><select className="atendimento-input-small" value={atendimentoData.repouso} onChange={(e) => setAtendimentoData(prev => ({ ...prev, repouso: e.target.value }))}><option value="">Selecione...</option>{repousoOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
-                      <div className="form-group"><label>Destino Final</label><select className="atendimento-input-small" value={atendimentoData.destino_final} onChange={(e) => setAtendimentoData(prev => ({ ...prev, destino_final: e.target.value }))}><option value="">Selecione...</option>{destinoFinalOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
+                      <div className="form-group" style={{ flex: 1 }}><label>Repouso</label><select className="atendimento-input-small" value={atendimentoData.repouso} onChange={(e) => setAtendimentoData(prev => ({ ...prev, repouso: e.target.value }))}><option value="">Selecione...</option>{repousoOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
+                      <div className="form-group" style={{ flex: 1 }}><label>Destino Final</label><select className="atendimento-input-small" value={atendimentoData.destino_final} onChange={(e) => setAtendimentoData(prev => ({ ...prev, destino_final: e.target.value }))}><option value="">Selecione...</option>{destinoFinalOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>
                     </div>
                   </div>
                 </div>
                 <div className="confirmation-section">
-                  <h4>Prescrições</h4>
-                  <div className="confirmation-prescriptions">
-                    {activePrescricoes.length === 0 ? <p className="no-prescriptions">Nenhuma prescrição adicionada.</p> : (
+                  <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                    Prescrições Geradas
+                  </h4>
+                  <div className="confirmation-prescriptions" style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', padding: '1rem', border: '1px solid var(--border-color)', minHeight: '300px' }}>
+                    {activePrescricoes.length === 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.6 }}>
+                        <p className="no-prescriptions">Nenhuma prescrição adicionada.</p>
+                      </div>
+                    ) : (
                       <div className="prescricao-list">
                         {activePrescricoes.map((p) => (
-                          <div key={p.id} className="prescricao-card"><div className="prescricao-card-header"><div className="prescricao-card-medicamento">{p.medicamento}</div><button className="prescricao-delete-btn" onClick={() => onDeletePrescricao(p.id)}>Excluir</button></div><div className="prescricao-card-info">{p.dosagem} - {p.frequencia} - {p.duracao}</div></div>
+                          <div key={p.id} className="prescricao-card" style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                            <div className="prescricao-card-header">
+                              <div className="prescricao-card-medicamento" style={{ color: 'var(--color-primary-600)' }}>{p.medicamento}</div>
+                              <button className="prescricao-delete-btn" onClick={() => onDeletePrescricao(p.id)} style={{ color: 'var(--color-error)' }}>Excluir</button>
+                            </div>
+                            <div className="prescricao-card-info">{p.dosagem} • {p.frequencia} • {p.duracao}</div>
+                          </div>
                         ))}
                       </div>
                     )}
                   </div>
                 </div>
               </div>
-              <div className="confirmation-actions">
+              <div className="confirmation-actions" style={{ marginTop: '2.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
                 <Button variant="ghost" onClick={() => setIsConfirmingEnd(false)}>Cancelar</Button>
                 <Button variant="primary" onClick={() => setConfirmationStep(2)}>
                   Próximo: Resumo da Consulta
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '6px', width: '16px', height: '16px' }}><polyline points="9 18 15 12 9 6" /></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '8px', width: '18px', height: '18px' }}><polyline points="9 18 15 12 9 6" /></svg>
                 </Button>
               </div>
             </>
@@ -300,65 +383,134 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
           {confirmationStep === 2 && (
             <>
               <div className="resumo-consulta-section">
-                <div className="resumo-consulta-header">
-                  <div className="resumo-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <div className="resumo-consulta-header" style={{ 
+                  marginBottom: '1.5rem', 
+                  padding: '1.25rem', 
+                  background: 'var(--bg-secondary)', 
+                  borderRadius: 'var(--radius-lg)',
+                  border: '1px solid var(--border-color)',
+                  display: 'flex',
+                  gap: '1rem',
+                  alignItems: 'center'
+                }}>
+                  <div className="resumo-icon" style={{ 
+                    background: 'var(--color-primary-100)', 
+                    color: 'var(--color-primary-600)',
+                    padding: '0.75rem',
+                    borderRadius: '12px'
+                  }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                       <polyline points="14 2 14 8 20 8" />
                       <line x1="16" y1="13" x2="8" y2="13" />
                       <line x1="16" y1="17" x2="8" y2="17" />
-                      <polyline points="10 9 9 9 8 9" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="resumo-consulta-title">Resumo da Consulta</h3>
-                    <p className="resumo-consulta-subtitle">
-                      Este campo contém a <strong>transcrição automática e o resumo gerado pela IA</strong> durante o atendimento. Revise-o cuidadosamente, pois ele será anexado ao prontuário.
+                    <h3 className="resumo-consulta-title" style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Resumo Estruturado pela IA</h3>
+                    <p className="resumo-consulta-subtitle" style={{ margin: '4px 0 0 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                      Este conteúdo será anexado ao prontuário do paciente. Revise e edite se necessário.
                     </p>
                   </div>
                 </div>
 
-                <div className="resumo-confidencial-badge">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
-                  Confidencial — Visível apenas para médicos
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <div className="resumo-confidencial-badge" style={{ 
+                    background: 'var(--bg-tertiary)', 
+                    padding: '0.4rem 0.75rem', 
+                    borderRadius: 'var(--radius-full)',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    color: 'var(--text-secondary)',
+                    border: '1px solid var(--border-color)'
+                  }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    VISÍVEL APENAS PARA MÉDICOS
+                  </div>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(atendimentoData.resumo_consulta || '');
+                      alert('Copiado para a área de transferência!');
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--color-primary-600)',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    Copiar Resumo
+                  </button>
                 </div>
 
-                <div className="form-group" style={{ marginTop: '1.25rem' }}>
-                  <label className="resumo-label">Relatório Completo da Consulta (IA)</label>
+                <div className="form-group">
                   <textarea
                     className="atendimento-textarea resumo-textarea"
-                    style={{ minHeight: '300px', borderLeft: '4px solid var(--color-primary-500)', background: 'var(--bg-secondary)', fontSize: '0.95rem', lineHeight: '1.6' }}
+                    style={{ 
+                      minHeight: '350px', 
+                      border: '2px solid var(--border-color)',
+                      borderRadius: 'var(--radius-lg)',
+                      padding: '1.25rem',
+                      fontSize: '0.95rem', 
+                      lineHeight: '1.7',
+                      background: 'var(--bg-primary)',
+                      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+                    }}
                     placeholder="A transcrição completa ou resumo aparecerá aqui..."
                     value={atendimentoData.resumo_consulta}
                     onChange={(e) => setAtendimentoData(prev => ({ ...prev, resumo_consulta: e.target.value }))}
                   />
-                  <div className="summarize-action-bar">
-                    <div className="summarize-info">
-                      <span className="summarize-title">Geração de Resumo — {atendimentoData.resumo_consulta?.length || 0} caracteres</span>
-                      <p className="summarize-description">Consolidar a transcrição diarizada em um relatório clínico estruturado.</p>
+                  <div className="summarize-action-bar" style={{ 
+                    marginTop: '1rem', 
+                    padding: '1.25rem', 
+                    background: 'var(--bg-secondary)', 
+                    borderRadius: 'var(--radius-lg)',
+                    border: '1px solid var(--border-color)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '1.5rem'
+                  }}>
+                    <div className="summarize-info" style={{ flex: 1 }}>
+                      <span className="summarize-title" style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                        {atendimentoData.resumo_consulta?.length || 0} caracteres
+                      </span>
+                      <p className="summarize-description" style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
+                        Deseja que a IA gere um relatório clínico estruturado a partir do texto acima?
+                      </p>
                     </div>
                     <Button 
                       variant="primary" 
                       className="btn-summarize"
                       onClick={onSummarize} 
                       disabled={isSummarizing || !atendimentoData.resumo_consulta}
+                      style={{ padding: '0.75rem 1.5rem', whiteSpace: 'nowrap' }}
                     >
-                      {isSummarizing ? 'Resumindo...' : <><span className="ia-icon-pulse">✨</span> Gerar Resumo da Transcrição</>}
+                      {isSummarizing ? 'Processando...' : <><span className="ia-icon-pulse" style={{ marginRight: '8px' }}>✨</span> Gerar Resumo Clínico</>}
                     </Button>
                   </div>
                 </div>
               </div>
 
-              <div className="confirmation-actions">
+              <div className="confirmation-actions" style={{ marginTop: '2.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
                 <Button variant="ghost" onClick={() => setConfirmationStep(1)}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', width: '16px', height: '16px' }}><polyline points="15 18 9 12 15 6" /></svg>
-                  Voltar
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px', width: '18px', height: '18px' }}><polyline points="15 18 9 12 15 6" /></svg>
+                  Voltar para Revisão
                 </Button>
-                <Button variant="primary" onClick={onConfirmFinishWithValidation}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', width: '16px', height: '16px' }}><polyline points="20 6 9 17 4 12" /></svg>
+                <Button variant="primary" onClick={onConfirmFinishWithValidation} style={{ padding: '0.85rem 2rem' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px', width: '20px', height: '20px' }}><polyline points="20 6 9 17 4 12" /></svg>
                   Confirmar e Finalizar Atendimento
                 </Button>
               </div>
