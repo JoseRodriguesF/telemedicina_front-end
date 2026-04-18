@@ -45,20 +45,28 @@ export function getUserId(): number | null {
 export function getPacienteId(): number | null {
   const u = getUser();
   if (!u) return null;
+  
+  // 1. Prioridade para o ID direto vindo da API (Consistência End-to-End)
+  if (u.pacienteId) return Number(u.pacienteId);
+  
+  // 2. Fallbacks legados
   const p = u.paciente || u.patient;
   if (p && p.id) return Number(p.id);
-  // Se não houver objeto aninhado, verifica se o id principal é do tipo paciente
-  if (u.tipo_usuario === 'paciente') return typeof u.id === 'number' ? u.id : (u.id ? Number(u.id) : null);
+  
   return null;
 }
 
 export function getMedicoId(): number | null {
   const u = getUser();
   if (!u) return null;
+  
+  // 1. Prioridade para o ID direto vindo da API (Consistência End-to-End)
+  if (u.medicoId) return Number(u.medicoId);
+  
+  // 2. Fallbacks legados
   const m = u.medico || u.doctor;
   if (m && m.id) return Number(m.id);
-  // Se não houver objeto aninhado, verifica se o id principal é do tipo médico
-  if (u.tipo_usuario === 'medico') return typeof u.id === 'number' ? u.id : (u.id ? Number(u.id) : null);
+  
   return null;
 }
 

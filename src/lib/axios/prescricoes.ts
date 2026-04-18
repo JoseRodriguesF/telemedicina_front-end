@@ -13,6 +13,22 @@ export interface Prescricao {
     inclusoConvenio: boolean;
     createdAt: string;
     updatedAt: string;
+    pdf_mimetype?: string | null;
+    tem_pdf?: boolean;
+}
+
+export interface PrescricaoHistorica extends Prescricao {
+    assinaturaHash?: string | null;
+    consulta: {
+        data_consulta: string | null;
+        createdAt: string;
+        status: string;
+        medico: {
+            nome_completo: string;
+            crm: string;
+            crm_uf: string;
+        } | null;
+    };
 }
 
 export interface CreatePrescricaoData {
@@ -113,7 +129,7 @@ export async function getSugestoesMarcas(query: string, token: string): Promise<
 /**
  * Obter histórico de prescrições de um paciente
  */
-export async function getPrescricoesByPaciente(pacienteId: number, token: string): Promise<Prescricao[]> {
+export async function getPrescricoesByPaciente(pacienteId: number, token: string): Promise<PrescricaoHistorica[]> {
     const response = await axios.get(
         `${API_URL}/prescricoes/paciente/${pacienteId}`,
         {

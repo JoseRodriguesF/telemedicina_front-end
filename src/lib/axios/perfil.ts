@@ -43,7 +43,7 @@ export type UserProfile = {
     enderecos?: Array<{
         id: number;
         endereco: string;
-        numero: number;
+        numero: string;
         complemento?: string;
     }>;
 };
