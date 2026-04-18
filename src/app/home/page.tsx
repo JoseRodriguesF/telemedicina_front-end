@@ -256,8 +256,8 @@ export default function HomeScreen() {
 							</div>
 							<div className="nav-group">
 								<h4>Jurídico</h4>
-								<Link href="#privacidade">Privacy Policy</Link>
-								<Link href="#termos">Terms of Service</Link>
+								<Link href="/termos">Política de Privacidade</Link>
+								<Link href="/termos">Termos de Uso</Link>
 								<Link href="#cookies">Cookie Settings</Link>
 							</div>
 						</div>

@@ -4,7 +4,7 @@
 
 export async function signInWithGoogle(): Promise<string> {
   if (typeof window === 'undefined') throw new Error('Google Sign-In only available in browser');
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || (window as any).__NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || (window as any).__NEXT_PUBLIC_GOOGLE_CLIENT_ID || '173823680882-2k1rvmktfukttbtk5muc4dckrpskcson.apps.googleusercontent.com';
   if (!clientId) throw new Error('Google Client ID not configured. Set NEXT_PUBLIC_GOOGLE_CLIENT_ID');
 
   return new Promise((resolve, reject) => {

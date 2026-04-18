@@ -6,9 +6,10 @@ import '@/components/layout/Header/header.css';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { getToken } from '@/lib/auth';
-import { getMyProfile, updateMyProfile, UserProfile } from '@/lib/axios/perfil';
+import { getToken, clearUser } from '@/lib/auth';
+import { getMyProfile, updateMyProfile, deleteMyProfile, UserProfile } from '@/lib/axios/perfil';
 import { Modal } from '@/components/common/Modal/Modal';
+import Link from 'next/link';
 import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate } from '@/lib/utils/dateFormatters';
 import AddressAutocomplete from '@/components/common/Inputs/AddressAutocomplete';
@@ -160,6 +161,30 @@ export default function PerfilPage() {
       console.error('Erro ao atualizar perfil:', error);
       modal.error('Erro', 'Não foi possível atualizar o perfil. ' + (error?.message || ''));
     }
+  };
+
+  const handleDeleteAccount = async () => {
+    modal.confirm(
+      'Excluir Conta e Dados',
+      'Tem certeza que deseja excluir sua conta? Esta ação é irreversível e todos os seus dados pessoais serão removidos da plataforma (com exceção de registros médicos que devem ser guardados por lei).',
+      async () => {
+        try {
+          const token = getToken();
+          if (!token) return;
+
+          await deleteMyProfile(token);
+          modal.success('Conta Excluída', 'Sua conta foi excluída com sucesso. Você será redirecionado.');
+          
+          setTimeout(() => {
+            clearUser();
+            router.push('/login');
+          }, 2000);
+        } catch (error: any) {
+          console.error('Erro ao excluir conta:', error);
+          modal.error('Erro', 'Não foi possível excluir sua conta no momento.');
+        }
+      }
+    );
   };
 
   if (loading) {
@@ -443,28 +468,30 @@ export default function PerfilPage() {
               <h4>Segurança</h4>
             </div>
 
+            <div className="section-header" style={{ marginTop: '2.5rem' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /><path d="m9 12 2 2 4-4" /></svg>
+              <h4>Privacidade e LGPD</h4>
+            </div>
+
             <div className="settings-list">
               <div className="setting-item">
                 <div className="setting-label">
-                  <span className="setting-title">Alterar Senha</span>
-                  <span className="setting-desc">Mantenha sua conta protegida</span>
+                  <span className="setting-title">Seus Dados e Direitos</span>
+                  <span className="setting-desc">Acesse nossos termos e saiba como tratamos seus dados</span>
                 </div>
-                <button className="btn-profile secondary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem' }} disabled>Alterar</button>
+                <Link href="/termos" className="btn-profile secondary" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  Ler Termos
+                </Link>
               </div>
 
               <div className="setting-item">
                 <div className="setting-label">
-                  <span className="setting-title">Notificações</span>
-                  <span className="setting-desc">Avisos via E-mail</span>
+                  <span className="setting-title" style={{ color: '#ef4444' }}>Excluir Conta</span>
+                  <span className="setting-desc">Remover permanentemente seus dados da plataforma</span>
                 </div>
-                <label className="switch">
-                  <input type="checkbox" defaultChecked />
-                  <span className="slider round"></span>
-                </label>
+                <button className="btn-profile danger" onClick={handleDeleteAccount}>Excluir</button>
               </div>
             </div>
-
-
           </aside>
         </div>
       </div>

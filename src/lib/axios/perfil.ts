@@ -72,3 +72,14 @@ export async function updateMyProfile(token: string, data: any): Promise<{ succe
         throw new ApiError(err);
     }
 }
+
+export async function deleteMyProfile(token: string): Promise<{ success: boolean }> {
+    try {
+        const res = await axios.delete('/api/usuarios/me', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return res.data;
+    } catch (err) {
+        throw new ApiError(err);
+    }
+}
