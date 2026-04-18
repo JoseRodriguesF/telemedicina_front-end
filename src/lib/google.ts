@@ -4,16 +4,23 @@
 
 export async function signInWithGoogle(): Promise<string> {
   if (typeof window === 'undefined') throw new Error('Google Sign-In only available in browser');
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || (window as any).__NEXT_PUBLIC_GOOGLE_CLIENT_ID || '173823680882-2k1rvmktfukttbtk5muc4dckrpskcson.apps.googleusercontent.com';
-  if (!clientId) throw new Error('Google Client ID not configured. Set NEXT_PUBLIC_GOOGLE_CLIENT_ID');
+
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || (window as any).__NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const currentOrigin = window.location.origin;
+
+  console.log('[GoogleAuth] Iniciando login...');
+  console.log('[GoogleAuth] Origin atual:', currentOrigin);
+
+  if (!clientId) {
+    console.error('[GoogleAuth] ERRO: NEXT_PUBLIC_GOOGLE_CLIENT_ID não está definida!');
+    throw new Error('Google Client ID não configurado.');
+  }
 
   return new Promise((resolve, reject) => {
-    let promptActive = false;
-    
     // initialize when script loaded
     function init() {
       const g = (window as any).google;
-      if (!g || !g.accounts || !g.accounts.id) return reject(new Error('Serviços de Identidade do Google não estão disponíveis. Verifique sua conexão ou bloqueadores de anúncios.'));
+      if (!g || !g.accounts || !g.accounts.id) return reject(new Error('Serviços de Identidade do Google não estão disponíveis.'));
       
       try {
         // initialize with a callback that receives the credential
@@ -21,46 +28,40 @@ export async function signInWithGoogle(): Promise<string> {
           client_id: clientId,
           callback: (resp: any) => {
             if (resp && resp.credential) {
+              console.log('[GoogleAuth] Credencial recebida com sucesso.');
               resolve(resp.credential);
             } else {
-              reject(new Error('Nenhuma credencial retornada pelo Google. Tente novamente.'));
+              reject(new Error('Nenhuma credencial retornada pelo Google.'));
             }
           },
           auto_select: false,
+          cancel_on_tap_outside: true,
           itp_support: true
         });
 
-        // show one-tap / prompt UI
+        // Para evitar erros de "prompt not displayed", vamos usar o renderButton 
+        // em um elemento oculto e simular o clique, ou simplesmente tentar o prompt
+        // mas com um tratamento mais amigável.
+        
         g.accounts.id.prompt((notification: any) => {
           if (notification.isNotDisplayed()) {
-            console.warn('[GoogleAuth] Prompt not displayed:', notification.getNotDisplayedReason());
-            // Se o prompt não for exibido (ex: bloqueado ou sessão já ativa), 
-            // podemos tentar renderizar um botão invisível ou lançar erro explicativo.
-            if (notification.getNotDisplayedReason() === 'skipped_by_user') {
-               reject(new Error('Login cancelado pelo usuário.'));
+            const reason = notification.getNotDisplayedReason();
+            console.warn('[GoogleAuth] Prompt não exibido:', reason);
+            
+            if (reason === 'origin_mismatch') {
+              reject(new Error(`Erro de Configuração: A URL '${currentOrigin}' não está autorizada no Console do Google Cloud para o Client ID ${clientId}. Verifique as 'Origens JavaScript autorizadas'.`));
+            } else if (reason === 'opt_out_or_no_session') {
+              // Se não há sessão ou usuário optou por não ver, tentamos renderizar o botão clássico
+              // ou instruir o usuário.
+              reject(new Error('Sessão do Google não encontrada ou bloqueada. Tente fazer login manualmente no Google primeiro.'));
             } else {
-               reject(new Error(`O seletor de conta do Google não pôde ser exibido (${notification.getNotDisplayedReason()}). Tente recarregar a página.`));
+              reject(new Error(`O seletor do Google não pôde ser exibido (${reason}).`));
             }
-          } else if (notification.isSkippedMoment()) {
-            console.warn('[GoogleAuth] Prompt skipped:', notification.getSkippedReason());
-            reject(new Error('O login do Google foi ignorado.'));
-          } else if (notification.isDismissedMoment()) {
-            console.warn('[GoogleAuth] Prompt dismissed:', notification.getDismissedReason());
-            // Não rejeita imediatamente se foi apenas fechado, mas marca como inativo
           }
         });
-        
-        promptActive = true;
-        
-        // Timeout de segurança se nada acontecer em 60s
-        setTimeout(() => {
-          if (promptActive) {
-            // Check if still pending
-          }
-        }, 60000);
 
       } catch (e) {
-        console.error('[GoogleAuth] Initialization error:', e);
+        console.error('[GoogleAuth] Erro na inicialização:', e);
         reject(e);
       }
     }
@@ -73,7 +74,6 @@ export async function signInWithGoogle(): Promise<string> {
 
     const existing = document.querySelector('script[data-google-identity]');
     if (existing) {
-      // wait a bit and try to init
       setTimeout(() => init(), 500);
       return;
     }
@@ -84,9 +84,10 @@ export async function signInWithGoogle(): Promise<string> {
     s.defer = true;
     s.setAttribute('data-google-identity', '1');
     s.onload = init;
-    s.onerror = () => reject(new Error('Falha ao carregar o script de autenticação do Google. Verifique sua conexão.'));
+    s.onerror = () => reject(new Error('Falha ao carregar o script do Google.'));
     document.head.appendChild(s);
   });
 }
 
 export default signInWithGoogle;
+
