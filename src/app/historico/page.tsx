@@ -552,14 +552,20 @@ export default function HistoricoPage() {
                   </div>
                 ))}
 
+                {filteredHistory.length > 0 && (
+                  <div style={{ textAlign: 'center', margin: '1rem 0', fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>
+                    Exibindo {Math.min(visibleCount, filteredHistory.length)} de {filteredHistory.length} atendimentos
+                  </div>
+                )}
+
                 {filteredHistory.length > visibleCount && (
-                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem', marginBottom: '1.5rem' }}>
                     <button 
                       className="btn primary" 
                       onClick={() => setVisibleCount(prev => prev + 10)}
                       style={{ padding: '0.75rem 2.5rem', borderRadius: '12px', fontWeight: 700 }}
                     >
-                      Ver Mais Atendimentos
+                      Carregar Mais Atendimentos
                     </button>
                   </div>
                 )}
@@ -648,14 +654,20 @@ export default function HistoricoPage() {
                   </div>
                 ))}
 
+                {allPrescriptions.length > 0 && (
+                  <div style={{ textAlign: 'center', margin: '1rem 0', fontSize: '0.85rem', color: 'var(--text-tertiary)' }}>
+                    Exibindo {Math.min(visibleCount, allPrescriptions.length)} de {allPrescriptions.length} prescrições
+                  </div>
+                )}
+
                 {allPrescriptions.length > visibleCount && (
-                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem', marginBottom: '1.5rem' }}>
                     <button 
                       className="btn primary" 
                       onClick={() => setVisibleCount(prev => prev + 10)}
                       style={{ padding: '0.75rem 2.5rem', borderRadius: '12px', fontWeight: 700 }}
                     >
-                      Ver Mais Prescrições
+                      Carregar Mais Prescrições
                     </button>
                   </div>
                 )}
