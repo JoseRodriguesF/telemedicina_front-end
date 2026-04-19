@@ -88,6 +88,7 @@
 	--transition-base: 450ms cubic-bezier(0.4, 0, 0.2, 1);
 	--transition-slow: 700ms cubic-bezier(0.4, 0, 0.2, 1);
 	--transition-bounce: 600ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	--theme-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
 
 	/* Typography */
@@ -215,13 +216,11 @@
 *,
 *::before,
 *::after {
-	transition: background-color 0.2s ease, 
-                background 0.2s ease,
-                border-color 0.2s ease, 
-                color 0.2s ease, 
-                box-shadow 0.2s ease,
-                fill 0.2s ease,
-                stroke 0.2s ease;
+	transition: background-color var(--theme-transition),
+                color var(--theme-transition),
+                border-color var(--theme-transition),
+                box-shadow var(--theme-transition),
+                background var(--theme-transition);
 }
 
 /* Disable transitions for media and specific heavy elements to prevent lag */

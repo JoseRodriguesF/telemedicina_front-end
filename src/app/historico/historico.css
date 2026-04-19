@@ -101,7 +101,6 @@
     border: 1px solid var(--border-color);
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
-    transition: all 0.2s ease;
 }
 
 .date-filter-wrapper {
@@ -112,9 +111,10 @@
     border: 1px solid var(--border-color);
     padding: 0 1rem;
     height: 3.5rem;
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: var(--shadow-sm);
     flex-shrink: 0;
+    cursor: pointer;
 }
 
 .date-range-input {
@@ -304,7 +304,7 @@
     display: flex;
     align-items: center;
     gap: 1.25rem;
-    transition: var(--transition-base);
+    transition: var(--theme-transition);
     cursor: pointer;
     box-shadow: var(--shadow-md);
     animation: dash-entry 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;

@@ -65,7 +65,7 @@
 	padding: 0.75rem;
 	/* Reduced from 0.85rem */
 	box-shadow: var(--shadow-md);
-	transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base), background-color var(--transition-base);
+	transition: transform var(--transition-base), box-shadow var(--theme-transition), border-color var(--theme-transition), background-color var(--theme-transition);
 	display: flex;
 	flex-direction: column;
 	gap: 0.3rem;
