@@ -177,13 +177,22 @@ const AtendimentoChat: React.FC<ChatProps> = ({
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
           </button>
           <input
-            className="c-input"
             placeholder="Digite aqui..."
             value={draft}
             onChange={(e) => onDraftChange(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') onSendMessage(); }}
             disabled={isUploadingChat}
-            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', padding: '0.75rem 0' }}
+            style={{ 
+              flex: 1, 
+              border: 'none', 
+              outline: 'none', 
+              background: 'transparent', 
+              padding: '0.75rem 0',
+              fontSize: '0.95rem',
+              color: 'var(--text-primary)',
+              boxShadow: 'none',
+              width: '100%'
+            }}
           />
           <button 
             className="pc-send-btn" 

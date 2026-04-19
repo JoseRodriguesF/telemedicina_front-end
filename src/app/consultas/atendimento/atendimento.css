@@ -655,11 +655,16 @@
 }
 
 .chat-input input {
-    border: 0 !important;
+    border: none !important;
     background: transparent !important;
     box-shadow: none !important;
-    outline: 0 !important;
-    border-radius: 999px !important; /* Ensure it matches the outer pill if it leaks */
+    outline: none !important;
+    flex: 1;
+    min-width: 0;
+    padding: 8px 0;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--text-primary);
 }
 
 /* Specific combination to fix possible nested input */
