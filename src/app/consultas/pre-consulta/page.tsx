@@ -435,7 +435,9 @@ function PreConsultaInner() {
               {showRelatorio && dadosTriagem && (
                 <div className="pc-relatorio-container">
                   <div className="pc-relatorio-header">
-                    <div className="pc-relatorio-icon">✅</div>
+                    <div className="pc-relatorio-icon">
+                      <img src="/icons/check-icon.png" alt="Concluído" className="blue-icon-filter" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+                    </div>
                     <h2>Triagem Concluída!</h2>
                     <p>Revise as informações coletadas antes de prosseguir para o atendimento.</p>
                   </div>

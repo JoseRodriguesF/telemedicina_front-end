@@ -150,13 +150,13 @@ const AtendimentoVideoGrid: React.FC<VideoGridProps> = ({
               <div className="status-alerts-container">
                 {!remoteHasAudio && (
                   <div className="remote-mic-alert">
-                    <span>🔇</span>
+                    <img src="/icons/mute-icon.png" alt="Mudo" className="alert-icon-img" />
                     <span>{role === 'medico' ? 'Paciente' : 'Médico'} em silêncio</span>
                   </div>
                 )}
                 {!micEnabled && (
                   <div className="remote-mic-alert local">
-                    <span>🔇</span>
+                    <img src="/icons/mute-icon.png" alt="Mudo" className="alert-icon-img" />
                     <span>Seu microfone está desligado</span>
                   </div>
                 )}

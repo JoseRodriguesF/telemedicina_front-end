@@ -286,7 +286,10 @@ const ClinicalPanel: React.FC<LeftPanelProps> = ({
                 <input type="file" accept=".pdf" style={{ display: 'none' }} ref={hiddenFileInputRef} onChange={onSignedPdfUpload} />
                 {signedPdfFile ? (
                   <div style={{ color: '#22c55e', fontWeight: 600, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                    <span>✅ PDF Assinado Anexado</span>
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      <img src="/icons/check-icon.png" alt="Concluído" className="blue-icon-filter" style={{ width: '16px', height: '16px', objectFit: 'contain', marginRight: '6px' }} />
+                      PDF Assinado Anexado
+                    </span>
                     <button className="action-btn-secondary" style={{ fontSize: '0.75rem', padding: '4px 10px' }} onClick={() => hiddenFileInputRef.current?.click()}>Substituir</button>
                   </div>
                 ) : (
