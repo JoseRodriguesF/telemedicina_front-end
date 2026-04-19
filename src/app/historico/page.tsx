@@ -187,7 +187,7 @@ export default function HistoricoPage() {
   };
 
   const getStatusLabel = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case 'finished': return 'Finalizada';
       case 'agendada': return 'Confirmada';
       case 'solicitada': return 'Solicitada';
@@ -200,9 +200,9 @@ export default function HistoricoPage() {
   };
 
   const getStatusBadgeClass = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case 'finished': return 'success';
-      case 'agendada': return 'info';
+      case 'agendada': return 'confirmed';
       case 'solicitada': return 'primary';
       case 'cancelled': return 'danger';
       case 'expired': return 'warning';
