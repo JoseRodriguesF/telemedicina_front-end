@@ -1,7 +1,7 @@
 .inicio-page {
 	display: flex;
 	min-height: 100vh;
-	background: var(--bg-secondary);
+	background-color: var(--bg-secondary);
 	color: var(--text-primary);
 }
 
@@ -26,7 +26,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: 1rem;
-	transition: margin-left var(--transition-base), padding var(--transition-base), background-color 0.6s ease-in-out, background 0.6s ease-in-out, color 0.4s ease-in-out;
+	transition: margin-left var(--transition-base), padding var(--transition-base);
 }
 
 .dashboard-header {
@@ -57,7 +57,7 @@
 
 /* Dashboard Cards */
 .dash-card {
-	background: var(--card-bg);
+	background-color: var(--card-bg);
 	backdrop-filter: blur(20px);
 	-webkit-backdrop-filter: blur(20px);
 	border: 1px solid var(--card-border);
@@ -65,7 +65,7 @@
 	padding: 0.75rem;
 	/* Reduced from 0.85rem */
 	box-shadow: var(--shadow-md);
-	transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base), background var(--transition-base);
+	transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
 	display: flex;
 	flex-direction: column;
 	gap: 0.3rem;

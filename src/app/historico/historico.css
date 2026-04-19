@@ -97,18 +97,18 @@
     position: relative;
     display: flex;
     align-items: center;
-    background: var(--card-bg);
+    background-color: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.6s ease-in-out, background-color 0.6s ease-in-out;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color var(--theme-transition), color var(--theme-transition);
 }
 
 .date-filter-wrapper {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    background: var(--card-bg);
+    background-color: var(--card-bg);
     border: 1px solid var(--border-color);
     padding: 0 1rem;
     height: 3.5rem;
@@ -295,7 +295,7 @@
 }
 
 .history-item-card {
-    background: var(--card-bg);
+    background-color: var(--card-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--card-border);
@@ -304,7 +304,7 @@
     display: flex;
     align-items: center;
     gap: 1.25rem;
-    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base), background 0.6s ease-in-out, background-color 0.6s ease-in-out;
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--theme-transition), background-color var(--theme-transition), color var(--theme-transition);
     cursor: pointer;
     box-shadow: var(--shadow-md);
     animation: dash-entry 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -420,14 +420,14 @@
 }
 
 .stat-mini-card {
-    background: var(--card-bg);
+    background-color: var(--card-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--card-border);
     border-radius: var(--radius-xl);
     padding: 1.5rem;
     box-shadow: var(--shadow-md);
-    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base), background 0.6s ease-in-out, background-color 0.6s ease-in-out;
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--theme-transition), background-color var(--theme-transition), color var(--theme-transition);
     animation: dash-entry 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
