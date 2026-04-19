@@ -3,7 +3,7 @@ import { clearUser } from '@/lib/auth';
 
 // Usamos /api como base pois o next.config.ts faz o rewrite para a URL da API
 const instance = axios.create({
-  baseURL: '/api',
+  baseURL: '',
   headers: {
     'Content-Type': 'application/json'
   }
