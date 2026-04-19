@@ -101,7 +101,7 @@
     border: 1px solid var(--border-color);
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
-    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--theme-transition), background-color var(--theme-transition);
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--theme-transition), background-color var(--theme-transition), background var(--theme-transition);
 }
 
 .date-filter-wrapper {
