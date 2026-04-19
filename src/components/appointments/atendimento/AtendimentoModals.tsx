@@ -144,25 +144,16 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
       <ContentModal 
         isOpen={showTranscriptionModal} 
         onClose={() => setShowTranscriptionModal(false)} 
-        title="📋 Transcrição e Resumo da Consulta (IA)" 
+        title="Transcrição em Tempo Real" 
         size="lg"
       >
-        <div className="resumo-consulta-section" style={{ padding: '0.5rem 0' }}>
-          <div className="resumo-consulta-header" style={{ 
-            marginBottom: '1.5rem', 
-            padding: '1.25rem', 
-            background: 'var(--bg-secondary)', 
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border-color)',
-            display: 'flex',
-            gap: '1rem',
-            alignItems: 'center'
-          }}>
-            <div className="resumo-icon" style={{ 
-              background: 'var(--color-primary-100)', 
-              color: 'var(--color-primary-600)',
-              padding: '0.75rem',
-              borderRadius: '12px'
+        <div className="transcription-modal-content" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '0.5rem 0' }}>
+          
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+            <div style={{ 
+              width: '48px', height: '48px', borderRadius: '12px', 
+              background: 'var(--color-primary-50)', color: 'var(--color-primary-600)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
             }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -172,104 +163,80 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
               </svg>
             </div>
             <div>
-              <h3 className="resumo-consulta-title" style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Relatório de Inteligência Artificial</h3>
-              <p className="resumo-consulta-subtitle" style={{ margin: '4px 0 0 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                Resumo gerado automaticamente a partir da transcrição em tempo real.
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}>Relatório de Inteligência Artificial</h3>
+              <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                Esta é a transcrição gerada automaticamente durante a consulta. Você pode refinar este texto usando nossa IA para obter um resumo estruturado.
               </p>
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <div className="resumo-confidencial-badge" style={{ 
-              background: 'var(--bg-tertiary)', 
-              padding: '0.4rem 0.75rem', 
-              borderRadius: 'var(--radius-full)',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              color: 'var(--text-secondary)',
-              border: '1px solid var(--border-color)'
-            }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-              CONTEÚDO CONFIDENCIAL
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', textTransform: 'uppercase' }}>
+                  Texto da Transcrição
+                </span>
+                <span style={{ fontSize: '0.75rem', background: 'var(--color-warning-50)', color: 'var(--color-warning-700)', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                  CONFIDENCIAL
+                </span>
+              </div>
+              
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(atendimentoData.resumo_consulta || '');
+                  alert('Copiado para a área de transferência!');
+                }}
+                className="btn ghost"
+                style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', height: 'auto', minHeight: '0' }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Copiar
+              </button>
             </div>
-            <button 
-              onClick={() => {
-                navigator.clipboard.writeText(atendimentoData.resumo_consulta || '');
-                alert('Copiado para a área de transferência!');
-              }}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--color-primary-600)',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-              Copiar
-            </button>
-          </div>
 
-          <div className="form-group">
             <textarea
-              className="atendimento-textarea resumo-textarea"
+              className="atendimento-textarea"
               style={{ 
-                minHeight: '400px', 
-                border: '2px solid var(--border-color)',
-                borderRadius: 'var(--radius-lg)',
+                minHeight: '350px', 
+                border: '1px solid var(--border-color)',
+                borderRadius: '12px',
                 padding: '1.25rem',
                 fontSize: '0.95rem', 
-                lineHeight: '1.7',
-                background: 'var(--bg-primary)',
-                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+                lineHeight: '1.6',
+                background: 'var(--bg-secondary)',
+                resize: 'vertical',
+                color: 'var(--text-primary)'
               }}
-              placeholder="O resumo da transcrição da consulta aparecerá aqui..."
+              placeholder="O resumo ou transcrição da consulta aparecerá aqui..."
               value={atendimentoData.resumo_consulta}
               onChange={(e) => setAtendimentoData(prev => ({ ...prev, resumo_consulta: e.target.value }))}
             />
-            <div className="summarize-action-bar" style={{ 
-              marginTop: '1rem', 
-              padding: '1.25rem', 
-              background: 'var(--bg-secondary)', 
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--border-color)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: '1.5rem'
-            }}>
-              <div className="summarize-info" style={{ flex: 1 }}>
-                <span className="summarize-title" style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                  {atendimentoData.resumo_consulta?.length || 0} caracteres registrados
-                </span>
-                <p className="summarize-description" style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
-                  Clique para processar a transcrição bruta e gerar um relatório estruturado.
-                </p>
-              </div>
-              <Button 
-                variant="primary" 
-                className="btn-summarize"
-                onClick={onSummarize} 
-                disabled={isSummarizing || !atendimentoData.resumo_consulta}
-                style={{ padding: '0.75rem 1.5rem', whiteSpace: 'nowrap' }}
-              >
-                {isSummarizing ? 'Processando...' : <><span className="ia-icon-pulse" style={{ marginRight: '8px' }}>✨</span> Refinar Resumo</>}
-              </Button>
-            </div>
           </div>
 
-          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
-            <Button variant="ghost" onClick={() => setShowTranscriptionModal(false)}>Concluir Revisão</Button>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            padding: '1.25rem',
+            background: 'var(--bg-tertiary)',
+            borderRadius: '12px',
+            border: '1px solid var(--border-color)'
+          }}>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>Refinamento por IA</p>
+              <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>{atendimentoData.resumo_consulta?.length || 0} caracteres registrados.</p>
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <Button variant="ghost" onClick={() => setShowTranscriptionModal(false)}>Fechar</Button>
+              <Button 
+                variant="primary" 
+                onClick={onSummarize} 
+                disabled={isSummarizing || !atendimentoData.resumo_consulta}
+                style={{ borderRadius: '8px' }}
+              >
+                {isSummarizing ? 'Processando...' : <><span style={{ marginRight: '8px' }}>✨</span> Refinar Resumo</>}
+              </Button>
+            </div>
           </div>
         </div>
       </ContentModal>
@@ -381,130 +348,95 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
 
           {/* ─── ETAPA 2: Resumo da Consulta (somente para médico) ─── */}
           {confirmationStep === 2 && (
-            <>
-              <div className="resumo-consulta-section">
-                <div className="resumo-consulta-header" style={{ 
-                  marginBottom: '1.5rem', 
-                  padding: '1.25rem', 
-                  background: 'var(--bg-secondary)', 
-                  borderRadius: 'var(--radius-lg)',
-                  border: '1px solid var(--border-color)',
-                  display: 'flex',
-                  gap: '1rem',
-                  alignItems: 'center'
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                <div style={{ 
+                  width: '48px', height: '48px', borderRadius: '12px', 
+                  background: 'var(--color-primary-50)', color: 'var(--color-primary-600)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
                 }}>
-                  <div className="resumo-icon" style={{ 
-                    background: 'var(--color-primary-100)', 
-                    color: 'var(--color-primary-600)',
-                    padding: '0.75rem',
-                    borderRadius: '12px'
-                  }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                      <line x1="16" y1="13" x2="8" y2="13" />
-                      <line x1="16" y1="17" x2="8" y2="17" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="resumo-consulta-title" style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Resumo Estruturado pela IA</h3>
-                    <p className="resumo-consulta-subtitle" style={{ margin: '4px 0 0 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                      Este conteúdo será anexado ao prontuário do paciente. Revise e edite se necessário.
-                    </p>
-                  </div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="24" height="24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
                 </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}>Resumo Estruturado pela IA</h3>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    Este conteúdo será anexado ao prontuário do paciente. Você pode editar o texto livremente antes de finalizar a consulta.
+                  </p>
+                </div>
+              </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <div className="resumo-confidencial-badge" style={{ 
-                    background: 'var(--bg-tertiary)', 
-                    padding: '0.4rem 0.75rem', 
-                    borderRadius: 'var(--radius-full)',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    color: 'var(--text-secondary)',
-                    border: '1px solid var(--border-color)'
-                  }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                    VISÍVEL APENAS PARA MÉDICOS
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', textTransform: 'uppercase' }}>
+                      Relatório Clínico
+                    </span>
+                    <span style={{ fontSize: '0.75rem', background: 'var(--color-warning-50)', color: 'var(--color-warning-700)', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                      VISÍVEL APENAS PARA MÉDICOS
+                    </span>
                   </div>
+                  
                   <button 
                     onClick={() => {
                       navigator.clipboard.writeText(atendimentoData.resumo_consulta || '');
                       alert('Copiado para a área de transferência!');
                     }}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: 'var(--color-primary-600)',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
+                    className="btn ghost"
+                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', height: 'auto', minHeight: '0' }}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                    Copiar Resumo
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    Copiar
                   </button>
                 </div>
 
-                <div className="form-group">
-                  <textarea
-                    className="atendimento-textarea resumo-textarea"
-                    style={{ 
-                      minHeight: '350px', 
-                      border: '2px solid var(--border-color)',
-                      borderRadius: 'var(--radius-lg)',
-                      padding: '1.25rem',
-                      fontSize: '0.95rem', 
-                      lineHeight: '1.7',
-                      background: 'var(--bg-primary)',
-                      boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
-                    }}
-                    placeholder="A transcrição completa ou resumo aparecerá aqui..."
-                    value={atendimentoData.resumo_consulta}
-                    onChange={(e) => setAtendimentoData(prev => ({ ...prev, resumo_consulta: e.target.value }))}
-                  />
-                  <div className="summarize-action-bar" style={{ 
-                    marginTop: '1rem', 
-                    padding: '1.25rem', 
-                    background: 'var(--bg-secondary)', 
-                    borderRadius: 'var(--radius-lg)',
+                <textarea
+                  className="atendimento-textarea"
+                  style={{ 
+                    minHeight: '350px', 
                     border: '1px solid var(--border-color)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '1.5rem'
-                  }}>
-                    <div className="summarize-info" style={{ flex: 1 }}>
-                      <span className="summarize-title" style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                        {atendimentoData.resumo_consulta?.length || 0} caracteres
-                      </span>
-                      <p className="summarize-description" style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
-                        Deseja que a IA gere um relatório clínico estruturado a partir do texto acima?
-                      </p>
-                    </div>
-                    <Button 
-                      variant="primary" 
-                      className="btn-summarize"
-                      onClick={onSummarize} 
-                      disabled={isSummarizing || !atendimentoData.resumo_consulta}
-                      style={{ padding: '0.75rem 1.5rem', whiteSpace: 'nowrap' }}
-                    >
-                      {isSummarizing ? 'Processando...' : <><span className="ia-icon-pulse" style={{ marginRight: '8px' }}>✨</span> Gerar Resumo Clínico</>}
-                    </Button>
-                  </div>
-                </div>
+                    borderRadius: '12px',
+                    padding: '1.25rem',
+                    fontSize: '0.95rem', 
+                    lineHeight: '1.6',
+                    background: 'var(--bg-secondary)',
+                    resize: 'vertical',
+                    color: 'var(--text-primary)'
+                  }}
+                  placeholder="A transcrição completa ou resumo aparecerá aqui..."
+                  value={atendimentoData.resumo_consulta}
+                  onChange={(e) => setAtendimentoData(prev => ({ ...prev, resumo_consulta: e.target.value }))}
+                />
               </div>
 
-              <div className="confirmation-actions" style={{ marginTop: '2.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                padding: '1.25rem',
+                background: 'var(--bg-tertiary)',
+                borderRadius: '12px',
+                border: '1px solid var(--border-color)'
+              }}>
+                <div>
+                  <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>Gerar Resumo Clínico</p>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>{atendimentoData.resumo_consulta?.length || 0} caracteres. Use a IA para estruturar os dados.</p>
+                </div>
+                <Button 
+                  variant="secondary" 
+                  onClick={onSummarize} 
+                  disabled={isSummarizing || !atendimentoData.resumo_consulta}
+                  style={{ borderRadius: '8px' }}
+                >
+                  {isSummarizing ? 'Processando...' : <><span style={{ marginRight: '8px' }}>✨</span> Estruturar com IA</>}
+                </Button>
+              </div>
+
+              <div className="confirmation-actions" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
                 <Button variant="ghost" onClick={() => setConfirmationStep(1)}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px', width: '18px', height: '18px' }}><polyline points="15 18 9 12 15 6" /></svg>
                   Voltar para Revisão
@@ -514,7 +446,7 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
                   Confirmar e Finalizar Atendimento
                 </Button>
               </div>
-            </>
+            </div>
           )}
 
         </div>
