@@ -40,7 +40,6 @@ export default function MobileHeader() {
                         <img src="/images/logo_matriarca_icon.png" alt="Matriarca" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
                     </Link>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <ThemeToggle minimal />
                         <button
                             className={`hamburger ${open ? 'is-open' : ''}`}
                             aria-label="Menu"

@@ -151,33 +151,28 @@
 /* ============================================
    DARK MODE THEME
    ============================================ */
+/* 
 [data-theme="dark"] {
-	/* Dark Mode Backgrounds */
 	--bg-primary: #0f172a;
 	--bg-secondary: #1e293b;
 	--bg-tertiary: #334155;
 	--bg-gradient: linear-gradient(135deg, #0c4a6e 0%, #075985 50%, #0f172a 100%);
 	--bg-gradient-subtle: linear-gradient(135deg, #1e293b 0%, #0c4a6e 100%);
 
-	/* Dark Mode Text */
 	--text-primary: #f1f5f9;
 	--text-secondary: #cbd5e1;
 	--text-tertiary: #94a3b8;
 	--text-muted: #64748b;
 
-	/* Dark Mode Borders */
 	--border-color: #334155;
 	--border-color-hover: #475569;
 
-	/* Dark Mode Cards */
 	--card-bg: rgba(30, 41, 59, 0.8);
 	--card-border: rgba(14, 165, 233, 0.2);
 
-	/* Dark Mode Header */
 	--header-bg: rgba(15, 23, 42, 0.85);
 	--header-border: rgba(14, 165, 233, 0.2);
 
-	/* Dark Mode Shadows - Balanced version */
 	--shadow-color: rgba(0, 0, 0, 0.3);
 	--shadow-color-lg: rgba(0, 0, 0, 0.45);
 	--shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
@@ -187,7 +182,6 @@
 	--shadow-2xl: 0 25px 45px -12px rgba(0, 0, 0, 0.5);
 	--shadow-glow: 0 0 25px rgba(14, 165, 233, 0.3);
 
-	/* Adjust primary colors for better dark mode visibility */
 	--color-primary-100: #0c4a6e;
 	--color-success-soft: rgba(16, 185, 129, 0.15);
 	--color-success-border: rgba(16, 185, 129, 0.3);
@@ -197,7 +191,8 @@
 	--color-error-border: rgba(239, 68, 68, 0.3);
 	--color-info-soft: rgba(59, 130, 246, 0.15);
 	--color-info-border: rgba(59, 130, 246, 0.3);
-}
+} 
+*/
 
 /* ============================================
    GLOBAL RESET & BASE STYLES

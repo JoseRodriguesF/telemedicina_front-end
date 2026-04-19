@@ -103,12 +103,6 @@ export default function Sidebar({ activeId: propActiveId, className = '' }: Prop
 
       <div className="sidebar-bottom">
         <div className="sidebar-tools">
-          <div className="tool-item">
-            <ThemeToggle minimal />
-          </div>
-
-
-
           <button
             type="button"
             className="tool-btn logout"
