@@ -194,6 +194,7 @@ export default function HistoricoPage() {
       case 'cancelled': return 'Cancelada';
       case 'in_progress': return 'Em andamento';
       case 'scheduled': return 'Pronto Atendimento';
+      case 'expired': return 'Expirada';
       default: return status;
     }
   };
@@ -202,9 +203,10 @@ export default function HistoricoPage() {
     switch (status) {
       case 'finished': return 'success';
       case 'agendada': return 'info';
-      case 'solicitada': return 'warning';
+      case 'solicitada': return 'primary';
       case 'cancelled': return 'danger';
-      case 'in_progress': return 'primary';
+      case 'expired': return 'warning';
+      case 'in_progress': return 'info';
       case 'scheduled': return 'secondary';
       default: return 'ghost';
     }
