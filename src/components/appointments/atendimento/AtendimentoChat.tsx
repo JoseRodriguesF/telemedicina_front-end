@@ -89,19 +89,37 @@ const AtendimentoChat: React.FC<ChatProps> = ({
         onMouseDown={variant === 'modal' ? handleMouseDown : undefined}
         style={variant === 'modal' ? { 
           cursor: 'move', 
-          background: 'var(--bg-primary)', 
-          color: 'var(--color-primary-600)',
-          borderBottom: '1px solid var(--border-color)', 
+          background: '#004a4a', 
+          color: '#ffffff',
+          borderBottom: 'none', 
           userSelect: 'none',
-          padding: '12px 16px',
+          padding: '14px 16px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: 'center',
+          position: 'relative',
+          borderTopLeftRadius: '12px',
+          borderTopRightRadius: '12px'
         } : undefined}
       >
-        <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>Chat da Consulta</span>
+        <span style={{ fontWeight: 700, fontSize: '0.95rem', letterSpacing: '0.02em' }}>Chat da Consulta</span>
         {variant === 'modal' && (
-          <button className="chat-close-btn" onClick={onClose} aria-label="Fechar chat" style={{ cursor: 'pointer', background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}>
+          <button 
+            className="chat-close-btn" 
+            onClick={onClose} 
+            aria-label="Fechar chat" 
+            style={{ 
+              position: 'absolute',
+              right: '12px',
+              cursor: 'pointer', 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'rgba(255,255,255,0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -160,13 +178,33 @@ const AtendimentoChat: React.FC<ChatProps> = ({
           </button>
           <input
             className="c-input"
-            placeholder="Digite..."
+            placeholder="Digite aqui..."
             value={draft}
             onChange={(e) => onDraftChange(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') onSendMessage(); }}
             disabled={isUploadingChat}
+            style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', padding: '0.75rem 0' }}
           />
-          <Button variant="primary" onClick={onSendMessage} aria-label="Enviar" disabled={isUploadingChat}>➤</Button>
+          <button 
+            className="pc-send-btn" 
+            onClick={onSendMessage} 
+            disabled={isUploadingChat || !draft.trim()}
+            style={{ 
+              background: 'transparent', 
+              border: 'none', 
+              color: 'var(--color-primary-500)', 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0.5rem'
+            }}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
         </div>
       </div>
     </div>
