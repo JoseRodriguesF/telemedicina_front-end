@@ -8,5 +8,20 @@ steps:
     '-t', 'southamerica-east1-docker.pkg.dev/${PROJECT_ID}/matriarca/frontend:latest',
     '.'
   ]
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+  - 'run'
+  - 'deploy'
+  - 'telemedicina-frontend'
+  - '--image'
+  - 'southamerica-east1-docker.pkg.dev/${PROJECT_ID}/matriarca/frontend:latest'
+  - '--region'
+  - 'southamerica-east1'
+  - '--platform'
+  - 'managed'
+  - '--allow-unauthenticated'
+
 images:
 - 'southamerica-east1-docker.pkg.dev/${PROJECT_ID}/matriarca/frontend:latest'
+
