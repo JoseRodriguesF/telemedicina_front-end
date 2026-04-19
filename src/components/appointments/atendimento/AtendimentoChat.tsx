@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Button from '@/components/common/Buttons/Button';
 
 interface ChatMessage {
@@ -35,15 +35,64 @@ const AtendimentoChat: React.FC<ChatProps> = ({
   onClose,
   variant
 }) => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const modalPos = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (showChat && variant === 'modal') {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      // Default position: bottom-right corner
+      setPosition({ x: Math.max(20, w - 400), y: Math.max(20, h - 600) });
+      modalPos.current = { x: Math.max(20, w - 400), y: Math.max(20, h - 600) };
+    }
+  }, [showChat, variant]);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const dx = e.clientX - dragStartPos.current.x;
+      const dy = e.clientY - dragStartPos.current.y;
+      setPosition({ x: modalPos.current.x + dx, y: modalPos.current.y + dy });
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      setIsDragging(false);
+      modalPos.current = {
+        x: modalPos.current.x + (e.clientX - dragStartPos.current.x),
+        y: modalPos.current.y + (e.clientY - dragStartPos.current.y)
+      };
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
+  };
+
   if (!showChat && variant === 'modal') return null;
 
   const ChatContent = (
-    <div className={`chat-inner ${variant}`}>
-      <div className="chat-header">
-        <span>Chat da consulta</span>
+    <div className={`chat-inner ${variant}`} style={variant === 'modal' ? { height: '100%', display: 'flex', flexDirection: 'column' } : undefined}>
+      <div 
+        className="chat-header" 
+        onMouseDown={variant === 'modal' ? handleMouseDown : undefined}
+        style={variant === 'modal' ? { cursor: 'move', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', userSelect: 'none' } : undefined}
+      >
+        <span style={{ fontWeight: 600 }}>Chat da Consulta</span>
         {variant === 'modal' && (
-          <button className="chat-close-btn" onClick={onClose} aria-label="Fechar chat">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <button className="chat-close-btn" onClick={onClose} aria-label="Fechar chat" style={{ cursor: 'pointer', background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
@@ -115,10 +164,26 @@ const AtendimentoChat: React.FC<ChatProps> = ({
 
   if (variant === 'modal') {
     return (
-      <div className="chat-modal-overlay" onClick={onClose}>
-        <div className="chat-modal" onClick={(e) => e.stopPropagation()}>
-          {ChatContent}
-        </div>
+      <div 
+        className="chat-floating-modal" 
+        style={{
+          position: 'fixed',
+          top: `${position.y}px`,
+          left: `${position.x}px`,
+          width: '380px',
+          height: '550px',
+          background: 'var(--bg-primary)',
+          borderRadius: '12px',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+          border: '1px solid var(--border-color)',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {ChatContent}
       </div>
     );
   }

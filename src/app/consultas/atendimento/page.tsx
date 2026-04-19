@@ -73,11 +73,36 @@ function AtendimentoInner() {
   const router = useRouter();
   const search = useSearchParams();
   const consultaId = search.get('id') || '';
-  const user = getUser();
-  const token = getToken();
-  const role = (user?.tipo_usuario === 'medico' ? 'medico' : 'paciente') as 'medico' | 'paciente';
+
+  const [isMounted, setIsMounted] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [token, setToken] = useState<string>('');
+  const [role, setRole] = useState<'medico' | 'paciente'>('paciente');
+
+  useEffect(() => {
+    const u = getUser();
+    const t = getToken();
+    setUser(u);
+    setToken(t);
+    setRole((u?.tipo_usuario === 'medico' ? 'medico' : 'paciente') as 'medico' | 'paciente');
+    setIsMounted(true);
+  }, []);
+
   const apiUrl = (process.env.NEXT_PUBLIC_API_URL || '').trim();
   const wsBaseUrl = getSignalUrl(apiUrl);
+
+  if (!isMounted) {
+    return (
+      <div className="inicio-page">
+        <main className="inicio-main atendimento-main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="atendimento-loading" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            <div className="spinner"></div>
+            <span>Carregando atendimento...</span>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   const [consultaDetails, setConsultaDetails] = useState<ConsultaDetails | null>(null);
 
