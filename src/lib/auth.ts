@@ -34,6 +34,7 @@ export function getUser(): StoredUser | null {
 export function clearUser() {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(STORAGE_KEY);
+  TOKEN_KEYS.forEach(k => localStorage.removeItem(k));
 }
 
 export function getUserId(): number | null {

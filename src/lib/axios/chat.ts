@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from './config';
 import type { ChatIAResponse, ChatHistory } from '@/types/chat';
 import { ApiError } from '@/lib/errorHandler';
 

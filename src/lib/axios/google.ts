@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from './config';
 
 export type GoogleAuthPayload = {
   id_token: string;

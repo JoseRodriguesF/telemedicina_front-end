@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from './config';
 import { isValidDDD } from '@/lib/validation/validators';
 import { ApiError } from '@/lib/errorHandler';
 

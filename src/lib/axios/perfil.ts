@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from './config';
 import { ApiError } from '@/lib/errorHandler';
 
 export type UserProfile = {
