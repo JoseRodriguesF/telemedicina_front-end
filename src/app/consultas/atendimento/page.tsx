@@ -187,7 +187,16 @@ function AtendimentoInner() {
   // Estado para Modal de Transcrição IA
   const [showTranscriptionModal, setShowTranscriptionModal] = useState(false);
 
+  // Iniciar o fluxo de atendimento assim que o componente estiver montado e o token disponível
+  useEffect(() => {
+    if (isMounted && token && !startedRef.current) {
+      startedRef.current = true;
+      startAtendimentoFlow();
+    }
+  }, [isMounted, token]);
+
   const isScheduled = search.get('scheduled') === 'true';
+
 
   // Redirecionamento de segurança para pacientes em Pronto Atendimento
   // Se entrar na sala e não houver médico, volta para a tela de espera
