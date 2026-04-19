@@ -88,6 +88,7 @@
 	--transition-base: 450ms cubic-bezier(0.4, 0, 0.2, 1);
 	--transition-slow: 700ms cubic-bezier(0.4, 0, 0.2, 1);
 	--transition-bounce: 600ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	--theme-transition: 0.2s ease;
 
 
 	/* Typography */
