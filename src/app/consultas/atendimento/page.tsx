@@ -91,18 +91,7 @@ function AtendimentoInner() {
   const apiUrl = (process.env.NEXT_PUBLIC_API_URL || '').trim();
   const wsBaseUrl = getSignalUrl(apiUrl);
 
-  if (!isMounted) {
-    return (
-      <div className="inicio-page">
-        <main className="inicio-main atendimento-main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="atendimento-loading" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-            <div className="spinner"></div>
-            <span>Carregando atendimento...</span>
-          </div>
-        </main>
-      </div>
-    );
-  }
+
 
   const [consultaDetails, setConsultaDetails] = useState<ConsultaDetails | null>(null);
 
@@ -1803,6 +1792,19 @@ function AtendimentoInner() {
       console.error('[AI] Erro ao enviar bloco de áudio para transcrição:', err);
     }
   };
+
+  if (!isMounted) {
+    return (
+      <div className="inicio-page">
+        <main className="inicio-main atendimento-main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="atendimento-loading" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            <div className="spinner"></div>
+            <span>Carregando atendimento...</span>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="inicio-page">
