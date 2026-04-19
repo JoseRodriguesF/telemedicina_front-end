@@ -619,6 +619,13 @@ function AtendimentoInner() {
       window.removeEventListener('beforeunload', onBeforeUnload);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      
+      // Cleanup de segurança: Parar mídia e fechar conexão ao sair da página
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(t => t.stop());
+        localStreamRef.current = null;
+      }
+      try { sessionRef.current?.end(); } catch (e) { }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1241,6 +1248,25 @@ function AtendimentoInner() {
       setConfirmationStep(1);
       setIsConfirmingEnd(true);
     } else {
+      console.log('[Atendimento] Paciente clicou em Desligar. Encerrando mídia e WebRTC...');
+      
+      // 1. Encerrar Sessão WebRTC
+      try {
+        sessionRef.current?.end();
+      } catch (err) {
+        console.error('[Atendimento] Erro ao encerrar WebRTC (Paciente):', err);
+      }
+
+      // 2. Parar tracks de mídia local IMEDIATAMENTE (desliga a luz da câmera/mic)
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => {
+          track.stop();
+          console.log(`[Atendimento] Track stopped (Paciente): ${track.kind}`);
+        });
+        localStreamRef.current = null;
+      }
+
+      // 3. Prosseguir com o redirecionamento
       confirmFinishCall();
     }
   }
