@@ -101,7 +101,7 @@
     border: 1px solid var(--border-color);
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color var(--theme-transition), color var(--theme-transition);
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--theme-transition), background-color var(--theme-transition);
 }
 
 .date-filter-wrapper {
@@ -304,7 +304,6 @@
     display: flex;
     align-items: center;
     gap: 1.25rem;
-    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--theme-transition), background-color var(--theme-transition), color var(--theme-transition);
     cursor: pointer;
     box-shadow: var(--shadow-md);
     animation: dash-entry 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
@@ -427,7 +426,6 @@
     border-radius: var(--radius-xl);
     padding: 1.5rem;
     box-shadow: var(--shadow-md);
-    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--theme-transition), background-color var(--theme-transition), color var(--theme-transition);
     animation: dash-entry 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 

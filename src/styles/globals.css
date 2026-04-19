@@ -807,8 +807,8 @@ textarea {
 .action-item {
 	transition: transform var(--transition-base),
 		box-shadow var(--transition-base),
-		border-color var(--transition-base),
-		background-color var(--transition-base);
+		border-color var(--theme-transition),
+		background-color var(--theme-transition);
 }
 
 .dash-card:hover,
