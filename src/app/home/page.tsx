@@ -18,11 +18,6 @@ export default function HomeScreen() {
 		<div className="page-home">
 			<Header />
 
-			{/* Floating Theme Toggle */}
-			<div className="landing-theme-toggle animate-fadeIn">
-				<ThemeToggle />
-			</div>
-
 			{/* Hero Section */}
 			<section className="hero-section">
 				<div className="container">
