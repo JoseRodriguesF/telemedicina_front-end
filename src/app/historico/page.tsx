@@ -391,7 +391,7 @@ export default function HistoricoPage() {
     <DashboardLayout>
       <header className="dashboard-header" style={{ marginBottom: '0.75rem' }}>
         <h2>Meu Histórico</h2>
-        <p>Consulte detalhes de atendimentos, prescrições e documentos gerados.</p>
+        <p>Consulte detalhes de atendimentos, prescrições e documentos gerados. <span style={{ color: 'var(--color-primary-500)', fontWeight: 'bold' }}>(Modo Paginação Ativo)</span></p>
       </header>
 
       <div className="historico-main">
