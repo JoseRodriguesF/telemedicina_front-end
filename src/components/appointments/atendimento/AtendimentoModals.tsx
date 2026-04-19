@@ -427,7 +427,7 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
                   <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>{atendimentoData.resumo_consulta?.length || 0} caracteres. Use a IA para estruturar os dados.</p>
                 </div>
                 <Button 
-                  variant="secondary" 
+                  variant="ghost" 
                   onClick={onSummarize} 
                   disabled={isSummarizing || !atendimentoData.resumo_consulta}
                   style={{ borderRadius: '8px' }}
