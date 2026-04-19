@@ -106,7 +106,9 @@ const AtendimentoVideoGrid: React.FC<VideoGridProps> = ({
         <div className="call-status-layer">
           {connectionFailed ? (
             <div className="call-status-content internet-error">
-              <div className="overlay-icon">🌐</div>
+              <div className="overlay-icon">
+                <img src="/icons/no-connection.png" alt="Sem conexão" />
+              </div>
               <div className="overlay-content">
                 <h3>Conexão Perdida</h3>
                 <p>{reconnecting ? 'Tentando restabelecer sinal...' : 'Verifique sua conexão com a internet.'}</p>
@@ -137,7 +139,9 @@ const AtendimentoVideoGrid: React.FC<VideoGridProps> = ({
             <>
               {!remoteHasVideo && (
                 <div className="call-status-content no-video">
-                  <div className="overlay-icon-small">📷</div>
+                <div className="overlay-icon-small">
+                  <img src="/icons/camera-icon.png" alt="Câmera" />
+                </div>
                   <div className="overlay-content">
                     <p>O {role === 'medico' ? 'paciente' : 'médico'} desligou a câmera</p>
                   </div>
@@ -158,7 +162,7 @@ const AtendimentoVideoGrid: React.FC<VideoGridProps> = ({
                 )}
                 {!camEnabled && (
                   <div className="remote-mic-alert local cam">
-                    <span>📷</span>
+                    <img src="/icons/camera-icon.png" alt="Câmera" className="alert-icon-img" />
                     <span>Sua câmera está desligada</span>
                   </div>
                 )}
@@ -179,7 +183,9 @@ const AtendimentoVideoGrid: React.FC<VideoGridProps> = ({
           />
           {!camEnabled && (
             <div className="no-camera-placeholder pip-placeholder">
-              <div className="overlay-icon-small">📷</div>
+              <div className="overlay-icon-small">
+                <img src="/icons/camera-icon.png" alt="Câmera" />
+              </div>
               <div style={{ fontSize: '0.8rem', marginTop: '4px', color: '#94a3b8' }}>Você está sem vídeo</div>
             </div>
           )}
