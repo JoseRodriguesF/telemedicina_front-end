@@ -4,7 +4,6 @@ import './sidebar.css';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
-import ThemeToggle from '@/components/common/ThemeToggle/ThemeToggle';
 import { getUser, clearUser } from '@/lib/auth';
 
 type SidebarItem = {

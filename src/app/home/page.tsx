@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import ThemeToggle from '@/components/common/ThemeToggle/ThemeToggle';
 import Header from "@/components/layout/Header/Header";
 import './Home.css';
 
