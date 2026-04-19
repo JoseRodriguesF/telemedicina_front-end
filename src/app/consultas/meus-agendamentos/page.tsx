@@ -355,7 +355,9 @@ export default function MeusAgendamentosPage() {
                             <div className="stat-mini-card">
                                 <div className="stat-header">
                                     <h4>Hoje</h4>
-                                    <div className="stat-icon">🔔</div>
+                                    <div className="stat-icon">
+                                        <img src="/icons/bell-icon.png" alt="Notificações" className="stat-icon-img" />
+                                    </div>
                                 </div>
                                 <div className="stat-value">
                                     {appointments.filter(a => isToday(a.data_consulta)).length}
