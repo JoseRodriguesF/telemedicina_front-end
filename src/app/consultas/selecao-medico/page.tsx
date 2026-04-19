@@ -21,6 +21,7 @@ type Doctor = {
     crm?: string;
     description?: string;
     image?: string;
+    resumo_profissional?: string;
 };
 
 function SelecaoMedicoInner() {
@@ -54,12 +55,13 @@ function SelecaoMedicoInner() {
                 const data = await listMedicos(token);
 
                 const mapped = Array.isArray(data)
-                    ? data.map((m) => ({
+                    ? data.map((m: any) => ({
                         ...m,
                         nome: m.nome_completo || '',
-                        // Mock ratings/specialties if not present to look better
                         specialty: m.especialidade || 'Clínico Geral',
-                        rating: 4.8 + (Math.random() * 0.2),
+                        crm: m.crm ? `${m.crm} - ${m.crm_uf || 'SP'}` : 'CRM não informado',
+                        resumo_profissional: m.resumo_profissional || 'Nenhum resumo profissional disponível.',
+                        rating: m.avaliacao || (4.8 + (Math.random() * 0.2)),
                         reviews: 120 + Math.floor(Math.random() * 50)
                     }))
                     : [];
@@ -258,7 +260,16 @@ function SelecaoMedicoInner() {
                             <img src={selectedDoctor.image || 'https://i.pravatar.cc/150?u=' + selectedDoctor.id} alt={selectedDoctor.nome} style={{ width: '100px', height: '100px', borderRadius: 'var(--radius-2xl)', marginBottom: '1rem', border: '4px solid var(--bg-secondary)' }} />
                             <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{selectedDoctor.nome}</h3>
                             <p style={{ color: 'var(--color-primary-600)', fontWeight: 600 }}>{selectedDoctor.specialty}</p>
+                            {selectedDoctor.crm && <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{selectedDoctor.crm}</p>}
                         </div>
+
+                        {selectedDoctor.resumo_profissional && (
+                            <div className="modal-about" style={{ marginBottom: '1.5rem', padding: '0 1rem', textAlign: 'center' }}>
+                                <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                                    {selectedDoctor.resumo_profissional}
+                                </p>
+                            </div>
+                        )}
 
                         <div className="modal-stats" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', padding: '1.5rem', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-2xl)', marginBottom: '2rem' }}>
                             <div style={{ textAlign: 'center' }}>

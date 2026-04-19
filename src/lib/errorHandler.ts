@@ -19,6 +19,8 @@ const ERROR_CODE_MESSAGES: Record<string, string> = {
     'UNAUTHORIZED': 'Você não tem permissão para realizar esta ação. Faça login.',
     'FORBIDDEN': 'Acesso negado. Você não possui permissão para este recurso.',
     'USE_GOOGLE_AUTH': 'Esta conta usa login social. Clique em "Entrar com Google".',
+    'tcle_required': 'Você precisa aceitar o Termo de Consentimento (TCLE) para agendar consultas.',
+    'paciente_profile_not_found': 'Perfil de paciente não encontrado. Por favor, complete seu cadastro.',
 
     // User & Registration
     'EMAIL_ALREADY_EXISTS': 'Este email já está em uso. Faça login ou use outro.',
