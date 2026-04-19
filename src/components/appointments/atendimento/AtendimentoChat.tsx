@@ -87,9 +87,19 @@ const AtendimentoChat: React.FC<ChatProps> = ({
       <div 
         className="chat-header" 
         onMouseDown={variant === 'modal' ? handleMouseDown : undefined}
-        style={variant === 'modal' ? { cursor: 'move', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)', userSelect: 'none' } : undefined}
+        style={variant === 'modal' ? { 
+          cursor: 'move', 
+          background: 'var(--bg-primary)', 
+          color: 'var(--color-primary-600)',
+          borderBottom: '1px solid var(--border-color)', 
+          userSelect: 'none',
+          padding: '12px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        } : undefined}
       >
-        <span style={{ fontWeight: 600 }}>Chat da Consulta</span>
+        <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>Chat da Consulta</span>
         {variant === 'modal' && (
           <button className="chat-close-btn" onClick={onClose} aria-label="Fechar chat" style={{ cursor: 'pointer', background: 'transparent', border: 'none', color: 'var(--text-secondary)' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
