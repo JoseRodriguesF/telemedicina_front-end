@@ -38,6 +38,7 @@ export default function HistoricoPage() {
   const [searchMode, setSearchMode] = useState<'nome' | 'cpf'>('nome');
   const [cpfValidationState, setCpfValidationState] = useState<'idle' | 'incomplete' | 'invalid' | 'valid'>('idle');
   const [loadingAnexos, setLoadingAnexos] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   // ✅ NOVO: Usar hooks otimizados
   const { historico: history, isLoading: loadingInternal } = useHistoricoCompleto();
@@ -397,7 +398,7 @@ export default function HistoricoPage() {
         <div className="history-tabs">
           <button
             className={`tab-btn ${activeTab === 'atendimentos' ? 'active' : ''}`}
-            onClick={() => setActiveTab('atendimentos')}
+            onClick={() => { setActiveTab('atendimentos'); setVisibleCount(10); }}
           >
             Atendimentos ({totalAtendimentos})
           </button>
@@ -406,6 +407,7 @@ export default function HistoricoPage() {
             onClick={() => {
               setActiveTab('prescricoes');
               setFilterStatus('all');
+              setVisibleCount(10);
             }}
           >
             Prescrições ({totalPrescricoes})
@@ -431,7 +433,7 @@ export default function HistoricoPage() {
                 }
                 value={searchTerm}
                 maxLength={searchMode === 'cpf' ? 14 : undefined}
-                onChange={(e) => handleSearchChange(e.target.value)}
+                onChange={(e) => { handleSearchChange(e.target.value); setVisibleCount(10); }}
               />
               {/* Ícone de status de CPF */}
               {userType === 'medico' && searchMode === 'cpf' && cpfValidationState === 'valid' && (
@@ -483,21 +485,21 @@ export default function HistoricoPage() {
               className="date-range-input"
               title="Data final"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => { setEndDate(e.target.value); setVisibleCount(10); }}
             />
           </div>
         </div>
 
         <div className="status-filters">
-          <button className={`btn ${filterStatus === 'all' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('all')}>Todos</button>
+          <button className={`btn ${filterStatus === 'all' ? 'primary' : 'ghost'}`} onClick={() => { setFilterStatus('all'); setVisibleCount(10); }}>Todos</button>
 
           {activeTab === 'atendimentos' && (
             <>
-              <button className={`btn ${filterStatus === 'finished' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('finished')}>Finalizadas</button>
-              <button className={`btn ${filterStatus === 'agendada' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('agendada')}>Agendadas</button>
-              <button className={`btn ${filterStatus === 'solicitada' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('solicitada')}>Solicitadas</button>
-              <button className={`btn ${filterStatus === 'cancelled' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('cancelled')}>Canceladas</button>
-              <button className={`btn ${filterStatus === 'in_progress' ? 'primary' : 'ghost'}`} onClick={() => setFilterStatus('in_progress')}>Em andamento</button>
+              <button className={`btn ${filterStatus === 'finished' ? 'primary' : 'ghost'}`} onClick={() => { setFilterStatus('finished'); setVisibleCount(10); }}>Finalizadas</button>
+              <button className={`btn ${filterStatus === 'agendada' ? 'primary' : 'ghost'}`} onClick={() => { setFilterStatus('agendada'); setVisibleCount(10); }}>Agendadas</button>
+              <button className={`btn ${filterStatus === 'solicitada' ? 'primary' : 'ghost'}`} onClick={() => { setFilterStatus('solicitada'); setVisibleCount(10); }}>Solicitadas</button>
+              <button className={`btn ${filterStatus === 'cancelled' ? 'primary' : 'ghost'}`} onClick={() => { setFilterStatus('cancelled'); setVisibleCount(10); }}>Canceladas</button>
+              <button className={`btn ${filterStatus === 'in_progress' ? 'primary' : 'ghost'}`} onClick={() => { setFilterStatus('in_progress'); setVisibleCount(10); }}>Em andamento</button>
             </>
           )}
         </div>
@@ -511,7 +513,8 @@ export default function HistoricoPage() {
               </div>
             ) : activeTab === 'atendimentos' ? (
               filteredHistory.length > 0 ? (
-                filteredHistory.map((item) => (
+                <>
+                  {filteredHistory.slice(0, visibleCount).map((item) => (
                   <div key={item.id} className="history-item-card" onClick={() => { setSelectedItem(item); setShowDetails(true); }}>
                     <div className="history-item-avatar">
                       {userType === 'paciente' ? (
@@ -547,17 +550,31 @@ export default function HistoricoPage() {
                       <button className="action-btn">Ver Detalhes</button>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="empty-history">
-                  <h3>Nenhum atendimento encontrado</h3>
-                  <p>Ajuste os filtros ou realize novas consultas.</p>
-                </div>
-              )
+                ))}
+
+                {filteredHistory.length > visibleCount && (
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+                    <button 
+                      className="btn primary" 
+                      onClick={() => setVisibleCount(prev => prev + 10)}
+                      style={{ padding: '0.75rem 2.5rem', borderRadius: '12px', fontWeight: 700 }}
+                    >
+                      Ver Mais Atendimentos
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="empty-history">
+                <h3>Nenhum atendimento encontrado</h3>
+                <p>Ajuste os filtros ou realize novas consultas.</p>
+              </div>
+            )
             ) : (
               /* Aba de Prescrições */
               allPrescriptions.length > 0 ? (
-                allPrescriptions.map((presc, idx) => (
+                <>
+                  {allPrescriptions.slice(0, visibleCount).map((presc, idx) => (
                   <div
                     key={`${presc.id}-${idx}`}
                     className="history-item-card prescription-card"
@@ -629,13 +646,26 @@ export default function HistoricoPage() {
                       <button className="action-btn-secondary">Detalhes</button>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="empty-history">
-                  <h3>Nenhuma prescrição encontrada</h3>
-                  <p>Prescrições aparecem aqui após serem geradas em consulta.</p>
-                </div>
-              )
+                ))}
+
+                {allPrescriptions.length > visibleCount && (
+                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+                    <button 
+                      className="btn primary" 
+                      onClick={() => setVisibleCount(prev => prev + 10)}
+                      style={{ padding: '0.75rem 2.5rem', borderRadius: '12px', fontWeight: 700 }}
+                    >
+                      Ver Mais Prescrições
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="empty-history">
+                <h3>Nenhuma prescrição encontrada</h3>
+                <p>Prescrições aparecem aqui após serem geradas em consulta.</p>
+              </div>
+            )
             )}
           </div>
 
