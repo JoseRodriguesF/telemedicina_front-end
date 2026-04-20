@@ -107,7 +107,7 @@ const AtendimentoVideoGrid: React.FC<VideoGridProps> = ({
           {connectionFailed ? (
             <div className="call-status-content internet-error">
               <div className="overlay-icon">
-                <img src="/icons/no-connection.png" alt="Sem conexão" />
+                <img src="/icons/no-connection.png" alt="Sem conexão" className="white-icon-filter" />
               </div>
               <div className="overlay-content">
                 <h3>Conexão Perdida</h3>
@@ -116,7 +116,9 @@ const AtendimentoVideoGrid: React.FC<VideoGridProps> = ({
             </div>
           ) : remoteDisconnected ? (
             <div className="call-status-content peer-disconnected">
-              <div className="overlay-icon">🔌</div>
+              <div className="overlay-icon">
+                <img src="/icons/no-connection.png" alt="Desconectado" className="white-icon-filter" />
+              </div>
               <div className="overlay-content">
                 <h3>Usuário desconectado</h3>
                 <p>{showExitMessage ? 'A consulta foi encerrada pelo outro participante.' : 'O sinal do outro participante caiu. Aguardando volta...'}</p>
