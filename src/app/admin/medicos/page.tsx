@@ -143,9 +143,9 @@ export default function AdminMedicos() {
                   </td>
                   <td>
                     {m.verificacao === 'analise' ? (
-                      <Button variant="primary" size="sm" onClick={() => handleReview(m)}>Validar</Button>
+                      <Button variant="primary" className="btn-sm" onClick={() => handleReview(m)}>Validar</Button>
                     ) : (
-                      <Button variant="ghost" size="sm" onClick={() => handleReview(m)}>Ver Perfil</Button>
+                      <Button variant="ghost" className="btn-sm" onClick={() => handleReview(m)}>Ver Perfil</Button>
                     )}
                   </td>
                 </tr>

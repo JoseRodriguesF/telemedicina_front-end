@@ -93,7 +93,7 @@ export default function AdminPacientes() {
                     </span>
                   </td>
                   <td>
-                    <Button variant="ghost" size="sm" onClick={() => handleOpenProfile(p)}>Ver Perfil</Button>
+                    <Button variant="ghost" className="btn-sm" onClick={() => handleOpenProfile(p)}>Ver Perfil</Button>
                   </td>
                 </tr>
               ))}
