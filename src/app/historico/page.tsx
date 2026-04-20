@@ -589,7 +589,7 @@ export default function HistoricoPage() {
                     onClick={() => { setSelectedPrescription(presc); setShowPrescriptionDetails(true); }}
                   >
                     <div className="history-item-avatar">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22v-5" /><path d="M12 12V2" /><path d="M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" /><path d="m15 13-3-3-3 3" /></svg>
+                      <img src="/icons/remedio-icon.png" alt="Remédio" className="blue-icon-filter" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
                     </div>
 
                     <div className="history-item-main">
