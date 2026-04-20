@@ -266,7 +266,7 @@ export default function AdminDashboard() {
                   </Pie>
                   <Tooltip 
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 5px 15px rgba(0,0,0,0.1)' }}
-                    formatter={(value: number) => [`${value} eventos`, 'Quantidade']}
+                    formatter={(value: any) => [`${value || 0} eventos`, 'Quantidade']}
                   />
                   <Legend layout="vertical" align="right" verticalAlign="middle" />
                 </PieChart>
