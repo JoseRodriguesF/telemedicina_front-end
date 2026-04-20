@@ -231,8 +231,12 @@ export default function HomeScreen() {
 							<img src="/images/logo_matriarca.png" alt="Matriarca" width="180" height="60" style={{ marginBottom: "1rem" }} />
 							<p>Excelência e rapidez no atendimento médico moderno, aliando tecnologia ao cuidado humano.</p>
 							<div className="social-links">
-								<span className="social-icon">🌐</span>
-								<span className="social-icon">📸</span>
+								<span className="social-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                </span>
+								<span className="social-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                </span>
 							</div>
 						</div>
 						<div className="footer-nav-groups">
