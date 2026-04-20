@@ -17,6 +17,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [filter, setFilter] = useState({
     ano: new Date().getFullYear().toString(),
     mes: (new Date().getMonth() + 1).toString(),
@@ -139,20 +140,117 @@ export default function AdminDashboard() {
           </div>
         </section>
 
-        {/* Main Analytics Grid */}
-        <div className="admin-main-grid">
+        {/* Main Management Section */}
+        <div className="admin-management-grid">
+          
+          {/* Card 1: Doctors Management */}
+          <div className="admin-table-card glass">
+            <div className="card-header">
+              <div>
+                <h3>Corpo Clínico</h3>
+                <p>Monitoramento de desempenho e cadastro dos médicos</p>
+              </div>
+              <button className="btn-action" onClick={() => router.push('/admin/medicos')}>Gerenciar Tudo</button>
+            </div>
+            <div className="table-wrapper">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Médico</th>
+                    <th>Especialidade</th>
+                    <th>CRM</th>
+                    <th>Atendimentos</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(stats?.doctors || []).map((medico: any) => (
+                    <tr key={medico.id}>
+                      <td className="col-user-info">
+                        <strong>{medico.nome}</strong>
+                        <span>{medico.usuario?.email}</span>
+                      </td>
+                      <td>{medico.especialidade}</td>
+                      <td>{medico.crm}/{medico.uf}</td>
+                      <td className="col-center">
+                        <span className="count-badge">{medico._count.consultas}</span>
+                      </td>
+                      <td>
+                        <span className={`status-pill ${medico.status_verificacao}`}>
+                          {medico.status_verificacao}
+                        </span>
+                      </td>
+                      <td>
+                        <button className="btn-detail" onClick={() => setSelectedUser({ type: 'medico', data: medico })}>
+                          🔍 Detalhes
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-          {/* Card 1: Horários de Pico (Area Chart for smoothness) */}
-          <div className="admin-chart-card glass">
+          {/* Card 2: Patients Overview */}
+          <div className="admin-table-card glass">
+            <div className="card-header">
+              <div>
+                <h3>Base de Pacientes</h3>
+                <p>Visão geral de engajamento (Dados de registro apenas)</p>
+              </div>
+            </div>
+            <div className="table-wrapper">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Paciente</th>
+                    <th>CPF</th>
+                    <th>Telefone</th>
+                    <th>Consultas</th>
+                    <th>Cadastro</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(stats?.patients || []).map((paciente: any) => (
+                    <tr key={paciente.id}>
+                      <td className="col-user-info">
+                        <strong>{paciente.nome}</strong>
+                        <span>{paciente.usuario?.email}</span>
+                      </td>
+                      <td>{paciente.cpf}</td>
+                      <td>{paciente.telefone}</td>
+                      <td className="col-center">
+                        <span className="count-badge secondary">{paciente._count.consultas}</span>
+                      </td>
+                      <td>{new Date(paciente.usuario?.createdAt).toLocaleDateString('pt-BR')}</td>
+                      <td>
+                        <button className="btn-detail" onClick={() => setSelectedUser({ type: 'paciente', data: paciente })}>
+                          🔍 Perfil
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Analytics & Activity Row */}
+        <div className="admin-bottom-grid">
+           {/* Fluxo de Atendimento */}
+           <div className="admin-chart-card glass">
             <div className="card-header">
               <div>
                 <h3>Fluxo de Atendimento</h3>
-                <p>Volume de pacientes por faixa horária (24h)</p>
+                <p>Volume por faixa horária (24h)</p>
               </div>
-              <span className="badge">Pico: {stats?.hourly?.reduce((max: any, curr: any) => curr.count > max.count ? curr : max, { count: 0, hour: 0 })?.hour}h</span>
             </div>
             <div className="chart-wrapper">
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={250}>
                 <AreaChart data={stats?.hourly || []}>
                   <defs>
                     <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
@@ -161,134 +259,86 @@ export default function AdminDashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
-                  <XAxis dataKey="hour" tickFormatter={(v) => `${v}h`} axisLine={false} tickLine={false} />
-                  <YAxis axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', background: 'rgba(255,255,255,0.9)' }}
-                  />
-                  <Area type="monotone" dataKey="count" stroke="var(--color-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
+                  <XAxis dataKey="hour" tickFormatter={(v) => `${v}h`} axisLine={false} tickLine={false} fontSize={11} />
+                  <YAxis axisLine={false} tickLine={false} fontSize={11} />
+                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
+                  <Area type="monotone" dataKey="count" stroke="var(--color-primary)" strokeWidth={2} fillOpacity={1} fill="url(#colorCount)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Card 2: Especialidade vs Gênero */}
-          <div className="admin-chart-card glass">
-            <div className="card-header">
-              <div>
-                <h3>Perfil por Especialidade</h3>
-                <p>Distribuição de gênero por área médica</p>
-              </div>
-            </div>
-            <div className="chart-wrapper">
-              <ResponsiveContainer width="100%" height={320}>
-                <BarChart data={stats?.specialtyGender || []} layout="vertical" margin={{ left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(0,0,0,0.05)" />
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="specialty" type="category" width={100} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ borderRadius: '16px', border: 'none' }} />
-                  <Legend iconType="circle" />
-                  <Bar dataKey="Masculino" stackId="a" fill="var(--color-primary-500)" radius={[0, 0, 0, 0]} barSize={20} />
-                  <Bar dataKey="Feminino" stackId="a" fill="#e91e63" radius={[0, 0, 0, 0]} barSize={20} />
-                  <Bar dataKey="Outro" stackId="a" fill="#9c27b0" radius={[4, 4, 4, 4]} barSize={20} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Card 3: Top CIDs */}
-          <div className="admin-chart-card glass cid-distribution">
-            <div className="card-header">
-              <div>
-                <h3>Morbitidade (Top CIDs)</h3>
-                <p>Diagnósticos mais frequentes no período</p>
-              </div>
-            </div>
-            <div className="cid-content">
-              <div className="cid-pie">
-                <ResponsiveContainer width="100%" height={260}>
-                  <PieChart>
-                    <Pie
-                      data={stats?.topCids || []}
-                      cx="50%" cy="50%"
-                      innerRadius={60} outerRadius={85}
-                      paddingAngle={8}
-                      dataKey="count" nameKey="cid"
-                    >
-                      {stats?.topCids?.map((entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="cid-list">
-                {stats?.topCids?.slice(0, 5).map((item: any, idx: number) => (
-                  <div key={idx} className="cid-item">
-                    <span className="cid-bullet" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></span>
-                    <span className="cid-label">{item.cid}</span>
-                    <span className="cid-value">{item.count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Card 4: Quick Analytics Access */}
+          {/* Quick Analytics Access */}
           <div className="admin-chart-card glass analytics-shortcut">
             <div className="shortcut-content">
               <div className="shortcut-text">
-                <h3>Insights & Auditoria</h3>
-                <p>Visualize tendências e métricas detalhadas de atividade.</p>
+                <h3>Monitoramento Central</h3>
+                <p>Acesse a trilha de auditoria e métricas de integridade.</p>
               </div>
-              <button className="btn-go-analytics" onClick={() => router.push('/admin/logs/analytics')}>
-                Acessar Dashboard Analítico →
-              </button>
-            </div>
-            <div className="shortcut-stats-mini">
-               <div className="mini-stat">
-                 <span className="label">Ações Hoje</span>
-                 <span className="value">{stats?.logStats?.reduce((a: any, b: any) => a + b.value, 0) || 0}</span>
-               </div>
-               <div className="mini-stat">
-                 <span className="label">Consultas</span>
-                 <span className="value">{stats?.totalConsultations || 0}</span>
-               </div>
+              <div className="shortcut-actions">
+                <button className="btn-go-analytics" onClick={() => router.push('/admin/logs/analytics')}>
+                   Analytics de Logs →
+                </button>
+                <button className="btn-secondary-action" onClick={() => router.push('/admin/logs')}>
+                   Trilha de Auditoria
+                </button>
+              </div>
             </div>
           </div>
-
-          {/* Card 5: Recent Audit Actions (Activity Monitor) */}
-          <div className="admin-chart-card glass audit-summary">
-            <div className="card-header">
-              <div>
-                <h3>Atividade do Sistema</h3>
-                <p>Monitoramento de integridade e auditoria</p>
-              </div>
-              <button className="btn-view-all" onClick={() => router.push('/admin/logs')}>Ver Tudo</button>
-            </div>
-            <div className="audit-list">
-                {(!stats?.recentLogs || stats.recentLogs.length === 0) ? (
-                  <div className="audit-empty" style={{padding: '2rem', textAlign: 'center', opacity: 0.5, fontSize: '0.85rem'}}>
-                    Nenhuma atividade registrada na trilha de auditoria.
-                  </div>
-                ) : (
-                  stats.recentLogs.slice(0, 4).map((log: any) => (
-                    <div key={log.id} className={`audit-item ${log.acao.includes('FAIL') || log.acao.includes('REJECT') || log.acao.includes('CANCEL') ? 'error' : 'success'}`}>
-                        <span className="audit-icon">
-                          {log.acao.includes('FAIL') || log.acao.includes('REJECT') || log.acao.includes('CANCEL') ? '⚠️' : '✓'}
-                        </span>
-                        <div className="audit-info">
-                            <strong>{log.acao}</strong>
-                            <p>{log.detalhes || log.recurso} • {new Date(log.createdAt).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</p>
-                        </div>
-                    </div>
-                  ))
-                )}
-            </div>
-          </div>
-
         </div>
+
+        {/* User Details Modal (Personal Data Only) */}
+        {selectedUser && (
+          <div className="user-details-modal-overlay" onClick={() => setSelectedUser(null)}>
+            <div className="user-details-modal glass animate-scaleIn" onClick={e => e.stopPropagation()}>
+              <header className="modal-header">
+                <h2>Detalhes do {selectedUser.type === 'medico' ? 'Médico' : 'Paciente'}</h2>
+                <button className="btn-close" onClick={() => setSelectedUser(null)}>×</button>
+              </header>
+              <div className="modal-content">
+                <div className="user-profile-summary">
+                  <div className="user-avatar">{selectedUser.data.nome.charAt(0)}</div>
+                  <div className="user-main-info">
+                    <h3>{selectedUser.data.nome}</h3>
+                    <p>{selectedUser.data.usuario?.email}</p>
+                  </div>
+                </div>
+
+                <div className="details-grid">
+                  <div className="detail-item">
+                    <label>{selectedUser.type === 'medico' ? 'CRM' : 'CPF'}</label>
+                    <span>{selectedUser.type === 'medico' ? `${selectedUser.data.crm}/${selectedUser.data.uf}` : selectedUser.data.cpf}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Telefone</label>
+                    <span>{selectedUser.data.telefone || 'Não informado'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Data de Cadastro</label>
+                    <span>{new Date(selectedUser.data.usuario?.createdAt).toLocaleString('pt-BR')}</span>
+                  </div>
+                  <div className="detail-item">
+                    <label>Total de Consultas</label>
+                    <span className="highlight-value">{selectedUser.data._count.consultas}</span>
+                  </div>
+                  {selectedUser.type === 'medico' && (
+                    <div className="detail-item">
+                      <label>Especialidade</label>
+                      <span>{selectedUser.data.especialidade}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="modal-notice">
+                  <p>🛡️ <strong>Privacidade:</strong> Por motivos de segurança e LGPD, dados clínicos e históricos médicos não são acessíveis por administradores.</p>
+                </div>
+              </div>
+              <footer className="modal-footer">
+                <button className="btn-primary" onClick={() => setSelectedUser(null)}>Fechar</button>
+              </footer>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
