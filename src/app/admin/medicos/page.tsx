@@ -66,41 +66,49 @@ export default function AdminMedicos() {
 
   return (
     <DashboardLayout>
-      <header className="admin-header">
-        <div className="header-info">
-          <h1>Gestão do Corpo Clínico</h1>
-          <p>Monitore o desempenho e valide o cadastro dos profissionais da rede.</p>
+      <header className="admin-header-v2 glass">
+        <div className="header-left">
+          <div className="search-box">
+            <input 
+              type="text" 
+              placeholder="Pesquisar médico por nome, CRM ou CPF..." 
+              value={filters.search}
+              onChange={(e) => setFilters({...filters, search: e.target.value})}
+              className="filter-input-large"
+            />
+          </div>
         </div>
 
-        <div className="medicos-filters glass">
-          <input 
-            type="text" 
-            placeholder="Buscar por nome, CRM ou CPF..." 
-            value={filters.search}
-            onChange={(e) => setFilters({...filters, search: e.target.value})}
-            className="filter-input"
-          />
-          <select 
-            value={filters.specialty}
-            onChange={(e) => setFilters({...filters, specialty: e.target.value})}
-            className="filter-select"
-          >
-            <option value="">Todas Especialidades</option>
-            <option value="Clínico Geral">Clínico Geral</option>
-            <option value="Pediatria">Pediatria</option>
-            <option value="Cardiologia">Cardiologia</option>
-            <option value="Dermatologia">Dermatologia</option>
-          </select>
-          <select 
-            value={filters.status}
-            onChange={(e) => setFilters({...filters, status: e.target.value})}
-            className="filter-select"
-          >
-            <option value="">Todos Status</option>
-            <option value="verificado">✓ Verificado</option>
-            <option value="analise">⏳ Em Análise</option>
-            <option value="recusado">✕ Recusado</option>
-          </select>
+        <div className="header-right">
+          <div className="filters-group">
+            <select 
+              value={filters.specialty}
+              onChange={(e) => setFilters({...filters, specialty: e.target.value})}
+              className="filter-select-v2"
+            >
+              <option value="">Especialidade: Todas</option>
+              <option value="Clínico Geral">Clínico Geral</option>
+              <option value="Pediatria">Pediatria</option>
+              <option value="Cardiologia">Cardiologia</option>
+            </select>
+
+            <select 
+              value={filters.status}
+              onChange={(e) => setFilters({...filters, status: e.target.value})}
+              className="filter-select-v2"
+            >
+              <option value="">Status: Todos</option>
+              <option value="verificado">✓ Verificado</option>
+              <option value="analise">⏳ Em Análise</option>
+              <option value="recusado">✕ Recusado</option>
+            </select>
+
+            <select className="filter-select-v2">
+              <option value="nome">Ordenar por: Nome</option>
+              <option value="consultas">Ordenar por: Consultas</option>
+              <option value="recente">Ordenar por: Recente</option>
+            </select>
+          </div>
         </div>
       </header>
 

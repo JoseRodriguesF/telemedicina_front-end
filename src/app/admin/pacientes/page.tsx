@@ -41,21 +41,27 @@ export default function AdminPacientes() {
 
   return (
     <DashboardLayout>
-      <header className="admin-header">
-        <div className="header-info">
-          <h1>Base de Pacientes</h1>
-          <p>Gestão e acompanhamento da base de usuários da plataforma.</p>
+      <header className="admin-header-v2 glass">
+        <div className="header-left">
+          <div className="search-box">
+            <input 
+              type="text" 
+              placeholder="Pesquisar paciente por nome, CPF ou telefone..." 
+              value={filters.search}
+              onChange={(e) => setFilters({...filters, search: e.target.value})}
+              className="filter-input-large"
+            />
+          </div>
         </div>
 
-        <div className="medicos-filters glass">
-          <input 
-            type="text" 
-            placeholder="Buscar por nome, CPF ou telefone..." 
-            value={filters.search}
-            onChange={(e) => setFilters({...filters, search: e.target.value})}
-            className="filter-input"
-            style={{ minWidth: '400px' }}
-          />
+        <div className="header-right">
+          <div className="filters-group">
+            <select className="filter-select-v2">
+              <option value="nome">Ordenar por: Nome</option>
+              <option value="consultas">Ordenar por: Consultas</option>
+              <option value="recente">Ordenar por: Recente</option>
+            </select>
+          </div>
         </div>
       </header>
 

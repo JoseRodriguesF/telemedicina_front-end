@@ -501,6 +501,94 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
+/* Analytics Shortcut Card Enhancement */
+.analytics-shortcut {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.5rem !important;
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.1), rgba(var(--color-primary-rgb), 0.05)) !important;
+  border: 1px solid rgba(var(--color-primary-rgb), 0.2) !important;
+}
+
+.shortcut-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.shortcut-text h3 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.shortcut-text p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.shortcut-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-go-analytics {
+  background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-400));
+  color: white;
+  border: none;
+  padding: 0.9rem 1.8rem;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 20px -5px rgba(var(--color-primary-rgb), 0.4);
+}
+
+.btn-go-analytics:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 25px -5px rgba(var(--color-primary-rgb), 0.5);
+  filter: brightness(1.1);
+}
+
+.btn-secondary-action {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.9rem 1.8rem;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary-action:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Mini Filter for Charts */
+.filter-select-mini {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.filter-select-mini:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 .modal-header {
   padding: 1.5rem 2rem;
   display: flex;

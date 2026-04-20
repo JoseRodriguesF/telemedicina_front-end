@@ -1,45 +1,64 @@
-.admin-header {
+.admin-header-v2 {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
+  padding: 1.5rem 2rem;
   margin-bottom: 2rem;
-  gap: 2rem;
+  border-radius: 24px;
 }
 
-.header-info h1 {
-  font-size: 2rem;
-  font-weight: 800;
+.header-left {
+  flex: 1;
+}
+
+.search-box {
+  width: 100%;
+  max-width: 500px;
+}
+
+.filter-input-large {
+  width: 100%;
+  padding: 0.8rem 1.2rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.3s;
 }
 
-.header-info p {
-  color: var(--text-secondary);
+.filter-input-large:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-primary-400);
+  box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.1);
+  outline: none;
 }
 
-.medicos-filters {
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.filters-group {
   display: flex;
   gap: 1rem;
-  padding: 1rem;
-  border-radius: 16px;
 }
 
-.filter-input {
-  padding: 0.6rem 1rem;
-  border-radius: 10px;
+.filter-select-v2 {
+  padding: 0.8rem 1rem;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-primary);
-  min-width: 250px;
-}
-
-.filter-select {
-  padding: 0.6rem 1rem;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-select-v2:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .admin-table {
@@ -49,12 +68,12 @@
 
 .admin-table th {
   text-align: left;
-  padding: 1rem;
-  font-size: 0.85rem;
+  padding: 1.2rem 1rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 

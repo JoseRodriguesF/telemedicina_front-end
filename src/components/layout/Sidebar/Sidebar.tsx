@@ -26,7 +26,7 @@ const baseItems: SidebarItem[] = [
 
 const adminItems: SidebarItem[] = [
   { id: 'inicio', label: 'Início', icon: '/images/home-06.svg', href: '/admin/dashboard' },
-  { id: 'perfil', label: 'Verificar Médicos', icon: '/icons/verificar.png', href: '/admin/medicos' },
+  { id: 'perfil', label: 'Verificar Médicos', icon: '/images/user-01.svg', href: '/admin/medicos' },
 ];
 
 export default function Sidebar({ activeId: propActiveId, className = '' }: Props) {

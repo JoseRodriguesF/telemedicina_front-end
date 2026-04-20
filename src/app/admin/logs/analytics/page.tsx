@@ -148,12 +148,27 @@ export default function AdminAnalyticsPage() {
             </div>
 
             {/* Pie Chart Section with Separate Legend */}
+            <div className="analytics-section-header">
+               <div className="section-title">
+                 <h2>Distribuição de Ações</h2>
+                 <p>Análise categórica de todos os eventos registrados</p>
+               </div>
+               <div className="section-filters">
+                 <select className="filter-select-premium">
+                   <option>Todas as Categorias</option>
+                   <option>Autenticação</option>
+                   <option>Gestão de Usuários</option>
+                   <option>Documentos</option>
+                 </select>
+                 <select className="filter-select-premium">
+                   <option>Ordenar por Volume</option>
+                   <option>Ordenar A-Z</option>
+                 </select>
+               </div>
+            </div>
+
             <div className="pie-analysis-grid">
               <div className="chart-card glass">
-                <div className="card-header">
-                  <h3>Distribuição de Ações</h3>
-                  <p>Proporção visual dos eventos</p>
-                </div>
                 <div className="chart-box">
                   <ResponsiveContainer width="100%" height={400}>
                     <PieChart>

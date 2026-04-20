@@ -140,7 +140,62 @@ export default function AdminDashboard() {
           </div>
         </section>
 
-        {/* Main Management Section */}
+        {/* Analytics & Activity Row */}
+        <div className="admin-bottom-grid">
+           {/* Fluxo de Atendimento */}
+           <div className="admin-chart-card glass">
+            <div className="card-header">
+              <div>
+                <h3>Fluxo de Atendimento</h3>
+                <p>Volume por faixa horária (24h)</p>
+              </div>
+              <div className="chart-filters">
+                <select className="filter-select-mini">
+                  <option>Hoje</option>
+                  <option>Ontem</option>
+                  <option>Últimos 7 dias</option>
+                </select>
+              </div>
+            </div>
+            <div className="chart-wrapper">
+              <ResponsiveContainer width="100%" height={250}>
+                <AreaChart data={stats?.hourly || []}>
+                  <defs>
+                    <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="hour" tickFormatter={(v) => `${v}h`} axisLine={false} tickLine={false} fontSize={11} stroke="rgba(255,255,255,0.4)" />
+                  <YAxis axisLine={false} tickLine={false} fontSize={11} stroke="rgba(255,255,255,0.4)" />
+                  <Tooltip contentStyle={{ background: 'rgba(20,20,30,0.9)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} />
+                  <Area type="monotone" dataKey="count" stroke="var(--color-primary)" strokeWidth={2} fillOpacity={1} fill="url(#colorCount)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Quick Analytics Access */}
+          <div className="admin-chart-card glass analytics-shortcut">
+            <div className="shortcut-content">
+              <div className="shortcut-text">
+                <h3>Monitoramento Central</h3>
+                <p>Acesse a trilha de auditoria e métricas de integridade.</p>
+              </div>
+              <div className="shortcut-actions">
+                <button className="btn-go-analytics" onClick={() => router.push('/admin/logs/analytics')}>
+                   Analytics de Logs →
+                </button>
+                <button className="btn-secondary-action" onClick={() => router.push('/admin/logs')}>
+                   Trilha de Auditoria
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Management Section (Moved to Bottom) */}
         <div className="admin-management-grid">
           
           {/* Card 1: Doctors Management */}
@@ -223,7 +278,9 @@ export default function AdminDashboard() {
                       <td>{paciente.cpf}</td>
                       <td>{paciente.telefone}</td>
                       <td className="col-center">
-                        <span className="count-badge secondary">{paciente._count.consultas}</span>
+                        <span className="count-badge secondary" style={{ background: 'rgba(0, 196, 159, 0.1)', color: '#00c49f' }}>
+                          {paciente._count.consultas}
+                        </span>
                       </td>
                       <td>
                         <button className="btn-detail" onClick={() => setSelectedUser({ type: 'paciente', data: paciente })}>
@@ -234,54 +291,6 @@ export default function AdminDashboard() {
                   ))}
                 </tbody>
               </table>
-            </div>
-          </div>
-        </div>
-
-        {/* Analytics & Activity Row */}
-        <div className="admin-bottom-grid">
-           {/* Fluxo de Atendimento */}
-           <div className="admin-chart-card glass">
-            <div className="card-header">
-              <div>
-                <h3>Fluxo de Atendimento</h3>
-                <p>Volume por faixa horária (24h)</p>
-              </div>
-            </div>
-            <div className="chart-wrapper">
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={stats?.hourly || []}>
-                  <defs>
-                    <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
-                  <XAxis dataKey="hour" tickFormatter={(v) => `${v}h`} axisLine={false} tickLine={false} fontSize={11} />
-                  <YAxis axisLine={false} tickLine={false} fontSize={11} />
-                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none' }} />
-                  <Area type="monotone" dataKey="count" stroke="var(--color-primary)" strokeWidth={2} fillOpacity={1} fill="url(#colorCount)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Quick Analytics Access */}
-          <div className="admin-chart-card glass analytics-shortcut">
-            <div className="shortcut-content">
-              <div className="shortcut-text">
-                <h3>Monitoramento Central</h3>
-                <p>Acesse a trilha de auditoria e métricas de integridade.</p>
-              </div>
-              <div className="shortcut-actions">
-                <button className="btn-go-analytics" onClick={() => router.push('/admin/logs/analytics')}>
-                   Analytics de Logs →
-                </button>
-                <button className="btn-secondary-action" onClick={() => router.push('/admin/logs')}>
-                   Trilha de Auditoria
-                </button>
-              </div>
             </div>
           </div>
         </div>
