@@ -167,10 +167,35 @@ export default function AdminDashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="hour" tickFormatter={(v) => `${v}h`} axisLine={false} tickLine={false} fontSize={11} stroke="rgba(255,255,255,0.4)" />
+                  <XAxis 
+                    dataKey="hour" 
+                    tickFormatter={(v) => `${v}h`} 
+                    axisLine={false} 
+                    tickLine={false} 
+                    fontSize={11} 
+                    stroke="rgba(255,255,255,0.4)" 
+                    interval={2}
+                  />
                   <YAxis axisLine={false} tickLine={false} fontSize={11} stroke="rgba(255,255,255,0.4)" />
-                  <Tooltip contentStyle={{ background: 'rgba(20,20,30,0.9)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} />
-                  <Area type="monotone" dataKey="count" stroke="var(--color-primary)" strokeWidth={2} fillOpacity={1} fill="url(#colorCount)" />
+                  <Tooltip 
+                    contentStyle={{ background: 'rgba(20,20,30,0.9)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} 
+                    labelFormatter={(v) => `Horário: ${v}:00`}
+                  />
+                  <Legend 
+                    verticalAlign="top" 
+                    align="right" 
+                    iconType="circle" 
+                    wrapperStyle={{ paddingTop: '0', marginTop: '-20px', fontSize: '10px', opacity: 0.7 }}
+                  />
+                  <Area 
+                    name="Volume de Atendimentos"
+                    type="monotone" 
+                    dataKey="count" 
+                    stroke="var(--color-primary)" 
+                    strokeWidth={2} 
+                    fillOpacity={1} 
+                    fill="url(#colorCount)" 
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -198,100 +223,56 @@ export default function AdminDashboard() {
         {/* Main Management Section (Moved to Bottom) */}
         <div className="admin-management-grid">
           
-          {/* Card 1: Doctors Management */}
-          <div className="admin-table-card glass">
-            <div className="card-header">
-              <div>
-                <h3>Corpo Clínico</h3>
-                <p>Monitoramento de desempenho e cadastro dos médicos</p>
+          {/* Card 1: Doctors Management (Informative) */}
+          <div className="admin-nav-card glass">
+            <div className="card-header-centered">
+              <div className="nav-icon">🩺</div>
+              <h3>Corpo Clínico</h3>
+              <p className="nav-description">
+                Gerencie o cadastro de médicos, valide novos registros no CRM, monitore o desempenho individual e gerencie escalas de plantão.
+              </p>
+            </div>
+            <div className="nav-stats-mini">
+              <div className="mini-stat">
+                <strong>{stats?.totalDoctors || 0}</strong>
+                <span>Médicos</span>
               </div>
-              <button className="btn-action" onClick={() => router.push('/admin/medicos')}>Gerenciar Tudo</button>
+              <div className="mini-stat">
+                <strong>{stats?.doctors?.filter((m: any) => m.verificacao === 'analise').length || 0}</strong>
+                <span>Pendentes</span>
+              </div>
             </div>
-            <div className="table-wrapper">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Médico</th>
-                    <th>Especialidade</th>
-                    <th>CRM</th>
-                    <th>Atendimentos</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(stats?.doctors || []).map((medico: any) => (
-                    <tr key={medico.id}>
-                      <td className="col-user-info">
-                        <strong>{medico.nome_completo}</strong>
-                        <span>{medico.usuario?.email}</span>
-                      </td>
-                      <td>{medico.especialidade}</td>
-                      <td>{medico.crm}/{medico.crm_uf}</td>
-                      <td className="col-center">
-                        <span className="count-badge">{medico._count.consultas}</span>
-                      </td>
-                      <td>
-                        <span className={`status-pill ${medico.verificacao}`}>
-                          {medico.verificacao}
-                        </span>
-                      </td>
-                      <td>
-                        <button className="btn-detail" onClick={() => setSelectedUser({ type: 'medico', data: medico })}>
-                          🔍 Detalhes
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <footer className="nav-footer">
+              <button className="btn-manage-full" onClick={() => router.push('/admin/medicos')}>
+                Gerenciar Corpo Clínico →
+              </button>
+            </footer>
           </div>
 
-          {/* Card 2: Patients Overview */}
-          <div className="admin-table-card glass">
-            <div className="card-header">
-              <div>
-                <h3>Base de Pacientes</h3>
-                <p>Visão geral de engajamento (Dados de registro apenas)</p>
+          {/* Card 2: Patients Overview (Informative) */}
+          <div className="admin-nav-card glass">
+            <div className="card-header-centered">
+              <div className="nav-icon">👥</div>
+              <h3>Base de Pacientes</h3>
+              <p className="nav-description">
+                Acompanhe o crescimento da base de usuários, gerencie dados cadastrais, verifique CPFs e monitore o engajamento geral na plataforma.
+              </p>
+            </div>
+            <div className="nav-stats-mini">
+              <div className="mini-stat">
+                <strong>{stats?.totalPatients || 0}</strong>
+                <span>Pacientes</span>
               </div>
-              <button className="btn-action" onClick={() => router.push('/admin/pacientes')}>Gerenciar Tudo</button>
+              <div className="mini-stat">
+                <strong>{stats?.patients?.length || 0}</strong>
+                <span>Novos (Mês)</span>
+              </div>
             </div>
-            <div className="table-wrapper">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Paciente</th>
-                    <th>CPF</th>
-                    <th>Telefone</th>
-                    <th>Consultas</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(stats?.patients || []).map((paciente: any) => (
-                    <tr key={paciente.id}>
-                      <td className="col-user-info">
-                        <strong>{paciente.nome_completo}</strong>
-                        <span>{paciente.usuario?.email}</span>
-                      </td>
-                      <td>{paciente.cpf}</td>
-                      <td>{paciente.telefone}</td>
-                      <td className="col-center">
-                        <span className="count-badge secondary" style={{ background: 'rgba(0, 196, 159, 0.1)', color: '#00c49f' }}>
-                          {paciente._count.consultas}
-                        </span>
-                      </td>
-                      <td>
-                        <button className="btn-detail" onClick={() => setSelectedUser({ type: 'paciente', data: paciente })}>
-                          🔍 Perfil
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <footer className="nav-footer">
+              <button className="btn-manage-full" onClick={() => router.push('/admin/pacientes')}>
+                Gerenciar Base de Pacientes →
+              </button>
+            </footer>
           </div>
         </div>
 

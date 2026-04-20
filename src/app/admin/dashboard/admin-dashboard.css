@@ -355,122 +355,116 @@
 /* Management Grid */
 .admin-management-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2.5rem;
+  margin: 2.5rem 0;
 }
 
-.admin-table-card {
-  padding: 1.5rem;
-  border-radius: 24px;
+.admin-nav-card {
+  padding: 2.5rem;
+  border-radius: 32px;
   display: flex;
   flex-direction: column;
-}
-
-.admin-table-card .card-header {
-  display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 400px;
 }
 
-.btn-action {
-  background: rgba(var(--color-primary-rgb), 0.1);
-  color: var(--color-primary-400);
-  border: 1px solid rgba(var(--color-primary-rgb), 0.2);
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+.admin-nav-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.25);
+  border-color: rgba(var(--color-primary-rgb), 0.3);
 }
 
-.btn-action:hover {
-  background: var(--color-primary-600);
-  color: white;
-}
-
-/* Table Styles */
-.table-wrapper {
-  overflow-x: auto;
-}
-
-.admin-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-.admin-table th {
-  text-align: left;
-  padding: 1rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.admin-table td {
-  padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  vertical-align: middle;
-}
-
-.col-user-info {
+.card-header-centered {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
 }
 
-.col-user-info strong {
+.nav-icon {
+  width: 70px;
+  height: 70px;
+  background: rgba(var(--color-primary-rgb), 0.1);
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  color: var(--color-primary-500);
+}
+
+.card-header-centered h3 {
+  font-size: 1.8rem;
+  font-weight: 800;
   color: var(--text-primary);
-  font-size: 0.95rem;
+  margin: 0;
 }
 
-.col-user-info span {
+.nav-description {
+  font-size: 1rem;
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  line-height: 1.6;
+  max-width: 80%;
 }
 
-.count-badge {
-  background: rgba(var(--color-primary-rgb), 0.15);
-  color: var(--color-primary-400);
-  padding: 0.3rem 0.7rem;
+.nav-stats-mini {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
   border-radius: 20px;
-  font-weight: 700;
-  font-size: 0.85rem;
 }
 
-.count-badge.secondary {
-  background: rgba(0, 196, 159, 0.15);
-  color: #00c49f;
+.mini-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
-.status-pill {
-  padding: 0.3rem 0.6rem;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
+.mini-stat strong {
+  font-size: 1.5rem;
+  color: var(--color-primary-400);
+  font-weight: 800;
+}
+
+.mini-stat span {
+  font-size: 0.8rem;
   text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-weight: 700;
 }
 
-.status-pill.verificado { background: rgba(0, 196, 159, 0.1); color: #00c49f; }
-.status-pill.analise { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-.status-pill.recusado { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.nav-footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+}
 
-.btn-detail {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-secondary);
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
+.btn-manage-full {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  padding: 1rem 2.5rem;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
+  box-shadow: 0 10px 20px -5px rgba(var(--color-primary-rgb), 0.3);
+  width: 100%;
+  max-width: 300px;
 }
 
-.btn-detail:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary);
-  border-color: rgba(255, 255, 255, 0.2);
+.btn-manage-full:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px -5px rgba(var(--color-primary-rgb), 0.5);
+  filter: brightness(1.1);
 }
 
 /* Bottom Grid (Charts) */
