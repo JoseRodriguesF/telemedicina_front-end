@@ -20,7 +20,7 @@ type Props = {
 
 const baseItems: SidebarItem[] = [
   { id: 'inicio', label: 'Início', icon: '/images/home-06.svg', href: '/inicio' },
-  { id: 'consultas', label: 'Consultas', icon: '/images/first-aid.svg', href: '/consultas' },
+  { id: 'consultas', label: 'Consultas', icon: '/icons/remedio-icon.png', href: '/consultas' },
   { id: 'historico', label: 'Histórico', icon: '/images/clock.svg', href: '/historico' },
 ];
 

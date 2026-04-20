@@ -96,6 +96,12 @@
   filter: grayscale(0) opacity(1);
 }
 
+/* Ensure PNG icons in sidebar follow the brand color when active/hover */
+.nav-item.active .nav-icon img,
+.nav-item:hover .nav-icon img {
+    filter: invert(20%) sepia(91%) saturate(3665%) hue-rotate(204deg) brightness(91%) contrast(106%);
+}
+
 .nav-item.active::after {
   content: '';
   position: absolute;
@@ -218,4 +224,10 @@
 [data-theme='dark'] .nav-item:hover .nav-icon,
 [data-theme='dark'] .nav-item.active .nav-icon {
   filter: brightness(0) invert(1) opacity(1);
+}
+
+/* Ensure PNG icons stay white in dark mode active/hover */
+[data-theme='dark'] .nav-item.active .nav-icon img,
+[data-theme='dark'] .nav-item:hover .nav-icon img {
+    filter: brightness(0) invert(1) !important;
 }
