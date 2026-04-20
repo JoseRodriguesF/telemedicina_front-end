@@ -171,7 +171,7 @@ export default function AdminAnalyticsPage() {
                      // Para simplificar, vou filtrar os dados localmente se o usuário preferir, 
                      // mas o ideal é que o backend suporte esse filtro no getStats.
                      // Como já sincronizei o backend, vou apenas adicionar o parâmetro na busca.
-                     setPeriod(prev => ({ ...prev, category: recurso }));
+                     setPeriod((prev: any) => ({ ...prev, category: recurso }));
                    }}
                  >
                    <option value="">Todas as Categorias</option>
