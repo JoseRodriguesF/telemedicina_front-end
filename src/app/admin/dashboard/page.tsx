@@ -149,7 +149,7 @@ export default function AdminDashboard() {
                 <h3>Fluxo de Atendimento</h3>
                 <p>Volume de pacientes por faixa horária (24h)</p>
               </div>
-              <span className="badge">Pico: {stats?.hourly?.reduce((max: any, curr: any) => curr.count > max.count ? curr : max, { count: 0 })?.hour}h</span>
+              <span className="badge">Pico: {stats?.hourly?.reduce((max: any, curr: any) => curr.count > max.count ? curr : max, { count: 0, hour: 0 })?.hour}h</span>
             </div>
             <div className="chart-wrapper">
               <ResponsiveContainer width="100%" height={320}>
@@ -235,7 +235,46 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Card 4: Recent Audit Actions */}
+          {/* Card 4: Audit Analytics (Pie Chart) */}
+          <div className="admin-chart-card glass audit-pie-card">
+            <div className="card-header">
+              <div>
+                <h3>Auditoria: Distribuição de Eventos</h3>
+                <p>Volume por tipo de ação no período</p>
+              </div>
+            </div>
+            <div className="chart-wrapper pie-with-legend">
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={stats?.logStats || []}
+                    cx="50%" cy="50%"
+                    innerRadius={60} outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    nameKey="name"
+                    onClick={(entry: any) => {
+                      if (entry && entry.name) {
+                        router.push(`/admin/logs?q=${entry.name}`);
+                      }
+                    }}
+                    cursor="pointer"
+                  >
+                    {(stats?.logStats || []).map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 5px 15px rgba(0,0,0,0.1)' }}
+                    formatter={(value: number) => [`${value} eventos`, 'Quantidade']}
+                  />
+                  <Legend layout="vertical" align="right" verticalAlign="middle" />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Card 5: Recent Audit Actions (Activity Monitor) */}
           <div className="admin-chart-card glass audit-summary">
             <div className="card-header">
               <div>
@@ -250,12 +289,14 @@ export default function AdminDashboard() {
                     Nenhuma atividade registrada na trilha de auditoria.
                   </div>
                 ) : (
-                  stats.recentLogs.slice(0, 3).map((log: any) => (
-                    <div key={log.id} className="audit-item success">
-                        <span className="audit-icon">✓</span>
+                  stats.recentLogs.slice(0, 4).map((log: any) => (
+                    <div key={log.id} className={`audit-item ${log.acao.includes('FAIL') || log.acao.includes('REJECT') || log.acao.includes('CANCEL') ? 'error' : 'success'}`}>
+                        <span className="audit-icon">
+                          {log.acao.includes('FAIL') || log.acao.includes('REJECT') || log.acao.includes('CANCEL') ? '⚠️' : '✓'}
+                        </span>
                         <div className="audit-info">
                             <strong>{log.acao}</strong>
-                            <p>{log.recurso} • {new Date(log.createdAt).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</p>
+                            <p>{log.detalhes || log.recurso} • {new Date(log.createdAt).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}</p>
                         </div>
                     </div>
                   ))

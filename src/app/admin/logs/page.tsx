@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { getToken } from '@/lib/auth';
 import axios from '@/lib/axios/config';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import './admin-logs.css';
 
 interface AuditLog {
@@ -20,19 +21,39 @@ interface AuditLog {
 }
 
 export default function AdminLogsPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <AdminLogsContent />
+    </Suspense>
+  );
+}
+
+function AdminLogsContent() {
+  const searchParams = useSearchParams();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  
+  const [filter, setFilter] = useState({
+    q: searchParams.get('q') || '',
+    inicio: searchParams.get('inicio') || '',
+    fim: searchParams.get('fim') || '',
+  });
 
   useEffect(() => {
     fetchLogs();
-  }, []);
+  }, [filter.inicio, filter.fim]);
 
   const fetchLogs = async () => {
     setLoading(true);
     try {
       const token = getToken();
-      const resp = await axios.get('/api/admin/audit', {
+      const params = new URLSearchParams();
+      if (filter.q) params.append('q', filter.q);
+      if (filter.inicio) params.append('inicio', filter.inicio);
+      if (filter.fim) params.append('fim', filter.fim);
+
+      const resp = await axios.get(`/api/admin/audit?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setLogs(resp.data);
@@ -43,10 +64,15 @@ export default function AdminLogsPage() {
     }
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchLogs();
+  };
+
   const getActionBadgeClass = (action: string) => {
     if (action.includes('LOGIN')) return 'badge-login';
-    if (action.includes('APPROVE') || action.includes('CREATE')) return 'badge-success';
-    if (action.includes('REJECT') || action.includes('DELETE')) return 'badge-danger';
+    if (action.includes('APPROVE') || action.includes('CREATE') || action.includes('CONFIRMACAO')) return 'badge-success';
+    if (action.includes('REJECT') || action.includes('DELETE') || action.includes('CANCEL') || action.includes('ANULACAO') || action.includes('FAIL')) return 'badge-danger';
     return 'badge-info';
   };
 
@@ -59,10 +85,46 @@ export default function AdminLogsPage() {
             <h1>Trilha de Auditoria</h1>
             <p>Monitoramento completo de ações e eventos de segurança do sistema.</p>
           </div>
-          <button className="btn-refresh-logs" onClick={fetchLogs} disabled={loading}>
-            {loading ? 'Atualizando...' : '🔄 Atualizar Logs'}
-          </button>
         </header>
+
+        <section className="logs-filters glass">
+          <form className="filter-form" onSubmit={handleSearch}>
+            <div className="filter-group main-search">
+              <label>Busca por CPF, ID ou Ação</label>
+              <div className="search-input-wrapper">
+                <input 
+                  type="text" 
+                  placeholder="Ex: 123.456.789-00 ou CONFIRMACAO..." 
+                  value={filter.q}
+                  onChange={(e) => setFilter({...filter, q: e.target.value})}
+                />
+                <button type="submit" className="btn-search">Buscar</button>
+              </div>
+            </div>
+
+            <div className="filter-group">
+              <label>Data Início</label>
+              <input 
+                type="date" 
+                value={filter.inicio}
+                onChange={(e) => setFilter({...filter, inicio: e.target.value})}
+              />
+            </div>
+
+            <div className="filter-group">
+              <label>Data Fim</label>
+              <input 
+                type="date" 
+                value={filter.fim}
+                onChange={(e) => setFilter({...filter, fim: e.target.value})}
+              />
+            </div>
+
+            <button type="button" className="btn-reset" onClick={() => setFilter({q: '', inicio: '', fim: ''})}>
+              Limpar
+            </button>
+          </form>
+        </section>
 
         <div className="logs-table-wrapper glass">
           {loading ? (

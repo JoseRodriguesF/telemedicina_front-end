@@ -324,6 +324,17 @@
 .audit-item.success .audit-icon { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 .audit-item.warning .audit-icon { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
 .audit-item.info .audit-icon { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.audit-item.error .audit-icon { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+.pie-with-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.audit-pie-card .chart-wrapper {
+    min-height: 250px;
+}
 
 .audit-info strong {
     display: block;
@@ -336,6 +347,10 @@
 .audit-info p {
     font-size: 0.75rem;
     color: var(--text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 250px;
 }
 
 .btn-view-all {
