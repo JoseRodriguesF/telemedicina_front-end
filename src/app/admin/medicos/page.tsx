@@ -23,7 +23,7 @@ export default function AdminMedicos() {
     setLoading(true);
     try {
       const token = getToken();
-      const resp = await axios.get('/admin/medicos/pendentes', {
+      const resp = await axios.get('/api/admin/medicos/pendentes', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMedicos(resp.data);
@@ -44,7 +44,7 @@ export default function AdminMedicos() {
     setProcessing(true);
     try {
       const token = getToken();
-      await axios.patch(`/admin/medicos/${selectedMedico.id}/verificar`, { status }, {
+      await axios.patch(`/api/admin/medicos/${selectedMedico.id}/verificar`, { status }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setShowModal(false);
@@ -59,7 +59,7 @@ export default function AdminMedicos() {
   const viewDoc = (type: string) => {
     if (!selectedMedico) return;
     const token = getToken();
-    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/admin/medicos/${selectedMedico.id}/documentos/${type}?token=${token}`;
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/admin/medicos/${selectedMedico.id}/documentos/${type}?token=${token}`;
     window.open(url, '_blank');
   };
 

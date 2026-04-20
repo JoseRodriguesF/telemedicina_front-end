@@ -32,7 +32,7 @@ export default function AdminDashboard() {
     try {
       const token = getToken();
       const params = new URLSearchParams(filter);
-      const resp = await axios.get(`/admin/stats?${params.toString()}`, {
+      const resp = await axios.get(`/api/admin/stats?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStats(resp.data);
