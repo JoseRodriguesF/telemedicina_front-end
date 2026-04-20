@@ -52,6 +52,13 @@ export default function PerfilPage() {
         return;
       }
       const data = await getMyProfile(token);
+      
+      // Bloquear acesso de admins ao perfil pessoal de paciente/médico
+      if (data.tipo_usuario === 'admin') {
+        router.push('/admin/dashboard');
+        return;
+      }
+
       setProfile(data);
 
       // Mevo: Verificação automática de perfil completo para pacientes

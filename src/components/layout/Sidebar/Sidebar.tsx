@@ -114,17 +114,19 @@ export default function Sidebar({ activeId: propActiveId, className = '' }: Prop
           </button>
         </div>
 
-        <div className="sidebar-user" onClick={() => router.push('/perfil')}>
-          <div className="user-avatar">
-            {user?.profile_image || user?.foto ? (
-              <Image src={user.profile_image || user.foto} alt="Perfil" width={40} height={40} />
-            ) : (
-              <div className="avatar-placeholder">
-                {user?.nome?.[0] || user?.email?.[0] || 'U'}
-              </div>
-            )}
+        {user?.tipo_usuario !== 'admin' && (
+          <div className="sidebar-user" onClick={() => router.push('/perfil')}>
+            <div className="user-avatar">
+              {user?.profile_image || user?.foto ? (
+                <Image src={user.profile_image || user.foto} alt="Perfil" width={40} height={40} />
+              ) : (
+                <div className="avatar-placeholder">
+                  {user?.nome?.[0] || user?.email?.[0] || 'U'}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </aside>
   );
