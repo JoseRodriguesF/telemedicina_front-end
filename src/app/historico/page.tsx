@@ -687,7 +687,9 @@ export default function HistoricoPage() {
             <div className="stat-mini-card">
               <div className="stat-header">
                 <h4>Total de Consultas</h4>
-                <div className="stat-icon">📈</div>
+                <div className="stat-icon">
+                  <img src="/icons/icon-chart.png" alt="Consultas" className="stat-icon-img" />
+                </div>
               </div>
               <div className="stat-value">{totalAtendimentos}</div>
               <div className="stat-label">Realizadas na plataforma</div>
@@ -696,7 +698,9 @@ export default function HistoricoPage() {
             <div className="stat-mini-card">
               <div className="stat-header">
                 <h4>Prescrições</h4>
-                <div className="stat-icon">💊</div>
+                <div className="stat-icon">
+                  <img src="/icons/remedio-icon.png" alt="Prescrições" className="stat-icon-img" />
+                </div>
               </div>
               <div className="stat-value">{totalPrescricoes}</div>
               <div className="stat-label">Documentos gerados</div>

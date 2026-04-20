@@ -104,7 +104,9 @@ export default function AdminDashboard() {
         {/* Quick Insights Cards */}
         <section className="top-stats-grid">
           <div className="summary-stat-card">
-            <div className="stat-icon consultations">📈</div>
+            <div className="stat-icon consultations">
+              <img src="/icons/icon-chart.png" alt="Consultas" className="stat-icon-img" />
+            </div>
             <div className="stat-info">
               <span className="stat-label">Consultas Totais</span>
               <h2 className="stat-value">{stats?.totalConsultations || 0}</h2>
