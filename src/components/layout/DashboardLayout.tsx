@@ -3,6 +3,7 @@
 import React from 'react';
 import Sidebar from './Sidebar/Sidebar';
 import MobileHeader from './MobileHeader/MobileHeader';
+import AIAssistant from '../AIAssistant/AIAssistant';
 import '@/app/inicio/inicio.css';
 
 interface DashboardLayoutProps {
@@ -19,6 +20,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <main className="inicio-main animate-fadeIn" style={{ animationDuration: '0.4s' }}>
                 {children}
             </main>
+            <AIAssistant />
         </div>
     );
 }
