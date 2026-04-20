@@ -200,6 +200,7 @@ export default function AdminDashboard() {
                 <h3>Base de Pacientes</h3>
                 <p>Visão geral de engajamento (Dados de registro apenas)</p>
               </div>
+              <button className="btn-action" onClick={() => router.push('/admin/pacientes')}>Gerenciar Tudo</button>
             </div>
             <div className="table-wrapper">
               <table className="admin-table">

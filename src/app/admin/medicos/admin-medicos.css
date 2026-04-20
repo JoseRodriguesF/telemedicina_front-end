@@ -1,75 +1,194 @@
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+  gap: 2rem;
+}
+
+.header-info h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.header-info p {
+  color: var(--text-secondary);
+}
+
+.medicos-filters {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 16px;
+}
+
+.filter-input {
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  min-width: 250px;
+}
+
+.filter-select {
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
 }
 
 .admin-table th {
   text-align: left;
   padding: 1rem;
-  font-size: 0.875rem;
-  color: var(--color-on-surface-variant);
-  border-bottom: 1px solid rgba(0, 91, 191, 0.1);
-  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .admin-table td {
-  padding: 1rem;
-  font-size: 0.9375rem;
-  color: var(--color-on-surface);
-  border-bottom: 1px solid rgba(0, 91, 191, 0.05);
+  padding: 1.2rem 1rem;
+  font-size: 0.95rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
-.loading-state, .empty-state {
+.col-user {
+  display: flex;
+  flex-direction: column;
+}
+
+.col-user strong {
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.col-user span {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.col-center {
+  text-align: center;
+}
+
+.count-badge {
+  background: rgba(var(--color-primary-rgb), 0.1);
+  color: var(--color-primary-400);
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 700;
+}
+
+.status-pill {
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-pill.verificado { background: rgba(0, 196, 159, 0.1); color: #00c49f; }
+.status-pill.analise { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.status-pill.recusado { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+.loading-state {
   padding: 4rem;
   text-align: center;
-  color: var(--color-on-surface-variant);
 }
 
-.review-modal-content {
-  padding: 1rem;
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(var(--color-primary-rgb), 0.1);
+  border-top-color: var(--color-primary-400);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Modal Enhancements */
+.review-header-summary {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.avatar-big {
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-400));
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 800;
+  color: white;
 }
 
 .review-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 }
 
-.review-section h4, .documents-section h4 {
-  font-size: 0.8125rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-primary);
-  margin-bottom: 1rem;
-}
-
-.review-section p {
-  margin-bottom: 0.5rem;
-  font-size: 0.9375rem;
-}
-
-.doc-buttons {
+.data-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 3rem;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.data-row span {
+  color: var(--text-secondary);
+}
+
+.data-row strong.highlight {
+  color: var(--color-primary-400);
+  font-size: 1.2rem;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  padding-top: 2rem;
-  border-top: 1px solid rgba(0, 91, 191, 0.1);
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .btn-reject {
-  color: var(--color-error) !important;
-  border-color: var(--color-error) !important;
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
 }
 
-.btn-reject:hover {
-  background: rgba(211, 47, 47, 0.05) !important;
+@media (max-width: 1024px) {
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .medicos-filters {
+    width: 100%;
+    flex-wrap: wrap;
+  }
 }
