@@ -117,7 +117,7 @@ const AtendimentoVideoGrid: React.FC<VideoGridProps> = ({
           ) : remoteDisconnected ? (
             <div className="call-status-content peer-disconnected">
               <div className="overlay-icon">
-                <img src="/icons/no-connection.png" alt="Desconectado" className="white-icon-filter" />
+                <img src="/icons/plug-icon.png" alt="Desconectado" className="white-icon-filter" />
               </div>
               <div className="overlay-content">
                 <h3>Usuário desconectado</h3>
