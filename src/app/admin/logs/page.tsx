@@ -81,7 +81,12 @@ function AdminLogsContent() {
       <div className="admin-logs-container animate-fadeIn">
         <header className="logs-header">
           <div className="header-info">
-            <button className="btn-back" onClick={() => router.back()}>← Voltar</button>
+            <div className="header-top">
+              <button className="btn-back" onClick={() => router.back()}>← Voltar</button>
+              <button className="btn-analytics" onClick={() => router.push('/admin/logs/analytics')}>
+                📊 Ver Analytics
+              </button>
+            </div>
             <h1>Trilha de Auditoria</h1>
             <p>Monitoramento completo de ações e eventos de segurança do sistema.</p>
           </div>

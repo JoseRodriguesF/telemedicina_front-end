@@ -352,7 +352,80 @@
     text-overflow: ellipsis;
     max-width: 250px;
 }
+/* Analytics Shortcut Card */
+.analytics-shortcut {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2rem !important;
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.05), rgba(var(--color-primary-rgb), 0.02)) !important;
+  border: 1px solid rgba(var(--color-primary-rgb), 0.2) !important;
+}
 
+.shortcut-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.shortcut-text h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.shortcut-text p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.btn-go-analytics {
+  background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-400));
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+  box-shadow: 0 4px 15px rgba(var(--color-primary-rgb), 0.3);
+}
+
+.btn-go-analytics:hover {
+  transform: translateX(5px);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 20px rgba(var(--color-primary-rgb), 0.4);
+}
+
+.shortcut-stats-mini {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mini-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.mini-stat .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+
+.mini-stat .value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary-400);
+}
 .btn-view-all {
     padding: 0.4rem 0.85rem;
     border-radius: var(--radius-md);

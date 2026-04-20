@@ -235,42 +235,26 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Card 4: Audit Analytics (Pie Chart) */}
-          <div className="admin-chart-card glass audit-pie-card">
-            <div className="card-header">
-              <div>
-                <h3>Auditoria: Distribuição de Eventos</h3>
-                <p>Volume por tipo de ação no período</p>
+          {/* Card 4: Quick Analytics Access */}
+          <div className="admin-chart-card glass analytics-shortcut">
+            <div className="shortcut-content">
+              <div className="shortcut-text">
+                <h3>Insights & Auditoria</h3>
+                <p>Visualize tendências e métricas detalhadas de atividade.</p>
               </div>
+              <button className="btn-go-analytics" onClick={() => router.push('/admin/logs/analytics')}>
+                Acessar Dashboard Analítico →
+              </button>
             </div>
-            <div className="chart-wrapper pie-with-legend">
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie
-                    data={stats?.logStats || []}
-                    cx="50%" cy="50%"
-                    innerRadius={60} outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                    nameKey="name"
-                    onClick={(entry: any) => {
-                      if (entry && entry.name) {
-                        router.push(`/admin/logs?q=${entry.name}`);
-                      }
-                    }}
-                    cursor="pointer"
-                  >
-                    {(stats?.logStats || []).map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 5px 15px rgba(0,0,0,0.1)' }}
-                    formatter={(value: any) => [`${value || 0} eventos`, 'Quantidade']}
-                  />
-                  <Legend layout="vertical" align="right" verticalAlign="middle" />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="shortcut-stats-mini">
+               <div className="mini-stat">
+                 <span className="label">Ações Hoje</span>
+                 <span className="value">{stats?.logStats?.reduce((a: any, b: any) => a + b.value, 0) || 0}</span>
+               </div>
+               <div className="mini-stat">
+                 <span className="label">Consultas</span>
+                 <span className="value">{stats?.totalConsultations || 0}</span>
+               </div>
             </div>
           </div>
 
