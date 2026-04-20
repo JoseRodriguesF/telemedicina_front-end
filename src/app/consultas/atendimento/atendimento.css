@@ -2916,7 +2916,6 @@ select.atendimento-input-small {
     display: flex;
     flex-direction: column;
     width: 100%;
-    border-top: 1px solid var(--border-color, #e5e7eb);
 }
 
 .chat-upload-loading {
@@ -3014,9 +3013,13 @@ select.atendimento-input-small {
     background: rgba(255, 255, 255, 0.3);
 }
 
-/* Override for the chat-input existing rule to avoid double padding if needed */
+/* Override for the chat-input existing rule to ensure full border */
 .chat-input-wrapper .chat-input {
-    border-top: none;
+    border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.chat-input-wrapper .chat-input:focus-within {
+    border-color: var(--color-primary-500, #3b82f6) !important;
 }
 
 /* CID Selection Styles */
@@ -3172,7 +3175,6 @@ select.atendimento-input-small {
 }
 
 .chat-input-wrapper {
-    border-top: 1px solid var(--border-color, #e5e7eb);
     background: var(--bg-primary);
     flex-shrink: 0;
 }
