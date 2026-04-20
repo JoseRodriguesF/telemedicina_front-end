@@ -168,17 +168,17 @@ export default function AdminDashboard() {
                   {(stats?.doctors || []).map((medico: any) => (
                     <tr key={medico.id}>
                       <td className="col-user-info">
-                        <strong>{medico.nome}</strong>
+                        <strong>{medico.nome_completo}</strong>
                         <span>{medico.usuario?.email}</span>
                       </td>
                       <td>{medico.especialidade}</td>
-                      <td>{medico.crm}/{medico.uf}</td>
+                      <td>{medico.crm}/{medico.crm_uf}</td>
                       <td className="col-center">
                         <span className="count-badge">{medico._count.consultas}</span>
                       </td>
                       <td>
-                        <span className={`status-pill ${medico.status_verificacao}`}>
-                          {medico.status_verificacao}
+                        <span className={`status-pill ${medico.verificacao}`}>
+                          {medico.verificacao}
                         </span>
                       </td>
                       <td>
@@ -209,7 +209,6 @@ export default function AdminDashboard() {
                     <th>CPF</th>
                     <th>Telefone</th>
                     <th>Consultas</th>
-                    <th>Cadastro</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -217,7 +216,7 @@ export default function AdminDashboard() {
                   {(stats?.patients || []).map((paciente: any) => (
                     <tr key={paciente.id}>
                       <td className="col-user-info">
-                        <strong>{paciente.nome}</strong>
+                        <strong>{paciente.nome_completo}</strong>
                         <span>{paciente.usuario?.email}</span>
                       </td>
                       <td>{paciente.cpf}</td>
@@ -225,7 +224,6 @@ export default function AdminDashboard() {
                       <td className="col-center">
                         <span className="count-badge secondary">{paciente._count.consultas}</span>
                       </td>
-                      <td>{new Date(paciente.usuario?.createdAt).toLocaleDateString('pt-BR')}</td>
                       <td>
                         <button className="btn-detail" onClick={() => setSelectedUser({ type: 'paciente', data: paciente })}>
                           🔍 Perfil
@@ -297,9 +295,9 @@ export default function AdminDashboard() {
               </header>
               <div className="modal-content">
                 <div className="user-profile-summary">
-                  <div className="user-avatar">{selectedUser.data.nome.charAt(0)}</div>
+                  <div className="user-avatar">{selectedUser.data.nome_completo.charAt(0)}</div>
                   <div className="user-main-info">
-                    <h3>{selectedUser.data.nome}</h3>
+                    <h3>{selectedUser.data.nome_completo}</h3>
                     <p>{selectedUser.data.usuario?.email}</p>
                   </div>
                 </div>
@@ -307,15 +305,11 @@ export default function AdminDashboard() {
                 <div className="details-grid">
                   <div className="detail-item">
                     <label>{selectedUser.type === 'medico' ? 'CRM' : 'CPF'}</label>
-                    <span>{selectedUser.type === 'medico' ? `${selectedUser.data.crm}/${selectedUser.data.uf}` : selectedUser.data.cpf}</span>
+                    <span>{selectedUser.type === 'medico' ? `${selectedUser.data.crm}/${selectedUser.data.crm_uf}` : selectedUser.data.cpf}</span>
                   </div>
                   <div className="detail-item">
                     <label>Telefone</label>
-                    <span>{selectedUser.data.telefone || 'Não informado'}</span>
-                  </div>
-                  <div className="detail-item">
-                    <label>Data de Cadastro</label>
-                    <span>{new Date(selectedUser.data.usuario?.createdAt).toLocaleString('pt-BR')}</span>
+                    <span>{selectedUser.data.telefone || selectedUser.data.telefone_celular || 'Não informado'}</span>
                   </div>
                   <div className="detail-item">
                     <label>Total de Consultas</label>
