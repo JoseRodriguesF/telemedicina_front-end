@@ -236,25 +236,31 @@ svg line {
 }
 
 /* ============================================
-   SCROLLBAR — Modern & Minimalist
+   SCROLLBAR — Modern & Minimalist (Hidden globally per user request)
    ============================================ */
 * {
-	scrollbar-width: thin;
-	scrollbar-color: #cbd5e1 transparent;
+	scrollbar-width: none !important;
+	-ms-overflow-style: none !important;
 }
 
 *::-webkit-scrollbar {
-	width: 8px;
+	display: none !important;
+	width: 0 !important;
+	height: 0 !important;
 }
 
-*::-webkit-scrollbar-track {
-	background: transparent;
-}
-
-*::-webkit-scrollbar-thumb {
-	background-color: #cbd5e1;
-	border-radius: 20px;
-	border: 2px solid var(--bg-primary);
+/* ============================================
+   CHART SELECTION BORDERS — Remove focus outline
+   ============================================ */
+svg:focus,
+path:focus,
+circle:focus,
+rect:focus,
+.recharts-active-dot,
+.recharts-rectangle:focus,
+.recharts-pie-sector:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* ============================================
@@ -730,24 +736,8 @@ svg {
 	color: var(--text-primary);
 }
 
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-	width: 10px;
-	height: 10px;
-}
-
-::-webkit-scrollbar-track {
-	background: var(--color-gray-100);
-}
-
-::-webkit-scrollbar-thumb {
-	background: var(--color-gray-400);
-	border-radius: var(--radius-full);
-}
-
-::-webkit-scrollbar-thumb:hover {
-	background: var(--color-gray-500);
-}
+/* Scrollbar Styling (Disabled) */
+/* Hidden globally above */
 
 /* Focus Styles */
 *:focus-visible {
