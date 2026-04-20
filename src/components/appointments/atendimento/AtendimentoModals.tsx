@@ -232,7 +232,7 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
                 variant="primary" 
                 onClick={onSummarize} 
                 disabled={isSummarizing || !atendimentoData.resumo_consulta}
-                style={{ borderRadius: '8px' }}
+                style={{ borderRadius: '8px', minWidth: '160px' }}
               >
                 {isSummarizing ? 'Processando...' : <><img src="/icons/ai-icon.png" alt="IA" className="white-icon-filter" style={{ width: '24px', height: '24px', marginRight: '8px', verticalAlign: 'middle', objectFit: 'contain' }} /> Refinar Resumo</>}
               </Button>
@@ -427,12 +427,12 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
                   <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>{atendimentoData.resumo_consulta?.length || 0} caracteres. Use a IA para estruturar os dados.</p>
                 </div>
                 <Button 
-                  variant="ghost" 
+                  variant="primary" 
                   onClick={onSummarize} 
                   disabled={isSummarizing || !atendimentoData.resumo_consulta}
                   style={{ borderRadius: '8px' }}
                 >
-                  {isSummarizing ? 'Processando...' : <><img src="/icons/ai-icon.png" alt="IA" className="blue-icon-filter" style={{ width: '24px', height: '24px', marginRight: '8px', verticalAlign: 'middle', objectFit: 'contain' }} /> Estruturar com IA</>}
+                  {isSummarizing ? 'Processando...' : <><img src="/icons/ai-icon.png" alt="IA" className="white-icon-filter" style={{ width: '24px', height: '24px', marginRight: '8px', verticalAlign: 'middle', objectFit: 'contain' }} /> Estruturar com IA</>}
                 </Button>
               </div>
 
