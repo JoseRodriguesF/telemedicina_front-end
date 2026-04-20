@@ -523,8 +523,15 @@
     width: 24px;
     height: 24px;
     object-fit: contain;
-    filter: brightness(0) invert(1);
+    /* Azul padrão para modo claro */
+    filter: invert(20%) sepia(91%) saturate(3665%) hue-rotate(204deg) brightness(91%) contrast(106%);
     opacity: 0.9;
+    transition: filter 0.3s ease;
+}
+
+[data-theme='dark'] .stat-icon-img {
+    /* Branco para modo escuro */
+    filter: brightness(0) invert(1);
 }
 
 .stat-value {
