@@ -4,7 +4,7 @@ import { ApiError } from '@/lib/errorHandler';
 export type UserProfile = {
     id: number;
     email: string;
-    tipo_usuario: 'medico' | 'paciente';
+    tipo_usuario: 'medico' | 'paciente' | 'admin';
     registro_full: boolean;
     paciente?: {
         id: number;
