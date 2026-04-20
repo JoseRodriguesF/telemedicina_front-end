@@ -89,27 +89,21 @@ export default function AdminAnalyticsPage() {
           </div>
         ) : (
           <div className="analytics-grid">
-            {/* KPI Row */}
-            <div className="kpi-row">
-              <div className="kpi-card glass">
-                <span className="kpi-label">Consultas no Período</span>
-                <span className="kpi-value">{stats?.totalConsultations || 0}</span>
-                <div className="kpi-meta">Volume total filtrado</div>
+            {/* KPI Row - Focused only on Logs */}
+            <div className="kpi-row-centered">
+              <div className="kpi-card glass log-focus">
+                <div className="kpi-icon">📋</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Total de Eventos Auditados</span>
+                  <span className="kpi-value">{stats?.logStats?.reduce((acc: any, curr: any) => acc + curr.value, 0) || 0}</span>
+                </div>
               </div>
-              <div className="kpi-card glass">
-                <span className="kpi-label">Eventos de Auditoria</span>
-                <span className="kpi-value">{stats?.logStats?.reduce((acc: any, curr: any) => acc + curr.value, 0) || 0}</span>
-                <div className="kpi-meta">Ações monitoradas</div>
-              </div>
-              <div className="kpi-card glass">
-                <span className="kpi-label">Pacientes na Base</span>
-                <span className="kpi-value">{stats?.totalPatients || 0}</span>
-                <div className="kpi-meta">Usuários cadastrados</div>
-              </div>
-              <div className="kpi-card glass">
-                <span className="kpi-label">Corpo Clínico</span>
-                <span className="kpi-value">{stats?.totalDoctors || 0}</span>
-                <div className="kpi-meta">Médicos verificados</div>
+              <div className="kpi-card glass log-focus">
+                <div className="kpi-icon">⚡</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Volume de Hoje</span>
+                  <span className="kpi-value">{stats?.dailyLogs?.find((l: any) => l.date === new Date().toISOString().split('T')[0])?.count || 0}</span>
+                </div>
               </div>
             </div>
 
@@ -151,103 +145,57 @@ export default function AdminAnalyticsPage() {
                   </ResponsiveContainer>
                 </div>
               </div>
+            </div>
 
+            {/* Pie Chart Section with Separate Legend */}
+            <div className="pie-analysis-grid">
               <div className="chart-card glass">
                 <div className="card-header">
                   <h3>Distribuição de Ações</h3>
-                  <p>Tipos de eventos auditados</p>
+                  <p>Proporção visual dos eventos</p>
                 </div>
                 <div className="chart-box">
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ResponsiveContainer width="100%" height={400}>
                     <PieChart>
                       <Pie
                         data={stats?.logStats || []}
-                        innerRadius={70}
-                        outerRadius={100}
+                        innerRadius={80}
+                        outerRadius={120}
                         paddingAngle={5}
                         dataKey="value"
                         nameKey="name"
+                        stroke="none"
                       >
                         {(stats?.logStats || []).map((entry: any, index: number) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
                       <Tooltip 
-                        contentStyle={{ borderRadius: '12px', border: 'none' }}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}
                       />
-                      <Legend layout="horizontal" verticalAlign="bottom" align="center" iconType="circle" />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
               </div>
-            </div>
 
-            {/* Secondary Charts Row */}
-            <div className="charts-row">
-              <div className="chart-card glass">
+              <div className="legend-card glass">
                 <div className="card-header">
-                  <h3>Fluxo de Consultas (Horário)</h3>
-                  <p>Picos de atendimento por hora</p>
+                  <h3>Legenda & Detalhes</h3>
+                  <p>Categorias de eventos monitorados</p>
                 </div>
-                <div className="chart-box">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={stats?.hourly || []}>
-                      <defs>
-                        <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <XAxis dataKey="hour" unit="h" axisLine={false} tickLine={false} fontSize={12} />
-                      <YAxis axisLine={false} tickLine={false} fontSize={12} />
-                      <Tooltip />
-                      <Area type="monotone" dataKey="count" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorCount)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div className="chart-card glass">
-                <div className="card-header">
-                  <h3>Top Especialidades</h3>
-                  <p>Demanda por área médica</p>
-                </div>
-                <div className="chart-box">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={stats?.specialtyGender?.slice(0, 5) || []} layout="vertical">
-                      <XAxis type="number" hide />
-                      <YAxis dataKey="specialty" type="category" width={100} axisLine={false} tickLine={false} fontSize={11} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="Masculino" stackId="a" fill="#005bbf" />
-                      <Bar dataKey="Feminino" stackId="a" fill="#ec4899" radius={[0, 4, 4, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-              
-              <div className="chart-card glass">
-                <div className="card-header">
-                  <h3>Diagnósticos Frequentes (CID)</h3>
-                  <p>Principais ocorrências registradas</p>
-                </div>
-                <div className="chart-box">
-                  <div className="cid-list-compact">
-                    {(stats?.topCids || []).slice(0, 5).map((item: any, idx: number) => (
-                      <div key={idx} className="cid-item-mini">
-                        <div className="cid-labels">
-                          <span className="code">{item.cid}</span>
-                          <span className="count">{item.count}</span>
-                        </div>
-                        <div className="cid-progress">
-                          <div 
-                            className="fill" 
-                            style={{ width: `${(item.count / (stats?.topCids[0]?.count || 1)) * 100}%` }}
-                          ></div>
-                        </div>
+                <div className="custom-legend-list">
+                  {(stats?.logStats || []).sort((a: any, b: any) => b.value - a.value).map((entry: any, index: number) => (
+                    <div key={index} className="legend-item-premium">
+                      <div className="legend-marker" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                      <div className="legend-info">
+                        <span className="legend-name">{entry.name}</span>
+                        <span className="legend-value">{entry.value} <small>eventos</small></span>
                       </div>
-                    ))}
-                  </div>
+                      <div className="legend-percent">
+                        {Math.round((entry.value / stats.logStats.reduce((a: any, b: any) => a + b.value, 0)) * 100)}%
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

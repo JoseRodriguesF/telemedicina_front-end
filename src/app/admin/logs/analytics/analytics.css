@@ -84,6 +84,119 @@
   gap: 2rem;
 }
 
+/* KPI row centered for focus */
+.kpi-row-centered {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.kpi-card.log-focus {
+  min-width: 300px;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.1), rgba(var(--color-primary-rgb), 0.05)) !important;
+}
+
+.kpi-icon {
+  font-size: 2.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.kpi-data {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Pie Analysis Grid */
+.pie-analysis-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.legend-card {
+  padding: 1.5rem;
+  border-radius: 24px;
+  max-height: 550px;
+  overflow-y: auto;
+}
+
+.custom-legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.legend-item-premium {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.legend-item-premium:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(var(--color-primary-rgb), 0.3);
+  transform: translateX(5px);
+}
+
+.legend-marker {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.legend-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.legend-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.legend-value {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.legend-value small {
+  opacity: 0.6;
+}
+
+.legend-percent {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-primary-400);
+  background: rgba(var(--color-primary-rgb), 0.1);
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+}
+
 /* KPI Cards */
 .kpi-row {
   display: grid;
@@ -204,6 +317,17 @@
   height: 100%;
   background: linear-gradient(90deg, var(--color-primary-600), var(--color-primary-400));
   border-radius: 3px;
+}
+
+@media (max-width: 1200px) {
+  .pie-analysis-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .kpi-row-centered {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 @media (max-width: 1024px) {
