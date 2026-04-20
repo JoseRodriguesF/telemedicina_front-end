@@ -16,10 +16,11 @@ const COLORS = ['#005bbf', '#00c49f', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'
 export default function AdminAnalyticsPage() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState({
+  const [period, setPeriod] = useState<any>({
     ano: new Date().getFullYear(),
     mes: new Date().getMonth() + 1,
-    periodo: 'mensal'
+    periodo: 'mensal',
+    category: ''
   });
   const router = useRouter();
 
@@ -31,7 +32,10 @@ export default function AdminAnalyticsPage() {
     setLoading(true);
     try {
       const token = getToken();
-      const resp = await axios.get(`/api/admin/stats?ano=${period.ano}&mes=${period.mes}&periodo=${period.periodo}`, {
+      let url = `/api/admin/stats?ano=${period.ano}&mes=${period.mes}&periodo=${period.periodo}`;
+      if (period.category) url += `&category=${period.category}`;
+      
+      const resp = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStats(resp.data);
@@ -154,11 +158,26 @@ export default function AdminAnalyticsPage() {
                  <p>Análise categórica de todos os eventos registrados</p>
                </div>
                <div className="section-filters">
-                 <select className="filter-select-premium">
-                   <option>Todas as Categorias</option>
-                   <option>Autenticação</option>
-                   <option>Gestão de Usuários</option>
-                   <option>Documentos</option>
+                 <select 
+                   className="filter-select-premium" 
+                   onChange={(e) => {
+                     const val = e.target.value;
+                     // Se for "Todas", limpa o filtro, senão filtra pelo recurso correspondente
+                     const recurso = val === 'Autenticação' ? 'auth' : 
+                                    val === 'Gestão de Usuários' ? 'user' : 
+                                    val === 'Documentos' ? 'document' : '';
+                     
+                     // Aqui poderíamos chamar o fetchAnalytics com o novo parâmetro
+                     // Para simplificar, vou filtrar os dados localmente se o usuário preferir, 
+                     // mas o ideal é que o backend suporte esse filtro no getStats.
+                     // Como já sincronizei o backend, vou apenas adicionar o parâmetro na busca.
+                     setPeriod(prev => ({ ...prev, category: recurso }));
+                   }}
+                 >
+                   <option value="">Todas as Categorias</option>
+                   <option value="Autenticação">Autenticação</option>
+                   <option value="Gestão de Usuários">Gestão de Usuários</option>
+                   <option value="Documentos">Documentos</option>
                  </select>
                  <select className="filter-select-premium">
                    <option>Ordenar por Volume</option>
