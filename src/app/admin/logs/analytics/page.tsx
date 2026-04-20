@@ -20,7 +20,9 @@ export default function AdminAnalyticsPage() {
     ano: new Date().getFullYear(),
     mes: new Date().getMonth() + 1,
     periodo: 'mensal',
-    category: ''
+    category: '',
+    inicio: '',
+    fim: ''
   });
   const router = useRouter();
 
@@ -32,10 +34,20 @@ export default function AdminAnalyticsPage() {
     setLoading(true);
     try {
       const token = getToken();
-      let url = `/api/admin/stats?ano=${period.ano}&mes=${period.mes}&periodo=${period.periodo}`;
-      if (period.category) url += `&category=${period.category}`;
+      const params = new URLSearchParams();
       
-      const resp = await axios.get(url, {
+      if (period.inicio && period.fim) {
+        params.append('inicio', period.inicio);
+        params.append('fim', period.fim);
+      } else {
+        params.append('ano', period.ano);
+        params.append('mes', period.mes);
+        params.append('periodo', period.periodo);
+      }
+      
+      if (period.category) params.append('category', period.category);
+      
+      const resp = await axios.get(`/api/admin/stats?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStats(resp.data);
@@ -64,13 +76,13 @@ export default function AdminAnalyticsPage() {
           <div className="analytics-filters glass">
             <div className="filter-group">
               <label>Ano</label>
-              <select name="ano" value={period.ano} onChange={handlePeriodChange}>
+              <select name="ano" value={period.ano} onChange={handlePeriodChange} disabled={!!(period.inicio && period.fim)}>
                 {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
             <div className="filter-group">
               <label>Mês</label>
-              <select name="mes" value={period.mes} onChange={handlePeriodChange}>
+              <select name="mes" value={period.mes} onChange={handlePeriodChange} disabled={!!(period.inicio && period.fim)}>
                 {Array.from({length: 12}, (_, i) => (
                   <option key={i+1} value={i+1}>{new Date(2024, i).toLocaleString('pt-BR', {month: 'long'})}</option>
                 ))}
@@ -78,10 +90,21 @@ export default function AdminAnalyticsPage() {
             </div>
             <div className="filter-group">
               <label>Período</label>
-              <select name="periodo" value={period.periodo} onChange={handlePeriodChange}>
+              <select name="periodo" value={period.periodo} onChange={handlePeriodChange} disabled={!!(period.inicio && period.fim)}>
                 <option value="mensal">Mensal</option>
                 <option value="anual">Anual</option>
               </select>
+            </div>
+            
+            <div className="filter-group date-range">
+              <label>Personalizado (Início - Fim)</label>
+              <div className="range-inputs">
+                <input type="date" name="inicio" value={period.inicio} onChange={(e) => setPeriod({...period, inicio: e.target.value})} />
+                <input type="date" name="fim" value={period.fim} onChange={(e) => setPeriod({...period, fim: e.target.value})} />
+                {(period.inicio || period.fim) && (
+                  <button className="btn-clear-date" onClick={() => setPeriod({...period, inicio: '', fim: ''})}>×</button>
+                )}
+              </div>
             </div>
           </div>
         </header>
@@ -132,8 +155,10 @@ export default function AdminAnalyticsPage() {
                         axisLine={false}
                         tickLine={false}
                         fontSize={12}
+                        stroke="var(--text-tertiary)"
+                        dy={10}
                       />
-                      <YAxis axisLine={false} tickLine={false} fontSize={12} />
+                      <YAxis axisLine={false} tickLine={false} fontSize={12} stroke="var(--text-tertiary)" dx={-5} />
                       <Tooltip 
                         contentStyle={{ borderRadius: '16px', background: 'rgba(255,255,255,0.95)', border: 'none', color: '#1a1a1a' }}
                         labelFormatter={(str) => new Date(str).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
@@ -158,19 +183,15 @@ export default function AdminAnalyticsPage() {
                  <p>Análise categórica de todos os eventos registrados</p>
                </div>
                <div className="section-filters">
-                 <select 
+                  <select 
                    className="filter-select-premium" 
                    onChange={(e) => {
                      const val = e.target.value;
-                     // Se for "Todas", limpa o filtro, senão filtra pelo recurso correspondente
-                     const recurso = val === 'Autenticação' ? 'auth' : 
-                                    val === 'Gestão de Usuários' ? 'user' : 
-                                    val === 'Documentos' ? 'document' : '';
+                     // Mapeamento corrigido para o banco de dados
+                     const recurso = val === 'Autenticação' ? 'autenticacao' : 
+                                    val === 'Gestão de Usuários' ? 'USUARIO' : 
+                                    val === 'Documentos' ? 'DOC' : '';
                      
-                     // Aqui poderíamos chamar o fetchAnalytics com o novo parâmetro
-                     // Para simplificar, vou filtrar os dados localmente se o usuário preferir, 
-                     // mas o ideal é que o backend suporte esse filtro no getStats.
-                     // Como já sincronizei o backend, vou apenas adicionar o parâmetro na busca.
                      setPeriod((prev: any) => ({ ...prev, category: recurso }));
                    }}
                  >

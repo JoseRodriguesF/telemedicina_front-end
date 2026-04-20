@@ -173,10 +173,11 @@ export default function AdminDashboard() {
                     axisLine={false} 
                     tickLine={false} 
                     fontSize={11} 
-                    stroke="rgba(255,255,255,0.4)" 
+                    stroke="var(--text-tertiary)" 
                     interval={2}
+                    dy={10}
                   />
-                  <YAxis axisLine={false} tickLine={false} fontSize={11} stroke="rgba(255,255,255,0.4)" />
+                  <YAxis axisLine={false} tickLine={false} fontSize={11} stroke="var(--text-tertiary)" dx={-5} />
                   <Tooltip 
                     contentStyle={{ background: 'rgba(20,20,30,0.9)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} 
                     labelFormatter={(v) => `Horário: ${v}:00`}
