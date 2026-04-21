@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, X, Send, Bot, User, Sparkles, Minus, Maximize2 } from 'lucide-react';
+import { X, Send, Bot, User, Sparkles } from 'lucide-react';
 import { getUser, getToken } from '@/lib/auth';
 import axios from '@/lib/axios/config';
 import { gsap } from 'gsap';
@@ -56,7 +56,6 @@ export default function AIAssistant() {
 
     try {
       const token = getToken();
-      // Tentar pegar contexto da página atual (ex: se estiver em consulta)
       let context = {};
       if (window.location.pathname.includes('/consultas/atendimento/')) {
         const parts = window.location.pathname.split('/');
@@ -66,7 +65,7 @@ export default function AIAssistant() {
 
       const response = await axios.post('/api/chat-ia/assistente-medico', {
         message: userMessage,
-        history: messages.slice(-10), // Enviar as últimas 10 mensagens
+        history: messages.slice(-10),
         context
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -114,46 +113,44 @@ export default function AIAssistant() {
           </header>
 
           <div className="ai-messages" ref={scrollRef}>
-                {messages.map((m, i) => (
-                  <div key={i} className={`ai-message ${m.role}`}>
-                    <div className="message-avatar">
-                      {m.role === 'assistant' ? <Bot size={16} /> : <User size={16} />}
-                    </div>
-                    <div className="message-bubble">
-                      {m.content}
-                    </div>
-                  </div>
-                ))}
-                {loading && (
-                  <div className="ai-message assistant">
-                    <div className="message-avatar">
-                      <Bot size={16} />
-                    </div>
-                    <div className="message-bubble loading-dots">
-                      <span></span><span></span><span></span>
-                    </div>
-                  </div>
-                )}
+            {messages.map((m, i) => (
+              <div key={i} className={`ai-message ${m.role}`}>
+                <div className="message-avatar">
+                  {m.role === 'assistant' ? <Bot size={16} /> : <User size={16} />}
+                </div>
+                <div className="message-bubble">
+                  {m.content}
+                </div>
               </div>
+            ))}
+            {loading && (
+              <div className="ai-message assistant">
+                <div className="message-avatar">
+                  <Bot size={16} />
+                </div>
+                <div className="message-bubble loading-dots">
+                  <span></span><span></span><span></span>
+                </div>
+              </div>
+            )}
+          </div>
 
-              <footer className="ai-chat-input">
-                <input 
-                  type="text" 
-                  placeholder="Pergunte algo..." 
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                />
-                <button 
-                  className={`btn-send ${!input.trim() || loading ? 'disabled' : ''}`}
-                  onClick={handleSend}
-                  disabled={!input.trim() || loading}
-                >
-                  <Send size={18} />
-                </button>
-              </footer>
-            </>
-          )}
+          <footer className="ai-chat-input">
+            <input 
+              type="text" 
+              placeholder="Pergunte algo..." 
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            />
+            <button 
+              className={`btn-send ${!input.trim() || loading ? 'disabled' : ''}`}
+              onClick={handleSend}
+              disabled={!input.trim() || loading}
+            >
+              <Send size={18} />
+            </button>
+          </footer>
         </div>
       )}
     </div>
