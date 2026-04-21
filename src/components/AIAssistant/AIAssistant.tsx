@@ -5,6 +5,8 @@ import { X, Send, Bot, User, Sparkles } from 'lucide-react';
 import { getUser, getToken } from '@/lib/auth';
 import axios from '@/lib/axios/config';
 import { gsap } from 'gsap';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './ai-assistant.css';
 
 interface Message {
@@ -159,7 +161,9 @@ export default function AIAssistant() {
                   {m.role === 'assistant' ? <Bot size={16} /> : <User size={16} />}
                 </div>
                 <div className="message-bubble">
-                  {m.content}
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {m.content}
+                  </ReactMarkdown>
                 </div>
               </div>
             ))}
