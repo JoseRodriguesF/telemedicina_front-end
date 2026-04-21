@@ -2,6 +2,7 @@ import React from 'react';
 import ContentModal from '@/components/common/Modal/ContentModal';
 import Button from '@/components/common/Buttons/Button';
 import ClinicalStructuredView from './ClinicalStructuredView';
+import FormattedText from '@/components/common/FormattedText';
 import { formatDate } from '@/lib/utils/dateFormatters';
 import { CID10 } from '@/lib/constants/cid10';
 
@@ -115,13 +116,13 @@ const AtendimentoModals: React.FC<ModalsProps> = ({
               )}
             </div>
 
-            <div className="details-section"><h4>Diagnóstico</h4><p className="detail-text">{consultaSelecionada.diagnostico || 'Não registrado'}</p></div>
-            <div className="details-section"><h4>Evolução</h4><p className="detail-text">{consultaSelecionada.evolucao || 'Não registrada'}</p></div>
-            <div className="details-section"><h4>Plano Terapêutico</h4><p className="detail-text">{consultaSelecionada.plano_terapeutico || 'Não registrado'}</p></div>
+            <div className="details-section"><h4>Diagnóstico</h4><div className="detail-text"><FormattedText text={consultaSelecionada.diagnostico || 'Não registrado'} /></div></div>
+            <div className="details-section"><h4>Evolução</h4><div className="detail-text"><FormattedText text={consultaSelecionada.evolucao || 'Não registrada'} /></div></div>
+            <div className="details-section"><h4>Plano Terapêutico</h4><div className="detail-text"><FormattedText text={consultaSelecionada.plano_terapeutico || 'Não registrado'} /></div></div>
             {consultaSelecionada.resumo_consulta && (
               <div className="details-section">
                 <h4>Resumo da Consulta</h4>
-                <p className="detail-text">{consultaSelecionada.resumo_consulta}</p>
+                <div className="detail-text"><FormattedText text={consultaSelecionada.resumo_consulta} /></div>
               </div>
             )}
             <div className="details-grid-bottom">

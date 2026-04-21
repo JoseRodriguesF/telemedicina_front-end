@@ -21,8 +21,8 @@ export default function AdminAnalyticsPage() {
     mes: new Date().getMonth() + 1,
     periodo: 'mensal',
     category: '',
-    inicio: '',
-    fim: ''
+    inicio: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+    fim: new Date().toISOString().split('T')[0]
   });
   const [logVisibility, setLogVisibility] = useState<Record<string, boolean>>({});
   const router = useRouter();
@@ -214,28 +214,25 @@ export default function AdminAnalyticsPage() {
                  <h2>Distribuição de Ações</h2>
                  <p>Análise categórica de todos os eventos registrados</p>
                </div>
-               <div className="section-filters">
-                  <select 
-                   className="filter-select-premium" 
-                   onChange={(e) => {
-                     const val = e.target.value;
-                     // Mapeamento corrigido para o banco de dados
-                     const recurso = val === 'Autenticação' ? 'autenticacao' : 
-                                    val === 'Gestão de Usuários' ? 'USUARIO' : 
-                                    val === 'Documentos' ? 'DOC' : '';
-                     
-                     setPeriod((prev: any) => ({ ...prev, category: recurso }));
-                   }}
-                 >
-                   <option value="">Todas as Categorias</option>
-                   <option value="Autenticação">Autenticação</option>
-                   <option value="Gestão de Usuários">Gestão de Usuários</option>
-                   <option value="Documentos">Documentos</option>
-                 </select>
-                 <select className="filter-select-premium">
-                   <option>Ordenar por Volume</option>
-                   <option>Ordenar A-Z</option>
-                 </select>
+               <div className="section-filters" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <div className="filter-date-mini">
+                    <label style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Início</label>
+                    <input 
+                      type="date" 
+                      className="input-premium-mini"
+                      value={period.inicio}
+                      onChange={(e) => setPeriod({...period, inicio: e.target.value})}
+                    />
+                  </div>
+                  <div className="filter-date-mini">
+                    <label style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '2px', display: 'block' }}>Fim</label>
+                    <input 
+                      type="date" 
+                      className="input-premium-mini"
+                      value={period.fim}
+                      onChange={(e) => setPeriod({...period, fim: e.target.value})}
+                    />
+                  </div>
                </div>
             </div>
 
@@ -245,7 +242,9 @@ export default function AdminAnalyticsPage() {
                   <ResponsiveContainer width="100%" height={400}>
                     <PieChart>
                       <Pie
-                        data={(stats?.logStats || []).filter((s: any) => logVisibility[s.name])}
+                        data={(stats?.logStats || [])
+                          .filter((s: any) => s.value > 0)
+                          .filter((s: any) => logVisibility[s.name])}
                         innerRadius={80}
                         outerRadius={120}
                         paddingAngle={5}
@@ -253,7 +252,7 @@ export default function AdminAnalyticsPage() {
                         nameKey="name"
                         stroke="none"
                       >
-                        {(stats?.logStats || []).map((entry: any, index: number) => (
+                        {(stats?.logStats || []).filter((s: any) => s.value > 0).map((entry: any, index: number) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
@@ -268,10 +267,13 @@ export default function AdminAnalyticsPage() {
               <div className="legend-card glass">
                 <div className="card-header">
                   <h3>Legenda & Detalhes</h3>
-                  <p>Categorias de eventos monitorados</p>
+                  <p>Categorias com eventos no período</p>
                 </div>
                 <div className="custom-legend-list">
-                  {(stats?.logStats || []).sort((a: any, b: any) => b.value - a.value).map((entry: any, index: number) => (
+                  {(stats?.logStats || [])
+                    .filter((s: any) => s.value > 0)
+                    .sort((a: any, b: any) => b.value - a.value)
+                    .map((entry: any, index: number) => (
                     <div key={index} className={`legend-item-premium ${!logVisibility[entry.name] ? 'muted' : ''}`}>
                       <input 
                         type="checkbox" 

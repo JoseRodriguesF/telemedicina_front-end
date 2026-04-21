@@ -5,8 +5,7 @@ import { X, Send, Bot, User, Sparkles } from 'lucide-react';
 import { getUser, getToken } from '@/lib/auth';
 import axios from '@/lib/axios/config';
 import { gsap } from 'gsap';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import FormattedText from '@/components/common/FormattedText';
 import './ai-assistant.css';
 
 interface Message {
@@ -33,8 +32,8 @@ export default function AIAssistant() {
     if (user?.tipo_usuario === 'medico') {
       setIsMedico(true);
       
-      // Carregar histórico do localStorage
-      const saved = localStorage.getItem(STORAGE_KEY);
+      // Carregar histórico do sessionStorage (limpa ao fechar aba/relogar)
+      const saved = sessionStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
           setMessages(JSON.parse(saved));
@@ -46,7 +45,7 @@ export default function AIAssistant() {
       }
 
       // Carregar estado de abertura
-      const savedOpen = localStorage.getItem(OPEN_STATE_KEY);
+      const savedOpen = sessionStorage.getItem(OPEN_STATE_KEY);
       if (savedOpen === 'true') {
         setIsOpen(true);
       }
@@ -56,16 +55,22 @@ export default function AIAssistant() {
   // 2. Salvar histórico sempre que mudar
   useEffect(() => {
     if (isMedico && messages.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
     }
   }, [messages, isMedico]);
 
   // 3. Salvar estado de abertura
   useEffect(() => {
     if (isMedico) {
-      localStorage.setItem(OPEN_STATE_KEY, isOpen.toString());
+      sessionStorage.setItem(OPEN_STATE_KEY, isOpen.toString());
     }
   }, [isOpen, isMedico]);
+
+  const handleClearChat = () => {
+    const initialMessage: Message[] = [{ role: 'assistant', content: 'Olá, Doutor(a)! Como posso te ajudar hoje?' }];
+    setMessages(initialMessage);
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(initialMessage));
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -148,6 +153,25 @@ export default function AIAssistant() {
               </div>
             </div>
             <div className="ai-actions">
+              <button 
+                className="btn-clear-chat" 
+                onClick={handleClearChat} 
+                title="Limpar conversa"
+                style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '4px 8px',
+                  color: 'white',
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  marginRight: '8px',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s'
+                }}
+              >
+                LIMPAR
+              </button>
               <button onClick={handleClose}>
                 <X size={18} />
               </button>
@@ -161,9 +185,7 @@ export default function AIAssistant() {
                   {m.role === 'assistant' ? <Bot size={16} /> : <User size={16} />}
                 </div>
                 <div className="message-bubble">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {m.content}
-                  </ReactMarkdown>
+                  <FormattedText text={m.content} />
                 </div>
               </div>
             ))}

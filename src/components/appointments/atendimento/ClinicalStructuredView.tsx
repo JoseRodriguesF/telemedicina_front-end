@@ -33,14 +33,14 @@ const ClinicalStructuredView: React.FC<ClinicalStructuredViewProps> = ({
         {hasValue(data.queixaPrincipal) && (
           <div className="clinical-report-section">
             <h3>Motivo da Consulta</h3>
-            <p>{data.queixaPrincipal}</p>
+            <FormattedText text={data.queixaPrincipal} />
           </div>
         )}
 
         {hasValue(data.descricaoSintomas) && (
           <div className="clinical-report-section">
             <h3>Descrição dos Sintomas</h3>
-            <p>{data.descricaoSintomas}</p>
+            <FormattedText text={data.descricaoSintomas} />
           </div>
         )}
 
@@ -139,13 +139,13 @@ const ClinicalStructuredView: React.FC<ClinicalStructuredViewProps> = ({
             {hasValue(data.queixaPrincipal) && (
               <div className="csv-item">
                 <label className="csv-label">Queixa Principal</label>
-                <div className="csv-value">{data.queixaPrincipal}</div>
+                <div className="csv-value"><FormattedText text={data.queixaPrincipal} /></div>
               </div>
             )}
             {hasValue(data.descricaoSintomas) && (
               <div className="csv-item">
                 <label className="csv-label">Descrição dos Sintomas</label>
-                <div className="csv-value">{data.descricaoSintomas}</div>
+                <div className="csv-value"><FormattedText text={data.descricaoSintomas} /></div>
               </div>
             )}
           </div>

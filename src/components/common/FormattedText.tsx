@@ -3,7 +3,7 @@
 import React from 'react';
 
 interface FormattedTextProps {
-    text: string;
+    text?: string | null;
     style?: React.CSSProperties;
 }
 
@@ -46,13 +46,13 @@ export default function FormattedText({ text, style }: FormattedTextProps) {
     return (
         <div style={{ ...style, whiteSpace: 'pre-wrap' }}>
             {lines.map((line, index) => {
-                // Detectar se a linha é um cabeçalho formatado (### **TITULO**) ou apenas # TITULO
-                const isHeader = line.startsWith('#') || (line.startsWith('**') && line.endsWith('**'));
+                const trimmedLine = line.trim();
+                
+                // 1. Detectar cabeçalhos (### ou **TEXTO**)
+                const isHeader = line.startsWith('#') || (trimmedLine.startsWith('**') && trimmedLine.endsWith('**') && trimmedLine.length > 4);
 
                 if (isHeader) {
-                    // Limpar a linha de marcadores para o display
                     const cleanTitle = line.replace(/[#*]/g, '').trim();
-
                     return (
                         <div
                             key={index}
@@ -61,7 +61,7 @@ export default function FormattedText({ text, style }: FormattedTextProps) {
                                 color: 'var(--color-primary-600)',
                                 marginTop: index === 0 ? '0' : '1.25rem',
                                 marginBottom: '0.5rem',
-                                fontSize: '0.95rem',
+                                fontSize: '0.9rem',
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.025em',
                                 display: 'flex',
@@ -74,11 +74,38 @@ export default function FormattedText({ text, style }: FormattedTextProps) {
                     );
                 }
 
-                // Linha comum de texto - processar negrito se houver
-                const parts = line.split(/(\*\*[^*]+\*\*)/g);
+                // 2. Detectar itens de lista (- ou *)
+                const isListItem = trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ');
+                if (isListItem) {
+                    const content = trimmedLine.substring(2);
+                    const parts = content.split(/(\*\*[^*]+\*\*)/g);
+                    return (
+                        <div key={index} style={{ 
+                            display: 'flex', 
+                            gap: '0.6rem', 
+                            marginLeft: '0.5rem', 
+                            marginBottom: '0.4rem',
+                            lineHeight: 1.5 
+                        }}>
+                            <span style={{ color: 'var(--color-primary-500)', fontWeight: 'bold' }}>•</span>
+                            <span style={{ flex: 1 }}>
+                                {parts.map((part, i) => {
+                                    if (part.startsWith('**') && part.endsWith('**')) {
+                                        return <strong key={i}>{part.slice(2, -2)}</strong>;
+                                    }
+                                    return <span key={i}>{part}</span>;
+                                })}
+                            </span>
+                        </div>
+                    );
+                }
 
+                // 3. Linha comum de texto - processar negrito
+                if (trimmedLine === '') return <div key={index} style={{ height: '0.75rem' }} />;
+
+                const parts = line.split(/(\*\*[^*]+\*\*)/g);
                 return (
-                    <div key={index} style={{ marginBottom: line.trim() === '' ? '0.5rem' : '0' }}>
+                    <div key={index} style={{ marginBottom: '0.25rem', lineHeight: 1.6 }}>
                         {parts.map((part, i) => {
                             if (part.startsWith('**') && part.endsWith('**')) {
                                 return <strong key={i}>{part.slice(2, -2)}</strong>;

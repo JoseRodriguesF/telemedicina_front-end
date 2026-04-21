@@ -796,15 +796,7 @@ export default function HistoricoPage() {
                   border: '1px solid var(--color-primary-100)',
                   boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)'
                 }}>
-                  <p className="detail-text" style={{ 
-                    whiteSpace: 'pre-wrap', 
-                    fontSize: '0.95rem', 
-                    lineHeight: 1.7,
-                    color: 'var(--text-primary)',
-                    margin: 0
-                  }}>
-                    {selectedItem.resumo_consulta}
-                  </p>
+                    <FormattedText text={selectedItem.resumo_consulta} />
                 </div>
               </div>
             )}

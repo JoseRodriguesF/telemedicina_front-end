@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Button from '@/components/common/Buttons/Button';
+import FormattedText from '@/components/common/FormattedText';
 
 interface ChatMessage {
   author: 'Você' | 'Médico' | 'Paciente';
@@ -138,7 +139,7 @@ const AtendimentoChat: React.FC<ChatProps> = ({
             <div key={idx} className={cls}>
               <div className="chat-author">{m.author}</div>
               <div className="chat-bubble">
-                {m.text && <div>{m.text}</div>}
+                {m.text && <FormattedText text={m.text} />}
                 {m.attachment && (
                   <div className="chat-attachment-card">
                     <div className="attachment-info">

@@ -10,23 +10,7 @@ import { Suspense, useState, useRef, useEffect } from 'react';
 import type { ChatIAResponse, ChatHistory, ChatMessage as ChatMsg } from '@/types/chat';
 import ClinicalStructuredView from '@/components/appointments/atendimento/ClinicalStructuredView';
 
-// Função simples para converter markdown básico em HTML seguro
-function formatIaText(text: string): string {
-  if (!text) return '';
-  let html = text
-    .replace(/^### (.*$)/gm, '<h3 style="color: var(--color-primary-600); font-weight: 700; margin-top: 1rem; margin-bottom: 0.5rem; font-size: 1rem; text-transform: uppercase;">$1</h3>')
-    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-    .replace(/\n\n/g, '<br/><br/>')
-    .replace(/\n/g, '<br/>')
-    .replace(/^- (.*)$/gm, '<li>$1</li>');
-
-  if (/<li>/.test(html)) {
-    html = html.replace(/(<li>.*?<\/li>)+/g, (match) => `<ul>${match}</ul>`);
-  }
-
-  html = html.replace(/<h3(.*?)><b>(.*?)<\/b><\/h3>/g, '<h3$1>$2</h3>');
-  return html;
-}
+import FormattedText from '@/components/common/FormattedText';
 
 import { getToken, getUser } from '@/lib/auth';
 import { psCreateRoom, enviarAnexosConsulta } from '@/lib/axios/consultas';
@@ -411,7 +395,7 @@ function PreConsultaInner() {
                       <div key={i} className={`pc-message-row ${m.author === 'Você' ? 'user' : 'assistant'}`}>
                         <div className="pc-message-bubble">
                           {m.author === 'Angélica' ? (
-                            <span dangerouslySetInnerHTML={{ __html: formatIaText(m.text) }} />
+                            <FormattedText text={m.text} />
                           ) : (
                             m.text
                           )}

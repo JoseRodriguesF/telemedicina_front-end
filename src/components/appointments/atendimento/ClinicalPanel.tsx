@@ -311,7 +311,7 @@ const ClinicalPanel: React.FC<LeftPanelProps> = ({
                 {pacienteNotas ? (
                   <div className="prescricao-card" style={{ marginBottom: '8px' }}>
                     <div className="prescricao-card-header"><div className="prescricao-card-medicamento">Notas do Paciente</div></div>
-                    <div className="prescricao-card-info" style={{ whiteSpace: 'pre-wrap' }}>{pacienteNotas}</div>
+                    <div className="prescricao-card-info"><FormattedText text={pacienteNotas} /></div>
                     <button className="prescricao-add-button" onClick={() => setIsEditingNotas(true)} style={{ marginTop: '12px', width: '100%', fontSize: '0.8rem', padding: '6px' }}>Editar Notas</button>
                   </div>
                 ) : (

@@ -22,7 +22,9 @@ export default function AdminDashboard() {
     ano: new Date().getFullYear().toString(),
     mes: (new Date().getMonth() + 1).toString(),
     periodo: 'mensal',
-    range: 'today'
+    range: 'today',
+    inicio: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+    fim: new Date().toISOString().split('T')[0]
   });
 
   useEffect(() => {
@@ -66,29 +68,21 @@ export default function AdminDashboard() {
 
           <div className="admin-filters-bar glass">
             <div className="filter-group">
-              <label>Ano</label>
-              <select
-                value={filter.ano}
-                onChange={(e) => setFilter({ ...filter, ano: e.target.value })}
-              >
-                {[2024, 2025, 2026].map(y => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
+              <label>Data Início</label>
+              <input
+                type="date"
+                value={filter.inicio}
+                onChange={(e) => setFilter({ ...filter, inicio: e.target.value })}
+              />
             </div>
 
             <div className="filter-group">
-              <label>Mês</label>
-              <select
-                value={filter.mes}
-                onChange={(e) => setFilter({ ...filter, mes: e.target.value })}
-              >
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {new Date(0, i).toLocaleString('pt-BR', { month: 'long' })}
-                  </option>
-                ))}
-              </select>
+              <label>Data Fim</label>
+              <input
+                type="date"
+                value={filter.fim}
+                onChange={(e) => setFilter({ ...filter, fim: e.target.value })}
+              />
             </div>
 
             <button className="btn-refresh" onClick={() => fetchStats()} disabled={loading}>
