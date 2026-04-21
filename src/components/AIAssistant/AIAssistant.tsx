@@ -65,7 +65,7 @@ export default function AIAssistant() {
         context = { consultaId, page: 'atendimento' };
       }
 
-      const response = await axios.post('/api/openai/chat-ia/assistente-medico', {
+      const response = await axios.post('/api/chat-ia/assistente-medico', {
         message: userMessage,
         history: messages.slice(-10), // Enviar as últimas 10 mensagens
         context
