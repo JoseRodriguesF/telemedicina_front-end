@@ -48,26 +48,14 @@ export default function AdminDashboard() {
     <DashboardLayout>
       <div className="admin-dashboard-container animate-fadeIn">
 
-        {/* Superior Welcome Bar */}
-        <header className="admin-hero-header">
-          <div className="hero-welcome">
-            <span className="hero-tag">Painel de Controle Matriarca</span>
-            <h1>Olá, Administrador 👋</h1>
-            <p>Gerenciamento estratégico e monitoramento em tempo real do ecossistema de saúde.</p>
+        {/* Compact Admin Header */}
+        <header className="admin-compact-header">
+          <div className="compact-title">
+            <h1>Dashboard Administrativo</h1>
+            <p>Monitoramento e gestão da plataforma.</p>
           </div>
 
           <div className="admin-filters-bar glass">
-            <div className="filter-group">
-              <label>Período</label>
-              <select
-                value={filter.periodo}
-                onChange={(e) => setFilter({ ...filter, periodo: e.target.value })}
-              >
-                <option value="mensal">Mensal</option>
-                <option value="anual">Anual</option>
-              </select>
-            </div>
-
             <div className="filter-group">
               <label>Ano</label>
               <select
@@ -80,24 +68,22 @@ export default function AdminDashboard() {
               </select>
             </div>
 
-            {filter.periodo === 'mensal' && (
-              <div className="filter-group">
-                <label>Mês</label>
-                <select
-                  value={filter.mes}
-                  onChange={(e) => setFilter({ ...filter, mes: e.target.value })}
-                >
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>
-                      {new Date(0, i).toLocaleString('pt-BR', { month: 'short' })}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <div className="filter-group">
+              <label>Mês</label>
+              <select
+                value={filter.mes}
+                onChange={(e) => setFilter({ ...filter, mes: e.target.value })}
+              >
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {new Date(0, i).toLocaleString('pt-BR', { month: 'long' })}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <button className="btn-refresh" onClick={fetchStats} disabled={loading}>
-              {loading ? '...' : '🔄'}
+              {loading ? '...' : 'Atualizar'}
             </button>
           </div>
         </header>
@@ -111,7 +97,20 @@ export default function AdminDashboard() {
             <div className="stat-info">
               <span className="stat-label">Consultas Totais</span>
               <h2 className="stat-value">{stats?.totalConsultations || 0}</h2>
-              <span className="stat-delta">Geral da Plataforma</span>
+            </div>
+          </div>
+          <div className="summary-stat-card online">
+            <div className="stat-icon online-dot">🟢</div>
+            <div className="stat-info">
+              <span className="stat-label">Médicos Online</span>
+              <h2 className="stat-value">{stats?.onlineDoctors || 0}</h2>
+            </div>
+          </div>
+          <div className="summary-stat-card online">
+            <div className="stat-icon online-dot">🟢</div>
+            <div className="stat-info">
+              <span className="stat-label">Pacientes Online</span>
+              <h2 className="stat-value">{stats?.onlinePatients || 0}</h2>
             </div>
           </div>
           <div className="summary-stat-card">
@@ -119,7 +118,6 @@ export default function AdminDashboard() {
             <div className="stat-info">
               <span className="stat-label">Corpo Clínico</span>
               <h2 className="stat-value">{stats?.totalDoctors || 0}</h2>
-              <span className="stat-delta">Médicos Ativos</span>
             </div>
           </div>
           <div className="summary-stat-card">
@@ -127,15 +125,6 @@ export default function AdminDashboard() {
             <div className="stat-info">
               <span className="stat-label">Pacientes</span>
               <h2 className="stat-value">{stats?.totalPatients || 0}</h2>
-              <span className="stat-delta">Vidas Cadastradas</span>
-            </div>
-          </div>
-          <div className="summary-stat-card highlight">
-            <div className="stat-icon uptime">🛡️</div>
-            <div className="stat-info">
-              <span className="stat-label">Segurança</span>
-              <h2 className="stat-value">100%</h2>
-              <span className="stat-delta">Auditado LGPD</span>
             </div>
           </div>
         </section>
@@ -172,9 +161,9 @@ export default function AdminDashboard() {
                     tickFormatter={(v) => `${v}h`} 
                     axisLine={false} 
                     tickLine={false} 
-                    fontSize={11} 
+                    fontSize={10} 
                     stroke="var(--text-tertiary)" 
-                    interval={2}
+                    interval={0}
                     dy={10}
                   />
                   <YAxis axisLine={false} tickLine={false} fontSize={11} stroke="var(--text-tertiary)" dx={-5} />
