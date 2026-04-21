@@ -14,7 +14,6 @@ interface Message {
 
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: 'Olá, Doutor(a)! Sou seu assistente digital. Como posso te ajudar hoje?' }
   ]);
@@ -96,7 +95,7 @@ export default function AIAssistant() {
           <span className="pulse-ring"></span>
         </button>
       ) : (
-        <div ref={containerRef} className={`ai-chat-container ${isMinimized ? 'minimized' : ''}`}>
+        <div ref={containerRef} className="ai-chat-container">
           <header className="ai-chat-header">
             <div className="ai-brand">
               <div className="ai-icon-mini">
@@ -108,18 +107,13 @@ export default function AIAssistant() {
               </div>
             </div>
             <div className="ai-actions">
-              <button onClick={() => setIsMinimized(!isMinimized)}>
-                {isMinimized ? <Maximize2 size={18} /> : <Minus size={18} />}
-              </button>
               <button onClick={() => setIsOpen(false)}>
                 <X size={18} />
               </button>
             </div>
           </header>
 
-          {!isMinimized && (
-            <>
-              <div className="ai-messages" ref={scrollRef}>
+          <div className="ai-messages" ref={scrollRef}>
                 {messages.map((m, i) => (
                   <div key={i} className={`ai-message ${m.role}`}>
                     <div className="message-avatar">

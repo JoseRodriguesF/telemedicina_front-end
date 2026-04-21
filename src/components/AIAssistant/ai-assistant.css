@@ -66,11 +66,6 @@
   margin-bottom: 1rem;
 }
 
-.ai-chat-container.minimized {
-  height: 64px;
-  width: 250px;
-}
-
 /* Header */
 .ai-chat-header {
   padding: 1.25rem;
