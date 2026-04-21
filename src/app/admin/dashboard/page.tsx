@@ -64,40 +64,38 @@ export default function AdminDashboard() {
         {/* Quick Insights Cards */}
         <section className="top-stats-grid">
           <div className="summary-stat-card">
-            <div className="stat-icon consultations">
-              <img src="/icons/icon-chart.png" alt="Consultas" className="stat-icon-img" />
-            </div>
+            <div className="stat-icon finished">✅</div>
             <div className="stat-info">
-              <span className="stat-label">Consultas Totais</span>
-              <h2 className="stat-value">{stats?.totalConsultations || 0}</h2>
+              <span className="stat-label">Realizadas (24h)</span>
+              <h2 className="stat-value">{stats?.finished24h || 0}</h2>
             </div>
           </div>
-          <div className="summary-stat-card online">
+          <div className="summary-stat-card in-progress">
+            <div className="stat-icon pulse-blue">⚡</div>
+            <div className="stat-info">
+              <span className="stat-label">Em Andamento</span>
+              <h2 className="stat-value">{stats?.ongoingConsultations || 0}</h2>
+            </div>
+          </div>
+          <div className="summary-stat-card queue">
+            <div className="stat-icon waiting">⏳</div>
+            <div className="stat-info">
+              <span className="stat-label">Fila de Espera</span>
+              <h2 className="stat-value">{stats?.queuePatients || 0}</h2>
+            </div>
+          </div>
+          <div className="summary-stat-card cancelled">
+            <div className="stat-icon error">🚫</div>
+            <div className="stat-info">
+              <span className="stat-label">Canceladas (24h)</span>
+              <h2 className="stat-value">{stats?.cancelled24h || 0}</h2>
+            </div>
+          </div>
+          <div className="summary-stat-card online-mini">
             <div className="stat-icon online-dot">🟢</div>
             <div className="stat-info">
-              <span className="stat-label">Médicos Online</span>
-              <h2 className="stat-value">{stats?.onlineDoctors || 0}</h2>
-            </div>
-          </div>
-          <div className="summary-stat-card online">
-            <div className="stat-icon online-dot">🟢</div>
-            <div className="stat-info">
-              <span className="stat-label">Pacientes Online</span>
-              <h2 className="stat-value">{stats?.onlinePatients || 0}</h2>
-            </div>
-          </div>
-          <div className="summary-stat-card">
-            <div className="stat-icon doctors">🩺</div>
-            <div className="stat-info">
-              <span className="stat-label">Corpo Clínico</span>
-              <h2 className="stat-value">{stats?.totalDoctors || 0}</h2>
-            </div>
-          </div>
-          <div className="summary-stat-card">
-            <div className="stat-icon avg-time">👥</div>
-            <div className="stat-info">
-              <span className="stat-label">Pacientes</span>
-              <h2 className="stat-value">{stats?.totalPatients || 0}</h2>
+              <span className="stat-label">Online</span>
+              <h2 className="stat-value">{(stats?.onlineDoctors || 0) + (stats?.onlinePatients || 0)}</h2>
             </div>
           </div>
         </section>
