@@ -107,44 +107,50 @@
 }
 
 .kpi-card.log-focus {
-  min-width: 200px;
+  min-width: 180px;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.5rem;
-  background: white;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }
 
+.kpi-card.audit-total { border-left: 3px solid #8b5cf6; }
+.kpi-card.audit-today { border-left: 3px solid #3b82f6; }
+
 .kpi-icon {
-  font-size: 1.75rem;
-  background: var(--color-primary-50);
-  width: 50px;
-  height: 50px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
-  color: var(--color-primary-500);
+  border-radius: var(--radius-md);
   flex-shrink: 0;
+  font-size: 1.1rem;
 }
 
+.icon-purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+.icon-blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+
 .kpi-label {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
   color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: block;
 }
 
 .kpi-value {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: var(--text-primary);
   display: block;
   margin-top: -2px;
+  line-height: 1;
 }
 
 /* CHARTS Row */
@@ -167,14 +173,14 @@
 }
 
 .chart-card h3 {
-  font-size: 1.5rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .chart-card p {
-  font-size: 1rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
 }
 
@@ -195,13 +201,18 @@
   align-items: start;
 }
 
+.pie-analysis-grid .chart-card {
+  height: 420px;
+  padding: 1.5rem;
+}
+
 .legend-card {
   padding: 1.5rem;
   border-radius: var(--radius-xl);
   background: white;
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
-  height: 400px;
+  height: 420px;
   display: flex;
   flex-direction: column;
 }
@@ -219,13 +230,12 @@
 }
 
 .legend-item-premium:hover {
-  background: white;
-  border-color: var(--color-primary-300);
-  box-shadow: var(--shadow-sm);
+  background: var(--bg-tertiary);
 }
 
-.legend-item-premium:hover .log-toggle-checkbox {
-  transform: scale(1.1);
+.checkbox-hit-area:hover .log-toggle-checkbox {
+  transform: scale(1.2);
+  filter: brightness(1.1);
 }
 
 .legend-marker {

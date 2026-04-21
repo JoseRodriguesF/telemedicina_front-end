@@ -148,17 +148,17 @@ export default function AdminAnalyticsPage() {
           <div className="analytics-grid">
             {/* KPI Row - Focused only on Logs */}
             <div className="kpi-row-centered">
-              <div className="kpi-card glass log-focus">
-                <div className="kpi-icon">📋</div>
+              <div className="kpi-card glass log-focus audit-total">
+                <div className="kpi-icon icon-purple">📋</div>
                 <div className="kpi-data">
-                  <span className="kpi-label">Total de Eventos Auditados</span>
+                  <span className="kpi-label">Total Auditado</span>
                   <span className="kpi-value">{stats?.logStats?.reduce((acc: any, curr: any) => acc + curr.value, 0) || 0}</span>
                 </div>
               </div>
-              <div className="kpi-card glass log-focus">
-                <div className="kpi-icon">⚡</div>
+              <div className="kpi-card glass log-focus audit-today">
+                <div className="kpi-icon icon-blue">⚡</div>
                 <div className="kpi-data">
-                  <span className="kpi-label">Volume de Hoje</span>
+                  <span className="kpi-label">Volume Hoje</span>
                   <span className="kpi-value">{stats?.dailyLogs?.find((l: any) => l.date === new Date().toISOString().split('T')[0])?.count || 0}</span>
                 </div>
               </div>
