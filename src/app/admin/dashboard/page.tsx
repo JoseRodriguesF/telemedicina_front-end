@@ -65,30 +65,6 @@ export default function AdminDashboard() {
             <h1>Dashboard Administrativo</h1>
             <p>Monitoramento e gestão da plataforma.</p>
           </div>
-
-          <div className="admin-filters-bar glass">
-            <div className="filter-group">
-              <label>Data Início</label>
-              <input
-                type="date"
-                value={filter.inicio}
-                onChange={(e) => setFilter({ ...filter, inicio: e.target.value })}
-              />
-            </div>
-
-            <div className="filter-group">
-              <label>Data Fim</label>
-              <input
-                type="date"
-                value={filter.fim}
-                onChange={(e) => setFilter({ ...filter, fim: e.target.value })}
-              />
-            </div>
-
-            <button className="btn-refresh" onClick={() => fetchStats()} disabled={loading}>
-              {loading ? '...' : 'Atualizar'}
-            </button>
-          </div>
         </header>
 
         {/* Quick Insights Cards */}
@@ -141,16 +117,28 @@ export default function AdminDashboard() {
                 <h3>Fluxo de Atendimento</h3>
                 <p>Volume por faixa horária (24h)</p>
               </div>
-              <div className="chart-filters">
-                <select 
-                  className="filter-select-mini"
-                  value={filter.range}
-                  onChange={(e) => setFilter({ ...filter, range: e.target.value })}
-                >
-                  <option value="today">Hoje</option>
-                  <option value="yesterday">Ontem</option>
-                  <option value="7days">Últimos 7 dias</option>
-                </select>
+              <div className="chart-filters-range">
+                <div className="filter-input-group">
+                  <span>De:</span>
+                  <input
+                    type="date"
+                    className="filter-date-mini"
+                    value={filter.inicio}
+                    onChange={(e) => setFilter({ ...filter, inicio: e.target.value, range: 'custom' })}
+                  />
+                </div>
+                <div className="filter-input-group">
+                  <span>Até:</span>
+                  <input
+                    type="date"
+                    className="filter-date-mini"
+                    value={filter.fim}
+                    onChange={(e) => setFilter({ ...filter, fim: e.target.value, range: 'custom' })}
+                  />
+                </div>
+                <button className="btn-refresh-mini" onClick={() => fetchStats()} disabled={loading}>
+                  {loading ? '...' : '⟳'}
+                </button>
               </div>
             </div>
             <div className="chart-wrapper">
