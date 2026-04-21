@@ -100,7 +100,7 @@ export default function AdminAnalyticsPage() {
       <div className="analytics-container animate-fadeIn">
         <header className="analytics-header">
           <div className="header-info">
-            <button className="btn-back" onClick={() => router.back()}>← Voltar</button>
+            {/* Botão voltar removido a pedido do usuário */}
           </div>
 
           <div className="analytics-filters glass">
@@ -273,12 +273,14 @@ export default function AdminAnalyticsPage() {
                     .sort((a: any, b: any) => b.value - a.value)
                     .map((entry: any, index: number) => (
                     <div key={index} className={`legend-item-premium ${!logVisibility[entry.name] ? 'muted' : ''}`}>
-                      <input 
-                        type="checkbox" 
-                        className="log-toggle-checkbox"
-                        checked={logVisibility[entry.name] !== false}
-                        onChange={() => setLogVisibility({ ...logVisibility, [entry.name]: !logVisibility[entry.name] })}
-                      />
+                      <div className="checkbox-hit-area">
+                        <input 
+                          type="checkbox" 
+                          className="log-toggle-checkbox"
+                          checked={logVisibility[entry.name] !== false}
+                          onChange={() => setLogVisibility({ ...logVisibility, [entry.name]: !logVisibility[entry.name] })}
+                        />
+                      </div>
                       <div className="legend-marker" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
                       <div className="legend-info">
                         <span className="legend-name">{getFriendlyName(entry.name)}</span>

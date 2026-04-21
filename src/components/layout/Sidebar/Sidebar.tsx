@@ -7,7 +7,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { getUser, clearUser } from '@/lib/auth';
 
 type SidebarItem = {
-  id: 'inicio' | 'consultas' | 'historico' | 'perfil';
+  id: 'inicio' | 'consultas' | 'historico' | 'perfil' | 'logs' | 'analytics';
   label: string;
   icon: string;
   href: string;
@@ -27,6 +27,8 @@ const baseItems: SidebarItem[] = [
 const adminItems: SidebarItem[] = [
   { id: 'inicio', label: 'Início', icon: '/images/home-06.svg', href: '/admin/dashboard' },
   { id: 'perfil', label: 'Verificar Médicos', icon: '/images/user.svg', href: '/admin/medicos' },
+  { id: 'logs', label: 'Logs do Sistema', icon: '/images/clock.svg', href: '/admin/logs' },
+  { id: 'analytics', label: 'Análise Avançada', icon: '/images/bar-chart-02.svg', href: '/admin/logs/analytics' },
 ];
 
 export default function Sidebar({ activeId: propActiveId, className = '' }: Props) {
@@ -44,6 +46,8 @@ export default function Sidebar({ activeId: propActiveId, className = '' }: Prop
     if (pathname.startsWith('/configuracoes')) return 'configuracoes';
     if (pathname.startsWith('/admin/dashboard')) return 'inicio';
     if (pathname.startsWith('/admin/medicos')) return 'perfil';
+    if (pathname.startsWith('/admin/logs/analytics')) return 'analytics';
+    if (pathname.startsWith('/admin/logs')) return 'logs';
     return 'inicio';
   }, [propActiveId, pathname]);
 
