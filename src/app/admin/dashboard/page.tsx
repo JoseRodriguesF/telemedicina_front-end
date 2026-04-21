@@ -241,10 +241,6 @@ export default function AdminDashboard() {
                 <strong>{stats?.totalDoctors || 0}</strong>
                 <span>Médicos</span>
               </div>
-              <div className="mini-stat">
-                <strong>{stats?.newDoctorsMonth || 0}</strong>
-                <span>Novos (Mês)</span>
-              </div>
             </div>
             <footer className="nav-footer">
               <button className="btn-manage-full" onClick={() => router.push('/admin/medicos')}>
@@ -266,10 +262,6 @@ export default function AdminDashboard() {
               <div className="mini-stat">
                 <strong>{stats?.totalPatients || 0}</strong>
                 <span>Pacientes</span>
-              </div>
-              <div className="mini-stat">
-                <strong>{stats?.newPatientsMonth || 0}</strong>
-                <span>Novos (Mês)</span>
               </div>
             </div>
             <footer className="nav-footer">
