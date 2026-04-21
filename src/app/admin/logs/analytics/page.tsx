@@ -24,7 +24,27 @@ export default function AdminAnalyticsPage() {
     inicio: '',
     fim: ''
   });
+  const [logVisibility, setLogVisibility] = useState<Record<string, boolean>>({});
   const router = useRouter();
+
+  const getFriendlyName = (name: string) => {
+    const map: Record<string, string> = {
+      'LOGIN_SUCESSO': 'Login',
+      'LOGIN': 'Tentativa Login',
+      'REGISTER_PACIENTE': 'Novo Paciente',
+      'REGISTER_MEDICO': 'Novo Médico',
+      'ACCESS_PROFILE': 'Ver Perfil',
+      'UPDATE_PROFILE': 'Editar Perfil',
+      'ACCESS_DOCUMENT': 'Ver Documentos',
+      'LIST_ANEXOS': 'Anexos',
+      'LISTAGEM_HISTORICO_PRESCRICOES': 'Prescrições',
+      'ENCERRAMENTO_CONSULTA': 'Fim Consulta',
+      'APPROVE_MEDICO': 'Aprovar Médico',
+      'CHAT': 'Chat IA',
+      'CREATE_CONSULTA': 'Consultas'
+    };
+    return map[name] || name;
+  };
 
   useEffect(() => {
     fetchAnalytics();
@@ -50,7 +70,19 @@ export default function AdminAnalyticsPage() {
       const resp = await axios.get(`/api/admin/stats?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setStats(resp.data);
+      const data = resp.data;
+      setStats(data);
+
+      // Sincronizar visibilidade com as categorias reais retornadas
+      if (data.logStats) {
+        setLogVisibility(prev => {
+          const next = { ...prev };
+          data.logStats.forEach((item: any) => {
+            if (next[item.name] === undefined) next[item.name] = true;
+          });
+          return next;
+        });
+      }
     } catch (err) {
       console.error('Error fetching analytics:', err);
     } finally {
@@ -213,7 +245,7 @@ export default function AdminAnalyticsPage() {
                   <ResponsiveContainer width="100%" height={400}>
                     <PieChart>
                       <Pie
-                        data={stats?.logStats || []}
+                        data={(stats?.logStats || []).filter((s: any) => logVisibility[s.name])}
                         innerRadius={80}
                         outerRadius={120}
                         paddingAngle={5}
@@ -240,10 +272,16 @@ export default function AdminAnalyticsPage() {
                 </div>
                 <div className="custom-legend-list">
                   {(stats?.logStats || []).sort((a: any, b: any) => b.value - a.value).map((entry: any, index: number) => (
-                    <div key={index} className="legend-item-premium">
+                    <div key={index} className={`legend-item-premium ${!logVisibility[entry.name] ? 'muted' : ''}`}>
+                      <input 
+                        type="checkbox" 
+                        className="log-toggle-checkbox"
+                        checked={logVisibility[entry.name] !== false}
+                        onChange={() => setLogVisibility({ ...logVisibility, [entry.name]: !logVisibility[entry.name] })}
+                      />
                       <div className="legend-marker" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
                       <div className="legend-info">
-                        <span className="legend-name">{entry.name}</span>
+                        <span className="legend-name">{getFriendlyName(entry.name)}</span>
                         <span className="legend-value">{entry.value} <small>eventos</small></span>
                       </div>
                       <div className="legend-percent">

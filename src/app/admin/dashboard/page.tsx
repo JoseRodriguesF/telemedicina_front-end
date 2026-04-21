@@ -21,7 +21,8 @@ export default function AdminDashboard() {
   const [filter, setFilter] = useState({
     ano: new Date().getFullYear().toString(),
     mes: (new Date().getMonth() + 1).toString(),
-    periodo: 'mensal'
+    periodo: 'mensal',
+    range: 'today'
   });
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function AdminDashboard() {
     
     // Configuração de atualização em tempo real (Sync a cada 15 segundos)
     const intervalId = setInterval(() => {
-      fetchStats(false); // fetch sem setar loading=true para evitar flicker
+      fetchStats(false);
     }, 15000);
 
     return () => clearInterval(intervalId);
@@ -40,6 +41,7 @@ export default function AdminDashboard() {
     try {
       const token = getToken();
       const params = new URLSearchParams(filter);
+      if (filter.range) params.set('range', filter.range);
       const resp = await axios.get(`/api/admin/stats?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -47,7 +49,7 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error('Error fetching admin stats:', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -89,7 +91,7 @@ export default function AdminDashboard() {
               </select>
             </div>
 
-            <button className="btn-refresh" onClick={fetchStats} disabled={loading}>
+            <button className="btn-refresh" onClick={() => fetchStats()} disabled={loading}>
               {loading ? '...' : 'Atualizar'}
             </button>
           </div>
@@ -146,15 +148,19 @@ export default function AdminDashboard() {
                 <p>Volume por faixa horária (24h)</p>
               </div>
               <div className="chart-filters">
-                <select className="filter-select-mini">
-                  <option>Hoje</option>
-                  <option>Ontem</option>
-                  <option>Últimos 7 dias</option>
+                <select 
+                  className="filter-select-mini"
+                  value={filter.range}
+                  onChange={(e) => setFilter({ ...filter, range: e.target.value })}
+                >
+                  <option value="today">Hoje</option>
+                  <option value="yesterday">Ontem</option>
+                  <option value="7days">Últimos 7 dias</option>
                 </select>
               </div>
             </div>
             <div className="chart-wrapper">
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={350}>
                 <AreaChart data={stats?.hourly || []}>
                   <defs>
                     <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
@@ -168,7 +174,7 @@ export default function AdminDashboard() {
                     tickFormatter={(v) => `${v}h`} 
                     axisLine={false} 
                     tickLine={false} 
-                    fontSize={10} 
+                    fontSize={9} 
                     stroke="var(--text-tertiary)" 
                     interval={0}
                     dy={10}
@@ -178,20 +184,27 @@ export default function AdminDashboard() {
                     contentStyle={{ background: 'rgba(20,20,30,0.9)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} 
                     labelFormatter={(v) => `Horário: ${v}:00`}
                   />
-                  <Legend 
-                    verticalAlign="top" 
-                    align="right" 
-                    iconType="circle" 
-                    wrapperStyle={{ paddingTop: '0', marginTop: '-20px', fontSize: '10px', opacity: 0.7 }}
-                  />
                   <Area 
                     name="Volume de Atendimentos"
                     type="monotone" 
                     dataKey="count" 
                     stroke="var(--color-primary)" 
-                    strokeWidth={2} 
+                    strokeWidth={3} 
                     fillOpacity={1} 
-                    fill="url(#colorCount)" 
+                    fill="url(#colorCount)"
+                    activeDot={{ r: 6, fill: '#ff4d4d', strokeWidth: 2, stroke: '#fff' }}
+                    dot={(props: any) => {
+                      const { cx, cy, payload } = props;
+                      const hourlyData = stats?.hourly || [];
+                      const maxVal = Math.max(...hourlyData.map((h: any) => h.count), 0);
+                      
+                      if (payload && payload.count === maxVal && maxVal > 0) {
+                        return (
+                          <circle key={`peak-dot-${payload.hour}`} cx={cx} cy={cy} r={5} fill="#ef4444" stroke="#fff" strokeWidth={2} />
+                        );
+                      }
+                      return <></>;
+                    }}
                   />
                 </AreaChart>
               </ResponsiveContainer>

@@ -243,6 +243,25 @@
   border-radius: var(--radius-md);
 }
 
+.legend-item-premium.muted {
+  opacity: 0.4;
+  background: var(--bg-primary);
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.legend-item-premium.muted .legend-percent {
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+}
+
+.log-toggle-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-primary-600);
+}
+
 .analytics-section-header {
   display: flex;
   justify-content: space-between;
