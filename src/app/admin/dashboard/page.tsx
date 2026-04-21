@@ -26,10 +26,17 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchStats();
+    
+    // Configuração de atualização em tempo real (Sync a cada 15 segundos)
+    const intervalId = setInterval(() => {
+      fetchStats(false); // fetch sem setar loading=true para evitar flicker
+    }, 15000);
+
+    return () => clearInterval(intervalId);
   }, [filter]);
 
-  const fetchStats = async () => {
-    setLoading(true);
+  const fetchStats = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const token = getToken();
       const params = new URLSearchParams(filter);
@@ -228,8 +235,8 @@ export default function AdminDashboard() {
                 <span>Médicos</span>
               </div>
               <div className="mini-stat">
-                <strong>{stats?.doctors?.filter((m: any) => m.verificacao === 'analise').length || 0}</strong>
-                <span>Pendentes</span>
+                <strong>{stats?.newDoctorsMonth || 0}</strong>
+                <span>Novos (Mês)</span>
               </div>
             </div>
             <footer className="nav-footer">
@@ -254,7 +261,7 @@ export default function AdminDashboard() {
                 <span>Pacientes</span>
               </div>
               <div className="mini-stat">
-                <strong>{stats?.patients?.length || 0}</strong>
+                <strong>{stats?.newPatientsMonth || 0}</strong>
                 <span>Novos (Mês)</span>
               </div>
             </div>

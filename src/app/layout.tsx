@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import QueryProvider from "@/components/providers/QueryProvider";
+import { SWRConfig } from 'swr';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -75,9 +76,15 @@ export default function RootLayout({
         }} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
-        <QueryProvider>
-          {children}
-        </QueryProvider>
+        <SWRConfig value={{ 
+          refreshInterval: 10000, 
+          revalidateOnFocus: true,
+          dedupingInterval: 2000
+        }}>
+          <QueryProvider>
+            {children}
+          </QueryProvider>
+        </SWRConfig>
       </body>
     </html>
   );
