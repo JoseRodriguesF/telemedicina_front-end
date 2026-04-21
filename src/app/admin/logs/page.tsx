@@ -79,18 +79,7 @@ function AdminLogsContent() {
   return (
     <DashboardLayout>
       <div className="admin-logs-container animate-fadeIn">
-        <header className="logs-header">
-          <div className="header-info">
-            <div className="header-top">
-              <button className="btn-back" onClick={() => router.back()}>← Voltar</button>
-              <button className="btn-analytics" onClick={() => router.push('/admin/logs/analytics')}>
-                📊 Ver Analytics
-              </button>
-            </div>
-            <h1>Trilha de Auditoria</h1>
-            <p>Monitoramento completo de ações e eventos de segurança do sistema.</p>
-          </div>
-        </header>
+        {/* Header e botões removidos a pedido do usuário */}
 
         <section className="logs-filters glass">
           <form className="filter-form" onSubmit={handleSearch}>

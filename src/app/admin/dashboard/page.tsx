@@ -59,13 +59,7 @@ export default function AdminDashboard() {
     <DashboardLayout>
       <div className="admin-dashboard-container animate-fadeIn">
 
-        {/* Compact Admin Header */}
-        <header className="admin-compact-header">
-          <div className="compact-title">
-            <h1>Dashboard Administrativo</h1>
-            <p>Monitoramento e gestão da plataforma.</p>
-          </div>
-        </header>
+        {/* Header removido a pedido do usuário */}
 
         {/* Quick Insights Cards */}
         <section className="top-stats-grid">
