@@ -12,11 +12,12 @@ interface Message {
   content: string;
 }
 
+const STORAGE_KEY = 'medico_ai_chat_history';
+const OPEN_STATE_KEY = 'medico_ai_chat_open';
+
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: 'Olá, Doutor(a)! Sou seu assistente digital. Como posso te ajudar hoje?' }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isMedico, setIsMedico] = useState(false);
@@ -24,12 +25,45 @@ export default function AIAssistant() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // 1. Carregar estado inicial
   useEffect(() => {
     const user = getUser();
     if (user?.tipo_usuario === 'medico') {
       setIsMedico(true);
+      
+      // Carregar histórico do localStorage
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          setMessages(JSON.parse(saved));
+        } catch (e) {
+          setMessages([{ role: 'assistant', content: 'Olá, Doutor(a)! Como posso te ajudar hoje?' }]);
+        }
+      } else {
+        setMessages([{ role: 'assistant', content: 'Olá, Doutor(a)! Como posso te ajudar hoje?' }]);
+      }
+
+      // Carregar estado de abertura
+      const savedOpen = localStorage.getItem(OPEN_STATE_KEY);
+      if (savedOpen === 'true') {
+        setIsOpen(true);
+      }
     }
   }, []);
+
+  // 2. Salvar histórico sempre que mudar
+  useEffect(() => {
+    if (isMedico && messages.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    }
+  }, [messages, isMedico]);
+
+  // 3. Salvar estado de abertura
+  useEffect(() => {
+    if (isMedico) {
+      localStorage.setItem(OPEN_STATE_KEY, isOpen.toString());
+    }
+  }, [isOpen, isMedico]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -51,7 +85,9 @@ export default function AIAssistant() {
 
     const userMessage = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    
+    const newMessages = [...messages, { role: 'user', content: userMessage } as Message];
+    setMessages(newMessages);
     setLoading(true);
 
     try {
@@ -65,7 +101,7 @@ export default function AIAssistant() {
 
       const response = await axios.post('/api/chat-ia/assistente-medico', {
         message: userMessage,
-        history: messages.slice(-10),
+        history: messages.slice(-15), // Aumentei para 15 para melhor memória
         context
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -78,6 +114,10 @@ export default function AIAssistant() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
   };
 
   if (!isMedico) return null;
@@ -106,7 +146,7 @@ export default function AIAssistant() {
               </div>
             </div>
             <div className="ai-actions">
-              <button onClick={() => setIsOpen(false)}>
+              <button onClick={handleClose}>
                 <X size={18} />
               </button>
             </div>
