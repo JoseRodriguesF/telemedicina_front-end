@@ -27,8 +27,8 @@ const baseItems: SidebarItem[] = [
 const adminItems: SidebarItem[] = [
   { id: 'inicio', label: 'Início', icon: '/images/home-06.svg', href: '/admin/dashboard' },
   { id: 'perfil', label: 'Verificar Médicos', icon: '/images/user.svg', href: '/admin/medicos' },
-  { id: 'logs', label: 'Logs do Sistema', icon: '/images/clock.svg', href: '/admin/logs' },
   { id: 'analytics', label: 'Análise Avançada', icon: '/images/bar-chart-02.svg', href: '/admin/logs/analytics' },
+  { id: 'logs', label: 'Logs do Sistema', icon: '/icons/historia.png', href: '/admin/logs' },
 ];
 
 export default function Sidebar({ activeId: propActiveId, className = '' }: Props) {
