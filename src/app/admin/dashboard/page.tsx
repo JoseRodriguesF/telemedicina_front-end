@@ -187,23 +187,6 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Quick Analytics Access */}
-          <div className="admin-chart-card glass analytics-shortcut">
-            <div className="shortcut-content">
-              <div className="shortcut-text">
-                <h3>Monitoramento Central</h3>
-                <p>Acesse a trilha de auditoria e métricas de integridade.</p>
-              </div>
-              <div className="shortcut-actions">
-                <button className="btn-go-analytics" onClick={() => router.push('/admin/logs/analytics')}>
-                   Analytics de Logs →
-                </button>
-                <button className="btn-secondary-action" onClick={() => router.push('/admin/logs')}>
-                   Trilha de Auditoria
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Main Management Section (Moved to Bottom) */}
