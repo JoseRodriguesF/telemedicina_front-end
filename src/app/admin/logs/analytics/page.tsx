@@ -101,8 +101,6 @@ export default function AdminAnalyticsPage() {
         <header className="analytics-header">
           <div className="header-info">
             <button className="btn-back" onClick={() => router.back()}>← Voltar</button>
-            <h1>Analytics & Insights do Sistema</h1>
-            <p>Visão profunda sobre todas as ações e tráfego gerado na plataforma.</p>
           </div>
 
           <div className="analytics-filters glass">
