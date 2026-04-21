@@ -32,6 +32,6 @@ images:
 - 'southamerica-east1-docker.pkg.dev/${PROJECT_ID}/matriarca/frontend:latest'
 
 substitutions:
-  _API_URL: 'https://telemedicina-api-931296712104.southamerica-east1.run.app'
-  _GOOGLE_CLIENT_ID: '931296712104-s7unkud1a51k613cjei11oa5qvu4bvdg.apps.googleusercontent.com'
-  _GOOGLE_MAPS_API_KEY: 'AIzaSyDZO-SAzhkUphJxq4HQ1DpwAAnNTqneq6s'
+  _API_URL: ''
+  _GOOGLE_CLIENT_ID: ''
+  _GOOGLE_MAPS_API_KEY: ''
