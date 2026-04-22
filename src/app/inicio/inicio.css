@@ -213,18 +213,46 @@
 }
 
 @media (max-width: 767px) {
+	.inicio-page {
+		flex-direction: column;
+	}
+
 	.inicio-main {
 		margin-left: 0 !important;
-		padding: 1.25rem !important;
-		padding-top: 5rem !important;
+		padding: 1rem !important;
+		padding-top: 4.25rem !important;
+		max-width: 100%;
+		width: 100%;
+	}
+
+	.dashboard-header h2 {
+		font-size: 1.2rem;
+	}
+
+	.dashboard-header p {
+		font-size: 0.9rem;
 	}
 
 	.dashboard-grid {
 		grid-template-columns: 1fr;
+		gap: 0.75rem;
+	}
+
+	.dash-card {
+		padding: 0.85rem;
 	}
 
 	.dash-card.featured {
 		grid-column: span 1;
+		min-height: auto;
+	}
+
+	.dash-card-value {
+		font-size: 1.5rem;
+	}
+
+	.actions-grid {
+		grid-template-columns: 1fr;
 	}
 }
 

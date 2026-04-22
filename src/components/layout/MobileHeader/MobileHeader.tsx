@@ -3,17 +3,46 @@
 import './MobileHeader.css';
 import '@/components/layout/Header/header.css';
 import Link from 'next/link';
-import ThemeToggle from '@/components/common/ThemeToggle/ThemeToggle';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { clearUser } from '@/lib/auth';
+import Image from 'next/image';
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { getUser, clearUser } from '@/lib/auth';
+
+type NavItem = {
+    id: string;
+    label: string;
+    icon: string;
+    href: string;
+};
+
+const baseItems: NavItem[] = [
+    { id: 'inicio', label: 'Início', icon: '/images/home-06.svg', href: '/inicio' },
+    { id: 'consultas', label: 'Consultas', icon: '/images/first-aid.svg', href: '/consultas' },
+    { id: 'historico', label: 'Histórico', icon: '/images/clock.svg', href: '/historico' },
+    { id: 'perfil', label: 'Perfil', icon: '/images/user.svg', href: '/perfil' },
+];
+
+const adminItems: NavItem[] = [
+    { id: 'inicio', label: 'Dashboard', icon: '/images/home-06.svg', href: '/admin/dashboard' },
+    { id: 'medicos', label: 'Verificar Médicos', icon: '/images/user.svg', href: '/admin/medicos' },
+    { id: 'analytics', label: 'Análise Avançada', icon: '/icons/icon-chart.png', href: '/admin/logs/analytics' },
+    { id: 'logs', label: 'Logs do Sistema', icon: '/icons/historia.png', href: '/admin/logs' },
+];
 
 export default function MobileHeader() {
     const router = useRouter();
+    const pathname = usePathname();
     const [open, setOpen] = useState(false);
+    const [user, setUser] = useState<any>(null);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        function onResize() { if (window.innerWidth > 900 && open) setOpen(false); }
+        setMounted(true);
+        setUser(getUser());
+    }, []);
+
+    useEffect(() => {
+        function onResize() { if (window.innerWidth > 767 && open) setOpen(false); }
         window.addEventListener('resize', onResize);
         return () => window.removeEventListener('resize', onResize);
     }, [open]);
@@ -24,98 +53,166 @@ export default function MobileHeader() {
         return () => { document.body.style.overflow = ''; };
     }, [open]);
 
+    const items = useMemo(() => {
+        if (user?.tipo_usuario === 'admin') return adminItems;
+        return baseItems;
+    }, [user]);
+
+    const activeId = useMemo(() => {
+        if (pathname.startsWith('/inicio')) return 'inicio';
+        if (pathname.startsWith('/consultas')) return 'consultas';
+        if (pathname.startsWith('/historico')) return 'historico';
+        if (pathname.startsWith('/perfil')) return 'perfil';
+        if (pathname.startsWith('/configuracoes')) return 'configuracoes';
+        if (pathname.startsWith('/admin/dashboard')) return 'inicio';
+        if (pathname.startsWith('/admin/medicos')) return 'medicos';
+        if (pathname.startsWith('/admin/logs/analytics')) return 'analytics';
+        if (pathname.startsWith('/admin/logs')) return 'logs';
+        return 'inicio';
+    }, [pathname]);
+
     const handleLogout = () => {
         clearUser();
         localStorage.removeItem('telemedicina_token');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('token');
+        setOpen(false);
         router.push('/login');
+    };
+
+    const handleNavigate = (href: string) => {
+        setOpen(false);
+        router.push(href);
     };
 
     return (
         <>
             <header className="site-header mobile-app-header">
-                <div className="header-inner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Link href="/inicio" style={{ display: 'flex', alignItems: 'center' }}>
-                        <img src="/images/logo_matriarca_icon.png" alt="Matriarca" style={{ width: '36px', height: '36px', objectFit: 'contain' }} />
+                <div className="mobile-header-inner">
+                    <Link href={user?.tipo_usuario === 'admin' ? '/admin/dashboard' : '/inicio'} className="mobile-header-brand">
+                        <img src="/images/logo_matriarca_icon.png" alt="Matriarca" className="mobile-header-logo" />
                     </Link>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+
+                    <div className="mobile-header-right">
+                        {/* User avatar mini */}
+                        {user?.tipo_usuario !== 'admin' && (
+                            <button
+                                className="mobile-header-avatar-btn"
+                                onClick={() => handleNavigate('/perfil')}
+                                aria-label="Perfil"
+                            >
+                                {user?.profile_image || user?.foto ? (
+                                    <Image src={user.profile_image || user.foto} alt="Perfil" width={32} height={32} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                                ) : (
+                                    <span className="mobile-avatar-letter">
+                                        {user?.nome?.[0] || user?.email?.[0] || 'U'}
+                                    </span>
+                                )}
+                            </button>
+                        )}
+
                         <button
-                            className={`hamburger ${open ? 'is-open' : ''}`}
+                            className={`mobile-hamburger ${open ? 'is-open' : ''}`}
                             aria-label="Menu"
                             aria-expanded={open}
                             onClick={() => setOpen(!open)}
-                            style={{ display: 'flex' }} // Force flex as header.css might hide it on desktop but this component is mobile-only via CSS
                         >
-                            <span className="bar" />
-                            <span className="bar" />
-                            <span className="bar" />
+                            <span className="hamburger-line" />
+                            <span className="hamburger-line" />
+                            <span className="hamburger-line" />
                         </button>
                     </div>
                 </div>
             </header>
 
-            {/* Mobile Drawer */}
-            <nav className={`mobile-menu ${open ? 'open' : ''}`} aria-hidden={!open} style={{ paddingTop: '1.5rem' }}>
-                {/* Close Button */}
-                <button
-                    className="mobile-menu-close"
-                    aria-label="Fechar menu"
-                    onClick={() => setOpen(false)}
-                    style={{
-                        position: 'absolute',
-                        top: '1rem',
-                        right: '1rem',
-                        background: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: '0.5rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: 'var(--radius-md)',
-                        transition: 'background 0.2s ease',
-                    }}
-                >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-primary)' }}>
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                </button>
-
-                <div style={{ marginTop: '2.5rem' }}>
-                    <Link href="/inicio" onClick={() => setOpen(false)} className="mobile-link">Início</Link>
-                    <Link href="/consultas" onClick={() => setOpen(false)} className="mobile-link">Consultas</Link>
-                    <Link href="/historico" onClick={() => setOpen(false)} className="mobile-link">Histórico</Link>
-                    <Link href="/perfil" onClick={() => setOpen(false)} className="mobile-link">Perfil</Link>
-
+            {/* Mobile Drawer Menu */}
+            <nav className={`mobile-drawer ${open ? 'open' : ''}`} aria-hidden={!open}>
+                {/* Drawer Header */}
+                <div className="mobile-drawer-header">
+                    <div className="mobile-drawer-brand">
+                        <img src="/images/logo_matriarca_icon.png" alt="Matriarca" className="mobile-drawer-logo" />
+                        <span className="mobile-drawer-title">Matriarca</span>
+                    </div>
                     <button
-                        onClick={handleLogout}
-                        className="mobile-link"
-                        style={{
-                            width: '100%',
-                            textAlign: 'left',
-                            background: 'transparent',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: 'var(--font-size-base)',
-                            fontFamily: 'var(--font-family)',
-                            color: 'var(--color-error)'
-                        }}
+                        className="mobile-drawer-close"
+                        aria-label="Fechar menu"
+                        onClick={() => setOpen(false)}
                     >
-                        Sair
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+
+                {/* User Info Card */}
+                {user && user.tipo_usuario !== 'admin' && (
+                    <div className="mobile-drawer-user" onClick={() => handleNavigate('/perfil')}>
+                        <div className="mobile-drawer-avatar">
+                            {user?.profile_image || user?.foto ? (
+                                <Image src={user.profile_image || user.foto} alt="Perfil" width={44} height={44} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                            ) : (
+                                <span className="drawer-avatar-letter">
+                                    {user?.nome?.[0] || user?.email?.[0] || 'U'}
+                                </span>
+                            )}
+                        </div>
+                        <div className="mobile-drawer-user-info">
+                            <span className="drawer-user-name">{user?.nome || 'Usuário'}</span>
+                            <span className="drawer-user-email">{user?.email || ''}</span>
+                        </div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4, marginLeft: 'auto', flexShrink: 0 }}>
+                            <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                    </div>
+                )}
+
+                {user?.tipo_usuario === 'admin' && (
+                    <div className="mobile-drawer-admin-badge">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                        <span>Painel Administrativo</span>
+                    </div>
+                )}
+
+                {/* Navigation Links */}
+                <div className="mobile-drawer-nav">
+                    {items.map((item) => (
+                        <button
+                            key={item.id}
+                            className={`mobile-drawer-link ${item.id === activeId ? 'active' : ''}`}
+                            onClick={() => handleNavigate(item.href)}
+                        >
+                            <span className="mobile-drawer-link-icon">
+                                {item.icon.endsWith('.svg') ? (
+                                    <Image src={item.icon} alt={item.label} width={20} height={20} />
+                                ) : (
+                                    <img src={item.icon} alt={item.label} width={20} height={20} />
+                                )}
+                            </span>
+                            <span className="mobile-drawer-link-label">{item.label}</span>
+                            {item.id === activeId && (
+                                <span className="mobile-drawer-active-dot" />
+                            )}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Drawer Footer */}
+                <div className="mobile-drawer-footer">
+                    <button className="mobile-drawer-logout" onClick={handleLogout}>
+                        <Image src="/icons/icon-logout.png" alt="Sair" width={18} height={18} />
+                        <span>Sair da conta</span>
                     </button>
                 </div>
             </nav>
 
             {/* Overlay */}
-            {open && (
-                <div
-                    className="mobile-menu-overlay open"
-                    onClick={() => setOpen(false)}
-                    style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'rgba(0,0,0,0.5)' }}
-                />
-            )}
+            <div
+                className={`mobile-drawer-overlay ${open ? 'open' : ''}`}
+                onClick={() => setOpen(false)}
+            />
         </>
     );
 }

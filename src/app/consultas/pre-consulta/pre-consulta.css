@@ -589,3 +589,67 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 767px) {
+    .pc-page-container {
+        margin-left: 0;
+    }
+
+    .pc-content-side {
+        padding: 0.75rem;
+        padding-top: 0.5rem;
+    }
+
+    .pc-welcome-text h1 {
+        font-size: 1.35rem;
+    }
+
+    .pc-welcome-text p {
+        font-size: 0.95rem;
+    }
+
+    .pc-start-btn {
+        padding: 0.85rem 2rem;
+        font-size: 1rem;
+    }
+
+    .pc-chat-history-container {
+        height: calc(100vh - 10rem);
+    }
+
+    .pc-input-wrapper {
+        bottom: 0.75rem;
+        max-width: calc(100% - 1.5rem);
+    }
+
+    .pc-message-row {
+        max-width: 92%;
+    }
+
+    .pc-message-bubble {
+        padding: 0.85rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .pc-relatorio-container {
+        gap: 1rem;
+    }
+
+    .pc-relatorio-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .pc-relatorio-section {
+        padding: 0.85rem 1rem;
+    }
+
+    .pc-relatorio-btn-editar,
+    .pc-relatorio-btn-iniciar {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .pc-disclaimer {
+        font-size: 0.7rem;
+    }
+}

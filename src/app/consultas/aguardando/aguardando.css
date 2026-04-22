@@ -128,3 +128,34 @@
 .btn-cancel-search:active {
     transform: scale(0.98);
 }
+
+@media (max-width: 767px) {
+    .waiting-page {
+        padding: 1rem;
+        min-height: calc(100vh - 56px);
+        padding-top: 5rem;
+    }
+
+    .waiting-content {
+        padding: 2rem 1.5rem;
+        gap: 1.75rem;
+    }
+
+    .loading-container {
+        width: 75px;
+        height: 75px;
+    }
+
+    .waiting-text h2 {
+        font-size: 1.25rem;
+    }
+
+    .waiting-text p {
+        font-size: 0.9rem;
+    }
+
+    .btn-cancel-search {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}

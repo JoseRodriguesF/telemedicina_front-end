@@ -575,3 +575,131 @@
     .hero-welcome h1 { font-size: 1.75rem; }
     .details-grid { grid-template-columns: 1fr; }
 }
+
+@media (max-width: 767px) {
+    .admin-dashboard-container {
+        padding: 0.75rem;
+        min-height: auto;
+    }
+
+    .admin-compact-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .compact-title h1 {
+        font-size: 1.3rem;
+    }
+
+    .compact-title p {
+        font-size: 0.8rem;
+    }
+
+    .chart-filters-range {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        width: 100%;
+    }
+
+    .filter-input-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .top-stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .summary-stat-card {
+        padding: 0.65rem 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.1rem;
+    }
+
+    .stat-label {
+        font-size: 0.6rem;
+    }
+
+    .stat-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 0.9rem;
+    }
+
+    .admin-chart-card {
+        padding: 1rem;
+    }
+
+    .card-header h3 {
+        font-size: 1rem;
+    }
+
+    .chart-wrapper {
+        min-height: 180px;
+    }
+
+    .admin-management-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .admin-nav-card {
+        padding: 1.25rem;
+        min-height: auto;
+    }
+
+    .nav-stats-mini {
+        gap: 1rem;
+        padding: 0.5rem;
+    }
+
+    .card-header-centered h3 {
+        font-size: 1.1rem;
+    }
+
+    .shortcut-content {
+        gap: 1.25rem;
+    }
+
+    .shortcut-text h3 {
+        font-size: 1.3rem;
+    }
+
+    .shortcut-actions {
+        flex-direction: column;
+    }
+
+    .btn-go-analytics,
+    .btn-secondary-action {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Modal on mobile */
+    .user-details-modal-overlay {
+        padding: 0.75rem;
+    }
+
+    .user-details-modal {
+        max-width: 100%;
+    }
+
+    .modal-content {
+        padding: 1.5rem;
+    }
+
+    .user-profile-summary {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+}

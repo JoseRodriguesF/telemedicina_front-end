@@ -231,3 +231,58 @@
         transform: translateY(0);
     }
 }
+
+@media (max-width: 767px) {
+    .agendamento-container {
+        gap: 0.75rem;
+    }
+
+    .scheduling-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .calendar-card {
+        padding: 0.85rem;
+    }
+
+    .calendar-header h3 {
+        font-size: 0.95rem;
+    }
+
+    .calendar-month-year {
+        font-size: 0.8rem;
+    }
+
+    .calendar-grid {
+        gap: 0.15rem;
+    }
+
+    .dow {
+        font-size: 0.7rem;
+        padding: 0.35rem 0;
+    }
+
+    .day {
+        font-size: 0.8rem;
+    }
+
+    .slots-card {
+        padding: 0.75rem;
+        position: static;
+    }
+
+    .slots-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+    }
+
+    .slot {
+        padding: 0.4rem;
+        font-size: 0.8rem;
+    }
+
+    .confirm-btn {
+        font-size: 0.9rem;
+    }
+}
