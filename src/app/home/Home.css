@@ -570,7 +570,7 @@
 
   /* Hero section: reduce top padding so it breathes */
   .hero-section {
-    padding: 6rem 0 3rem; /* Increased top padding to accommodate the new header */
+    padding: 4rem 0 3rem;
   }
 
   /* Title: smaller so it doesn't overflow */
