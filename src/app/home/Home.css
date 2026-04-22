@@ -549,3 +549,278 @@
   .tech-side-grid { grid-template-columns: 1fr; }
   .wide-card { text-align: center; }
 }
+
+/* ============================================
+   MOBILE (≤767px) - Fix "espremido" layout
+   ============================================ */
+@media (max-width: 767px) {
+  /* Prevent horizontal overflow */
+  .page-home {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+  }
+
+  /* Container padding more generous on mobile */
+  .container {
+    padding: 0 1rem;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Hero section: reduce top padding so it breathes */
+  .hero-section {
+    padding: 6rem 0 3rem; /* Increased top padding to accommodate the new header */
+  }
+
+  /* Title: smaller so it doesn't overflow */
+  .hero-title {
+    font-size: clamp(1.8rem, 10vw, 2.5rem);
+    margin-bottom: 1rem;
+    line-height: 1.1;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  /* Description: compact, readable */
+  .hero-description {
+    font-size: 0.95rem;
+    max-width: 100%;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+    padding: 0 0.5rem;
+  }
+
+  /* Buttons: stack on very small or side-by-side with smaller padding */
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    padding: 0 1rem;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+    padding: 0.8rem 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  /* Stats: reduce gap and number size so they fit in one row */
+  .hero-stats {
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0 0.5rem;
+  }
+
+  .stat-item {
+    min-width: 80px;
+  }
+
+  .stat-number {
+    font-size: 1.4rem;
+  }
+
+  .stat-label {
+    font-size: 0.6rem;
+  }
+
+  /* Hero image: constrain so it doesn't overflow */
+  .hero-image-v2 {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+
+  .doctor-main-img {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    border-radius: 30px;
+  }
+
+  /* Floating card: reposition so it doesn't escape */
+  .floating-card-v2 {
+    width: 180px;
+    padding: 0.85rem;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -10px;
+    font-size: 0.75rem;
+  }
+
+  /* Section padding: much more compact */
+  .tech-section,
+  .benefits-dashboard-section,
+  .faq-section-v2 {
+    padding: 3.5rem 0;
+  }
+
+  .section-header {
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+  }
+
+  .display-title {
+    font-size: clamp(1.5rem, 7vw, 2rem);
+    word-break: break-word;
+  }
+
+  .section-subtitle {
+    font-size: 0.95rem;
+    max-width: 100%;
+    line-height: 1.5;
+  }
+
+  /* Tech cards */
+  .tech-card {
+    padding: 1.5rem;
+    border-radius: 20px;
+  }
+
+  .tech-grid {
+    gap: 1.5rem;
+  }
+
+  .tech-side-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .wide-card {
+    text-align: center;
+    grid-column: span 1;
+  }
+
+  .card-icon-round {
+    width: 64px;
+    height: 64px;
+    font-size: 1.25rem;
+  }
+
+  .card-icon-round img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .mini-card {
+    padding: 1.25rem;
+  }
+
+  /* Benefits */
+  .benefits-layout {
+    gap: 2.5rem;
+  }
+
+  .benefit-item {
+    gap: 1.25rem;
+    text-align: left;
+  }
+
+  .benefit-number {
+    font-size: 2rem;
+  }
+
+  .benefit-content h3 {
+    font-size: 1.1rem;
+  }
+
+  .benefit-content p {
+    font-size: 0.9rem;
+  }
+
+  .benefits-info {
+    gap: 2rem;
+    padding: 0 0.5rem;
+  }
+
+  /* Dashboard image */
+  .dashboard-visual .dashboard-img {
+    border-radius: 20px;
+    width: 100%;
+    height: auto;
+  }
+
+  /* FAQ */
+  .faq-trigger {
+    font-size: 0.95rem;
+    padding: 1rem;
+    text-align: left;
+  }
+
+  .faq-content {
+    padding: 0 1rem;
+  }
+
+  .faq-item-v2.active .faq-content {
+    padding: 0 1rem 1rem;
+  }
+
+  .faq-item-v2 {
+    border-radius: 15px;
+  }
+
+  /* CTA */
+  .final-cta {
+    padding: 2.5rem 0;
+  }
+
+  .cta-box {
+    padding: 2.5rem 1rem;
+    border-radius: 20px;
+  }
+
+  .cta-title {
+    font-size: 1.6rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .cta-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .cta-btns {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .cta-btns .btn {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+  }
+
+  /* Footer */
+  .site-footer {
+    padding: 2.5rem 0 1.5rem;
+  }
+
+  .footer-top {
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .footer-nav-groups {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    gap: 0.85rem;
+    padding-top: 1.25rem;
+    text-align: center;
+  }
+
+  .lang {
+    justify-content: center;
+    font-size: 0.8rem;
+  }
+}

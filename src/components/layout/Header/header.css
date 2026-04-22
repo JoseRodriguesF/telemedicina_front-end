@@ -89,3 +89,27 @@
     display: none;
   }
 }
+
+@media (max-width: 767px) {
+  .site-header {
+    padding: 1rem 0;
+  }
+
+  .header-logo {
+    width: 110px;
+    height: auto;
+  }
+
+  .header-actions {
+    gap: 1rem;
+  }
+
+  .btn-login {
+    font-size: 0.85rem;
+  }
+
+  .btn-signup {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.85rem;
+  }
+}

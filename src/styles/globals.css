@@ -507,12 +507,19 @@ svg {
    UTILITY CLASSES
    ============================================ */
 
+/* Base reset adjustments for mobile robustness */
+html, body {
+	overflow-x: hidden;
+	width: 100%;
+	position: relative;
+}
+
 /* Container */
 .container {
 	width: 100%;
 	max-width: 1280px;
 	margin: 0 auto;
-	padding: 0 var(--spacing-lg);
+	padding: 0 var(--spacing-md); /* Consistent mobile padding */
 }
 
 @media (min-width: 640px) {
