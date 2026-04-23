@@ -22,9 +22,29 @@ export default function AIAssistant() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isMedico, setIsMedico] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+
+    const handleResize = () => {
+      const vh = window.visualViewport?.height || window.innerHeight;
+      const kh = window.innerHeight - vh;
+      setKeyboardHeight(Math.max(0, kh));
+    };
+
+    window.visualViewport.addEventListener('resize', handleResize);
+    window.visualViewport.addEventListener('scroll', handleResize);
+    handleResize();
+
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+    };
+  }, []);
 
   // 1. Carregar estado inicial
   useEffect(() => {
@@ -141,7 +161,14 @@ export default function AIAssistant() {
           <span className="pulse-ring"></span>
         </button>
       ) : (
-        <div ref={containerRef} className="ai-chat-container">
+        <div 
+          ref={containerRef} 
+          className="ai-chat-container"
+          style={keyboardHeight > 0 ? {
+            bottom: `${keyboardHeight + 20}px`,
+            transition: 'bottom 0.1s ease-out'
+          } : {}}
+        >
           <header className="ai-chat-header">
             <div className="ai-brand">
               <div className="ai-icon-mini">

@@ -36,20 +36,44 @@ const AtendimentoChat: React.FC<ChatProps> = ({
   onClose,
   variant
 }) => {
+  const [viewportHeight, setViewportHeight] = useState<number | undefined>(undefined);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStartPos = useRef({ x: 0, y: 0 });
   const modalPos = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+
+    const handleResize = () => {
+      const vh = window.visualViewport?.height || window.innerHeight;
+      setViewportHeight(vh);
+      
+      // Calculate keyboard height
+      const currentKeyboardHeight = window.innerHeight - vh;
+      setKeyboardHeight(Math.max(0, currentKeyboardHeight));
+    };
+
+    window.visualViewport.addEventListener('resize', handleResize);
+    window.visualViewport.addEventListener('scroll', handleResize);
+    handleResize();
+
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
     if (showChat && variant === 'modal') {
       const w = window.innerWidth;
-      const h = window.innerHeight;
-      // Default position: bottom-right corner
+      const h = viewportHeight || window.innerHeight;
+      // Default position: bottom-right corner, adjusted for viewport height
       setPosition({ x: Math.max(20, w - 400), y: Math.max(20, h - 600) });
       modalPos.current = { x: Math.max(20, w - 400), y: Math.max(20, h - 600) };
     }
-  }, [showChat, variant]);
+  }, [showChat, variant, viewportHeight]);
 
   useEffect(() => {
     if (!isDragging) return;
@@ -230,6 +254,7 @@ const AtendimentoChat: React.FC<ChatProps> = ({
           left: `${position.x}px`,
           width: '380px',
           height: '550px',
+          maxHeight: viewportHeight ? `${viewportHeight - 40}px` : '550px',
           background: 'var(--bg-primary)',
           borderRadius: '12px',
           boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
@@ -237,7 +262,10 @@ const AtendimentoChat: React.FC<ChatProps> = ({
           zIndex: 9999,
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          bottom: keyboardHeight > 0 ? `${keyboardHeight}px` : undefined,
+          // If keyboard is open, we might want to force it to stay above
+          ...(keyboardHeight > 0 ? { top: 'auto', left: '0', width: '100%', borderRadius: '0' } : {})
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -247,7 +275,22 @@ const AtendimentoChat: React.FC<ChatProps> = ({
   }
 
   return (
-    <aside className="chat-panel" aria-label="Chat da consulta">
+    <aside 
+      className="chat-panel" 
+      aria-label="Chat da consulta"
+      style={keyboardHeight > 0 ? {
+        position: 'fixed',
+        bottom: `${keyboardHeight}px`,
+        left: 0,
+        right: 0,
+        height: 'auto',
+        maxHeight: '40vh',
+        zIndex: 1000,
+        background: 'var(--bg-primary)',
+        borderRadius: '12px 12px 0 0',
+        boxShadow: '0 -4px 12px rgba(0,0,0,0.1)'
+      } : {}}
+    >
       {ChatContent}
     </aside>
   );
