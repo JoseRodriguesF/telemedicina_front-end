@@ -48,7 +48,7 @@
   padding: 8rem 0 4rem;
   overflow: hidden;
   position: relative;
-  background: radial-gradient(circle at 80% 20%, rgba(0, 91, 191, 0.05) 0%, transparent 50%);
+  background: url('/images/hero-bg-medical.png') no-repeat center right / cover;
 }
 
 .hero-content {
@@ -152,13 +152,10 @@
 /* Hero Image Side */
 .hero-image-v2 {
   position: relative;
-}
-
-.doctor-main-img {
-  border-radius: 40px;
-  box-shadow: var(--shadow-xl);
-  object-fit: cover;
-  animation: float 6s ease-in-out infinite;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .floating-card-v2 {

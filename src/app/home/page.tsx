@@ -54,13 +54,6 @@ export default function HomeScreen() {
 							</div>
 						</div>
 						<div className="hero-image-v2 animate-fadeIn">
-							<img 
-								src="/images/hero-doctor.png" 
-								alt="Medico Matriarca" 
-								width="600" 
-								height="700"
-								className="doctor-main-img"
-							/>
 							<div className="floating-card-v2 consultation-active shadow-xl">
 								<div className="card-header" style={{ color: '#10b981' }}>
 									<div className="pulse-dot"></div>
