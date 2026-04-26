@@ -22,8 +22,15 @@ export default function HomeScreen() {
 				<div className="container">
 					<div className="hero-content">
 						<div className="hero-text animate-fadeIn">
-							<h1 className="hero-title">
-								<span className="text-highlight">Matriarca</span> Telemed
+							<h1 className="hero-title" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+								<Image 
+									src="/images/logo_matriarca_icon.png" 
+									alt="Matriarca Ícone" 
+									width={64} 
+									height={64} 
+									style={{ filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.1))' }}
+								/>
+								<span><span className="text-highlight">Matriarca</span> Telemed</span>
 							</h1>
 							<p className="hero-description">
 								Acesso imediato a especialistas de alto nível através de uma plataforma segura e intuitiva. 
