@@ -54,16 +54,7 @@ export default function HomeScreen() {
 							</div>
 						</div>
 						<div className="hero-image-v2 animate-fadeIn">
-							<div className="floating-card-v2 consultation-active shadow-xl">
-								<div className="card-header" style={{ color: '#10b981' }}>
-									<div className="pulse-dot"></div>
-									<span>Ambiente Seguro</span>
-								</div>
-								<div className="card-body">
-									<p>100% Confidencial</p>
-									<p className="timer" style={{ fontSize: '0.95rem', marginTop: '0.25rem', color: 'var(--text-secondary)' }}>Criptografia de Ponta a Ponta</p>
-								</div>
-							</div>
+							{/* Imagem e card removidos para dar espaço ao background com blur e ícones médicos */}
 						</div>
 					</div>
 				</div>

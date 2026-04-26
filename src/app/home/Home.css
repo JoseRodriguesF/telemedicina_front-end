@@ -51,11 +51,31 @@
   background: url('/images/hero-bg-medical.png') no-repeat center right / cover;
 }
 
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.7) 40%, rgba(255, 255, 255, 0) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-mask-image: linear-gradient(to right, black 0%, black 45%, transparent 80%);
+  mask-image: linear-gradient(to right, black 0%, black 45%, transparent 80%);
+  z-index: 0;
+}
+
+[data-theme="dark"] .hero-section::before {
+  background: linear-gradient(to right, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.7) 40%, rgba(15, 23, 42, 0) 100%);
+}
+
 .hero-content {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
   align-items: center;
   gap: 4rem;
+  position: relative;
+  z-index: 1;
 }
 
 .hero-title {
