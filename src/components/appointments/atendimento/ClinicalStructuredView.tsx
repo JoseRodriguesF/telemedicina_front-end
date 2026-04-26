@@ -1,6 +1,7 @@
 import React from 'react';
 import { HistoriaClinicaItem } from '@/lib/axios/consultas';
 import FormattedText from '@/components/common/FormattedText';
+import './ClinicalStructuredView.css';
 
 interface ClinicalStructuredViewProps {
   data: HistoriaClinicaItem | null | undefined;
@@ -26,103 +27,7 @@ const ClinicalStructuredView: React.FC<ClinicalStructuredViewProps> = ({
     return true;
   };
 
-  if (variant === 'report') {
-    return (
-      <div className="clinical-report-card">
-        {/* Seção 1: Queixa e Sintomas */}
-        {hasValue(data.queixaPrincipal) && (
-          <div className="clinical-report-section">
-            <h3>Motivo da Consulta</h3>
-            <FormattedText text={data.queixaPrincipal} />
-          </div>
-        )}
 
-        {hasValue(data.descricaoSintomas) && (
-          <div className="clinical-report-section">
-            <h3>Descrição dos Sintomas</h3>
-            <FormattedText text={data.descricaoSintomas} />
-          </div>
-        )}
-
-        {/* Seção 2: Histórico Pessoal */}
-        {hasValue(data.historicoPessoal) && (
-          <div className="clinical-report-section">
-            <h3>Histórico Médico Pessoal</h3>
-            {hasValue(data.historicoPessoal.doencas) && (
-              <div className="clinical-report-item">
-                <span className="clinical-report-label">Doenças crônicas</span>
-                <span className="clinical-report-value">
-                  {Array.isArray(data.historicoPessoal.doencas) 
-                    ? data.historicoPessoal.doencas.join(', ') 
-                    : data.historicoPessoal.doencas}
-                </span>
-              </div>
-            )}
-            {hasValue(data.historicoPessoal.medicamentos) && (
-              <div className="clinical-report-item">
-                <span className="clinical-report-label">Medicamentos em uso</span>
-                <span className="clinical-report-value">
-                  {Array.isArray(data.historicoPessoal.medicamentos) 
-                    ? data.historicoPessoal.medicamentos.join(', ') 
-                    : data.historicoPessoal.medicamentos}
-                </span>
-              </div>
-            )}
-            {hasValue(data.historicoPessoal.alergias) && (
-              <div className="clinical-report-item">
-                <span className="clinical-report-label alerta">Alergias</span>
-                <span className="clinical-report-value alerta">
-                  {Array.isArray(data.historicoPessoal.alergias) 
-                    ? data.historicoPessoal.alergias.join(', ') 
-                    : data.historicoPessoal.alergias}
-                </span>
-              </div>
-            )}
-            {hasValue(data.historicoPessoal.vacinacao) && (
-              <div className="clinical-report-item">
-                <span className="clinical-report-label">Vacinação</span>
-                <span className="clinical-report-value">{data.historicoPessoal.vacinacao}</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Seção 3: Antecedentes Familiares */}
-        {hasValue(data.antecedentesFamiliares) && (
-          <div className="clinical-report-section">
-            <h3>Antecedentes Familiares</h3>
-            {Object.entries(data.antecedentesFamiliares).map(([key, val]: [string, any]) => (
-              <div key={key} className="clinical-report-item">
-                <span className="clinical-report-label" style={{ textTransform: 'capitalize' }}>{key.replace('_', ' ')}</span>
-                <span className="clinical-report-value">{val}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Seção 4: Estilo de Vida */}
-        {hasValue(data.estiloVida) && (
-          <div className="clinical-report-section">
-            <h3>Estilo de Vida</h3>
-            {Object.entries(data.estiloVida).map(([key, val]: [string, any]) => (
-              <div key={key} className="clinical-report-item">
-                <span className="clinical-report-label" style={{ textTransform: 'capitalize' }}>{key.replace('_', ' ')}</span>
-                <span className="clinical-report-value">{val}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Fallback */}
-        {(!hasValue(data.queixaPrincipal) && !hasValue(data.historicoPessoal)) && data.conteudo && (
-          <div className="clinical-report-section">
-            <h3>Resumo Clínico</h3>
-            <FormattedText text={data.conteudo} />
-          </div>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div className="clinical-structured-view">

@@ -729,23 +729,28 @@ export default function HistoricoPage() {
         {selectedItem && (
           <div className="history-details-modal">
             <div className="pc-relatorio-container" style={{ padding: 0 }}>
-              <div className="clinical-report-card">
-                <div className="clinical-report-section">
-                  <h3>🗓️ Informações Gerais</h3>
-                  <div className="clinical-report-item">
-                    <span className="clinical-report-label">Data:</span>
-                    <span>{selectedItem.data_consulta ? formatDate(selectedItem.data_consulta) : formatDate(selectedItem.createdAt)}</span>
+              <div className="clinical-structured-view">
+                <div className="csv-section">
+                  <div className="csv-section-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    Informações Gerais
                   </div>
-                  <div className="clinical-report-item">
-                    <span className="clinical-report-label">{userType === 'paciente' ? 'Médico:' : 'Paciente:'}</span>
-                    <span>{getParticipantName(selectedItem)}</span>
-                  </div>
-                  <div className="clinical-report-item">
-                    <span className="clinical-report-label">Horário:</span>
-                    <span>
-                      {selectedItem.hora_inicio ? formatTime(selectedItem.hora_inicio) : '-'}
-                      {selectedItem.hora_fim ? ` - ${formatTime(selectedItem.hora_fim)}` : ''}
-                    </span>
+                  <div className="csv-grid">
+                    <div className="csv-item">
+                      <span className="csv-label">Data</span>
+                      <span className="csv-value">{selectedItem.data_consulta ? formatDate(selectedItem.data_consulta) : formatDate(selectedItem.createdAt)}</span>
+                    </div>
+                    <div className="csv-item">
+                      <span className="csv-label">{userType === 'paciente' ? 'Médico' : 'Paciente'}</span>
+                      <span className="csv-value">{getParticipantName(selectedItem)}</span>
+                    </div>
+                    <div className="csv-item">
+                      <span className="csv-label">Horário</span>
+                      <span className="csv-value">
+                        {selectedItem.hora_inicio ? formatTime(selectedItem.hora_inicio) : '-'}
+                        {selectedItem.hora_fim ? ` - ${formatTime(selectedItem.hora_fim)}` : ''}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

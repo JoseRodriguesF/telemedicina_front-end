@@ -1,0 +1,105 @@
+.clinical-structured-view {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 0.25rem 0;
+    animation: fadeIn 0.4s ease;
+}
+
+.csv-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.dark-mode .csv-section,
+[data-theme="dark"] .csv-section {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.csv-section-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-primary-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dark-mode .csv-section-title,
+[data-theme="dark"] .csv-section-title {
+    color: var(--color-primary-300);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.csv-section-title svg {
+    opacity: 0.8;
+}
+
+.csv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.csv-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.csv-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+}
+
+.csv-value {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.csv-value.alert {
+    color: var(--color-error);
+    background: rgba(239, 68, 68, 0.05);
+    padding: 4px 8px;
+    border-radius: 6px;
+    width: fit-content;
+}
+
+.dark-mode .csv-value.alert,
+[data-theme="dark"] .csv-value.alert {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.csv-empty {
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+    font-style: italic;
+    text-align: center;
+    padding: 1rem;
+}
+
+.csv-main-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0.5rem 0;
+}
+
+@media (max-width: 600px) {
+    .csv-grid {
+        grid-template-columns: 1fr;
+    }
+}
