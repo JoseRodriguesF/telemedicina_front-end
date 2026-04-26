@@ -22,20 +22,19 @@ export default function HomeScreen() {
 				<div className="container">
 					<div className="hero-content">
 						<div className="hero-text animate-fadeIn">
-							<h1 className="hero-title" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
-								<Image 
-									src="/images/logo_matriarca_icon.png" 
-									alt="Matriarca Ícone" 
-									width={64} 
-									height={64} 
-									style={{ filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.1))' }}
-								/>
-								<span><span className="text-highlight">Matriarca</span> Telemed</span>
+							<Image 
+								src="/images/logo_matriarca_icon.png" 
+								alt="Logo Matriarca" 
+								width={150} 
+								height={150} 
+								className="hero-logo-img"
+								style={{ marginBottom: '1rem', objectFit: 'contain' }}
+								priority
+							/>
+							<h1 className="hero-title">
+								<span className="text-highlight">Matriarca</span> Telemedicina
 							</h1>
-							<p className="hero-description">
-								Acesso imediato a especialistas de alto nível através de uma plataforma segura e intuitiva. 
-								O futuro do cuidado clínico, agora na palma da sua mão.
-							</p>
+							
 							<div className="hero-actions">
 								<Link href={{ pathname: '/register', query: { tipo: 'paciente' } }} className="btn btn-hero-primary">
 									Começar Agora →
@@ -43,21 +42,6 @@ export default function HomeScreen() {
 								<Link href="/login" className="btn btn-hero-secondary">
 									Já Tenho Conta
 								</Link>
-							</div>
-							
-							<div className="hero-stats">
-								<div className="stat-item">
-									<span className="stat-number">1000+</span>
-									<span className="stat-label">PACIENTES</span>
-								</div>
-								<div className="stat-item">
-									<span className="stat-number">50+</span>
-									<span className="stat-label">ESPECIALISTAS</span>
-								</div>
-								<div className="stat-item">
-									<span className="stat-number">24/7</span>
-									<span className="stat-label">DISPONIBILIDADE</span>
-								</div>
 							</div>
 						</div>
 						<div className="hero-image-v2 animate-fadeIn">
