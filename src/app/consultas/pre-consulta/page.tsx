@@ -428,85 +428,30 @@ function PreConsultaInner() {
 
                   <div className="pc-relatorio-card">
                     {patientData && (
-                      <div className="pc-relatorio-section">
-                        <h3>👤 Meus Dados</h3>
+                      <div className="pc-relatorio-section" style={{ borderBottom: '1px solid var(--border-color)', marginBottom: '1.5rem', paddingBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>👤 Meus Dados</h3>
                         <div className="pc-relatorio-item">
                           <span className="pc-relatorio-label">Nome:</span>
                           <span>{patientData.nome_completo || patientData.nome || '-'}</span>
                         </div>
                       </div>
                     )}
-                    
-                    {dadosTriagem?.queixa_principal && (
-                      <div className="pc-relatorio-section">
-                        <h3>📋 Motivo da Consulta</h3>
-                        <p>{dadosTriagem.queixa_principal}</p>
-                      </div>
-                    )}
 
-                    {dadosTriagem?.descricao_sintomas && (
-                      <div className="pc-relatorio-section">
-                        <h3>🩺 Descrição dos Sintomas</h3>
-                        <p>{dadosTriagem.descricao_sintomas}</p>
-                      </div>
-                    )}
-
-                    {dadosTriagem?.historico_pessoal && (
-                      <div className="pc-relatorio-section">
-                        <h3>📁 Histórico Médico Pessoal</h3>
-                        {dadosTriagem.historico_pessoal.doencas && dadosTriagem.historico_pessoal.doencas.length > 0 && (
-                          <div className="pc-relatorio-item">
-                            <span className="pc-relatorio-label">Doenças crônicas:</span>
-                            <span>{dadosTriagem.historico_pessoal.doencas.join(', ')}</span>
-                          </div>
-                        )}
-                        {dadosTriagem.historico_pessoal.medicamentos && dadosTriagem.historico_pessoal.medicamentos.length > 0 && (
-                          <div className="pc-relatorio-item">
-                            <span className="pc-relatorio-label">Medicamentos em uso:</span>
-                            <span>{dadosTriagem.historico_pessoal.medicamentos.join(', ')}</span>
-                          </div>
-                        )}
-                        {dadosTriagem.historico_pessoal.alergias && dadosTriagem.historico_pessoal.alergias.length > 0 && (
-                          <div className="pc-relatorio-item">
-                            <span className="pc-relatorio-label alerta">⚠️ Alergias:</span>
-                            <span className="txt-alerta">{dadosTriagem.historico_pessoal.alergias.join(', ')}</span>
-                          </div>
-                        )}
-                        {(!dadosTriagem.historico_pessoal.doencas?.length && !dadosTriagem.historico_pessoal.medicamentos?.length && !dadosTriagem.historico_pessoal.alergias?.length) && (
-                          <p className="pc-relatorio-vazio">Nenhuma informação registrada.</p>
-                        )}
-                      </div>
-                    )}
-                    {dadosTriagem?.antecedentes_familiares && Object.keys(dadosTriagem.antecedentes_familiares).length > 0 && (
-                      <div className="pc-relatorio-section">
-                        <h3>👨‍👩‍👧 Antecedentes Familiares</h3>
-                        {Object.entries(dadosTriagem.antecedentes_familiares).map(([familiar, doenca]) => (
-                          <div key={familiar} className="pc-relatorio-item">
-                            <span className="pc-relatorio-label">{familiar}:</span>
-                            <span>{doenca}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {dadosTriagem?.estilo_vida && Object.keys(dadosTriagem.estilo_vida).length > 0 && (
-                      <div className="pc-relatorio-section">
-                        <h3>🏃 Estilo de Vida</h3>
-                        {Object.entries(dadosTriagem.estilo_vida).map(([key, valor]) => (
-                          <div key={key} className="pc-relatorio-item">
-                            <span className="pc-relatorio-label">{key}:</span>
-                            <span>{valor}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {dadosTriagem?.vacinacao && dadosTriagem.vacinacao.trim() && !dadosTriagem.vacinacao.toLowerCase().includes('não coletado') && (
-                      <div className="pc-relatorio-section">
-                        <h3>💉 Vacinação</h3>
-                        <p>{dadosTriagem.vacinacao}</p>
-                      </div>
-                    )}
+                    <ClinicalStructuredView 
+                      data={{
+                        id: 0,
+                        conteudo: dadosTriagem.conteudo,
+                        queixaPrincipal: dadosTriagem.queixa_principal,
+                        descricaoSintomas: dadosTriagem.descricao_sintomas,
+                        historicoPessoal: {
+                          ...dadosTriagem.historico_pessoal,
+                          vacinacao: dadosTriagem.vacinacao
+                        },
+                        antecedentesFamiliares: dadosTriagem.antecedentes_familiares,
+                        estiloVida: dadosTriagem.estilo_vida
+                      }}
+                      variant="report"
+                    />
                   </div>
 
                   <div className="pc-relatorio-disclaimer">

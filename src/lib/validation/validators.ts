@@ -116,17 +116,13 @@ export function isValidDDD(ddd: string): boolean {
 }
 
 /**
- * Valida CRM no formato 0000000-0/UF (7 dígitos, hífen, 1 dígito, barra, duas letras)
+ * Valida CRM (mínimo de 4 dígitos, apenas números)
  */
 export function isValidCRM(crm: string): boolean {
   if (!crm || typeof crm !== 'string') return false;
-  const s = crm.trim().toUpperCase();
-  if (!/^\d{7}-\d\/[A-Z]{2}$/.test(s)) return false;
-  const uf = s.slice(-2);
-  const VALID_UFS = [
-    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
-  ];
-  return VALID_UFS.includes(uf);
+  const onlyNumbers = crm.trim().replace(/\D/g, '');
+  // CRMs brasileiros têm entre 4 e 10 dígitos dependendo do estado e data
+  return onlyNumbers.length >= 4 && onlyNumbers.length <= 10;
 }
 
 /** Retorna os estados/UFs que utilizam o DDD informado (array vazio se nenhum) */

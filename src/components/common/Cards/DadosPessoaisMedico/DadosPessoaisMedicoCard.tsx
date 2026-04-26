@@ -101,18 +101,12 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
         <label className="form-label">
           <span className="label-title">CRM <span className="required-asterisk">*</span></span>
           <Input
-            placeholder="CRM: 0000000-0/UF"
+            placeholder="Ex: 123456"
             value={crm}
             onChange={(e) => {
-              const raw = (e.target.value || '').toUpperCase();
-              const nums = (raw.replace(/\D/g, '') || '').slice(0, 8); // 7 + 1 dígito verificador
-              const letters = (raw.replace(/[^A-Z]/g, '') || '').slice(0, 2);
-              const left = nums.slice(0, 7);
-              const dv = nums.slice(7, 8);
-              let formatted = left;
-              if (dv) formatted += `-${dv}`;
-              if (letters) formatted += `/${letters}`;
-              setCrm(formatted);
+              const raw = (e.target.value || '');
+              const nums = (raw.replace(/\D/g, '') || '').slice(0, 10);
+              setCrm(nums);
               setCrmError('');
             }}
           />
@@ -195,7 +189,7 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
               onClick={() => {
                 const ok = validateAll();
                 if (!isValidCRM(crm)) {
-                  setCrmError('CRM inválido. Formato: 0000000-0/UF (UF brasileira válida, ex.: 1234567-8/SP).');
+                  setCrmError('CRM inválido. Informe apenas os números.');
                   return;
                 }
                 if (ok) onComplete?.({ name, crm, cpf, gender, birthDate, telefone_celular: telefoneCelular, crm_uf: crmUf, rqe });

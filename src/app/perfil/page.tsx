@@ -624,24 +624,33 @@ export default function PerfilPage() {
             <>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="field-group">
-                  <label>UF do CRM</label>
+                  <label>CRM (Imutável)</label>
                   <input
                     className="field-value"
-                    style={{ width: '100%', background: 'var(--bg-tertiary)' }}
-                    maxLength={2}
-                    value={editData.crm_uf}
-                    onChange={(e) => setEditData({ ...editData, crm_uf: e.target.value.toUpperCase() })}
+                    style={{ width: '100%', background: 'var(--bg-tertiary)', opacity: 0.7, cursor: 'not-allowed' }}
+                    value={editData.crm}
+                    readOnly
                   />
                 </div>
                 <div className="field-group">
-                  <label>RQE</label>
+                  <label>UF do CRM</label>
                   <input
                     className="field-value"
-                    style={{ width: '100%', background: 'var(--bg-tertiary)' }}
-                    value={editData.rqe}
-                    onChange={(e) => setEditData({ ...editData, rqe: e.target.value })}
+                    style={{ width: '100%', background: 'var(--bg-tertiary)', opacity: 0.7, cursor: 'not-allowed' }}
+                    value={editData.crm_uf}
+                    readOnly
                   />
                 </div>
+              </div>
+              
+              <div className="field-group">
+                <label>RQE</label>
+                <input
+                  className="field-value"
+                  style={{ width: '100%', background: 'var(--bg-tertiary)' }}
+                  value={editData.rqe}
+                  onChange={(e) => setEditData({ ...editData, rqe: e.target.value })}
+                />
               </div>
 
               <div className="field-group">
