@@ -21,25 +21,26 @@ export default function HomeScreen() {
 			<section className="hero-section">
 				<div className="container">
 					<div className="hero-content">
-						<div className="hero-text animate-fadeIn">
+						<div className="hero-text animate-fadeIn" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 							<Image 
 								src="/images/logo_matriarca_icon.png" 
 								alt="Logo Matriarca" 
-								width={150} 
-								height={150} 
+								width={180} 
+								height={180} 
 								className="hero-logo-img"
-								style={{ marginBottom: '1rem', objectFit: 'contain' }}
+								style={{ marginBottom: '1.5rem', objectFit: 'contain' }}
 								priority
 							/>
-							<h1 className="hero-title">
-								<span className="text-highlight">Matriarca</span> Telemedicina
+							<h1 className="hero-title" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '3rem', lineHeight: 1.1 }}>
+								<span className="text-highlight" style={{ fontSize: 'clamp(4rem, 8vw, 6.5rem)', fontWeight: 900 }}>Matriarca</span>
+								<span style={{ fontSize: 'clamp(1.5rem, 3vw, 2.2rem)', fontWeight: 600, color: 'var(--color-primary-600)', letterSpacing: '0.15em', marginTop: '0.5rem', textTransform: 'uppercase' }}>Telemedicina</span>
 							</h1>
 							
-							<div className="hero-actions">
-								<Link href={{ pathname: '/register', query: { tipo: 'paciente' } }} className="btn btn-hero-primary">
+							<div className="hero-actions" style={{ justifyContent: 'center', gap: '2rem', width: '100%' }}>
+								<Link href={{ pathname: '/register', query: { tipo: 'paciente' } }} className="btn btn-hero-primary" style={{ padding: '1.25rem 3.5rem', fontSize: '1.2rem' }}>
 									Começar Agora →
 								</Link>
-								<Link href="/login" className="btn btn-hero-secondary">
+								<Link href="/login" className="btn btn-hero-secondary" style={{ padding: '1.25rem 3.5rem', fontSize: '1.2rem' }}>
 									Já Tenho Conta
 								</Link>
 							</div>
