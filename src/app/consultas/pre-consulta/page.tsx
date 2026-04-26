@@ -440,15 +440,15 @@ function PreConsultaInner() {
                     <ClinicalStructuredView 
                       data={{
                         id: 0,
-                        conteudo: dadosTriagem.conteudo,
-                        queixaPrincipal: dadosTriagem.queixa_principal,
-                        descricaoSintomas: dadosTriagem.descricao_sintomas,
+                        conteudo: dadosTriagem?.conteudo || '',
+                        queixaPrincipal: dadosTriagem?.queixa_principal,
+                        descricaoSintomas: dadosTriagem?.descricao_sintomas,
                         historicoPessoal: {
-                          ...dadosTriagem.historico_pessoal,
-                          vacinacao: dadosTriagem.vacinacao
+                          ...dadosTriagem?.historico_pessoal,
+                          vacinacao: dadosTriagem?.vacinacao
                         },
-                        antecedentesFamiliares: dadosTriagem.antecedentes_familiares,
-                        estiloVida: dadosTriagem.estilo_vida
+                        antecedentesFamiliares: dadosTriagem?.antecedentes_familiares,
+                        estiloVida: dadosTriagem?.estilo_vida
                       }}
                       variant="report"
                     />
