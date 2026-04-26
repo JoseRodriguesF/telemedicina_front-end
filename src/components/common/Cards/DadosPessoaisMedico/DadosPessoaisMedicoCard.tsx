@@ -127,7 +127,6 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
         <label className="form-label">
            <span className="label-title">RQE (Opcional)</span>
            <Input placeholder="Nº do RQE" value={rqe} onChange={(e) => setRqe(e.target.value)} />
-           <div className="input-tip">Obrigatório para anunciar especialidade</div>
         </label>
 
         <label className="form-label">
@@ -174,7 +173,6 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
             }}
             className={telefoneCelularError ? 'c-input--error' : ''}
           />
-          <div className="input-tip">Onde você receberá o SMS para assinar</div>
           {telefoneCelularError && <div className="error-text">{telefoneCelularError}</div>}
         </label>
 
