@@ -45,7 +45,7 @@
    HERO SECTION
    ============================================ */
 .hero-section {
-  padding: 8rem 0 4rem;
+  padding: 5rem 0 6rem; /* Reduced top padding to move content up */
   overflow: hidden;
   position: relative;
   background: url('/images/hero-bg-medical.png') no-repeat center right / cover;
@@ -71,9 +71,9 @@
 
 .hero-content {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+  grid-template-columns: 0.85fr 1.15fr; /* Shifted grid so the left column center is further left */
   align-items: center;
-  gap: 4rem;
+  gap: 2rem; /* Reduced gap just in case */
   position: relative;
   z-index: 1;
 }
