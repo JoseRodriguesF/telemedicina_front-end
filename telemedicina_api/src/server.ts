@@ -15,7 +15,7 @@ dotenv.config()
 process.env.TZ = 'America/Sao_Paulo';
 
 const server = Fastify({ 
-  logger: false,
+  logger: true,
   trustProxy: true // Essencial para rate limiting atrás de um balanceador/proxy
 })
 

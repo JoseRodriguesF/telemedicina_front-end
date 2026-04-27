@@ -15,10 +15,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://telemedicina-jj.com.br"),
+  metadataBase: new URL("https://matriarcatelemed.com.br"),
   title: {
-    default: "Matriarca - Soluções em Saúde Online com Especialistas",
-    template: "%s | Matriarca"
+    default: "Matriarca Telemedicina - Saúde Online com Especialistas",
+    template: "%s | Matriarca Telemedicina"
+  },
+  icons: {
+    icon: "/images/logo_matriarca_icon.png",
+    shortcut: "/images/logo_matriarca_icon.png",
+    apple: "/images/logo_matriarca_icon.png",
   },
   description: "Matriarca: Acesso imediato a especialistas de alto nível através de uma plataforma segura e intuitiva. Atendimento rápido, seguro e no conforto da sua casa.",
   keywords: ["matriarca", "saúde online", "telemedicina moderna", "consulta online", "médico online", "saúde digital", "atendimento médico"],
