@@ -1,0 +1,67 @@
+services:
+  telemedicina-api:
+    build:
+      context: ./telemedicina_api
+      dockerfile: Dockerfile
+    container_name: telemedicina-api
+    restart: always
+    env_file:
+      - ./telemedicina_api/.env
+    environment:
+      - PORT=3000
+    ports:
+      - "3001:3000"
+    networks:
+      - telemedicina-network
+
+  telemedicina-frontend:
+    build:
+      context: ./telemedicina_front-end
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=https://api.matriarcatelemed.com.br
+        - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+    container_name: telemedicina-frontend
+    restart: always
+    env_file:
+      - ./telemedicina_front-end/.env.local
+    environment:
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - telemedicina-api
+    networks:
+      - telemedicina-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/nginx/certs
+      - ./nginx/vhost.d:/etc/nginx/vhost.d
+      - ./nginx/html:/usr/share/nginx/html
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - telemedicina-network
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - telemedicina-network
+
+networks:
+  telemedicina-network:
+    driver: bridge

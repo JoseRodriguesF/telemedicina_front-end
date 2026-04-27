@@ -1,0 +1,84 @@
+import crypto from 'node:crypto'
+
+type Participant = {
+  userId: string | number
+  role?: 'medico' | 'paciente'
+}
+
+type RoomState = {
+  consultaId: number | null
+  participants: Participant[]
+  createdAt: number
+}
+
+const rooms = new Map<string, RoomState>()
+
+/**
+ * Gera um ID de sala com alta entropia para prevenir ataques de enumeração.
+ */
+function generateRoomId(): string {
+  return crypto.randomBytes(16).toString('hex')
+}
+
+export const Rooms = {
+  createOrGet(consultaId: number): { roomId: string; created: boolean } {
+    // try to find existing room for consulta
+    for (const [rid, state] of rooms.entries()) {
+      if (state.consultaId === consultaId) {
+        return { roomId: rid, created: false }
+      }
+    }
+    const roomId = generateRoomId()
+    rooms.set(roomId, { consultaId, participants: [], createdAt: Date.now() })
+    return { roomId, created: true }
+  },
+
+  /**
+   * @deprecated Salas sem consultaId são um risco de segurança em telemedicina.
+   * Mantido apenas para triagem inicial controlada.
+   */
+  createStandalone(): { roomId: string } {
+    const roomId = generateRoomId()
+    rooms.set(roomId, { consultaId: null, participants: [], createdAt: Date.now() })
+    return { roomId }
+  },
+
+  get(roomId: string): RoomState | undefined {
+    return rooms.get(roomId)
+  },
+
+  findRoomIdByConsulta(consultaId: number): string | undefined {
+    for (const [rid, state] of rooms.entries()) {
+      if (state.consultaId === consultaId) return rid
+    }
+    return undefined
+  },
+
+  addParticipant(roomId: string, participant: Participant): { ok: boolean; reason?: string } {
+    const state = rooms.get(roomId)
+    if (!state) return { ok: false, reason: 'room_not_found' }
+    // if participant with same userId exists, replace (reconnection)
+    const existingIndex = state.participants.findIndex(p => p.userId === participant.userId)
+    if (existingIndex >= 0) {
+      state.participants[existingIndex] = participant
+      return { ok: true }
+    }
+    if (state.participants.length >= 2) return { ok: false, reason: 'room_full' }
+    state.participants.push(participant)
+    return { ok: true }
+  },
+
+  listParticipants(roomId: string): Participant[] {
+    return rooms.get(roomId)?.participants ?? []
+  },
+
+  removeParticipant(roomId: string, userId: string | number): void {
+    const state = rooms.get(roomId)
+    if (!state) return
+    state.participants = state.participants.filter(p => p.userId !== userId)
+  },
+
+  end(roomId: string): void {
+    rooms.delete(roomId)
+  }
+}

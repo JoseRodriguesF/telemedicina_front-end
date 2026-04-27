@@ -1,0 +1,240 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id           Int         @id @default(autoincrement())
+  email        String      @unique @db.VarChar(255)
+  senha_hash   String?     @db.VarChar(255)
+  google_id    String?     @unique @map("google_id") @db.VarChar(255)
+  registroFull Boolean     @default(false) @map("registro_full")
+  tipo_usuario TipoUsuario
+  enderecos    Endereco[]
+  medico       Medico?
+  paciente     Paciente?
+
+  @@map("usuarios")
+}
+
+model Paciente {
+  id                    Int               @id @default(autoincrement())
+  usuario_id            Int               @unique
+  nome_completo         String            @db.VarChar(255)
+  data_nascimento       DateTime          @db.Date
+  cpf                   String            @unique @db.VarChar(14)
+  sexo                  String            @db.VarChar(20)
+  estado_civil          String            @db.VarChar(50)
+  telefone              String            @db.VarChar(11)
+  nome_mae              String?           @db.VarChar(255)
+  telefone_responsavel  String?           @db.VarChar(20)
+  peso                  Decimal?          @db.Decimal(5, 2)
+  altura                Int?              // Altura em cm
+  notas                 String?
+  historiaClinicaResumo String?           @map("historia_clinica")
+  aceitouTCLE           Boolean           @default(false) @map("aceitou_tcle")
+  tcleData              DateTime?         @map("tcle_data")
+  tcleVersion           String?           @default("1.0") @map("tcle_version") @db.VarChar(10)
+  consultas             Consulta[]        @relation("ConsultaPaciente")
+  historiaClinica       HistoriaClinica[]
+  usuario               Usuario           @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("pacientes")
+}
+
+model Medico {
+  id                               Int               @id @default(autoincrement())
+  usuario_id                       Int               @unique
+  nome_completo                    String            @db.VarChar(255)
+  data_nascimento                  DateTime          @db.Date
+  cpf                              String            @unique @db.VarChar(14)
+  sexo                             String?           @db.VarChar(20)
+  telefone_celular                 String?           @db.VarChar(15) // MFA/Mevo
+  crm                              String            @db.VarChar(50)
+  crm_uf                           String            @default("SP") @db.VarChar(2)
+  rqe                              String?           @db.VarChar(50)
+  diploma_url                      String?           @db.VarChar(255)
+  especializacao_url               String?           @db.VarChar(255)
+  assinatura_digital_url           String?           @db.VarChar(255)
+  seguro_responsabilidade_url      String?           @db.VarChar(255)
+  verificacao                      StatusVerificacao @default(analise)
+  avaliacao                        Float?            @default(0)
+  resumo_profissional              String?
+  especialidade                    String?           @db.VarChar(100)
+  consultas                        Consulta[]        @relation("ConsultaMedico")
+  usuario                          Usuario           @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("medicos")
+}
+
+model Endereco {
+  id          Int     @id @default(autoincrement())
+  usuario_id  Int
+  endereco    String  @db.VarChar(255)
+  numero      String? @db.VarChar(20)
+  complemento String? @db.VarChar(255)
+  bairro      String? @db.VarChar(100)
+  cep         String? @db.VarChar(10)
+  cidade      String? @db.VarChar(100)
+  estado      String? @db.VarChar(2)
+  usuario     Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
+  @@map("enderecos")
+}
+
+model Consulta {
+  id                Int               @id @default(autoincrement())
+  medicoId          Int?              @map("medico_id")
+  pacienteId        Int               @map("paciente_id")
+  status            ConsultaStatus
+  data_consulta     DateTime?         @map("data_consulta") @db.Date
+  hora_inicio       DateTime?         @map("hora_inicio") @db.Time(6)
+  hora_fim          DateTime?         @map("hora_fim") @db.Time(6)
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  resumo            String?
+  repouso           String?
+  destino_final     String?           @map("destino_final")
+  diagnostico       String?
+  cid               String?           @db.VarChar(10)
+  evolucao          String?
+  plano_terapeutico String?           @map("plano_terapeutico")
+  especialidade_seguimento String?    @map("especialidade_seguimento")
+  ambulancia_endereco     String?    @map("ambulancia_endereco")
+  ambulancia_complemento  String?    @map("ambulancia_complemento")
+  ambulancia_info         String?    @map("ambulancia_info")
+  ambulancia_telefone     String?    @map("ambulancia_telefone")
+  avaliacao         String?
+  estrelas          Int?
+  canceladoPor      String?           @map("cancelado_por")
+  canceladoPorId    Int?              @map("cancelado_por_id")
+  observacaoTecnica String?           @map("observacao_tecnica") // Registros automáticos de falhas de conexão p/ CFM
+  medico            Medico?           @relation("ConsultaMedico", fields: [medicoId], references: [id], onDelete: Cascade)
+  paciente          Paciente          @relation("ConsultaPaciente", fields: [pacienteId], references: [id], onDelete: Cascade)
+  historiaClinica   HistoriaClinica[]
+  prescricoes       Prescricao[]
+  anexos            ConsultaAnexo[]
+  eventosTecnicos   EventoTecnico[]
+
+  @@index([medicoId], map: "idx_consultas_medico_id")
+  @@index([pacienteId], map: "idx_consultas_paciente_id")
+  @@index([medicoId, pacienteId], map: "idx_consultas_medico_paciente")
+  @@map("consultas")
+}
+
+model ConsultaAnexo {
+  id         Int      @id @default(autoincrement())
+  consultaId Int      @map("consulta_id")
+  arquivo_url String   @map("arquivo_url") @db.VarChar(255)
+  tipo_mime   String   @map("tipo_mime") @db.VarChar(100)
+  nome        String?  @db.VarChar(255)
+  createdAt  DateTime @default(now()) @map("created_at")
+  consulta   Consulta @relation(fields: [consultaId], references: [id], onDelete: Cascade)
+
+  @@index([consultaId], map: "idx_consulta_anexos_consulta_id")
+  @@map("consulta_anexos")
+}
+
+model HistoriaClinica {
+  id                     Int       @id @default(autoincrement())
+  pacienteId             Int       @map("paciente_id")
+  consultaId             Int?      @map("consulta_id")
+  status                 String    @default("rascunho") @db.VarChar(20)
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+  conteudo               String
+  antecedentesFamiliares Json?     @map("antecedentes_familiares")
+  descricaoSintomas      String?   @map("descricao_sintomas")
+  estiloVida             Json?     @map("estilo_vida")
+  historicoPessoal       Json?     @map("historico_pessoal")
+  queixaPrincipal        String?   @map("queixa_principal")
+  consulta               Consulta? @relation(fields: [consultaId], references: [id])
+  paciente               Paciente  @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+
+  @@index([pacienteId], map: "idx_historiaclinica_paciente_id")
+  @@index([consultaId], map: "idx_historiaclinica_consulta_id")
+  @@index([status], map: "idx_historiaclinica_status")
+  @@map("historiaClinica")
+}
+
+model Prescricao {
+  id              Int      @id @default(autoincrement())
+  consultaId      Int      @map("consulta_id")
+  mevoId          String?  @unique @map("mevo_id")
+  mevoStatus      String?  @map("mevo_status") @db.VarChar(50)
+  medicamento     String   @db.VarChar(255)
+  marca           String?  @db.VarChar(255)
+  dosagem         String
+  frequencia      String
+  duracao         String
+  inclusoConvenio Boolean  @default(false) @map("incluso_convenio")
+  pdf_url         String?  @map("pdf_url") @db.VarChar(255)
+  pdf_mimetype    String?  @map("pdf_mimetype") @db.VarChar(100)
+  assinaturaHash  String?  @map("assinatura_hash") // Hash da assinatura ICP-Brasil para conferência NGS2
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  consulta        Consulta @relation(fields: [consultaId], references: [id], onDelete: Cascade)
+
+  @@index([consultaId], map: "idx_prescricoes_consulta_id")
+  @@map("prescricoes")
+}
+
+model TrilhaAuditoria {
+  id            Int      @id @default(autoincrement())
+  usuarioId     Int      @map("usuario_id")
+  acao          String   @db.VarChar(100)
+  recurso       String   @db.VarChar(100)
+  recursoId     Int?     @map("recurso_id")
+  detalhes      String?
+  ip            String?  @db.VarChar(45)
+  userAgent     String?  @map("user_agent")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("trilha_auditoria")
+}
+
+model EventoTecnico {
+  id            Int      @id @default(autoincrement())
+  consultaId    Int      @map("consulta_id")
+  usuarioId     Int      @map("usuario_id")
+  tipo          String   @db.VarChar(50) // ex: 'FAIL_CONNECTION', 'LOW_QUALITY', 'BITRATE_DROP'
+  status_info   Json?    @map("status_info") // Bitrate, Jitter, Packet Loss, etc.
+  observacao    String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  consulta      Consulta @relation(fields: [consultaId], references: [id], onDelete: Cascade)
+
+  @@index([consultaId], map: "idx_eventos_tecnicos_consulta_id")
+  @@map("eventos_tecnicos")
+}
+
+enum TipoUsuario {
+  medico
+  paciente
+  admin
+
+  @@map("tipo_usuario_enum")
+}
+
+enum StatusVerificacao {
+  analise
+  verificado
+  recusado
+
+  @@map("status_verificacao_enum")
+}
+
+enum ConsultaStatus {
+  scheduled
+  agendada
+  in_progress
+  finished
+  solicitada
+  cancelled
+  expired
+
+  @@map("consulta_status_enum")
+}

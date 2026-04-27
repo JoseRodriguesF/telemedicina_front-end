@@ -1,0 +1,10 @@
+steps:
+- name: 'gcr.io/cloud-builders/npm'
+  args: ['install']
+- name: 'gcr.io/cloud-builders/npm'
+  entrypoint: 'npx'
+  args: ['prisma', 'migrate', 'deploy']
+  env:
+  - 'DATABASE_URL=${_DATABASE_URL}'
+options:
+  cloudSqlInstances: ['matriarca-telemedicina:southamerica-east1:matriarca-db']

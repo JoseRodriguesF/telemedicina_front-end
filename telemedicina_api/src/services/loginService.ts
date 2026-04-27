@@ -1,0 +1,85 @@
+import prisma from '../config/database'
+import bcrypt from 'bcrypt'
+import ApiError from '../utils/apiError'
+import { generateJWT } from '../utils/security'
+import logger from '../utils/logger'
+
+export class LoginService {
+  async authenticateUser(email: string, senha: string) {
+    // Buscar usuário por email com dados necessários em uma única query
+    const user = await prisma.usuario.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        senha_hash: true,
+        tipo_usuario: true,
+        registroFull: true,
+        medico: {
+          select: {
+            id: true,
+            nome_completo: true,
+            verificacao: true
+          }
+        },
+        paciente: {
+          select: {
+            id: true,
+            nome_completo: true
+          }
+        }
+      }
+    })
+
+    if (!user) {
+      logger.warn('Login attempt with non-existent email', { email: logger.sanitize({ email }) })
+      // SECURITY: Unificamos a mensagem e o código de erro para evitar enumeração de contas (OWASP).
+      throw new ApiError('E-mail ou senha incorretos.', 401, 'INVALID_CREDENTIALS')
+    }
+
+    // Verificar senha
+    if (!user.senha_hash) {
+      logger.info('OAuth user attempted password login', { userId: user.id })
+      throw new ApiError('Esta conta está vinculada ao Google. Faça login usando o Google.', 401, 'USE_GOOGLE_AUTH')
+    }
+
+    const isPasswordValid = await bcrypt.compare(senha, user.senha_hash)
+    if (!isPasswordValid) {
+      logger.warn('Failed login attempt - wrong password', { userId: user.id })
+      // SECURITY: Mesmo erro que o caso 'user not found' para anonimato de existência da conta.
+      throw new ApiError('E-mail ou senha incorretos.', 401, 'INVALID_CREDENTIALS')
+    }
+
+    // Extrair nome e verificação do perfil correspondente
+    let nome: string | undefined
+    let verificacao: string | undefined
+
+    if (user.tipo_usuario === 'medico' && user.medico) {
+      nome = user.medico.nome_completo
+      verificacao = user.medico.verificacao
+    } else if (user.tipo_usuario === 'paciente' && user.paciente) {
+      nome = user.paciente.nome_completo
+    }
+
+    // Gerar JWT usando helper seguro
+    const token = generateJWT({
+      id: user.id,
+      email: user.email,
+      tipo_usuario: user.tipo_usuario
+    })
+
+    logger.info('Successful login', { userId: user.id, tipo_usuario: user.tipo_usuario })
+
+    return {
+      id: user.id,
+      email: user.email,
+      tipo_usuario: user.tipo_usuario,
+      registro_full: user.registroFull,
+      pacienteId: user.paciente?.id || null,
+      medicoId: user.medico?.id || null,
+      nome,
+      verificacao,
+      token
+    }
+  }
+}

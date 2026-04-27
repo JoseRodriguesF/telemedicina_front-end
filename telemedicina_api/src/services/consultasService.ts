@@ -1,0 +1,406 @@
+import prisma from '../config/database'
+import { ConsultaStatus, ServiceResult } from '../types/shared'
+import logger from '../utils/logger'
+
+export async function getConsultaById(id: number) {
+  return prisma.consulta.findUnique({ where: { id } })
+}
+
+export function sanitizeHistoriaClinica(content: string | null | undefined): string {
+  if (!content) return '';
+  
+  // Se o conteúdo for um JSON de triagem, extraímos os campos relevantes para o médico
+  if (content.trim().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(content);
+      // Se tiver queixa_principal (formato de triagem novo), reconstrói um resumo clínico
+      if (parsed.queixa_principal) {
+        let summary = `### **QUEIXA PRINCIPAL**\n${parsed.queixa_principal}\n\n`;
+        if (parsed.descricao_sintomas) summary += `### **SINTOMAS**\n${parsed.descricao_sintomas}\n\n`;
+        if (parsed.historico_medico) summary += `### **HISTÓRICO MÉDICO**\n${parsed.historico_medico}\n\n`;
+        if (parsed.medicamentos_uso) summary += `### **MEDICAMENTOS EM USO**\n${parsed.medicamentos_uso}\n\n`;
+        if (parsed.alergias) summary += `### **ALERGIAS**\n${parsed.alergias}\n\n`;
+        return summary.trim();
+      }
+      // Se tiver campo 'conteudo' genérico
+      if (parsed.conteudo) return parsed.conteudo;
+      if (parsed.resumo) return parsed.resumo;
+    } catch (e) {
+      // Falha no parse, trata como string comum
+    }
+  }
+
+  // Regex para remover campos administrativos comuns de sistemas legados ou triagens técnicas
+  return content
+    .replace(/ID do Pedido: \d+/gi, '')
+    .replace(/Status da Triagem: \w+/gi, '')
+    .replace(/Prioridade Técnica: \w+/gi, '')
+    .replace(/Responsável pela triagem: .+/gi, '')
+    .replace(/\n{3,}/g, '\n\n') // Remove quebras de linha excessivas
+    .trim();
+}
+
+export async function getConsultaWithPatient(id: number) {
+  const consulta = await prisma.consulta.findUnique({
+    where: { id },
+    include: {
+      paciente: {
+        select: {
+          id: true,
+          nome_completo: true,
+          data_nascimento: true,
+          cpf: true,
+          sexo: true,
+          estado_civil: true,
+          telefone: true,
+          notas: true,
+          usuario: {
+            select: {
+              email: true,
+            }
+          }
+        }
+      },
+      historiaClinica: true
+    }
+  });
+
+  if (consulta && consulta.historiaClinica) {
+    if (Array.isArray(consulta.historiaClinica)) {
+      (consulta as any).historiaClinica = (consulta.historiaClinica as any[]).map(h => ({
+        ...h,
+        conteudo: sanitizeHistoriaClinica(h.conteudo)
+      }));
+    } else {
+      (consulta.historiaClinica as any).conteudo = sanitizeHistoriaClinica((consulta.historiaClinica as any).conteudo);
+    }
+  }
+
+  return consulta;
+}
+
+export async function updateConsultaStatus(id: number, status: ConsultaStatus) {
+  return prisma.consulta.update({ where: { id }, data: { status } })
+}
+
+interface CreateConsultaData {
+  medicoId: number | null
+  pacienteId: number
+  status?: ConsultaStatus
+  data_consulta?: string | Date
+  hora_inicio?: string
+  hora_fim?: string
+}
+
+export async function createConsulta(data: CreateConsultaData) {
+  const status = data.status ?? 'scheduled'
+
+  // Helper para converter string de tempo para Date base (1970-01-01) para o tipo @db.Time do Postgres
+  const parseTime = (timeInput: any) => {
+    if (!timeInput) return undefined
+    if (timeInput instanceof Date) return timeInput
+    if (typeof timeInput === 'string') {
+      if (timeInput.includes('T')) return new Date(timeInput)
+      return new Date(`1970-01-01T${timeInput}Z`)
+    }
+    return undefined
+  }
+
+  return prisma.consulta.create({
+    data: {
+      medicoId: data.medicoId || null,
+      pacienteId: data.pacienteId,
+      status,
+      data_consulta: data.data_consulta ? new Date(data.data_consulta) : undefined,
+      hora_inicio: parseTime(data.hora_inicio),
+      hora_fim: parseTime(data.hora_fim),
+    }
+  })
+}
+
+export async function claimConsultaByMedico(
+  consultaId: number,
+  medicoId: number
+): Promise<ServiceResult> {
+  // 1. Buscar dados para validação de territorialidade (CFM Res. 2.314/2022 Art. 2)
+  const [consulta, medico] = await Promise.all([
+    prisma.consulta.findUnique({ 
+      where: { id: consultaId },
+      include: { paciente: { include: { usuario: { include: { enderecos: true } } } } }
+    }),
+    prisma.medico.findUnique({ where: { id: medicoId } })
+  ]);
+
+  if (!consulta || !medico) {
+    return { ok: false, error: 'not_found' };
+  }
+
+  // Validação de Territorialidade (Log de Alerta)
+  const pacienteEstado = consulta.paciente.usuario.enderecos[0]?.estado;
+  const medicoUF = medico.crm_uf;
+
+  if (pacienteEstado && medicoUF && pacienteEstado !== medicoUF) {
+    logger.warn(`CONFORMIDADE CFM: Médico (UF: ${medicoUF}) atendendo paciente em estado diferente (UF: ${pacienteEstado}).`, {
+      consultaId,
+      medicoId,
+      pacienteId: consulta.pacienteId
+    });
+  }
+
+  // 2. Atomic claim: update only if still scheduled and unassigned
+  const res = await prisma.consulta.updateMany({
+    where: {
+      id: consultaId,
+      medicoId: null,
+      status: { in: ['scheduled', 'solicitada', 'agendada'] }
+    },
+    data: {
+      medicoId,
+      status: 'in_progress',
+      hora_inicio: new Date()
+    }
+  })
+
+  if (res.count === 0) {
+    // Either not found, already claimed, or already in progress
+    const exists = await prisma.consulta.findUnique({ where: { id: consultaId } })
+
+    if (!exists) {
+      return { ok: false, error: 'consulta_not_found' }
+    }
+
+    // Permitir reconexão ou início de consulta agendada: 
+    // se o médico tentando o claim já é o médico associado e a consulta está em um estado ativo
+    const allowedStatuses: ConsultaStatus[] = ['scheduled', 'solicitada', 'agendada', 'in_progress']
+    if (exists.medicoId === medicoId && allowedStatuses.includes(exists.status as ConsultaStatus)) {
+      if (exists.status !== 'in_progress') {
+        const updated = await prisma.consulta.update({
+          where: { id: consultaId },
+          data: { 
+            status: 'in_progress', 
+            // Mantém hora_inicio se já existir (reconexão), senão define agora
+            hora_inicio: exists.hora_inicio || new Date() 
+          }
+        })
+        return { ok: true, data: updated }
+      }
+      return { ok: true, data: exists }
+    }
+
+    return { ok: false, error: 'already_claimed_or_in_progress' }
+  }
+
+  const updated = await prisma.consulta.findUnique({ where: { id: consultaId } })
+  return { ok: true, data: updated }
+}
+
+export async function reconnectConsultaByPaciente(
+  consultaId: number,
+  pacienteId: number
+): Promise<ServiceResult> {
+  const exists = await prisma.consulta.findUnique({ where: { id: consultaId } })
+
+  if (!exists) {
+    return { ok: false, error: 'consulta_not_found' }
+  }
+
+  // Permitir reconexão: se o paciente tentando é o dono da consulta e ela está ativa
+  const activeStatuses: ConsultaStatus[] = ['scheduled', 'agendada', 'solicitada', 'in_progress']
+  if (exists.pacienteId === pacienteId && activeStatuses.includes(exists.status as ConsultaStatus)) {
+    return { ok: true, data: exists }
+  }
+
+  return { ok: false, error: 'not_authorized_to_reconnect' }
+}
+
+/**
+ * Cancela uma consulta com lógica de reatribuição para médicos
+ * Se médico cancela: tenta reatribuir para outro médico
+ * Se paciente cancela: deleta a consulta
+ */
+export async function cancelConsulta(
+  consultaId: number,
+  userId: number,
+  tipoUsuario: 'medico' | 'paciente' | 'admin'
+): Promise<ServiceResult<{ action: 'deleted' | 'reassigned' | 'released' }>> {
+  const consulta = await prisma.consulta.findUnique({ where: { id: consultaId } })
+
+  if (!consulta) {
+    return { ok: false, error: 'consulta_not_found' }
+  }
+
+  if (consulta.status === 'finished' || consulta.status === 'cancelled') {
+    return { ok: false, error: 'cannot_cancel_already_cancelled_or_finished_consultation' }
+  }
+
+  // Identificar quem cancelou para salvar nos novos campos
+  let canceladoPor: string = tipoUsuario;
+  let canceladoPorId: number | undefined = userId;
+
+  // Lógica específica para médico: No sistema atual, se o médico cancela,
+  // poderíamos reatribuir, mas usuário quer que a consulta seja "realmente desmarcada".
+  // Então vamos mudar o status para 'cancelled' para todos.
+  
+  if (tipoUsuario === 'medico') {
+    const medico = await prisma.medico.findUnique({ where: { usuario_id: userId } })
+    if (medico && consulta.medicoId === medico.id) {
+        canceladoPor = 'medico';
+        canceladoPorId = medico.id;
+    }
+  } else if (tipoUsuario === 'paciente') {
+    const paciente = await prisma.paciente.findUnique({ where: { usuario_id: userId } })
+    if (paciente && consulta.pacienteId === paciente.id) {
+        canceladoPor = 'paciente';
+        canceladoPorId = paciente.id;
+    } else {
+        return { ok: false, error: 'forbidden' }
+    }
+  }
+
+  // Atualizar para status cancelado sem deletar
+  await prisma.consulta.update({
+    where: { id: consultaId },
+    data: {
+      status: 'cancelled',
+      canceladoPor,
+      canceladoPorId
+    }
+  })
+
+  return { ok: true, data: { action: 'deleted' }, message: 'Consulta desmarcada com sucesso para ambas as partes' }
+}
+
+/**
+ * Marca consultas agendadas ou solicitadas que passaram da data como expiradas.
+ */
+export async function cleanupExpiredConsultations() {
+  try {
+    const now = new Date()
+    
+    // 1. Consultas com data anterior a hoje (ignorando horário)
+    const yesterday = new Date(now)
+    yesterday.setHours(0, 0, 0, 0)
+
+    const resPastDays = await prisma.consulta.updateMany({
+      where: {
+        status: { in: ['agendada', 'solicitada', 'scheduled'] },
+        data_consulta: { lt: yesterday }
+      },
+      data: { status: 'expired' }
+    })
+
+    if (resPastDays.count > 0) {
+      logger.info(`[Cleanup] Marcou ${resPastDays.count} consultas de dias anteriores como expiradas.`)
+    }
+
+    // 2. Consultas de HOJE que já passaram do horário (buffer de 2 horas)
+    // Nota: O campo hora_inicio no Postgres (db.Time) é lido pelo Prisma como 1970-01-01T...
+    // Precisamos comparar apenas a parte do tempo.
+    
+    // Buscar consultas de hoje para verificar horário
+    const todayConsultas = await prisma.consulta.findMany({
+      where: {
+        status: { in: ['agendada', 'solicitada', 'scheduled'] },
+        data_consulta: {
+          gte: yesterday,
+          lt: new Date(yesterday.getTime() + 24 * 60 * 60 * 1000)
+        }
+      }
+    })
+
+    if (todayConsultas.length > 0) {
+      // Diferença em minutos para expiração conforme pedido do usuário (20 minutos)
+      const EXPIRATION_BUFFER_MINUTES = 20;
+
+      const expiredTodayIds: number[] = []
+
+      for (const c of todayConsultas) {
+        if (c.hora_inicio) {
+          // Diferença em ms entre Agora e a Hora de Início prevista
+          // Nota: hora_inicio do Prisma vem como Date(1970-01-01T...)
+          // Precisamos comparar apenas os minutos absolutos do dia.
+          const currentHour = now.getHours()
+          const currentMin = now.getMinutes()
+          
+          const startHour = c.hora_inicio.getHours()
+          const startMin = c.hora_inicio.getMinutes()
+          
+          const currentMinutesTotal = currentHour * 60 + currentMin
+          const startMinutesTotal = startHour * 60 + startMin
+          
+          // Se passaram mais de 20 minutos do horário previsto
+          if (currentMinutesTotal >= (startMinutesTotal + EXPIRATION_BUFFER_MINUTES)) {
+            expiredTodayIds.push(c.id)
+          }
+        }
+      }
+
+      if (expiredTodayIds.length > 0) {
+        await prisma.consulta.updateMany({
+          where: { id: { in: expiredTodayIds } },
+          data: { status: 'expired' }
+        })
+        logger.info(`[Cleanup] Marcou ${expiredTodayIds.length} consultas de HOJE como expiradas por atraso (> 20 min).`)
+      }
+    }
+
+  } catch (err) {
+    logger.error('[Cleanup] Erro ao limpar consultas expiradas', err as Error)
+  }
+}
+
+export async function listConsultasScheduled(where: any) {
+  // Garantir que a lista esteja limpa antes de retornar
+  await cleanupExpiredConsultations()
+
+  return prisma.consulta.findMany({
+    where: {
+      ...where,
+      status: { in: ['agendada', 'solicitada'] }
+    },
+    orderBy: [
+      { data_consulta: 'asc' },
+      { hora_inicio: 'asc' }
+    ],
+    include: {
+      medico: { select: { id: true, nome_completo: true } },
+      paciente: { select: { id: true, nome_completo: true } },
+      historiaClinica: true
+    }
+  })
+}
+
+export async function evaluateConsulta(consultaId: number, numEstrelas: number, avaliacao?: string) {
+  const consulta = await prisma.consulta.findUnique({ where: { id: consultaId } })
+  if (!consulta) throw new Error('consulta_not_found')
+
+  // Update Consulta
+  await prisma.consulta.update({
+    where: { id: consultaId },
+    data: {
+      estrelas: numEstrelas,
+      avaliacao: avaliacao || null
+    } as any
+  })
+
+  // Update Medico Average
+  if (consulta.medicoId) {
+    const ratings = await prisma.consulta.findMany({
+      where: {
+        medicoId: consulta.medicoId,
+        estrelas: { not: null }
+      },
+      select: { estrelas: true }
+    })
+
+    if (ratings.length > 0) {
+      const totalStars = ratings.reduce((acc: number, curr: any) => acc + (curr.estrelas || 0), 0)
+      const average = totalStars / ratings.length
+
+      await prisma.medico.update({
+        where: { id: consulta.medicoId },
+        data: { avaliacao: average } as any
+      })
+    }
+  }
+}

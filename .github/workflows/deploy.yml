@@ -1,0 +1,32 @@
+name: Deploy Telemedicina
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VM via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            # Entra na pasta do projeto (ajuste se necessário)
+            cd ~/app || mkdir -p ~/app && cd ~/app
+            
+            # Se a pasta estiver vazia ou não for um repo, clona. Caso contrário, faz pull.
+            if [ ! -d ".git" ]; then
+              git clone https://github.com/${{ github.repository }} .
+            else
+              git pull origin main
+            fi
+            
+            # Sobe os containers
+            docker compose up -d --build
+            
+            # Reinicia o Nginx para garantir que as novas configs foram lidas
+            docker compose restart nginx
