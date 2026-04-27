@@ -13,6 +13,8 @@ services:
       - "3001:3000"
     networks:
       - telemedicina-network
+    volumes:
+      - ./telemedicina_api/ca.pem:/app/ca.pem:ro
 
   telemedicina-frontend:
     build:
