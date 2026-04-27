@@ -14,7 +14,6 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.VM_SSH_KEY }}
-          port: 22
           debug: true
           script: |
             # Entra na pasta do projeto (ajuste se necessário)
