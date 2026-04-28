@@ -28,10 +28,6 @@
   color: var(--color-primary-500);
 }
 
-[data-theme="dark"] .text-highlight {
-  color: var(--color-primary-400);
-}
-
 .display-title {
   font-family: var(--font-display);
   font-size: clamp(2.5rem, 4vw, 3.5rem);
@@ -65,10 +61,6 @@
   z-index: 0;
 }
 
-[data-theme="dark"] .hero-section::before {
-  background: linear-gradient(to right, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.7) 40%, rgba(15, 23, 42, 0) 100%);
-}
-
 .hero-content {
   display: grid;
   grid-template-columns: 0.85fr 1.15fr; /* Shifted grid so the left column center is further left */
@@ -85,10 +77,6 @@
   line-height: 1;
   margin-bottom: 2rem;
   color: var(--color-primary-600);
-}
-
-[data-theme="dark"] .hero-title {
-  color: var(--text-primary);
 }
 
 .hero-description {
@@ -132,11 +120,6 @@
   color: var(--color-primary-600);
 }
 
-[data-theme="dark"] .btn-hero-secondary {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.1);
-}
-
 .btn-hero-secondary:hover {
   background: var(--color-primary-100);
 }
@@ -156,10 +139,6 @@
   font-size: 2.5rem;
   font-weight: 800;
   color: var(--color-primary-600);
-}
-
-[data-theme="dark"] .stat-number {
-  color: var(--text-primary);
 }
 
 .stat-label {
@@ -188,10 +167,6 @@
   bottom: 10%;
   left: -20%;
   border: 1px solid var(--border-color);
-}
-
-[data-theme="dark"] .floating-card-v2 {
-  background: var(--card-bg);
 }
 
 .card-header {
@@ -305,10 +280,6 @@
   gap: 2rem;
 }
 
-[data-theme="dark"] .card-icon-small img {
-  filter: brightness(0) invert(1);
-}
-
 .side-grid-2 {
   grid-column: span 2;
 }
@@ -362,10 +333,6 @@
   line-height: 1;
 }
 
-[data-theme="dark"] .benefit-number {
-  color: #e0f2fe;
-}
-
 .benefit-content h3 {
   font-size: 1.5rem;
   margin-bottom: 0.75rem;
@@ -397,10 +364,6 @@
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   border: 1px solid transparent;
-}
-
-[data-theme="dark"] .faq-item-v2 {
-  border-color: var(--border-color);
 }
 
 .faq-item-v2:hover {
@@ -588,7 +551,15 @@
   /* Hero section: reduce top padding so it breathes */
   .hero-section {
     padding: 4rem 0 3rem;
+    background-position: bottom center;
   }
+
+  .hero-section::before {
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0) 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
+    mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 85%);
+  }
+
 
   /* Title: smaller so it doesn't overflow */
   .hero-title {
