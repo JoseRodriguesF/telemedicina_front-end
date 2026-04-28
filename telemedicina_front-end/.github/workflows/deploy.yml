@@ -1,0 +1,43 @@
+name: Deploy to Production VM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to VM via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            # Ajuste o caminho para onde o projeto front-end está localizado na VM
+            cd /caminho/para/o/projeto/telemedicina_front-end
+            
+            # Puxa as últimas atualizações do repositório
+            git pull origin main
+            
+            # Faz o build da nova imagem Docker injetando as variáveis de ambiente necessárias
+            # Obs: certifique-se de cadastrar essas variáveis no GitHub Secrets do repositório
+            docker build \
+              --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
+              --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }} \
+              --build-arg NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }} \
+              -t matriarca/frontend:latest .
+            
+            # Para e remove o contêiner antigo caso ele esteja rodando
+            docker stop frontend-container || true
+            docker rm frontend-container || true
+            
+            # Roda o novo contêiner na porta 3000
+            docker run -d \
+              --name frontend-container \
+              -p 3000:3000 \
+              --restart unless-stopped \
+              matriarca/frontend:latest
