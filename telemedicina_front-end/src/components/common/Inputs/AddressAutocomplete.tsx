@@ -28,12 +28,14 @@ export default function AddressAutocomplete({
   className,
 }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const isInitialized = useRef(false);
 
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!key) return;
 
     function init() {
+      if (isInitialized.current) return;
       const google = (window as any).google;
       if (!google?.maps?.places || !inputRef.current) return;
 
@@ -43,10 +45,15 @@ export default function AddressAutocomplete({
         componentRestrictions: { country: ['br'] },
       });
 
+      isInitialized.current = true;
+
       ac.addListener('place_changed', () => {
         const place = ac.getPlace();
-        const description = place.formatted_address || value;
-        onChange(description || '');
+        const description = place.formatted_address || '';
+        
+        // Use a callback approach to ensure we don't need 'value' in the closure if possible,
+        // but here we just need to call onChange with the new description.
+        onChange(description);
         
         if (onPlaceSelected && place.place_id) {
           const comps: any = {};
@@ -60,7 +67,7 @@ export default function AddressAutocomplete({
           });
 
           onPlaceSelected({ 
-            description: description || '', 
+            description: description, 
             placeId: place.place_id,
             components: comps
           });
@@ -71,22 +78,21 @@ export default function AddressAutocomplete({
     // Load script if not loaded
     if ((window as any).google?.maps?.places) {
       init();
-      return;
+    } else {
+      const existing = document.querySelector('script[data-google-maps]');
+      if (existing) {
+        existing.addEventListener('load', init as any);
+      } else {
+        const s = document.createElement('script');
+        s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&language=pt-BR&region=BR&loading=async`;
+        s.async = true;
+        s.defer = true;
+        s.setAttribute('data-google-maps', '1');
+        s.onload = init;
+        document.head.appendChild(s);
+      }
     }
-    const existing = document.querySelector('script[data-google-maps]');
-    if (existing) {
-      existing.addEventListener('load', init as any);
-      return;
-    }
-    const s = document.createElement('script');
-    // Recommended pattern adds loading=async for optimal performance
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&language=pt-BR&region=BR&loading=async`;
-    s.async = true;
-    s.defer = true;
-    s.setAttribute('data-google-maps', '1');
-    s.onload = init;
-    document.head.appendChild(s);
-  }, [value, onChange, onPlaceSelected]);
+  }, []); // Run once on mount
 
   return (
     <input
@@ -97,7 +103,7 @@ export default function AddressAutocomplete({
       onChange={(e) => onChange(e.target.value)}
       type="text"
       autoComplete="off"
-      data-lpignore="true" // LastPass ignore
+      data-lpignore="true"
       data-form-type="other"
       spellCheck="false"
     />

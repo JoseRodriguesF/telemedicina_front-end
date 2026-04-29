@@ -5,7 +5,7 @@ import '../../inicio/inicio.css';
 import './selecao-medico.css';
 import '@/components/layout/Header/header.css';
 import Sidebar from '@/components/layout/Sidebar/Sidebar';
-import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
+
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getToken, getUser } from '@/lib/auth';
 import { Modal } from '@/components/common/Modal/Modal';
@@ -140,9 +140,7 @@ function SelecaoMedicoInner() {
 
     return (
         <div className="inicio-page">
-            <div className="inicio-mobile-header">
-                <MobileHeader />
-            </div>
+
             <Sidebar activeId="consultas" />
 
             <main className="inicio-main">

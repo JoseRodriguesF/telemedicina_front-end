@@ -105,7 +105,7 @@ const AtendimentoChat: React.FC<ChatProps> = ({
     dragStartPos.current = { x: e.clientX, y: e.clientY };
   };
 
-  if (!showChat && variant === 'modal') return null;
+  if (!showChat) return null;
 
   const ChatContent = (
     <div className={`chat-inner ${variant}`} style={variant === 'modal' ? { height: '100%', display: 'flex', flexDirection: 'column' } : undefined}>

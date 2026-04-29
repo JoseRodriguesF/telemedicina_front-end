@@ -2,7 +2,7 @@
 
 import './atendimento.css';
 import '@/app/inicio/inicio.css';
-import MobileHeader from '@/components/layout/MobileHeader/MobileHeader';
+
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useRef, useState, useEffect } from 'react';
 import { getUser, getToken } from '@/lib/auth';
@@ -1807,9 +1807,7 @@ function AtendimentoInner() {
 
   return (
     <div className="inicio-page">
-      <div className="inicio-mobile-header">
-        <MobileHeader />
-      </div>
+
 
       <main className="inicio-main atendimento-main">
         {/* LAYOUT PARA MÉDICO - 3 colunas com painéis */}

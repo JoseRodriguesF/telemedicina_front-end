@@ -105,7 +105,15 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
         }
       });
 
+      console.log('[RegisterMedico] Enviando payload (sem arquivos):', { 
+        ...payload, 
+        diploma: payload.diploma ? 'Anexado' : 'Ausente',
+        assinatura_digital: payload.assinatura_digital ? 'Anexada' : 'Ausente',
+        seguro_responsabilidade: payload.seguro_responsabilidade ? 'Anexado' : 'Ausente',
+        especializacao: payload.especializacao ? 'Anexada' : 'Ausente'
+      });
       const resp = await createMedico(payload);
+      console.log('[RegisterMedico] Sucesso:', resp);
 
       try {
         const { saveUser } = await import('@/lib/auth');
@@ -134,6 +142,11 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
 
       onComplete?.(resp);
     } catch (err: any) {
+      console.error('[RegisterMedico] Erro na requisição:', {
+        status: err?.response?.status,
+        data: err?.response?.data,
+        message: err?.message
+      });
       handleApiError(err, { setGlobalError: setError });
     } finally {
       setLoading(false);

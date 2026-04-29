@@ -94,7 +94,19 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
       <form className="register-form grid-2" onSubmit={(e) => e.preventDefault()}>
         <label className="form-label full-width">
           <span className="label-title">Nome <span className="required-asterisk">*</span></span>
-          <Input placeholder="Seu nome completo" value={name} onChange={(e) => { setName(e.target.value); setNameError(''); }} className={nameError ? 'c-input--error' : ''} />
+          <Input 
+            placeholder="Seu nome completo" 
+            value={name} 
+            maxLength={100}
+            onChange={(e) => { 
+              const val = e.target.value || '';
+              // Allow only letters and spaces as per isValidName
+              const cleaned = val.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ ]+/g, '');
+              setName(cleaned); 
+              setNameError(''); 
+            }} 
+            className={nameError ? 'c-input--error' : ''} 
+          />
           {nameError && <div className="error-text">{nameError}</div>}
         </label>
 
@@ -126,7 +138,15 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
 
         <label className="form-label">
            <span className="label-title">RQE (Opcional)</span>
-           <Input placeholder="Nº do RQE" value={rqe} onChange={(e) => setRqe(e.target.value)} />
+           <Input 
+            placeholder="Nº do RQE" 
+            value={rqe} 
+            onChange={(e) => {
+              const val = e.target.value || '';
+              const nums = val.replace(/\D/g, '').slice(0, 10);
+              setRqe(nums);
+            }} 
+           />
         </label>
 
         <label className="form-label">

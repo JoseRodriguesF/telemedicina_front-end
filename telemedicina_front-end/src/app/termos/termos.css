@@ -1,94 +1,126 @@
 .termos-page {
   min-height: 100vh;
-  background: radial-gradient(circle at top right, #1e293b, #0f172a);
-  color: #f1f5f9;
-  padding: 40px 20px;
+  background-color: #f8fafc; /* Lighter, document-like background */
+  color: #1e293b;
+  padding: 60px 20px;
   display: flex;
   justify-content: center;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 .termos-container {
-  max-width: 900px;
+  max-width: 800px;
   width: 100%;
 }
 
 .termos-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 50px;
 }
 
 .termos-logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  margin-bottom: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .termos-header h1 {
-  font-size: 2rem;
+  font-size: 2.25rem;
   font-weight: 800;
-  margin-bottom: 8px;
-  background: linear-gradient(to right, #60a5fa, #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+  color: #0f172a;
+  letter-spacing: -0.02em;
 }
 
 .termos-header p {
-  color: #94a3b8;
-  font-size: 0.9rem;
+  color: #64748b;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .termos-content {
-  padding: 40px;
+  padding: 50px;
   border-radius: 24px;
-}
-
-.glass-effect {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
 }
 
 .termos-section {
-  margin-bottom: 40px;
+  margin-bottom: 45px;
 }
 
 .termos-section:last-child {
   margin-bottom: 0;
 }
 
-.tcle-content h3, .tcle-content h4 {
-  color: #60a5fa;
+.tcle-content h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid #3b82f6;
+  padding-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.tcle-content h4 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
 }
 
 .tcle-content p, .tcle-content li {
-  color: #cbd5e1;
-  line-height: 1.6;
+  color: #334155;
+  line-height: 1.7;
+  font-size: 1.05rem;
+  margin-bottom: 1rem;
+}
+
+.tcle-content strong {
+  color: #0f172a;
+}
+
+.dpo-info {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
 }
 
 .dpo-info p {
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  color: #475569;
 }
 
-.dpo-info p:last-child {
-  margin-bottom: 0;
+.dpo-info p strong {
+  color: #1e293b;
 }
 
 .termos-footer-actions {
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 50px;
+  padding-top: 30px;
+  border-top: 1px solid #e2e8f0;
   display: flex;
   justify-content: center;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .termos-page {
+    padding: 30px 15px;
+  }
+  
   .termos-content {
-    padding: 24px;
+    padding: 30px 20px;
   }
   
   .termos-header h1 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
   }
 }

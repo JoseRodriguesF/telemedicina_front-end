@@ -18,7 +18,7 @@ export default function TermosPage() {
           <p>Última atualização: 17 de abril de 2026</p>
         </header>
 
-        <main className="termos-content glass-effect">
+        <main className="termos-content">
           <section className="termos-section">
             {DefaultTerms}
           </section>

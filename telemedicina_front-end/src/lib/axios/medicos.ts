@@ -31,11 +31,13 @@ export type CreateMedicoResponse = {
  */
 export async function createMedico(payload: MedicoPayload): Promise<CreateMedicoResponse> {
   try {
+    console.log(`[Axios] POST /api/register/medicos`, payload);
     const resp = await axios.post('/api/register/medicos', payload, {
       headers: { 'Content-Type': 'application/json' },
     });
     return resp.data as CreateMedicoResponse;
-  } catch (err) {
+  } catch (err: any) {
+    console.error(`[Axios Error] POST /api/register/medicos:`, err?.response?.data || err?.message);
     throw new ApiError(err);
   }
 }

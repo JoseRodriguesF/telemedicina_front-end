@@ -19,7 +19,6 @@ const baseItems: NavItem[] = [
     { id: 'inicio', label: 'Início', icon: '/images/home-06.svg', href: '/inicio' },
     { id: 'consultas', label: 'Consultas', icon: '/images/first-aid.svg', href: '/consultas' },
     { id: 'historico', label: 'Histórico', icon: '/images/clock.svg', href: '/historico' },
-    { id: 'perfil', label: 'Perfil', icon: '/images/user.svg', href: '/perfil' },
 ];
 
 const adminItems: NavItem[] = [

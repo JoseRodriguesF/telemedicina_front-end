@@ -52,7 +52,7 @@ export default function PerfilPage() {
         return;
       }
       const data = await getMyProfile(token);
-      
+
       // Bloquear acesso de admins ao perfil pessoal de paciente/médico
       if (data.tipo_usuario === 'admin') {
         router.push('/admin/dashboard');
@@ -181,7 +181,7 @@ export default function PerfilPage() {
 
           await deleteMyProfile(token);
           modal.success('Conta Excluída', 'Sua conta foi excluída com sucesso. Você será redirecionado.');
-          
+
           setTimeout(() => {
             clearUser();
             router.push('/login');
@@ -642,7 +642,7 @@ export default function PerfilPage() {
                   />
                 </div>
               </div>
-              
+
               <div className="field-group">
                 <label>RQE</label>
                 <input
