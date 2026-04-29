@@ -23,6 +23,7 @@ export default function AIAssistant() {
   const [loading, setLoading] = useState(false);
   const [isMedico, setIsMedico] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -89,7 +90,22 @@ export default function AIAssistant() {
   const handleClearChat = () => {
     const initialMessage: Message[] = [{ role: 'assistant', content: 'Olá, Doutor(a)! Como posso te ajudar hoje?' }];
     setMessages(initialMessage);
+    setShowSuggestions(true);
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(initialMessage));
+  };
+
+  const SUGGESTIONS = [
+    { id: 'prescrever', text: 'Como prescrever receitas?', icon: '✍️' },
+    { id: 'exames', text: 'Como solicitar exames?', icon: '🧪' },
+    { id: 'anexos', text: 'Onde vejo os anexos?', icon: '📁' },
+    { id: 'encerrar', text: 'Como encerrar atendimento?', icon: '🏁' }
+  ];
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setInput(suggestion);
+    setShowSuggestions(false);
+    // Opcional: enviar automaticamente
+    // setTimeout(() => handleSend(suggestion), 100);
   };
 
   useEffect(() => {
@@ -107,11 +123,13 @@ export default function AIAssistant() {
     }
   }, [isOpen]);
 
-  const handleSend = async () => {
-    if (!input.trim() || loading) return;
+  const handleSend = async (overrideInput?: string) => {
+    const textToSend = overrideInput || input;
+    if (!textToSend.trim() || loading) return;
 
-    const userMessage = input.trim();
+    const userMessage = textToSend.trim();
     setInput('');
+    setShowSuggestions(false);
     
     const newMessages = [...messages, { role: 'user', content: userMessage } as Message];
     setMessages(newMessages);
@@ -223,6 +241,24 @@ export default function AIAssistant() {
                 </div>
                 <div className="message-bubble loading-dots">
                   <span></span><span></span><span></span>
+                </div>
+              </div>
+            )}
+
+            {showSuggestions && messages.length <= 1 && (
+              <div className="ai-suggestions">
+                <p className="suggestions-title">Sugestões para esta consulta:</p>
+                <div className="suggestions-grid">
+                  {SUGGESTIONS.map(s => (
+                    <button 
+                      key={s.id} 
+                      className="suggestion-card"
+                      onClick={() => handleSuggestionClick(s.text)}
+                    >
+                      <span className="suggestion-icon">{s.icon}</span>
+                      <span className="suggestion-text">{s.text}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             )}

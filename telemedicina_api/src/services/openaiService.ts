@@ -239,7 +239,7 @@ export async function chatWithOpenAI(
   }
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-4o',
     temperature: 0.1,
     messages: [
       { role: 'system', content: promptComportamento + extraInstruction },
@@ -429,7 +429,7 @@ REGRAS:
 5. NÃO resuma, NÃO mude palavras, NÃO adicione introduções.`;
 
     const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       temperature: 0,
       messages: [
         { role: 'system', content: 'Você é um assistente que identifica falantes em diálogos médicos sem alterar o texto original.' },
@@ -494,6 +494,7 @@ export async function resumirTranscricao(transcricao: string) {
     return transcricao;
   }
 }
+
 /**
  * Assistente de IA exclusivo para Médicos
  */
@@ -559,26 +560,30 @@ export async function chatWithDoctorAssistant(
     }
   ];
 
-  const systemPrompt = `Você é o Assistente Digital da Matriarca Telemedicina, exclusivo para Médicos.
+  const systemPrompt = `Você é o Assistente Digital da Matriarca Telemedicina, exclusivo para Médicos. Seu papel é ser um braço direito do doutor(a) em QUALQUER lugar da plataforma.
   
-  ESTRITAMENTE LIMITADO A:
-  1. Auxiliar o médico com o uso da plataforma Matriarca Telemedicina (ex: como prescrever, como ver exames, como gerenciar agenda).
-  2. Fornecer informações sobre pacientes e consultas que o médico atual está atendendo ou já atendeu.
-  3. Auxiliar em tarefas médicas diretamente relacionadas à prática dentro da plataforma.
-
-  REGRAS DE SEGURANÇA E PRIVACIDADE (OBRIGATÓRIO):
-  - Você NÃO deve dar instruções ou suporte para assuntos fora do escopo da plataforma ou da medicina praticada nela.
-  - Você NÃO pode falar sobre dados de outros médicos (nomes, CRM, estatísticas de outros).
-  - Você NÃO pode acessar ou fornecer dados de pacientes que não pertençam à carteira de atendimentos do médico que está perguntando.
-  - Se o médico solicitar algo fora destas diretrizes, responda educadamente que seu escopo de atuação é limitado ao auxílio na plataforma Matriarca.
-  
-  CONTEXTO DA SESSÃO ATUAL:
+  CONTEXTO SITUACIONAL (OPCIONAL):
   ${JSON.stringify(contextoAdicional, null, 2)}
   
+  DIRETRIZES DE ATUAÇÃO GLOBAL:
+  - Você auxilia o médico em tudo: desde dúvidas de navegação até resumos de histórico de pacientes.
+  - Se houver um "consultaId" no contexto, você sabe que o médico está em atendimento e pode oferecer ajuda específica para aquele momento.
+  - Se NÃO houver contexto de consulta, você continua operando normalmente como um assistente geral da plataforma.
+  - O médico pode estar na agenda, no perfil, na lista de pacientes ou no painel principal; adapte-se ao que ele precisar.
+
+  O QUE VOCÊ FAZ:
+  1. Suporte de Uso: "Como faço para...", "Onde fica...", "Como altero minha agenda?".
+  2. Consulta de Dados: Fornecer estatísticas e histórico de pacientes que já foram atendidos por este médico (use as ferramentas disponíveis).
+  3. Apoio Clínico: Auxiliar na redação de prontuários, resumos de evolução e sugestões de conduta baseadas no histórico do paciente.
+
+  REGRAS DE SEGURANÇA E PRIVACIDADE (OBRIGATÓRIO):
+  - Você NUNCA deve acessar dados de pacientes que não pertençam ao histórico de atendimento do médico logado.
+  - Responda educadamente se algo estiver fora do seu escopo (ex: assuntos não médicos ou de fora da plataforma).
+  
   DIRETRIZES DE RESPOSTA:
-  1. Seja profissional, técnico, conciso e extremamente direto.
-  2. SEMPRE use Markdown para formatar suas respostas (listas, negrito, etc) para facilitar a leitura.
-  3. Responda sempre em Português do Brasil.`;
+  1. Tom profissional, prestativo e extremamente ágil.
+  2. Use Markdown sempre.
+  3. Português do Brasil.`;
 
   const messages: any[] = [
     { role: 'system', content: systemPrompt },
