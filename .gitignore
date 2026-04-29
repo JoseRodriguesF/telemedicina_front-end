@@ -42,5 +42,10 @@ nginx/certs/
 nginx/vhost.d/
 nginx/html/
 
+# SSH Keys
 github_actions_key
 github_actions_key.pub
+github_actions_ed25519
+github_actions_ed25519.pub
+key_deploy
+key_deploy.pub

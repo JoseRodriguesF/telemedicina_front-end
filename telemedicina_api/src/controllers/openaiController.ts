@@ -142,10 +142,32 @@ export async function openaiChatController(req: FastifyRequest<{ Body: ChatBody 
       }
     }
 
+    // Lógica de pulo de pergunta e detecção de conclusão forçada
+    let finalMessage = message
+    if (message === '[PULAR_PERGUNTA]') {
+      let skipCount = 1
+      // Conta quantos pulos consecutivos o usuário deu no histórico
+      for (let i = history.length - 1; i >= 0; i--) {
+        if (history[i].role === 'user') {
+          if (history[i].content === '[PULAR_PERGUNTA]') {
+            skipCount++
+          } else {
+            // Qualquer outra mensagem do usuário quebra a sequência
+            break
+          }
+        }
+      }
+
+      if (skipCount >= 3) {
+        logger.info(`Usuário pulou 3 perguntas consecutivas. Forçando conclusão da triagem.`, { userId: user.id })
+        finalMessage = '[FORCAR_CONCLUSAO] O usuário pulou 3 perguntas consecutivas. Conclua a triagem agora.'
+      }
+    }
+
     // LGPD/CFM: Anonimização de PII (Personally Identifiable Information) ao enviar para IA generativa.
     // Usamos um identificador genérico em vez do nome real do paciente para mitigar riscos de privacidade.
     const { answer, completed, dadosEstruturados } = await chatWithOpenAI(
-      message,
+      finalMessage,
       'Paciente', // Anonimizado conforme LGPD
       history || [],
       contextoHistorico

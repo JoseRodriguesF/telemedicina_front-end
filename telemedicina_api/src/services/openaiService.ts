@@ -224,15 +224,29 @@ export async function chatWithOpenAI(
    3. Adicione: [DADOS_ESTRUTURADOS] seguido do JSON estruturado seguindo AS REGRAS ACIMA
    🎯 REGRA DE OURO: Pense antes de perguntar: "Essa pergunta faz sentido para o que o paciente acabou de me dizer?". Se não fizer, PULE ou ADAPTE.`
 
+  // Lógica de pulo de pergunta (Skip)
+  let processedMessage = message
+  let extraInstruction = ""
+
+  if (message === '[PULAR_PERGUNTA]') {
+    processedMessage = "(O usuário optou por pular esta pergunta específica. Por favor, prossiga para o próximo tópico da triagem ou conclua a triagem se já tiver informações suficientes.)"
+  }
+
+  // Se houver uma flag para forçar a conclusão (enviada via mensagem ou contexto)
+  if (message.includes('[FORCAR_CONCLUSAO]')) {
+    extraInstruction = "\n\n⚠️ O usuário solicitou encerrar a triagem agora ou pulou muitas perguntas consecutivas. Por favor, gere IMEDIATAMENTE o relatório final e os [DADOS_ESTRUTURADOS] com o que foi coletado até o momento. Se não houver informações suficientes, preencha com o que for possível e use arrays vazios para o restante."
+    processedMessage = message.replace('[FORCAR_CONCLUSAO]', '').trim() || "Encerrar triagem agora."
+  }
+
   const response = await client.chat.completions.create({
     model: 'gpt-4o-mini',
     temperature: 0.1,
     messages: [
-      { role: 'system', content: promptComportamento },
+      { role: 'system', content: promptComportamento + extraInstruction },
       // histórico enviado pelo frontend (mantém contexto apenas durante a sessão)
       ...history.map((m) => ({ role: m.role, content: m.content })),
       // nova mensagem do usuário
-      { role: 'user', content: message }
+      { role: 'user', content: processedMessage }
     ]
   })
 

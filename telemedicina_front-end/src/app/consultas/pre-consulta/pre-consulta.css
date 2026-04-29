@@ -259,6 +259,44 @@
   cursor: not-allowed;
 }
 
+/* Skip Question Button */
+.pc-skip-btn {
+  background: var(--bg-secondary, #f3f4f6);
+  border: 1px solid var(--border-color, #e5e7eb);
+  color: var(--text-secondary, #6b7280);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-base);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-right: 0.5rem;
+  white-space: nowrap;
+}
+
+.pc-skip-btn:hover:not(:disabled) {
+  background: var(--bg-tertiary, #e5e7eb);
+  color: var(--text-primary, #111827);
+  border-color: var(--color-primary-300, #93c5fd);
+}
+
+.pc-skip-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .pc-skip-btn span {
+    display: none;
+  }
+  .pc-skip-btn {
+    padding: 0.5rem;
+  }
+}
+
 /* Disclaimer */
 .pc-disclaimer {
   margin-top: 1.5rem;

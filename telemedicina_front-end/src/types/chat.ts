@@ -52,6 +52,7 @@ export type ChatHistory = Array<{
 export interface ChatMessage {
     author: 'Você' | 'Sistema' | 'Angélica';
     text: string;
+    rawContent?: string;
 }
 
 /**
