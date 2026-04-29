@@ -80,7 +80,11 @@ export async function salvarAnexos(req: FastifyRequest<{ Params: { id: string } 
     return reply.send({ ok: true, count: created.count })
   } catch (err: any) {
     logger.error('Erro ao salvar anexos no GCS', err)
-    return reply.code(400).send({ error: 'upload_failed', message: err.message })
+    return reply.code(400).send({ 
+      error: 'upload_failed', 
+      code: err.message.includes('inválido') ? 'INVALID_FILE_TYPE' : 'INTERNAL_ERROR',
+      message: err.message 
+    })
   }
 }
 

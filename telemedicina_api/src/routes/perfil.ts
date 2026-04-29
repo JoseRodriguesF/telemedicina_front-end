@@ -7,7 +7,10 @@ const perfilController = new PerfilController()
 export async function perfilRoutes(app: FastifyInstance) {
     // Aplicar authentication apenas nestas rotas
     app.get('/usuarios/me', { preHandler: authenticateJWT }, perfilController.getMe.bind(perfilController))
-    app.patch('/usuarios/me', { preHandler: authenticateJWT }, perfilController.updateMe.bind(perfilController))
+    app.patch('/usuarios/me', { 
+        preHandler: authenticateJWT,
+        bodyLimit: 10 * 1024 * 1024 // 10MB para upload de documentos do perfil
+    }, perfilController.updateMe.bind(perfilController))
     app.delete('/usuarios/me', { preHandler: authenticateJWT }, perfilController.deleteMe.bind(perfilController))
     app.get('/usuarios/me/documentos/:type', { preHandler: authenticateJWT }, perfilController.getDocument.bind(perfilController))
 }

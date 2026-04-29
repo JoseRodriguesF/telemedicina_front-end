@@ -22,7 +22,10 @@ export default async function consultasRoutes(fastify: FastifyInstance) {
   fastify.patch('/consultas/:id/paciente/notas', { preHandler: authenticateJWT }, updatePacienteNotas as any)
 
   // Anexos (arquivos do paciente)
-  fastify.post('/consultas/:id/anexos', { preHandler: authenticateJWT }, salvarAnexos as any)
+  fastify.post('/consultas/:id/anexos', { 
+    preHandler: authenticateJWT,
+    bodyLimit: 15 * 1024 * 1024 // 15MB para permitir múltiplos anexos/imagens
+  }, salvarAnexos as any)
   fastify.get('/consultas/:id/anexos', { preHandler: authenticateJWT }, listarAnexos as any)
   fastify.get('/consultas/anexos/:id/arquivo', { preHandler: authenticateJWT }, getAnexoConteudo as any)
 }

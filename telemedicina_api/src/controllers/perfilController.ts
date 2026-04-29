@@ -30,7 +30,7 @@ export class PerfilController {
                 userAgent: request.headers['user-agent']
             });
 
-            // 1. Antes de qualquer serialização, capturar flags e REMOVER buffers para não travar o processo
+            // 1. Antes de qualquer serialização, capturar flags
             const medico = profile.medico as any
             let mFlags: any = null
             if (medico) {
@@ -40,35 +40,34 @@ export class PerfilController {
                     tem_assinatura: !!medico.assinatura_digital_url,
                     tem_seguro: !!medico.seguro_responsabilidade_url
                 }
-                // Remover binários do objeto ORIGINAL (preventivamente, embora estejamos migrando para remove-los do schema)
-                delete medico.diploma_data
-                delete medico.especializacao_data
-                delete medico.assinatura_digital_data
-                delete medico.seguro_responsabilidade_data
             }
 
-            // 2. Agora sim, converter para JSON limpo com segurança
-            const result = JSON.parse(JSON.stringify(profile))
+            // 2. Mapeamento seguro para o resultado final
+            // Usamos desestruturação para evitar problemas com tipos não-serializáveis do Prisma
+            const { senha_hash, google_id, senha, registroFull, ...cleanProfile } = profile as any
+            
+            const result = {
+                ...cleanProfile,
+                registro_full: registroFull,
+                nome: ''
+            }
 
-            // 3. Mapeamento para snake_case consistente com Login
-            result.registro_full = result.registroFull
-            delete result.registroFull
-
-            // Sanitizar sensíveis
-            delete result.senha_hash
-            delete result.google_id
-            delete result.senha
-
-            // 4. Injetar flags e dados de raiz
+            // 3. Injetar flags e dados específicos por tipo
             if (result.medico && mFlags) {
-                Object.assign(result.medico, mFlags)
+                result.medico = { ...result.medico, ...mFlags }
+                // Remover campos binários legados se existirem
+                delete result.medico.diploma_data
+                delete result.medico.especializacao_data
+                delete result.medico.assinatura_digital_data
+                delete result.medico.seguro_responsabilidade_data
+                
                 result.nome = result.medico.nome_completo
                 result.verificacao = result.medico.verificacao
             } else if (result.paciente) {
                 result.nome = result.paciente.nome_completo
                 if (result.paciente.historiaClinicaResumo) {
                     result.paciente.historia_clinica = result.paciente.historiaClinicaResumo
-                    delete result.paciente.historiaClinicaResumo
+                    // Nota: Não removemos o original aqui para manter consistência se o frontend esperar
                 }
             }
 
@@ -77,8 +76,12 @@ export class PerfilController {
             if (error instanceof ApiError) {
                 reply.code(error.statusCode).send({ error: { code: error.code, message: error.message } })
             } else {
-                logger.error('PerfilController.getMe unexpected error', error)
-                reply.code(500).send({ error: { code: 'INTERNAL_ERROR', message: 'Erro interno' } })
+                logger.error('PerfilController.getMe unexpected error', {
+                    error: error.message,
+                    stack: error.stack,
+                    userId: (request.user as any)?.id
+                })
+                reply.code(500).send({ error: { code: 'INTERNAL_ERROR', message: 'Erro interno ao carregar perfil' } })
             }
         }
     }
