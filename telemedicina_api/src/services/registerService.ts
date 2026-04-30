@@ -157,11 +157,27 @@ export class RegisterService {
 
     // CFM: Validação oficial do CRM antes de prosseguir
     const cleanCRM = data.crm.replace(/\D/g, '');
+    let crmData;
     try {
-        await VerificationService.verifyCRM(cleanCRM, data.crm_uf)
+        crmData = await VerificationService.verifyCRM(cleanCRM, data.crm_uf)
     } catch (error) {
         // Se a validação oficial falhar, bloqueamos o registro para segurança da plataforma
         throw error;
+    }
+
+    // SECURITY: Validação de integridade entre o nome digitado e o nome oficial no CRM
+    const inputNome = data.nome_completo.trim().toLowerCase();
+    const oficialNome = crmData.nome.trim().toLowerCase();
+
+    // Compara se o nome oficial contém as partes principais do nome digitado para evitar bloqueios por abreviações simples
+    // Mas por padrão de segurança em Telemedicina, o ideal é que o nome seja o oficial.
+    if (inputNome !== oficialNome) {
+        logger.warn('Tentativa de registro com nome divergente do CRM', { 
+            input: data.nome_completo, 
+            oficial: crmData.nome,
+            crm: cleanCRM 
+        });
+        throw new ApiError('O nome informado não coincide com o registro oficial do CRM no CFM.', 400, 'CRM_NAME_MISMATCH');
     }
 
     const existingMedico = await prisma.medico.findFirst({ where: { OR: [{ usuario_id: data.usuario_id }, { cpf: cleanCPF }] } })

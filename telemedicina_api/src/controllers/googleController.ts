@@ -28,7 +28,8 @@ export class GoogleController {
       });
 
       reply.send({ message: 'Login via Google realizado com sucesso', user: result });
-    } catch (error: any) {
+      } catch (error: any) {
+      console.error('[GoogleAuth Controller Error]:', error);
       if (error instanceof z.ZodError) {
         reply.code(400).send({ error: { code: 'INVALID_INPUT', message: 'Dados inválidos', details: error.issues } });
       } else if (error instanceof ApiError) {
