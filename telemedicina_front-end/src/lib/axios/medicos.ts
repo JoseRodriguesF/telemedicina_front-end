@@ -10,7 +10,6 @@ export type MedicoPayload = {
   crm: string; // e.g. 'CRM-12345' or '12345'
   diploma: { data: string; mimetype: string };
   especializacao?: { data: string; mimetype: string } | null;
-  assinatura_digital: { data: string; mimetype: string };
   seguro_responsabilidade: { data: string; mimetype: string };
 };
 

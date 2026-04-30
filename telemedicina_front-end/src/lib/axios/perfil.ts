@@ -29,11 +29,10 @@ export type UserProfile = {
         crm: string;
         tem_diploma?: boolean;
         tem_especializacao?: boolean;
-        tem_assinatura?: boolean;
         tem_seguro?: boolean;
+        vidaas_connected?: boolean;
         diploma_url?: string;
         especializacao_url?: string;
-        assinatura_digital_url?: string;
         seguro_responsabilidade_url?: string;
         telefone_celular?: string;
         avaliacao?: number;

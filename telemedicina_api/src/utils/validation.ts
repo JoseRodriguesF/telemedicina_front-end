@@ -98,7 +98,6 @@ export const registerMedicoSchema = z.object({
     crm: z.string().min(1, 'CRM é obrigatório'),
     diploma_url: z.string().url('URL do diploma inválida'),
     especializacao_url: z.string().url('URL do diploma de especialista inválida').nullish(),
-    assinatura_digital_url: z.string().url('URL da assinatura digital inválida'),
     seguro_responsabilidade_url: z.string().url('URL do seguro de responsabilidade inválida')
 })
 
@@ -133,7 +132,6 @@ export const updatePerfilMedicoSchema = z.object({
     crm: z.string().optional(),
     diploma_url: z.string().url().optional(),
     especializacao_url: z.string().url().nullish(),
-    assinatura_digital_url: z.string().url().optional(),
     seguro_responsabilidade_url: z.string().url().optional()
 })
 

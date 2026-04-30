@@ -11,6 +11,8 @@ import prescricoesRoutes from './prescricoes'
 import { auditRoutes } from './audit'
 import { adminRoutes } from './admin'
 
+import { vidaasRoutes } from './vidaas'
+
 /**
  * Centralized route registration
  */
@@ -26,4 +28,5 @@ export async function appRoutes(fastify: FastifyInstance) {
     await fastify.register(prescricoesRoutes)
     await fastify.register(auditRoutes)
     await fastify.register(adminRoutes)
+    await fastify.register(vidaasRoutes)
 }

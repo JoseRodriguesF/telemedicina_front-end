@@ -1,6 +1,8 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 import Fastify from 'fastify'
 import prisma from './config/database'
-import dotenv from 'dotenv'
 import helmet from '@fastify/helmet'
 import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
@@ -8,8 +10,6 @@ import { appRoutes } from './routes/index'
 import { initSignalServer } from './server-signal'
 import logger from './utils/logger'
 import { errorHandler } from './middlewares/errorHandler'
-
-dotenv.config()
 
 // Garantir que o servidor utilize o fuso horário local de Brasília para sincronização
 process.env.TZ = 'America/Sao_Paulo';

@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { getToken, clearUser } from '@/lib/auth';
 import { getMyProfile, updateMyProfile, deleteMyProfile, UserProfile } from '@/lib/axios/perfil';
+import axios from '@/lib/axios/config';
 import { Modal } from '@/components/common/Modal/Modal';
 import Link from 'next/link';
 import { useModal } from '@/components/common/Modal/useModal';
@@ -152,6 +153,24 @@ export default function PerfilPage() {
       setUploadingDoc(null);
       // Reset input
       event.target.value = '';
+    }
+  };
+
+  const handleVidaasConnect = async () => {
+    try {
+      const token = getToken();
+      if (!token) return;
+      
+      const resp = await axios.get('/api/vidaas/authenticate', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (resp.data.url) {
+        window.location.href = resp.data.url;
+      }
+    } catch (error) {
+      console.error('Erro ao conectar com Vidaas:', error);
+      modal.error('Erro', 'Não foi possível iniciar a conexão com Vidaas.');
     }
   };
 
@@ -360,7 +379,6 @@ export default function PerfilPage() {
                 <div className="documents-grid">
                   {/* Inputs ocultos para upload */}
                   <input id="upload-diploma" type="file" style={{ display: 'none' }} accept=".pdf,image/*" onChange={(e) => handleFileUpload(e, 'diploma_url')} />
-                  <input id="upload-assinatura" type="file" style={{ display: 'none' }} accept=".pdf,image/*" onChange={(e) => handleFileUpload(e, 'assinatura_digital_url')} />
                   <input id="upload-especializacao" type="file" style={{ display: 'none' }} accept=".pdf,image/*" onChange={(e) => handleFileUpload(e, 'especializacao_url')} />
                   <input id="upload-seguro" type="file" style={{ display: 'none' }} accept=".pdf,image/*" onChange={(e) => handleFileUpload(e, 'seguro_responsabilidade_url')} />
 
@@ -389,30 +407,6 @@ export default function PerfilPage() {
                     )}
                   </div>
 
-                  <div
-                    className={`document-card ${profile.medico?.tem_assinatura ? 'active' : ''}`}
-                    onClick={() => profile.medico?.tem_assinatura ? handleDocumentView('Assinatura Digital', getDocUrl('assinatura'), 'application/pdf', 'assinatura_digital_url') : document.getElementById('upload-assinatura')?.click()}
-                  >
-                    {uploadingDoc === 'assinatura_digital_url' && <div className="upload-loader-overlay"><div className="loader-spinner" /></div>}
-                    <div className="document-icon">
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5" /><rect x="2" y="6" width="14" height="12" rx="2" /></svg>
-                    </div>
-                    <div className="document-info">
-                      <div className="document-title">Assinatura Digital</div>
-                      <div className="document-status">{profile.medico?.tem_assinatura ? 'Verificado' : 'Clique para enviar'}</div>
-                    </div>
-                    {profile.medico?.tem_assinatura ? (
-                      <button className="btn-view-doc">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
-                        Visualizar
-                      </button>
-                    ) : (
-                      <button className="btn-upload-doc" style={{ opacity: 1, transform: 'none' }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
-                        Enviar
-                      </button>
-                    )}
-                  </div>
 
                   <div
                     className={`document-card ${profile.medico?.tem_especializacao ? 'active' : ''}`}
@@ -460,6 +454,29 @@ export default function PerfilPage() {
                       <button className="btn-upload-doc" style={{ opacity: 1, transform: 'none' }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
                         Enviar
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="section-header" style={{ marginTop: '2.5rem' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /><path d="m9 12 2 2 4-4" /></svg>
+                  <h4>Assinatura Digital (Vidaas)</h4>
+                </div>
+
+                <div className="documents-grid" style={{ gridTemplateColumns: '1fr' }}>
+                  <div className={`document-card ${profile.medico?.vidaas_connected ? 'active' : ''}`} style={{ cursor: profile.medico?.vidaas_connected ? 'default' : 'pointer' }} onClick={!profile.medico?.vidaas_connected ? handleVidaasConnect : undefined}>
+                    <div className="document-icon">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /><path d="m9 12 2 2 4-4" /></svg>
+                    </div>
+                    <div className="document-info">
+                      <div className="document-title">Certificado em Nuvem VIDaaS</div>
+                      <div className="document-status">{profile.medico?.vidaas_connected ? 'Conectado e Ativo' : 'Clique para conectar seu certificado'}</div>
+                    </div>
+                    {!profile.medico?.vidaas_connected && (
+                      <button className="btn-upload-doc" style={{ opacity: 1, transform: 'none' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
+                        Conectar
                       </button>
                     )}
                   </div>

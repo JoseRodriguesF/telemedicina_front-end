@@ -89,11 +89,6 @@ export class PerfilService {
                         await storageService.uploadDocument(Buffer.from(data.especializacao.data, 'base64'), path, data.especializacao.mimetype)
                         updateData.especializacao_url = path
                     }
-                    if (data.assinatura_digital && data.assinatura_digital.data) {
-                        const path = StorageService.buildPath(usuarioId, 'assinatura_digital', data.assinatura_digital.mimetype)
-                        await storageService.uploadDocument(Buffer.from(data.assinatura_digital.data, 'base64'), path, data.assinatura_digital.mimetype)
-                        updateData.assinatura_digital_url = path
-                    }
                     if (data.seguro_responsabilidade && data.seguro_responsabilidade.data) {
                         const path = StorageService.buildPath(usuarioId, 'seguro_responsabilidade', data.seguro_responsabilidade.mimetype)
                         await storageService.uploadDocument(Buffer.from(data.seguro_responsabilidade.data, 'base64'), path, data.seguro_responsabilidade.mimetype)
@@ -165,9 +160,6 @@ export class PerfilService {
                 break
             case 'especializacao':
                 gcsPath = medico.especializacao_url
-                break
-            case 'assinatura':
-                gcsPath = medico.assinatura_digital_url
                 break
             case 'seguro':
                 gcsPath = medico.seguro_responsabilidade_url

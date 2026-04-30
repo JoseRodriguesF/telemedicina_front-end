@@ -37,8 +37,8 @@ export class PerfilController {
                 mFlags = {
                     tem_diploma: !!medico.diploma_url,
                     tem_especializacao: !!medico.especializacao_url,
-                    tem_assinatura: !!medico.assinatura_digital_url,
-                    tem_seguro: !!medico.seguro_responsabilidade_url
+                    tem_seguro: !!medico.seguro_responsabilidade_url,
+                    vidaas_connected: !!medico.vidaas_external_id
                 }
             }
 
@@ -58,7 +58,6 @@ export class PerfilController {
                 // Remover campos binários legados se existirem
                 delete result.medico.diploma_data
                 delete result.medico.especializacao_data
-                delete result.medico.assinatura_digital_data
                 delete result.medico.seguro_responsabilidade_data
                 
                 result.nome = result.medico.nome_completo

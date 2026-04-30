@@ -145,7 +145,6 @@ export class RegisterService {
     rqe?: string | null
     diploma: { data: string; mimetype: string }
     especializacao?: { data: string; mimetype: string } | null
-    assinatura_digital: { data: string; mimetype: string }
     seguro_responsabilidade: { data: string; mimetype: string }
   }) {
     const user = await prisma.usuario.findUnique({ where: { id: data.usuario_id } })
@@ -172,12 +171,10 @@ export class RegisterService {
       // LGPD/CFM: Upload de documentos sensíveis para o Google Cloud Storage (privado)
       // Apenas o caminho GCS é armazenado no banco — sem dados binários no PostgreSQL
       const diplomaPath = StorageService.buildPath(data.usuario_id, 'diploma', data.diploma.mimetype)
-      const assinaturaPath = StorageService.buildPath(data.usuario_id, 'assinatura_digital', data.assinatura_digital.mimetype)
       const seguroPath = StorageService.buildPath(data.usuario_id, 'seguro_responsabilidade', data.seguro_responsabilidade.mimetype)
 
       await Promise.all([
         storageService.uploadDocument(Buffer.from(data.diploma.data, 'base64'), diplomaPath, data.diploma.mimetype),
-        storageService.uploadDocument(Buffer.from(data.assinatura_digital.data, 'base64'), assinaturaPath, data.assinatura_digital.mimetype),
         storageService.uploadDocument(Buffer.from(data.seguro_responsabilidade.data, 'base64'), seguroPath, data.seguro_responsabilidade.mimetype)
       ])
 
@@ -200,7 +197,6 @@ export class RegisterService {
           rqe: data.rqe || null,
           diploma_url: diplomaPath,
           especializacao_url: especializacaoPath,
-          assinatura_digital_url: assinaturaPath,
           seguro_responsabilidade_url: seguroPath
         }
       })

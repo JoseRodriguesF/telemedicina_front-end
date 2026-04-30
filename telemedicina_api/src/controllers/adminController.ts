@@ -367,7 +367,6 @@ export class AdminController {
                 select: {
                     diploma_url: true,
                     especializacao_url: true,
-                    assinatura_digital_url: true,
                     seguro_responsabilidade_url: true
                 }
             })
@@ -384,9 +383,6 @@ export class AdminController {
                     break
                 case 'especializacao':
                     gcsPath = medico.especializacao_url
-                    break
-                case 'assinatura':
-                    gcsPath = medico.assinatura_digital_url
                     break
                 case 'seguro':
                     gcsPath = medico.seguro_responsabilidade_url

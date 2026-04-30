@@ -17,7 +17,6 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
   const [seguroFile, setSeguroFile] = useState<File | null>(null);
   const [diplomaFile, setDiplomaFile] = useState<File | null>(null);
   const [diplomaEspFile, setDiplomaEspFile] = useState<File | null>(null);
-  const [assinaturaFile, setAssinaturaFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -54,7 +53,7 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    if (!seguroFile || !diplomaFile || !assinaturaFile) {
+    if (!seguroFile || !diplomaFile) {
       setError('Por favor, anexe todos os documentos obrigatórios.');
       return;
     }
@@ -63,10 +62,9 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
       const createMedico = (await import('@/lib/axios/medicos')).default;
 
       // Convert files to Base64 for database storage
-      const [seguro, diploma, assinatura, especializacao] = await Promise.all([
+      const [seguro, diploma, especializacao] = await Promise.all([
         fileToBase64(seguroFile),
         fileToBase64(diplomaFile),
-        fileToBase64(assinaturaFile),
         diplomaEspFile ? fileToBase64(diplomaEspFile) : Promise.resolve(null)
       ]);
 
@@ -93,7 +91,6 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
         // Documentos direto para o banco
         diploma,
         especializacao,
-        assinatura_digital: assinatura,
         seguro_responsabilidade: seguro,
       };
 
@@ -108,7 +105,6 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
       console.log('[RegisterMedico] Enviando payload (sem arquivos):', { 
         ...payload, 
         diploma: payload.diploma ? 'Anexado' : 'Ausente',
-        assinatura_digital: payload.assinatura_digital ? 'Anexada' : 'Ausente',
         seguro_responsabilidade: payload.seguro_responsabilidade ? 'Anexado' : 'Ausente',
         especializacao: payload.especializacao ? 'Anexada' : 'Ausente'
       });
@@ -185,10 +181,6 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
                   <FileField id="diplomaEsp" accept="application/pdf,image/*" file={diplomaEspFile} setFile={setDiplomaEspFile} placeholder={placeholderText} />
                 </label>
 
-                <label className="form-label">
-                  <span className="label-title">Assinatura digital<span className="required-asterisk">*</span></span>
-                  <FileField id="assinatura" accept="application/pdf,image/*" file={assinaturaFile} setFile={setAssinaturaFile} placeholder={placeholderText} />
-                </label>
               </>
             );
           })()
@@ -202,7 +194,7 @@ export default function DadosDocumentosMedicoCard({ onBack, onComplete, userId, 
             type="submit"
             variant="primary"
             className="btn-equal"
-            disabled={loading || !(seguroFile && diplomaFile && assinaturaFile)}
+            disabled={loading || !(seguroFile && diplomaFile)}
             loading={loading}
           >
             {loading ? 'Enviando...' : 'Próximo'}

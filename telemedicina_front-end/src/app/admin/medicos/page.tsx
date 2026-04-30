@@ -196,7 +196,6 @@ export default function AdminMedicos() {
               <h4>Documentos Comprobatórios</h4>
               <div className="doc-buttons">
                 <Button variant="ghost" onClick={() => viewDoc('diploma')}>Diploma</Button>
-                <Button variant="ghost" onClick={() => viewDoc('assinatura')}>Assinatura Digital</Button>
                 <Button variant="ghost" onClick={() => viewDoc('seguro')}>Seguro</Button>
                 <Button variant="ghost" onClick={() => viewDoc('especializacao')}>Especialização</Button>
               </div>

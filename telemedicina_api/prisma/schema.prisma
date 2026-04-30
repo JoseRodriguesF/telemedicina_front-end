@@ -59,7 +59,8 @@ model Medico {
   rqe                              String?           @db.VarChar(50)
   diploma_url                      String?           @db.VarChar(255)
   especializacao_url               String?           @db.VarChar(255)
-  assinatura_digital_url           String?           @db.VarChar(255)
+  vidaas_external_id               String?           @db.VarChar(255)
+  vidaas_refresh_token             String?           @db.Text
   seguro_responsabilidade_url      String?           @db.VarChar(255)
   verificacao                      StatusVerificacao @default(analise)
   avaliacao                        Float?            @default(0)
