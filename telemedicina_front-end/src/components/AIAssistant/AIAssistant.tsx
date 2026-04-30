@@ -274,7 +274,7 @@ export default function AIAssistant() {
             />
             <button 
               className={`btn-send ${!input.trim() || loading ? 'disabled' : ''}`}
-              onClick={handleSend}
+              onClick={() => handleSend()}
               disabled={!input.trim() || loading}
             >
               <Send size={18} />
