@@ -77,7 +77,8 @@ export class GoogleAuthService {
         medicoId,
         token,
         nome,
-        verificacao
+        verificacao,
+        documentos_pendentes: verificacao === 'pendente_documentos'
       };
     } catch (err: any) {
       if (err instanceof ApiError) throw err;

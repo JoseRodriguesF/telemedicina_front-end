@@ -20,9 +20,11 @@ export type DadosPessoaisMedico = {
 type Props = {
   onBack?: () => void;
   onComplete?: (data?: DadosPessoaisMedico) => void;
+  stepLabel?: string;
+  loading?: boolean;
 };
 
-export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
+export default function DadosPessoaisMedicoCard({ onBack, onComplete, stepLabel, loading: externalLoading }: Props) {
   const [name, setName] = useState('');
   const [crm, setCrm] = useState('');
   const [cpf, setCpf] = useState('');
@@ -89,7 +91,7 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
        </div>
 
       <h1 className="register-title">Dados Pessoais</h1>
-      <p className="register-subtitle">Etapa 2 de 3</p>
+      <p className="register-subtitle">{stepLabel || 'Etapa 2 de 3'}</p>
 
       <form className="register-form grid-2" onSubmit={(e) => e.preventDefault()}>
         <label className="form-label full-width">
@@ -204,6 +206,8 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
             <Button
               type="button"
               variant="primary"
+              disabled={externalLoading}
+              loading={externalLoading}
               onClick={() => {
                 const ok = validateAll();
                 if (!isValidCRM(crm)) {
@@ -213,7 +217,7 @@ export default function DadosPessoaisMedicoCard({ onBack, onComplete }: Props) {
                 if (ok) onComplete?.({ name, crm, cpf, gender, birthDate, telefone_celular: telefoneCelular, crm_uf: crmUf, rqe });
               }}
             >
-              Próximo
+              {externalLoading ? 'Enviando...' : 'Cadastrar'}
             </Button>
           </div>
         </div>

@@ -2,6 +2,7 @@ import prisma from '../config/database'
 import ApiError from '../utils/apiError'
 import { sanitizeText, sanitizePhone, sanitizeCPF } from '../utils/security'
 import { storageService, StorageService } from './storageService'
+import { EmailService } from './emailService'
 import logger from '../utils/logger'
 
 export class PerfilService {
@@ -100,6 +101,44 @@ export class PerfilService {
                             where: { id: usuario.medico.id },
                             data: updateData
                         })
+                    }
+
+                    // Verificar se todos os documentos obrigatórios foram enviados
+                    // Se sim, mudar status para 'analise' e enviar email de notificação
+                    const updatedMedico = await tx.medico.findUnique({ where: { id: usuario.medico.id } })
+                    if (updatedMedico && 
+                        updatedMedico.diploma_url && 
+                        updatedMedico.seguro_responsabilidade_url &&
+                        updatedMedico.verificacao === 'pendente_documentos') {
+                        
+                        await tx.medico.update({
+                            where: { id: usuario.medico.id },
+                            data: { verificacao: 'analise' }
+                        })
+
+                        // Enviar email informando que os documentos estão em análise
+                        EmailService.sendDocumentsUnderReview(
+                            usuario.email,
+                            updatedMedico.nome_completo
+                        ).catch(err => logger.error('Failed to send review email', err))
+                    }
+
+                    // Se o médico estava recusado e reenviou documentos, voltar para análise
+                    if (updatedMedico && 
+                        updatedMedico.diploma_url && 
+                        updatedMedico.seguro_responsabilidade_url &&
+                        updatedMedico.verificacao === 'recusado' &&
+                        (updateData.diploma_url || updateData.seguro_responsabilidade_url)) {
+                        
+                        await tx.medico.update({
+                            where: { id: usuario.medico.id },
+                            data: { verificacao: 'analise' }
+                        })
+
+                        EmailService.sendDocumentsUnderReview(
+                            usuario.email,
+                            updatedMedico.nome_completo
+                        ).catch(err => logger.error('Failed to send review email', err))
                     }
                 }
 

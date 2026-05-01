@@ -19,6 +19,7 @@ import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
 import { formatDate, formatTime } from '@/lib/utils/dateFormatters';
 import { getUser, getUserFirstName, getToken } from '@/lib/auth';
+import DocumentsRequiredModal from '@/components/common/Modals/DocumentsRequiredModal/DocumentsRequiredModal';
 import {
   PSFullHistoryItem,
   ConsultaAgendada,
@@ -36,6 +37,8 @@ function InicioPageContent() {
   const [displayName, setDisplayName] = useState<string>('');
   const [isMedico, setIsMedico] = useState<boolean>(false);
   const [userId, setUserId] = useState<number | null>(null);
+  const [verificacao, setVerificacao] = useState<string | undefined>(undefined);
+  const [showDocsModal, setShowDocsModal] = useState(false);
 
   // Estados para Avaliação
   const [showRatingModal, setShowRatingModal] = useState(false);
@@ -119,6 +122,11 @@ function InicioPageContent() {
 
   const handleEnterAppointment = () => {
     if (nextAppointment) {
+      // Verificar se médico tem documentos verificados
+      if (isMedico && verificacao && verificacao !== 'verificado') {
+        setShowDocsModal(true);
+        return;
+      }
       router.push(`/consultas/atendimento?id=${nextAppointment.id}&scheduled=true`);
     }
   };
@@ -137,6 +145,7 @@ function InicioPageContent() {
     const isMed = (u?.tipo_usuario || '').toLowerCase() === 'medico';
     setIsMedico(isMed);
     setUserId(u?.id || null);
+    setVerificacao(u?.verificacao);
 
     // Verificar sessionStorage para reconexão
     try {
@@ -232,6 +241,11 @@ function InicioPageContent() {
 
   const handleReconnect = () => {
     if (reconnectData) {
+      // Verificar se médico tem documentos verificados
+      if (isMedico && verificacao && verificacao !== 'verificado') {
+        setShowDocsModal(true);
+        return;
+      }
       router.push(`/consultas/atendimento?id=${reconnectData.consultaId}`);
     }
   };
@@ -620,6 +634,11 @@ function InicioPageContent() {
         onCancel={modal.onCancel}
       />
       <RatingModal />
+      <DocumentsRequiredModal
+        open={showDocsModal}
+        onClose={() => setShowDocsModal(false)}
+        status={verificacao as any}
+      />
     </>
   );
 }

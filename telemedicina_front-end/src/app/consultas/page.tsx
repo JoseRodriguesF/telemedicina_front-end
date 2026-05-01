@@ -19,6 +19,7 @@ import { useConsultationTimer } from '@/hooks/useConsultationTimer';
 import { formatTime } from '@/lib/utils/dateFormatters';
 import FormattedText from '@/components/common/FormattedText';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import DocumentsRequiredModal from '@/components/common/Modals/DocumentsRequiredModal/DocumentsRequiredModal';
 
 // Array vazio estável para evitar re-renders desnecessários
 const EMPTY_ARRAY: any[] = [];
@@ -27,6 +28,8 @@ export default function ConsultasPage() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState<string>('');
   const [isMedico, setIsMedico] = useState<boolean>(false);
+  const [verificacao, setVerificacao] = useState<string | undefined>(undefined);
+  const [showDocsModal, setShowDocsModal] = useState(false);
 
   // ✅ NOVO: Usar hooks otimizados
   const { consultas: allConsultasRaw, isLoading: loading, error: consultasError, refresh: refreshConsultas } = useConsultasAgendadas();
@@ -112,6 +115,11 @@ export default function ConsultasPage() {
   };
 
   const handleAttend = async (id: number) => {
+    // Verificar se médico tem documentos verificados antes de atender
+    if (isMedico && verificacao && verificacao !== 'verificado') {
+      setShowDocsModal(true);
+      return;
+    }
     const appt = scheduledAppointments.find(a => a.id === id);
     if (appt?.status === 'solicitada') {
       try {
@@ -162,6 +170,7 @@ export default function ConsultasPage() {
     setDisplayName(getUserFirstName(u));
     const isMed = (u?.tipo_usuario || '').toLowerCase() === 'medico';
     setIsMedico(isMed);
+    setVerificacao(u?.verificacao);
   }, []);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -225,7 +234,13 @@ export default function ConsultasPage() {
               <button
                 className="btn primary"
                 style={{ marginTop: '1rem', width: 'fit-content', padding: '0.75rem 2rem', borderRadius: 'var(--radius-lg)' }}
-                onClick={() => router.push(isMedico ? '/consultas/pacientes' : '/consultas/pre-consulta')}
+                onClick={() => {
+                  if (isMedico && verificacao && verificacao !== 'verificado') {
+                    setShowDocsModal(true);
+                    return;
+                  }
+                  router.push(isMedico ? '/consultas/pacientes' : '/consultas/pre-consulta');
+                }}
               >
                 {isMedico ? 'Ver Fila de Espera' : 'Entrar na Fila'}
               </button>
@@ -506,6 +521,11 @@ export default function ConsultasPage() {
           config={globalModal.config}
           onConfirm={globalModal.onConfirm}
           onCancel={globalModal.onCancel}
+        />
+        <DocumentsRequiredModal
+          open={showDocsModal}
+          onClose={() => setShowDocsModal(false)}
+          status={verificacao as any}
         />
       </DashboardLayout>
     </ErrorBoundary>

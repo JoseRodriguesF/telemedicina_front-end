@@ -6,12 +6,13 @@ import { useRouter } from 'next/navigation';
 import DadosAcessoPacienteCard from '@/components/common/Cards/DadosACessoPacienteCard/DadosAcessoPacienteCard';
 import DadosPessoaisPacienteCard from '@/components/common/Cards/DadosPessoaisPaciente/DadosPessoaisPacienteCard';
 // DadosConvenioCard removed — convênio step deprecated
+// DadosDocumentosMedicoCard removed — documents moved to profile page
 import TermsModal from '@/components/common/Modals/TermsModal/TermsModal';
 import createPessoais from '@/lib/axios/pessoais';
 import { saveUser, getUserId } from '@/lib/auth';
 import DadosPessoaisMedicoCard from '@/components/common/Cards/DadosPessoaisMedico/DadosPessoaisMedicoCard';
-import DadosDocumentosMedicoCard from '@/components/common/Cards/DadosDocumentosMedico/DadosDocumentosMedicoCard';
 import { handleApiError } from '@/lib/errorHandler';
+
 export default function RegisterPage() {
   const [step, setStep] = useState<number>(1);
   const [credentials, setCredentials] = useState<{ email?: string; password?: string; userId?: number } | null>(null);
@@ -58,12 +59,14 @@ export default function RegisterPage() {
     setStep(1);
   }
 
-  // store pessoais data and advance to convenio step
+  // store pessoais data and advance
   function handleCompleteStep2(data?: any) {
     // For patients, skip the convênio step and show terms + submit pessoais
     setPessoaisData(data || null);
     if (tipoParam === 'medico') {
-      setStep(3);
+      // Médicos agora não precisam mais enviar documentos no cadastro
+      // Vamos submeter os dados pessoais direto e redirecionar para a plataforma
+      handleSubmitMedico(data);
       return;
     }
     // paciente: open terms modal to confirm and submit
@@ -74,43 +77,94 @@ export default function RegisterPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  function handleBackFromStep3() {
-    setStep(2);
-  }
+  /**
+   * Submissão de cadastro médico (sem documentos — serão enviados pelo perfil)
+   */
+  async function handleSubmitMedico(data: any) {
+    if (!data) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const createMedico = (await import('@/lib/axios/medicos')).default;
 
-  // Step 3 completion: the DadosConvenioCard will call createPessoais
-  function handleCompleteStep3(data?: any) {
-    // data may contain result info; simply redirect to inicio or show success
-    router.push('/inicio');
+      const pd = data || {};
+      const toISODate = (d: string) => {
+        if (!d) return '';
+        if (d.includes('/')) {
+          const parts = d.split('/');
+          if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        }
+        return d;
+      };
+
+      const payload: any = {
+        usuario_id: credentials?.userId || null,
+        nome_completo: pd?.name || pd?.nome || '',
+        data_nascimento: toISODate(pd?.birthDate || pd?.data_nascimento || ''),
+        cpf: (pd?.cpf || '').toString().replace(/\D/g, ''),
+        sexo: (pd?.gender || pd?.sexo || '').toString().toLowerCase(),
+        crm: pd?.crm || '',
+        crm_uf: pd?.crm_uf || '',
+        rqe: pd?.rqe || null,
+        telefone_celular: (pd?.telefone_celular || '').replace(/\D/g, ''),
+      };
+
+      // Remove null/undefined keys
+      Object.keys(payload).forEach((k) => {
+        if (payload[k] === null || typeof payload[k] === 'undefined') {
+          delete payload[k];
+        }
+      });
+
+      console.log('[RegisterMedico] Enviando payload:', payload);
+      const resp = await createMedico(payload);
+      console.log('[RegisterMedico] Sucesso:', resp);
+
+      try {
+        const { saveUser } = await import('@/lib/auth');
+        if (resp?.user) {
+          const user = resp.user || {};
+          const token = (resp as any).token || user.token;
+          if (token && !user.token) {
+            user.token = token;
+          }
+          if (token) {
+            localStorage.setItem('telemedicina_token', token);
+          } else {
+            localStorage.removeItem('telemedicina_token');
+          }
+          localStorage.removeItem('token');
+          localStorage.removeItem('auth_token');
+          saveUser(user);
+        }
+      } catch (e) {
+        // ignore save failures
+      }
+
+      // Redirecionar para a página inicial (médico pode navegar, mas precisa enviar docs)
+      router.push('/inicio');
+    } catch (err: any) {
+      console.error('[RegisterMedico] Erro:', err);
+      handleApiError(err, { setGlobalError: setSubmitError });
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
-    <div className={`register-page ${step === 2 || step === 3 ? 'dados-pessoais-active' : ''}`}>
-      <main className={`register-main ${step === 2 || step === 3 ? 'dados-pessoais-wide' : ''}`}>
+    <div className={`register-page ${step === 2 ? 'dados-pessoais-active' : ''}`}>
+      <main className={`register-main ${step === 2 ? 'dados-pessoais-wide' : ''}`}>
         {step === 1 && <DadosAcessoPacienteCard onNext={handleNextFromStep1} tipoUsuario={tipoParam} />}
         {step === 2 && (tipoParam === 'medico' ? (
-          <DadosPessoaisMedicoCard onBack={handleBackFromStep2} onComplete={(data) => { setPessoaisData(data); setStep(3); }} />
+          <DadosPessoaisMedicoCard
+            onBack={handleBackFromStep2}
+            onComplete={handleCompleteStep2}
+            stepLabel="Etapa 2 de 2"
+            loading={submitting}
+          />
         ) : (
           <DadosPessoaisPacienteCard onBack={handleBackFromStep2} onComplete={handleCompleteStep2} />
         ))}
-        {step === 3 && tipoParam === 'medico' && (
-          <DadosDocumentosMedicoCard
-            onBack={handleBackFromStep3}
-            userId={credentials?.userId}
-            pessoaisData={pessoaisData}
-            onComplete={(data) => {
-              try {
-                if (data && (data.medicoId || data.message)) {
-                  router.push('/analise');
-                  return;
-                }
-              } catch (e) {
-                // fallback
-              }
-              router.push('/analise');
-            }}
-          />
-        )}
 
         <TermsModal
           open={showTerms}

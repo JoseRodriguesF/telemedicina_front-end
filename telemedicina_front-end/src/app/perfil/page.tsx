@@ -249,10 +249,36 @@ export default function PerfilPage() {
             <h3>{userData.nome_completo || 'Usuário'}</h3>
             <p className="profile-email">{profile?.email}</p>
             <div className="profile-badges">
-              <span className="profile-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                Conta {profile?.tipo_usuario === 'medico' ? 'Médica' : 'Paciente'} Verificada
-              </span>
+              {profile?.tipo_usuario === 'medico' ? (
+                <>
+                  {profile.verificacao === 'verificado' && (
+                    <span className="profile-badge">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                      Conta Médica Verificada
+                    </span>
+                  )}
+                  {profile.verificacao === 'pendente_documentos' && (
+                    <span className="profile-badge" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
+                      📄 Documentos Pendentes
+                    </span>
+                  )}
+                  {profile.verificacao === 'analise' && (
+                    <span className="profile-badge" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+                      ⏳ Em Análise
+                    </span>
+                  )}
+                  {profile.verificacao === 'recusado' && (
+                    <span className="profile-badge" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+                      ⚠️ Documentos Recusados
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="profile-badge">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                  Conta Paciente Verificada
+                </span>
+              )}
               <span className="profile-badge" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
                 Ativo
               </span>
@@ -263,6 +289,40 @@ export default function PerfilPage() {
             <button className="btn-profile primary" onClick={handleEditOpen}>Editar Perfil</button>
           </div>
         </section>
+
+        {/* Document Status Banner (Doctors Only) */}
+        {profile?.tipo_usuario === 'medico' && profile.verificacao !== 'verificado' && (
+          <section className="docs-status-banner" style={{
+            background: profile.verificacao === 'pendente_documentos' 
+              ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.03))'
+              : profile.verificacao === 'analise'
+              ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.03))'
+              : 'linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.03))',
+            border: `1px solid ${profile.verificacao === 'pendente_documentos' ? 'rgba(245, 158, 11, 0.2)' : profile.verificacao === 'analise' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
+            borderRadius: 'var(--radius-xl)',
+            padding: '1.25rem 1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            marginBottom: '0'
+          }}>
+            <div style={{ fontSize: '2rem', flexShrink: 0 }}>
+              {profile.verificacao === 'pendente_documentos' ? '📄' : profile.verificacao === 'analise' ? '⏳' : '⚠️'}
+            </div>
+            <div style={{ flex: 1 }}>
+              <h4 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                {profile.verificacao === 'pendente_documentos' && 'Envie seus documentos profissionais'}
+                {profile.verificacao === 'analise' && 'Seus documentos estão em análise'}
+                {profile.verificacao === 'recusado' && 'Documentos recusados — reenvie abaixo'}
+              </h4>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                {profile.verificacao === 'pendente_documentos' && 'Para atender pacientes e utilizar todas as funcionalidades, envie seu Diploma e Seguro de Responsabilidade Civil na seção de Documentos Profissionais abaixo.'}
+                {profile.verificacao === 'analise' && 'Nossa equipe está verificando seus documentos. Você receberá um email com o resultado. Enquanto isso, pode navegar pela plataforma.'}
+                {profile.verificacao === 'recusado' && 'Revise os documentos enviados e reenvie-os na seção de Documentos Profissionais abaixo.'}
+              </p>
+            </div>
+          </section>
+        )}
 
         <div className="profile-content-grid">
           {/* Main Content Card (Single Card for both Patient and Doctor) */}
@@ -391,8 +451,8 @@ export default function PerfilPage() {
                       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14.5 2 14.5 7.5 20 7.5" /></svg>
                     </div>
                     <div className="document-info">
-                      <div className="document-title">Diploma Médico</div>
-                      <div className="document-status">{profile.medico?.tem_diploma ? 'Verificado' : 'Clique para enviar'}</div>
+                      <div className="document-title">Diploma Médico <span style={{ color: '#ef4444', fontSize: '0.8em' }}>*</span></div>
+                      <div className="document-status">{profile.medico?.tem_diploma ? (profile.verificacao === 'verificado' ? 'Verificado' : 'Enviado') : 'Obrigatório — Clique para enviar'}</div>
                     </div>
                     {profile.medico?.tem_diploma ? (
                       <button className="btn-view-doc">
@@ -442,8 +502,8 @@ export default function PerfilPage() {
                       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /></svg>
                     </div>
                     <div className="document-info">
-                      <div className="document-title">Seguro Profissional</div>
-                      <div className="document-status">{profile.medico?.tem_seguro ? 'Verificado' : 'Clique para enviar'}</div>
+                      <div className="document-title">Seguro Profissional <span style={{ color: '#ef4444', fontSize: '0.8em' }}>*</span></div>
+                      <div className="document-status">{profile.medico?.tem_seguro ? (profile.verificacao === 'verificado' ? 'Verificado' : 'Enviado') : 'Obrigatório — Clique para enviar'}</div>
                     </div>
                     {profile.medico?.tem_seguro ? (
                       <button className="btn-view-doc">

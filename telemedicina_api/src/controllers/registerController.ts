@@ -37,11 +37,6 @@ const registerPersonalSchema = z.object({
   })
 })
 
-const fileSchema = z.object({
-  data: z.string().min(1, 'Conteúdo do arquivo é obrigatório'),
-  mimetype: z.string().min(1, 'Mimetype é obrigatório')
-})
-
 const registerMedicoSchema = z.object({
   usuario_id: z.number().int().positive('ID do usuário deve ser um número positivo'),
   nome_completo: z.string().min(1, 'Nome completo é obrigatório'),
@@ -51,11 +46,7 @@ const registerMedicoSchema = z.object({
   telefone_celular: z.string().regex(/^\d{10,11}$/, 'Telefone celular deve ter 10 ou 11 dígitos (incluindo DDD)'),
   crm: z.string().min(1, 'CRM é obrigatório'),
   crm_uf: z.string().length(2, 'UF do CRM deve ter 2 caracteres'),
-  rqe: z.string().nullish(),
-  diploma: fileSchema,
-  especializacao: fileSchema.nullish(),
-  assinatura_digital: fileSchema,
-  seguro_responsabilidade: fileSchema
+  rqe: z.string().nullish()
 })
 
 export class RegisterController {
@@ -149,7 +140,7 @@ export class RegisterController {
   async registerMedico(request: FastifyRequest, reply: FastifyReply) {
     try {
       const data = registerMedicoSchema.parse(request.body)
-      const medico = await registerService.createMedico(data as any)
+      const medico = await registerService.createMedico(data)
 
       // Buscar dados do usuário para gerar JWT
       const usuario = await registerService.getUsuarioById(data.usuario_id)
@@ -167,13 +158,13 @@ export class RegisterController {
         acao: 'CADASTRO_PERFIL_MEDICO',
         recurso: 'medico',
         recursoId: medico.id,
-        detalhes: `Registro de médico (CRM ${data.crm}/${data.crm_uf}) solicitado para análise.`,
+        detalhes: `Registro de médico (CRM ${data.crm}/${data.crm_uf}) — documentos pendentes.`,
         ip: request.ip,
         userAgent: request.headers['user-agent']
       });
 
       reply.send({
-        message: 'Dados pessoais do médico registrados com sucesso. Cadastro completo!',
+        message: 'Cadastro médico realizado com sucesso! Envie seus documentos pelo perfil para liberar todas as funcionalidades.',
         medicoId: medico.id,
         user: {
           id: usuario.id,
@@ -182,7 +173,7 @@ export class RegisterController {
           medicoId: medico.id,
           nome: data.nome_completo,
           registro_full: true,
-          verificacao: 'analise',
+          verificacao: 'pendente_documentos',
           token
         }
       })

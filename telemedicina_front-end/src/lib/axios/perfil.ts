@@ -6,6 +6,8 @@ export type UserProfile = {
     email: string;
     tipo_usuario: 'medico' | 'paciente' | 'admin';
     registro_full: boolean;
+    verificacao?: string;
+    documentos_pendentes?: boolean;
     paciente?: {
         id: number;
         nome_completo: string;
@@ -27,6 +29,7 @@ export type UserProfile = {
         cpf: string;
         sexo: string;
         crm: string;
+        verificacao?: string;
         tem_diploma?: boolean;
         tem_especializacao?: boolean;
         tem_seguro?: boolean;

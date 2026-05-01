@@ -143,9 +143,6 @@ export class RegisterService {
     crm_uf: string
     telefone_celular?: string | null
     rqe?: string | null
-    diploma: { data: string; mimetype: string }
-    especializacao?: { data: string; mimetype: string } | null
-    seguro_responsabilidade: { data: string; mimetype: string }
   }) {
     const user = await prisma.usuario.findUnique({ where: { id: data.usuario_id } })
     if (!user || user.tipo_usuario !== 'medico') {
@@ -184,22 +181,8 @@ export class RegisterService {
     if (existingMedico) throw new ApiError('Registro médico já existente ou duplicado.', 409, 'REGISTRATION_DUPLICATE')
 
     try {
-      // LGPD/CFM: Upload de documentos sensíveis para o Google Cloud Storage (privado)
-      // Apenas o caminho GCS é armazenado no banco — sem dados binários no PostgreSQL
-      const diplomaPath = StorageService.buildPath(data.usuario_id, 'diploma', data.diploma.mimetype)
-      const seguroPath = StorageService.buildPath(data.usuario_id, 'seguro_responsabilidade', data.seguro_responsabilidade.mimetype)
-
-      await Promise.all([
-        storageService.uploadDocument(Buffer.from(data.diploma.data, 'base64'), diplomaPath, data.diploma.mimetype),
-        storageService.uploadDocument(Buffer.from(data.seguro_responsabilidade.data, 'base64'), seguroPath, data.seguro_responsabilidade.mimetype)
-      ])
-
-      let especializacaoPath: string | null = null
-      if (data.especializacao) {
-        especializacaoPath = StorageService.buildPath(data.usuario_id, 'especializacao', data.especializacao.mimetype)
-        await storageService.uploadDocument(Buffer.from(data.especializacao.data, 'base64'), especializacaoPath, data.especializacao.mimetype)
-      }
-
+      // Médico criado SEM documentos — ele poderá enviá-los posteriormente pelo Perfil
+      // Status inicial: 'pendente_documentos' (não pode atender até enviar e ser aprovado)
       const medico = await prisma.medico.create({
         data: {
           usuario_id: data.usuario_id,
@@ -211,9 +194,11 @@ export class RegisterService {
           crm: cleanCRM,
           crm_uf: data.crm_uf,
           rqe: data.rqe || null,
-          diploma_url: diplomaPath,
-          especializacao_url: especializacaoPath,
-          seguro_responsabilidade_url: seguroPath
+          // Documentos serão enviados depois pelo Perfil
+          diploma_url: null,
+          especializacao_url: null,
+          seguro_responsabilidade_url: null,
+          verificacao: 'pendente_documentos'
         }
       })
 
@@ -221,7 +206,7 @@ export class RegisterService {
       return medico
     } catch (error: any) {
       logger.error('Critical failure during doctor registration', error)
-      throw new ApiError('Erro ao processar documentos médicos.', 500, 'INTERNAL_ERROR')
+      throw new ApiError('Erro ao processar cadastro médico.', 500, 'INTERNAL_ERROR')
     }
   }
 

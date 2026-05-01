@@ -79,6 +79,7 @@ export class LoginService {
       medicoId: user.medico?.id || null,
       nome,
       verificacao,
+      documentos_pendentes: verificacao === 'pendente_documentos',
       token
     }
   }

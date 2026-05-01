@@ -62,7 +62,7 @@ model Medico {
   vidaas_external_id               String?           @db.VarChar(255)
   vidaas_refresh_token             String?           @db.Text
   seguro_responsabilidade_url      String?           @db.VarChar(255)
-  verificacao                      StatusVerificacao @default(analise)
+  verificacao                      StatusVerificacao @default(pendente_documentos)
   avaliacao                        Float?            @default(0)
   resumo_profissional              String?
   especialidade                    String?           @db.VarChar(100)
@@ -221,6 +221,7 @@ enum TipoUsuario {
 }
 
 enum StatusVerificacao {
+  pendente_documentos
   analise
   verificado
   recusado

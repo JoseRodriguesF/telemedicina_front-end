@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from 'fastify'
 import prisma from '../config/database'
 import { AuthenticatedUser } from '../types/shared'
 import { logAuditoria } from '../utils/auditLogger'
+import { EmailService } from '../services/emailService'
 import logger from '../utils/logger'
 
 export class AdminController {
@@ -333,7 +334,8 @@ export class AdminController {
 
             const medico = await prisma.medico.update({
                 where: { id: parseInt(id) },
-                data: { verificacao: status }
+                data: { verificacao: status },
+                include: { usuario: { select: { email: true } } }
             })
 
             // Auditoria
@@ -346,6 +348,17 @@ export class AdminController {
                 ip: request.ip,
                 userAgent: request.headers['user-agent']
             })
+
+            // Enviar email com resultado da análise
+            const medicoEmail = (medico as any).usuario?.email
+            if (medicoEmail) {
+                EmailService.sendVerificationResult(
+                    medicoEmail,
+                    medico.nome_completo,
+                    status,
+                    observacao
+                ).catch(err => logger.error('Failed to send verification result email', err))
+            }
 
             return reply.send({ message: `Médico ${status} com sucesso`, medico })
         } catch (error) {

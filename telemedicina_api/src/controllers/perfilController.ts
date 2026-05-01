@@ -62,6 +62,8 @@ export class PerfilController {
                 
                 result.nome = result.medico.nome_completo
                 result.verificacao = result.medico.verificacao
+                // Flag para o frontend saber se o médico precisa enviar documentos
+                result.documentos_pendentes = result.medico.verificacao === 'pendente_documentos'
             } else if (result.paciente) {
                 result.nome = result.paciente.nome_completo
                 if (result.paciente.historiaClinicaResumo) {
