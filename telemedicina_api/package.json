@@ -2,7 +2,7 @@
   "name": "telemedicina_api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "src/server.ts",
   "scripts": {
     "dev": "ts-node src/server.ts",
     "build": "npm run prisma:generate && tsc",
@@ -21,8 +21,6 @@
     "@fastify/rate-limit": "^10.3.0",
     "@google-cloud/storage": "^7.19.0",
     "@prisma/client": "^6.19.0",
-    "@types/bcrypt": "^6.0.0",
-    "@types/jsonwebtoken": "^9.0.10",
     "axios": "^1.15.0",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
@@ -36,6 +34,8 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.1",
     "@types/nodemailer": "^8.0.0",
     "@types/ws": "^8.5.10",
