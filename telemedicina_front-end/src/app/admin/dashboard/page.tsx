@@ -202,7 +202,14 @@ export default function AdminDashboard() {
             <div className="nav-stats-mini">
               <div className="mini-stat">
                 <strong>{stats?.totalDoctors || 0}</strong>
-                <span>Médicos</span>
+                <span>Total Registrados</span>
+              </div>
+              <div className="mini-stat">
+                <strong style={{ color: '#10b981' }}>{stats?.onlineDoctors || 0}</strong>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }}></span>
+                  Online Agora
+                </span>
               </div>
             </div>
             <footer className="nav-footer">
@@ -224,7 +231,14 @@ export default function AdminDashboard() {
             <div className="nav-stats-mini">
               <div className="mini-stat">
                 <strong>{stats?.totalPatients || 0}</strong>
-                <span>Pacientes</span>
+                <span>Total Registrados</span>
+              </div>
+              <div className="mini-stat">
+                <strong style={{ color: '#10b981' }}>{stats?.onlinePatients || 0}</strong>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }}></span>
+                  Online Agora
+                </span>
               </div>
             </div>
             <footer className="nav-footer">

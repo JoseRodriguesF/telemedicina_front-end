@@ -1,5 +1,5 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
-import { chatWithOpenAI, transcreverConsulta, resumirTranscricao, diarizarTranscricao, chatWithDoctorAssistant, client } from '../services/openaiService'
+import { chatWithOpenAI, transcreverConsulta, resumirTranscricao, diarizarTranscricao, chatWithDoctorAssistant, client, gerarEvolucaoDaTriagem } from '../services/openaiService'
 import prisma from '../config/database'
 import { ChatMessage } from '../services/openaiService'
 import logger from '../utils/logger'
@@ -498,5 +498,34 @@ export async function doctorAssistantController(req: FastifyRequest<{ Body: Assi
   } catch (err: any) {
     logger.error('Erro no Assistente do Médico', err)
     return reply.code(500).send({ error: 'erro_interno_assistente' })
+  }
+}
+
+/**
+ * Controller para gerar a evolução clínica a partir dos dados estruturados da triagem
+ */
+export async function gerarEvolucaoTriagemController(req: FastifyRequest<{ Body: { dadosTriagem: any } }>, reply: FastifyReply) {
+  try {
+    const user = req.user
+    if (!user || user.tipo_usuario !== 'medico') {
+      return reply.code(403).send({ error: 'apenas_medicos_podem_gerar_evolucao' })
+    }
+
+    const { dadosTriagem } = req.body
+    if (!dadosTriagem) {
+      return reply.code(400).send({ error: 'dadosTriagem_obrigatorio' })
+    }
+
+    logger.info(`Gerando evolução clínica de triagem para médico ${user.id}`)
+    
+    const evolucao = await gerarEvolucaoDaTriagem(dadosTriagem)
+
+    return reply.send({
+      ok: true,
+      evolucao
+    })
+  } catch (err: any) {
+    logger.error('Erro ao gerar evolução da triagem', err, { userId: (req as any).user?.id })
+    return reply.code(500).send({ error: 'erro_ao_gerar_evolucao_triagem' })
   }
 }

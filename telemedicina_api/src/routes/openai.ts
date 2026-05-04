@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify'
-import { openaiChatController, confirmTriagemController, transcreverConsultaController, resumirTranscricaoController, doctorAssistantController } from '../controllers/openaiController'
+import { openaiChatController, confirmTriagemController, transcreverConsultaController, resumirTranscricaoController, doctorAssistantController, gerarEvolucaoTriagemController } from '../controllers/openaiController'
 import { authenticateJWT } from '../middlewares/auth'
 
 export async function openaiRoutes(fastify: FastifyInstance) {
@@ -36,5 +36,11 @@ export async function openaiRoutes(fastify: FastifyInstance) {
     url: '/chat-ia/assistente-medico',
     preHandler: authenticateJWT,
     handler: doctorAssistantController
+  })
+  fastify.route({
+    method: 'POST',
+    url: '/chat-ia/gerar-evolucao-triagem',
+    preHandler: authenticateJWT,
+    handler: gerarEvolucaoTriagemController
   })
 }

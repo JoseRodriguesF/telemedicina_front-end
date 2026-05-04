@@ -9,6 +9,7 @@ import { getUser, getToken } from '@/lib/auth';
 import { createWebRTCSession } from '@/lib/webrtc';
 import { psCreateRoom, psClaim, listParticipants, endConsulta, getConsulta, type ConsultaDetails, getHistoricoConsultasPaciente, type PSFullHistoryItem, updatePacienteNotas, listAnexosConsulta, type ConsultaAnexo, enviarAnexosConsulta, logEventoTecnico, downloadAnexo } from '@/lib/axios/consultas';
 import { createPrescricao, getSugestoesMedicamentos, getSugestoesMarcas, getPrescricoesByConsulta, deletePrescricao, getPrescricoesByPaciente, Prescricao as PrescricaoType, downloadPrescricaoPdf } from '@/lib/axios/prescricoes';
+import { gerarEvolucaoTriagemIA } from '@/lib/axios/chat';
 import { getSignalUrl, getConsultaIdFromUrl } from '@/lib/signal';
 import { Modal } from '@/components/common/Modal/Modal';
 import { useModal } from '@/components/common/Modal/useModal';
@@ -226,6 +227,35 @@ function AtendimentoInner() {
         if (data.paciente?.notas) {
           setPacienteNotas(data.paciente.notas);
         }
+
+        // --- Nova lógica: Gerar Evolução Clínica via IA a partir da Triagem ---
+        // Se a evolução estiver vazia E existir uma história clínica (triagem)
+        if (!data.evolucao && data.historiaClinica) {
+          setAtendimentoData(prev => ({
+            ...prev,
+            evolucao: 'Gerando resumo clínico a partir da triagem...'
+          }));
+          
+          gerarEvolucaoTriagemIA(data.historiaClinica, token)
+            .then(res => {
+              if (res.ok && res.evolucao) {
+                setAtendimentoData(prev => ({
+                  ...prev,
+                  evolucao: res.evolucao
+                }));
+              } else {
+                setAtendimentoData(prev => ({ ...prev, evolucao: '' }));
+              }
+            })
+            .catch(err => {
+              console.error('[AtendimentoInner] Erro ao gerar evolução da triagem:', err);
+              setAtendimentoData(prev => ({ ...prev, evolucao: '' }));
+            });
+        } else if (data.evolucao) {
+          // Se já existir evolução salva, preenche normalmente
+          setAtendimentoData(prev => ({ ...prev, evolucao: data.evolucao }));
+        }
+
       } catch (err) {
         console.error('[AtendimentoInner] Erro ao buscar detalhes da consulta:', err);
       }
@@ -1747,14 +1777,14 @@ function AtendimentoInner() {
       setIsRecording(true);
       isRecordingRef.current = true;
 
-      // Agendar "rotação" periódica a cada 30 segundos (mais frequente para evitar perda de dados e feedback mais rápido)
+      // Agendar "rotação" periódica a cada 10 segundos (mais frequente para evitar perda de dados e feedback mais rápido)
       const rotationInterval = setInterval(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
           mediaRecorderRef.current.stop(); // Dispara processamento e reinício no onstop
         } else if (!isRecordingRef.current) {
           clearInterval(rotationInterval);
         }
-      }, 30 * 1000);
+      }, 10 * 1000);
 
     } catch (err) {
       console.error('[AI] Erro ao configurar mixagem/gravação:', err);

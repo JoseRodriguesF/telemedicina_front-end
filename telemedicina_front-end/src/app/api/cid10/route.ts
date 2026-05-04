@@ -1,10 +1,13 @@
-
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
 // Memory cache to keep it efficient
 let cidCache: any[] | null = null;
+
+function removeAccents(str: string): string {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
 
 /**
  * Loads and parses CID-10 data from CSV files.
@@ -39,7 +42,11 @@ function getCIDData(): any[] {
           const code = parts[0].trim();
           const description = parts[2].trim();
           if (code && description && !seen.has(code)) {
-            results.push({ codigo: code, nome: description });
+            results.push({ 
+              codigo: code, 
+              nome: description,
+              nomeNormalizado: removeAccents(description)
+            });
             seen.add(code);
           }
         }
@@ -59,7 +66,11 @@ function getCIDData(): any[] {
           const formattedCode = formatCode(rawCode);
           
           if (formattedCode && description && !seen.has(formattedCode)) {
-            results.push({ codigo: formattedCode, nome: description });
+            results.push({ 
+              codigo: formattedCode, 
+              nome: description,
+              nomeNormalizado: removeAccents(description)
+            });
             seen.add(formattedCode);
           }
         }
@@ -79,19 +90,28 @@ function getCIDData(): any[] {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get('q')?.toLowerCase() || '';
+  const rawQuery = searchParams.get('q') || '';
+  
+  if (rawQuery.length < 2) {
+    return NextResponse.json([]);
+  }
 
-  if (!query || query.length < 2) {
+  const queryWords = removeAccents(rawQuery).split(' ').filter(w => w.length > 0);
+
+  if (queryWords.length === 0) {
     return NextResponse.json([]);
   }
 
   const data = getCIDData();
   
-  // Efficient filtering: check both code and name
-  const filtered = data.filter((item: any) => 
-    item.codigo.toLowerCase().includes(query) || 
-    item.nome.toLowerCase().includes(query)
-  ).slice(0, 20); // Top 20 results for performance and UI
+  // Efficient filtering: check both code and name, and require all words from query to be present
+  const filtered = data.filter((item: any) => {
+    const searchableText = `${item.codigo.toLowerCase()} ${item.nomeNormalizado}`;
+    return queryWords.every(word => searchableText.includes(word));
+  }).slice(0, 20); // Top 20 results for performance and UI
 
-  return NextResponse.json(filtered);
+  // Remove the 'nomeNormalizado' field before sending to client
+  const responseData = filtered.map(({ nomeNormalizado, ...rest }) => rest);
+
+  return NextResponse.json(responseData);
 }

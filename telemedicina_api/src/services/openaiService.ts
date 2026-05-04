@@ -616,3 +616,40 @@ export async function chatWithDoctorAssistant(
     role: 'assistant'
   };
 }
+
+/**
+ * Gera um resumo clínico em linguagem técnica (médica) a partir dos dados estruturados da triagem.
+ * O objetivo é autopreencher o campo de Evolução no painel do médico.
+ */
+export async function gerarEvolucaoDaTriagem(dadosTriagem: any) {
+  if (!dadosTriagem) return '';
+
+  const systemPrompt = `Você é um médico experiente redigindo a evolução clínica inicial de um prontuário.
+Sua tarefa é pegar as anotações leigas da triagem do paciente e reescrevê-las em JARGÃO MÉDICO TÉCNICO e PROFISSIONAL.
+Isto será inserido no campo "Evolução" do sistema.
+
+REGRAS OBRIGATÓRIAS:
+1. Comece diretamente com o texto clínico. Não use introduções como "Aqui está a evolução" ou "Paciente apresenta".
+2. Use formato de evolução tradicional. Ex: "Paciente relata quadro de [X] iniciado há [Y]... HMA: ... Nega comorbidades. Alergias: ...".
+3. NÃO DEVE adicionar informações que não estão presentes nos dados da triagem.
+4. Mantenha o texto contínuo e objetivo, condensando as informações em um ou dois parágrafos.
+5. Empregue termos médicos corretos (ex: cefaleia em vez de dor de cabeça, êmese em vez de vômito, etc).`;
+
+  const dadosTexto = JSON.stringify(dadosTriagem, null, 2);
+
+  try {
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini', // Modelo menor e mais rápido é suficiente para esta tarefa
+      temperature: 0.3,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Reescreva os seguintes dados de triagem em linguagem técnica médica para o campo Evolução:\n\n${dadosTexto}` }
+      ]
+    });
+
+    return response.choices[0].message.content || '';
+  } catch (error) {
+    console.error('Erro ao gerar evolução da triagem via OpenAI:', error);
+    return '';
+  }
+}

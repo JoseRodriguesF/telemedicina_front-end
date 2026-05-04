@@ -14,7 +14,7 @@ type SidebarItem = {
 };
 
 type Props = {
-  activeId?: SidebarItem['id'] | 'configuracoes';
+  activeId?: SidebarItem['id'];
   className?: string;
 };
 
@@ -43,7 +43,6 @@ export default function Sidebar({ activeId: propActiveId, className = '' }: Prop
     if (pathname.startsWith('/consultas')) return 'consultas';
     if (pathname.startsWith('/historico')) return 'historico';
     if (pathname.startsWith('/perfil')) return 'perfil';
-    if (pathname.startsWith('/configuracoes')) return 'configuracoes';
     if (pathname.startsWith('/admin/dashboard')) return 'inicio';
     if (pathname.startsWith('/admin/medicos')) return 'perfil';
     if (pathname.startsWith('/admin/logs/analytics')) return 'analytics';

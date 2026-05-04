@@ -51,3 +51,22 @@ export async function confirmTriagem(
   }
 }
 
+/**
+ * Solicita à IA a geração do texto da evolução clínica com base na triagem estruturada.
+ */
+export async function gerarEvolucaoTriagemIA(
+  dadosTriagem: any,
+  token: string
+): Promise<{ ok: boolean; evolucao: string }> {
+  try {
+    const res = await axios.post(`${CHAT_IA_URL}/gerar-evolucao-triagem`, { dadosTriagem }, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.data;
+  } catch (err) {
+    throw new ApiError(err);
+  }
+}
