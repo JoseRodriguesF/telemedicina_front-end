@@ -253,7 +253,7 @@ function AtendimentoInner() {
             });
         } else if (data.evolucao) {
           // Se já existir evolução salva, preenche normalmente
-          setAtendimentoData(prev => ({ ...prev, evolucao: data.evolucao }));
+          setAtendimentoData(prev => ({ ...prev, evolucao: data.evolucao || '' }));
         }
 
       } catch (err) {
