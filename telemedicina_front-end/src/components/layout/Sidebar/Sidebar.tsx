@@ -77,7 +77,7 @@ export default function Sidebar({ activeId: propActiveId, className = '' }: Prop
       <div className="sidebar-top">
         <div className="sidebar-logo">
           <div className="logo-inner">
-            <img src="/images/logo_matriarca_icon.png" alt="Matriarca" width={36} height={36} style={{ borderRadius: '8px', objectFit: 'contain' }} />
+            <img src="/images/logo_matriarca_icon.svg" alt="Matriarca" width={36} height={36} style={{ borderRadius: '8px', objectFit: 'contain' }} />
           </div>
         </div>
       </div>

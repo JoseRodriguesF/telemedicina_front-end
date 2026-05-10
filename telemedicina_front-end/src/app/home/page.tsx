@@ -23,7 +23,7 @@ export default function HomeScreen() {
 					<div className="hero-content">
 						<div className="hero-text animate-fadeIn" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 							<Image 
-								src="/images/logo_matriarca_icon.png" 
+								src="/images/logo_matriarca_icon.svg" 
 								alt="Logo Matriarca" 
 								width={180} 
 								height={180} 

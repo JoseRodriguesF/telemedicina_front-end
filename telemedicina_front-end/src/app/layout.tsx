@@ -21,9 +21,9 @@ export const metadata: Metadata = {
     template: "%s | Matriarca Telemedicina"
   },
   icons: {
-    icon: "/images/logo_matriarca_icon.png",
-    shortcut: "/images/logo_matriarca_icon.png",
-    apple: "/images/logo_matriarca_icon.png",
+    icon: "/images/logo_matriarca_icon.svg",
+    shortcut: "/images/logo_matriarca_icon.svg",
+    apple: "/images/logo_matriarca_icon.svg",
   },
   description: "Matriarca: Acesso imediato a especialistas de alto nível através de uma plataforma segura e intuitiva. Atendimento rápido, seguro e no conforto da sua casa.",
   keywords: ["matriarca", "saúde online", "telemedicina moderna", "consulta online", "médico online", "saúde digital", "atendimento médico"],

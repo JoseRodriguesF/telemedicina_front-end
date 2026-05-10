@@ -13,7 +13,7 @@ export default function TermosPage() {
     <div className="termos-page">
       <div className="termos-container">
         <header className="termos-header">
-          <img src="/images/logo_matriarca_icon.png" alt="Matriarca" className="termos-logo" />
+          <img src="/images/logo_matriarca_icon.svg" alt="Matriarca" className="termos-logo" />
           <h1>Termos de Uso e Política de Privacidade</h1>
           <p>Última atualização: 17 de abril de 2026</p>
         </header>

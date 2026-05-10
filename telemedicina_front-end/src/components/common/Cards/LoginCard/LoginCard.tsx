@@ -136,7 +136,7 @@ export default function LoginCard({ onLogin }: Props) {
   return (
     <section className="register-card dados-acesso-card">
       <div className="login-brand">
-        <img src="/images/logo_matriarca_icon.png" alt="Matriarca" width={36} height={36} style={{ borderRadius: '8px', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+        <img src="/images/logo_matriarca_icon.svg" alt="Matriarca" width={36} height={36} style={{ borderRadius: '8px', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
       </div>
 
       <h2 className="register-title">Bem-vindo(a) de volta!</h2>

@@ -148,7 +148,7 @@ export default function DadosPessoaisPacienteCard({ onBack, onComplete }: Props)
   return (
     <section className="register-card dados-pessoais-card">
       <div className="register-brand">
-        <img src="/images/logo_matriarca_icon.png" alt="Matriarca" width={36} height={36} style={{ borderRadius: '8px', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+        <img src="/images/logo_matriarca_icon.svg" alt="Matriarca" width={36} height={36} style={{ borderRadius: '8px', objectFit: 'contain', display: 'block', margin: '0 auto' }} />
         <p>Complete seu perfil para um melhor atendimento</p>
       </div>
 
