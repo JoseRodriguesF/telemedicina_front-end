@@ -7,7 +7,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { getUser, clearUser } from '@/lib/auth';
 
 type SidebarItem = {
-  id: 'inicio' | 'consultas' | 'historico' | 'perfil' | 'logs' | 'analytics';
+  id: 'inicio' | 'consultas' | 'historico' | 'perfil' | 'logs' | 'analytics' | 'pacientes';
   label: string;
   icon: string;
   href: string;
@@ -26,7 +26,8 @@ const baseItems: SidebarItem[] = [
 
 const adminItems: SidebarItem[] = [
   { id: 'inicio', label: 'Início', icon: '/images/home-06.svg', href: '/admin/dashboard' },
-  { id: 'perfil', label: 'Verificar Médicos', icon: '/images/user.svg', href: '/admin/medicos' },
+  { id: 'perfil', label: 'Corpo Clínico', icon: '/images/user.svg', href: '/admin/medicos' },
+  { id: 'pacientes', label: 'Base de Pacientes', icon: '/icons/historia.png', href: '/admin/pacientes' },
   { id: 'analytics', label: 'Análise Avançada', icon: '/icons/icon-chart.png', href: '/admin/logs/analytics' },
   { id: 'logs', label: 'Logs do Sistema', icon: '/icons/historia.png', href: '/admin/logs' },
 ];
@@ -45,6 +46,7 @@ export default function Sidebar({ activeId: propActiveId, className = '' }: Prop
     if (pathname.startsWith('/perfil')) return 'perfil';
     if (pathname.startsWith('/admin/dashboard')) return 'inicio';
     if (pathname.startsWith('/admin/medicos')) return 'perfil';
+    if (pathname.startsWith('/admin/pacientes')) return 'pacientes';
     if (pathname.startsWith('/admin/logs/analytics')) return 'analytics';
     if (pathname.startsWith('/admin/logs')) return 'logs';
     return 'inicio';
