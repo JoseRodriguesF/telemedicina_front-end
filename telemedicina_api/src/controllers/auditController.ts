@@ -77,6 +77,12 @@ export async function logEventoTecnico(
 export async function logHeartbeat(req: FastifyRequest, reply: FastifyReply) {
     try {
         const user = req.user as AuthenticatedUser;
+        
+        // O perfil de admin nunca deve contar como online/ativo no painel
+        if (user.tipo_usuario === 'admin') {
+            return reply.code(200).send({ status: 'ignored_admin' });
+        }
+
         const { logAuditoria } = await import('../utils/auditLogger');
         
         await logAuditoria({
