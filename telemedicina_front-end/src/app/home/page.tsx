@@ -45,9 +45,7 @@ export default function HomeScreen() {
 								</Link>
 							</div>
 						</div>
-						<div className="hero-image-v2 animate-fadeIn">
-							{/* Imagem e card removidos para dar espaço ao background com blur e ícones médicos */}
-						</div>
+
 					</div>
 				</div>
 			</section>
