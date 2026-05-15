@@ -46,7 +46,7 @@ function PreConsultaInner() {
   const [showRelatorio, setShowRelatorio] = useState(false);
   const [dadosTriagem, setDadosTriagem] = useState<TriagemDados | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
-  const [anexos, setAnexos] = useState<Array<{ data: string; nome: string; tipo_mime: string }>>([]);
+  const [anexos, setAnexos] = useState<Array<{ data: string; nome: string; tipo_mime: string; sentToAI?: boolean }>>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [patientData, setPatientData] = useState<any>(null);
   const historiaClinicaIdRef = useRef<number | undefined>(undefined);
@@ -78,17 +78,37 @@ function PreConsultaInner() {
       setTimeout(() => setShowWelcome(false), 500);
     }
     const t = (textInput || draft).trim();
-    if (!t || isLoading || iaTyping) return;
+    
+    // Pegar anexos que ainda não foram enviados para a IA
+    const unsentAnexos = anexos.filter(a => !a.sentToAI);
+    
+    // Se não houver texto e não houver anexos novos (e não for um comando oculto), não faz nada
+    if (!t && unsentAnexos.length === 0 && !hidden) return;
+    if (isLoading || iaTyping) return;
+
+    // Se só enviou foto, mandar um texto placeholder para manter a UI e o fluxo consistentes
+    const messageToSend = t || "[O paciente anexou um ou mais arquivos. Por favor, analise-os.]";
+    const imagesToAI = unsentAnexos.map(a => a.data);
 
     let currentMessages = messages;
     if (!hidden) {
-      const displayMsg = t === '[PULAR_PERGUNTA]' ? 'Pular pergunta ⏭️' : t;
-      const userMsg: ChatMsg = { author: 'Você', text: displayMsg, rawContent: t };
+      const displayMsg = t === '[PULAR_PERGUNTA]' ? 'Pular pergunta ⏭️' : t || '📎 Arquivo(s) anexado(s)';
+      const userMsg: ChatMsg = { author: 'Você', text: displayMsg, rawContent: messageToSend };
       setMessages(prev => [...prev, userMsg]);
       currentMessages = [...messages, userMsg];
+      
+      // Se enviou imagens, adicionar a mensagem educativa automaticamente após o envio do usuário
+      if (imagesToAI.length > 0) {
+        setMessages(prev => [...prev, { author: 'Sistema', text: '📎 Imagem(ns) enviada(s) para análise primária.' }]);
+      }
     }
 
     setDraft('');
+    
+    // Marcar anexos como enviados
+    if (unsentAnexos.length > 0) {
+      setAnexos(prev => prev.map(a => ({ ...a, sentToAI: true })));
+    }
 
     const token = getToken();
     if (!token) {
@@ -103,7 +123,7 @@ function PreConsultaInner() {
       // ✅ CORREÇÃO: Pegamos o histórico SEM a mensagem atual, pois ela é enviada no campo 'message'
       const currentHistory = messagesToHistory(messages);
       const data = await sendChatMessage(
-        { message: t, history: currentHistory },
+        { message: messageToSend, history: currentHistory, images: imagesToAI },
         token
       );
       
@@ -226,6 +246,12 @@ function PreConsultaInner() {
     setIsUploading(true);
     try {
       const newAnexos = [...anexos];
+      
+      // Checar limite de quantidade (máx 5)
+      if (newAnexos.length + files.length > 5) {
+        modal.warning("Limite atingido", "Você pode anexar no máximo 5 arquivos.");
+        return;
+      }
       
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -609,12 +635,83 @@ function PreConsultaInner() {
               {isTriageStarted && !showRelatorio && !completed && (
                 <div className="pc-input-wrapper">
                   <div className="pc-input-container">
+                    {/* Preview de Anexos no Chat */}
+                    {anexos.length > 0 && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: 'calc(100% + 10px)',
+                        left: '0',
+                        right: '0',
+                        display: 'flex',
+                        gap: '0.5rem',
+                        padding: '0.5rem',
+                        overflowX: 'auto',
+                        background: 'rgba(255,255,255,0.9)',
+                        backdropFilter: 'blur(8px)',
+                        borderRadius: '12px',
+                        border: '1px solid var(--border-color)',
+                        boxShadow: '0 -4px 15px rgba(0,0,0,0.05)',
+                        zIndex: 10
+                      }}>
+                        {anexos.map((file, idx) => (
+                          <div key={idx} style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            background: 'var(--bg-secondary)',
+                            padding: '0.4rem 0.6rem',
+                            borderRadius: '8px',
+                            border: '1px solid var(--border-color)',
+                            fontSize: '0.75rem',
+                            fontWeight: 500,
+                            whiteSpace: 'nowrap',
+                            maxWidth: '150px'
+                          }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, color: 'var(--color-primary-500)' }}><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{file.nome}</span>
+                            <button 
+                              onClick={() => removeAnexo(idx)}
+                              style={{ background: 'none', border: 'none', color: 'var(--color-error)', cursor: 'pointer', display: 'flex', padding: '0.1rem' }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <input 
                       type="file" 
                       ref={fileInputRef} 
                       style={{ display: 'none' }} 
+                      multiple
                       onChange={handleFileUpload}
                     />
+
+                    <button
+                      className="pc-attach-btn"
+                      title="Anexar arquivo ou foto"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isLoading || iaTyping || completed || isUploading}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--text-tertiary)',
+                        cursor: 'pointer',
+                        padding: '0 0.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'color 0.2s ease',
+                      }}
+                    >
+                      {isUploading ? (
+                        <span className="pc-btn-spinner" style={{ width: '18px', height: '18px', border: '2px solid rgba(0,0,0,0.1)', borderTopColor: 'var(--color-primary-500)' }} />
+                      ) : (
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                        </svg>
+                      )}
+                    </button>
 
                     <input
                       className="pc-input-field"
@@ -645,7 +742,7 @@ function PreConsultaInner() {
                     <button
                       className="pc-send-btn"
                       onClick={() => sendMessage()}
-                      disabled={isLoading || iaTyping || !draft.trim() || completed}
+                      disabled={isLoading || iaTyping || (!draft.trim() && anexos.filter(a => !a.sentToAI).length === 0) || completed}
                     >
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>

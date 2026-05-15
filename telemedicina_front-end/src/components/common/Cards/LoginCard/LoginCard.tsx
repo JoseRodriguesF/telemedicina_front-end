@@ -51,6 +51,7 @@ export default function LoginCard({ onLogin }: Props) {
           user.token = token;
           // ✅ NOVO: Salvar token em localStorage para que getToken() encontre
           localStorage.setItem('telemedicina_token', token);
+          document.cookie = `telemedicina_token=${token}; path=/; max-age=86400; SameSite=Lax`;
         }
 
         // Clear other standalone tokens to avoid conflicts
@@ -122,6 +123,7 @@ export default function LoginCard({ onLogin }: Props) {
       user.token = token;
       // ✅ Salvar token em localStorage para que getToken() encontre
       localStorage.setItem('telemedicina_token', token);
+      document.cookie = `telemedicina_token=${token}; path=/; max-age=86400; SameSite=Lax`;
 
       saveUser(user);
       onLogin?.({ email: user?.email, password: '', user, raw: resp });

@@ -8,11 +8,10 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getUserFirstName, getToken, getUser } from '@/lib/auth';
-import ContentModal from '@/components/common/Modal/ContentModal';
 import { psListFila, PSFilaItem, getConsulta, ConsultaDetails, getHistoriaClinica } from '@/lib/axios/consultas';
-import ClinicalStructuredView from '@/components/appointments/atendimento/ClinicalStructuredView';
 import { getTimeWaiting } from '@/lib/utils/dateFormatters';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { ConsultaDetailsModal } from '@/components/appointments/ConsultaDetailsModal';
 
 const POLL_MS = 5000;
 
@@ -151,6 +150,20 @@ export default function PacientesPage() {
     return filteredLines.join('\n').trim();
   };
 
+  const getPriority = (historiaClinica: any) => {
+    if (!historiaClinica || !historiaClinica.conteudo) return { label: 'Normal', color: 'var(--color-primary-500)', bg: 'var(--color-primary-50)' };
+    const content = historiaClinica.conteudo.toLowerCase();
+    
+    // Simple regex/keyword heuristic for urgency
+    if (content.includes('dor no peito') || content.includes('falta de ar') || content.includes('desmaio') || content.includes('hemorragia') || content.includes('convulsão')) {
+      return { label: 'Urgente', color: 'var(--color-error)', bg: 'var(--color-error-soft)' };
+    }
+    if (content.includes('dor forte') || content.includes('febre alta') || content.includes('sangramento') || content.includes('fratura')) {
+      return { label: 'Prioridade', color: '#f59e0b', bg: '#fef3c7' }; // Yellow/Amber
+    }
+    return { label: 'Normal', color: 'var(--color-primary-500)', bg: 'var(--color-primary-50)' };
+  };
+
 
   return (
     <DashboardLayout>
@@ -198,9 +211,13 @@ export default function PacientesPage() {
               <div className={styles['pac-list-grid']}>
                 {pacientes
                   .filter((p) => p.status === 'scheduled')
-                  .map((p) => (
+                  .map((p) => {
+                    const prio = getPriority(Array.isArray(p.historiaClinica) ? p.historiaClinica[0] : null);
+                    return (
                     <div key={p.consultaId} className={styles['pac-card']}>
-                      <div className={styles['priority-badge']}>Normal</div>
+                      <div className={styles['priority-badge']} style={{ color: prio.color, backgroundColor: prio.bg, fontWeight: 700 }}>
+                        {prio.label}
+                      </div>
                       <div className={styles['pac-card-header']}>
                         <div className={styles['pac-info']}>
                           <h3>
@@ -234,67 +251,23 @@ export default function PacientesPage() {
                         </button>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
               </div>
             )}
           </>
         )}
 
-        <ContentModal
+        <ConsultaDetailsModal
           isOpen={!!selectedPaciente}
           onClose={handleCloseDetails}
-          title="Ficha de Pré-Atendimento"
-          size="md"
-        >
-          {loadingDetails ? (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>
-              <div className="spinner"></div>
-            </div>
-          ) : consultaDetails ? (
-            <div className="pc-relatorio-container" style={{ padding: 0 }}>
-              <div className="clinical-report-card">
-                <div className="clinical-report-section">
-                  <h3>👤 Dados do Paciente</h3>
-                  <div className="clinical-report-item">
-                    <span className="clinical-report-label">Nome:</span>
-                    <span>{consultaDetails.paciente?.nome_completo || 'Paciente'}</span>
-                  </div>
-                </div>
-              </div>
-
-              {consultaDetails.historiaClinica ? (
-                <ClinicalStructuredView data={consultaDetails.historiaClinica} variant="report" />
-              ) : (
-                <div className="clinical-report-card" style={{ marginTop: '1rem' }}>
-                  <div className="clinical-report-section" style={{ textAlign: 'center', padding: '2rem', background: 'var(--bg-secondary)', color: 'var(--text-tertiary)', border: '2px dashed var(--border-color)', borderRadius: '1.25rem' }}>
-                    <p style={{ margin: 0 }}>Informações de triagem não encontradas.</p>
-                  </div>
-                </div>
-              )}
-
-              <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <button
-                  className="btn secondary"
-                  onClick={handleCloseDetails}
-                  style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
-                >
-                  Fechar
-                </button>
-                <button
-                  className="btn primary"
-                  onClick={() => router.push(`/consultas/atendimento?id=${encodeURIComponent(selectedPaciente?.consultaId || '')}`)}
-                  style={{ borderRadius: 'var(--radius-lg)', padding: '0.8rem' }}
-                >
-                  Atender agora
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-tertiary)' }}>
-              Erro ao carregar os detalhes.
-            </div>
-          )}
-        </ContentModal>
+          consultaDetails={consultaDetails}
+          selectedAppt={{ id: selectedPaciente?.consultaId, paciente: consultaDetails?.paciente, status: selectedPaciente?.status }}
+          isMedico={isMedico}
+          loadingDetails={loadingDetails}
+          loadingAnexos={false}
+          onAttend={(id) => router.push(`/consultas/atendimento?id=${encodeURIComponent(id)}`)}
+        />
       </div>
     </DashboardLayout>
   );

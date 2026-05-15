@@ -14,7 +14,7 @@ function getJwtSecret(): string {
 /**
  * Gera um JWT para o usuário com expiração curta para segurança médica.
  */
-export function generateJWT(payload: { id: number; email: string; tipo_usuario: string }): string {
+export function generateJWT(payload: { id: number; email: string; tipo_usuario: string; pacienteId?: number; medicoId?: number }): string {
     return jwt.sign(
         payload,
         getJwtSecret(),
@@ -77,15 +77,7 @@ export function sanitizePhone(phone: string): string {
     return phone.replace(/\D/g, '')
 }
 
-/**
- * Valida formato de email (adicional ao Zod)
- */
-export function validateEmail(email: string): boolean {
-    if (!email || typeof email !== 'string') return false
-    const trimmed = email.trim()
-    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
-    return emailRegex.test(trimmed) && trimmed.length <= 255
-}
+
 
 /**
  * Sanitiza entrada de texto para prevenir XSS

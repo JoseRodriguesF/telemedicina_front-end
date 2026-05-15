@@ -17,11 +17,12 @@ function isValidMagicBytes(buffer: Buffer, mimeType: string): boolean {
   }
   if (mimeType.startsWith('image/')) {
     // JPEG: FF D8 FF
-    if (mimeType === 'image/jpeg') return buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF
+    if (mimeType === 'image/jpeg' || mimeType === 'image/jpg') return buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF
     // PNG: 89 50 4E 47
     if (mimeType === 'image/png') return buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47
   }
-  return true // Outros tipos sob risco controlado
+  // SECURITY (Zero Trust): Bloquear qualquer outro tipo de arquivo não explicitamente validado (previne HTML, SVG, EXE, JS, etc)
+  return false
 }
 
 /**

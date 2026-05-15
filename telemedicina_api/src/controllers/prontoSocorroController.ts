@@ -152,6 +152,7 @@ export async function listarFila(req: FastifyRequest, reply: FastifyReply) {
   }
 
   const consultas = await prisma.consulta.findMany({
+    take: 50,
     where: { status: 'scheduled', medicoId: null },
     select: {
       id: true,
@@ -279,6 +280,7 @@ export async function getHistoricoCompleto(req: FastifyRequest, reply: FastifyRe
   try {
     logger.debug('Iniciando busca no Prisma', { where })
     const consultas = await prisma.consulta.findMany({
+      take: 50,
       where,
       orderBy: { createdAt: 'desc' },
       include: {
@@ -461,6 +463,7 @@ export async function searchHistoricoCompleto(req: FastifyRequest, reply: Fastif
 
   try {
     const consultas = await prisma.consulta.findMany({
+      take: 50,
       where,
       orderBy: { createdAt: 'desc' },
       include: {

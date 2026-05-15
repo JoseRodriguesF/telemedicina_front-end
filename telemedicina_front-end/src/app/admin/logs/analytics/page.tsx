@@ -95,6 +95,12 @@ export default function AdminAnalyticsPage() {
     setPeriod({ ...period, [name]: value });
   };
 
+  const activeLogStats = (stats?.logStats || [])
+    .filter((s: any) => s.value > 0)
+    .sort((a: any, b: any) => b.value - a.value);
+
+  const pieData = activeLogStats.filter((s: any) => logVisibility[s.name] !== false);
+
   return (
     <DashboardLayout>
       <div className="analytics-container animate-fadeIn">
@@ -240,9 +246,7 @@ export default function AdminAnalyticsPage() {
                   <ResponsiveContainer width="100%" height={400}>
                     <PieChart>
                       <Pie
-                        data={(stats?.logStats || [])
-                          .filter((s: any) => s.value > 0)
-                          .filter((s: any) => logVisibility[s.name])}
+                        data={pieData}
                         innerRadius={80}
                         outerRadius={120}
                         paddingAngle={5}
@@ -250,9 +254,10 @@ export default function AdminAnalyticsPage() {
                         nameKey="name"
                         stroke="none"
                       >
-                        {(stats?.logStats || []).filter((s: any) => s.value > 0).map((entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
+                        {pieData.map((entry: any) => {
+                          const originalIndex = activeLogStats.findIndex((s: any) => s.name === entry.name);
+                          return <Cell key={`cell-${originalIndex}`} fill={COLORS[originalIndex % COLORS.length]} />;
+                        })}
                       </Pie>
                       <Tooltip 
                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}
@@ -268,11 +273,8 @@ export default function AdminAnalyticsPage() {
                   <p>Categorias com eventos no período</p>
                 </div>
                 <div className="custom-legend-list">
-                  {(stats?.logStats || [])
-                    .filter((s: any) => s.value > 0)
-                    .sort((a: any, b: any) => b.value - a.value)
-                    .map((entry: any, index: number) => (
-                    <div key={index} className={`legend-item-premium ${!logVisibility[entry.name] ? 'muted' : ''}`}>
+                  {activeLogStats.map((entry: any, index: number) => (
+                    <div key={index} className={`legend-item-premium ${logVisibility[entry.name] === false ? 'muted' : ''}`}>
                       <div className="checkbox-hit-area">
                         <input 
                           type="checkbox" 

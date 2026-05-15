@@ -1,0 +1,60 @@
+--- EMOJIS ---
+✅: telemedicina_front-end\src\app\admin\dashboard\page.tsx, telemedicina_front-end\src\app\consultas\agendamento\page.tsx, telemedicina_front-end\src\app\consultas\atendimento\page.tsx, telemedicina_front-end\src\app\consultas\meus-agendamentos\page.tsx, telemedicina_front-end\src\app\consultas\page.tsx, telemedicina_front-end\src\app\consultas\pre-consulta\page.tsx, telemedicina_front-end\src\app\consultas\selecao-medico\page.tsx, telemedicina_front-end\src\app\historico\page.tsx, telemedicina_front-end\src\app\inicio\page.tsx, telemedicina_front-end\src\app\register\page.tsx, telemedicina_front-end\src\components\common\Cards\DadosConvenio\DadosConvenioCard.tsx, telemedicina_front-end\src\components\common\Cards\DadosDocumentosMedico\DadosDocumentosMedicoCard.tsx, telemedicina_front-end\src\components\common\Cards\LoginCard\LoginCard.tsx
+⚡: telemedicina_front-end\src\app\admin\dashboard\page.tsx, telemedicina_front-end\src\app\admin\logs\analytics\page.tsx
+⏳: telemedicina_front-end\src\app\admin\dashboard\page.tsx, telemedicina_front-end\src\app\admin\medicos\page.tsx, telemedicina_front-end\src\app\perfil\page.tsx, telemedicina_front-end\src\components\common\Modals\DocumentsRequiredModal\DocumentsRequiredModal.tsx, telemedicina_front-end\src\components\common\Modals\PendingReviewModal\PendingReviewModal.tsx
+🚫: telemedicina_front-end\src\app\admin\dashboard\page.tsx
+👥: telemedicina_front-end\src\app\admin\dashboard\page.tsx
+🛡: telemedicina_front-end\src\app\admin\dashboard\page.tsx, telemedicina_front-end\src\app\admin\pacientes\page.tsx
+📋: telemedicina_front-end\src\app\admin\logs\analytics\page.tsx, telemedicina_front-end\src\app\historico\page.tsx
+✓: telemedicina_front-end\src\app\admin\medicos\page.tsx, telemedicina_front-end\src\app\historico\page.tsx
+✕: telemedicina_front-end\src\app\admin\medicos\page.tsx, telemedicina_front-end\src\components\appointments\atendimento\AssistancePanel.tsx, telemedicina_front-end\src\components\appointments\atendimento\AtendimentoModals.tsx, telemedicina_front-end\src\components\appointments\atendimento\ClinicalPanel.tsx
+❌: telemedicina_front-end\src\app\consultas\atendimento\page.tsx, telemedicina_front-end\src\components\common\ErrorBoundary.tsx
+⚠: telemedicina_front-end\src\app\consultas\atendimento\page.tsx, telemedicina_front-end\src\app\consultas\pacientes\page.tsx, telemedicina_front-end\src\app\consultas\page.tsx, telemedicina_front-end\src\app\historico\page.tsx, telemedicina_front-end\src\app\perfil\page.tsx, telemedicina_front-end\src\components\appointments\atendimento\ClinicalStructuredView.tsx, telemedicina_front-end\src\components\common\Modals\ConfirmationModal\ConfirmationModal.tsx, telemedicina_front-end\src\components\common\Modals\DocumentsRequiredModal\DocumentsRequiredModal.tsx
+📅: telemedicina_front-end\src\app\consultas\meus-agendamentos\page.tsx, telemedicina_front-end\src\components\appointments\atendimento\ClinicalPanel.tsx
+👤: telemedicina_front-end\src\app\consultas\meus-agendamentos\page.tsx, telemedicina_front-end\src\app\consultas\pacientes\page.tsx, telemedicina_front-end\src\app\consultas\page.tsx, telemedicina_front-end\src\app\consultas\pre-consulta\page.tsx
+☕: telemedicina_front-end\src\app\consultas\pacientes\page.tsx
+⏭: telemedicina_front-end\src\app\consultas\pre-consulta\page.tsx
+⭐: telemedicina_front-end\src\app\consultas\selecao-medico\page.tsx, telemedicina_front-end\src\app\historico\page.tsx
+🚨: telemedicina_front-end\src\app\historico\page.tsx
+🚑: telemedicina_front-end\src\app\historico\page.tsx
+©: telemedicina_front-end\src\app\home\page.tsx
+📄: telemedicina_front-end\src\app\perfil\page.tsx, telemedicina_front-end\src\components\common\Modals\DocumentsRequiredModal\DocumentsRequiredModal.tsx
+✍: telemedicina_front-end\src\components\AIAssistant\AIAssistant.tsx
+🧪: telemedicina_front-end\src\components\AIAssistant\AIAssistant.tsx
+📁: telemedicina_front-end\src\components\AIAssistant\AIAssistant.tsx, telemedicina_front-end\src\components\appointments\atendimento\AtendimentoModals.tsx
+🏁: telemedicina_front-end\src\components\AIAssistant\AIAssistant.tsx
+📂: telemedicina_front-end\src\components\appointments\atendimento\AtendimentoModals.tsx
+❓: telemedicina_front-end\src\components\common\Modals\ConfirmationModal\ConfirmationModal.tsx
+
+--- IMAGES ---
+/icons/bell-icon.png: telemedicina_front-end\src\app\consultas\meus-agendamentos\page.tsx
+/icons/check-icon.png: telemedicina_front-end\src\app\consultas\pre-consulta\page.tsx, telemedicina_front-end\src\components\appointments\atendimento\ClinicalPanel.tsx
+/icons/remedio-icon.png: telemedicina_front-end\src\app\historico\page.tsx
+/icons/icon-chart.png: telemedicina_front-end\src\app\historico\page.tsx, telemedicina_front-end\src\app\inicio\page.tsx, telemedicina_front-end\src\components\layout\MobileHeader\MobileHeader.tsx, telemedicina_front-end\src\components\layout\Sidebar\Sidebar.tsx
+/images/logo_matriarca.png: telemedicina_front-end\src\app\historico\page.tsx, telemedicina_front-end\src\app\home\page.tsx, telemedicina_front-end\src\app\layout.tsx, telemedicina_front-end\src\components\appointments\atendimento\PrescriptionPDFTemplate.tsx
+/images/logo_matriarca_icon.svg: telemedicina_front-end\src\app\home\page.tsx, telemedicina_front-end\src\app\layout.tsx, telemedicina_front-end\src\app\termos\page.tsx, telemedicina_front-end\src\components\common\Cards\DadosACessoPacienteCard\DadosAcessoPacienteCard.tsx, telemedicina_front-end\src\components\common\Cards\DadosDocumentosMedico\DadosDocumentosMedicoCard.tsx, telemedicina_front-end\src\components\common\Cards\DadosPessoaisMedico\DadosPessoaisMedicoCard.tsx, telemedicina_front-end\src\components\common\Cards\DadosPessoaisPaciente\DadosPessoaisPacienteCard.tsx, telemedicina_front-end\src\components\common\Cards\LoginCard\LoginCard.tsx, telemedicina_front-end\src\components\layout\MobileHeader\MobileHeader.tsx, telemedicina_front-end\src\components\layout\Sidebar\Sidebar.tsx
+/images/technology.png: telemedicina_front-end\src\app\home\page.tsx
+/images/brain-scan.png: telemedicina_front-end\src\app\home\page.tsx
+/icons/cronometro.png: telemedicina_front-end\src\app\home\page.tsx
+/icons/escudo.png: telemedicina_front-end\src\app\home\page.tsx
+/icons/verificar.png: telemedicina_front-end\src\app\home\page.tsx
+/images/dashboard-mockup.png: telemedicina_front-end\src\app\home\page.tsx
+/icons/icon-checklist.png: telemedicina_front-end\src\app\inicio\page.tsx
+/icons/icon-calendar.png: telemedicina_front-end\src\app\inicio\page.tsx
+/icons/Search.png: telemedicina_front-end\src\components\appointments\atendimento\AssistancePanel.tsx, telemedicina_front-end\src\components\appointments\atendimento\AtendimentoModals.tsx
+/icons/ai-icon.png: telemedicina_front-end\src\components\appointments\atendimento\AtendimentoModals.tsx
+/icons/no-connection.png: telemedicina_front-end\src\components\appointments\atendimento\AtendimentoVideoGrid.tsx
+/icons/plug-icon.png: telemedicina_front-end\src\components\appointments\atendimento\AtendimentoVideoGrid.tsx
+/icons/camera-icon.png: telemedicina_front-end\src\components\appointments\atendimento\AtendimentoVideoGrid.tsx
+/icons/mute-icon.png: telemedicina_front-end\src\components\appointments\atendimento\AtendimentoVideoGrid.tsx
+/images/googleIcon.svg: telemedicina_front-end\src\components\common\Cards\DadosACessoPacienteCard\DadosAcessoPacienteCard.tsx, telemedicina_front-end\src\components\common\Cards\LoginCard\LoginCard.tsx
+/images/document.svg: telemedicina_front-end\src\components\common\Cards\DadosDocumentosMedico\DadosDocumentosMedicoCard.tsx
+/images/document-upload.svg: telemedicina_front-end\src\components\common\Cards\DadosDocumentosMedico\DadosDocumentosMedicoCard.tsx
+/icons/icon-moon.png: telemedicina_front-end\src\components\common\ThemeToggle\ThemeToggle.tsx
+/icons/icon-sun.png: telemedicina_front-end\src\components\common\ThemeToggle\ThemeToggle.tsx
+/images/home-06.svg: telemedicina_front-end\src\components\layout\MobileHeader\MobileHeader.tsx, telemedicina_front-end\src\components\layout\Sidebar\Sidebar.tsx
+/images/first-aid.svg: telemedicina_front-end\src\components\layout\MobileHeader\MobileHeader.tsx, telemedicina_front-end\src\components\layout\Sidebar\Sidebar.tsx
+/images/clock.svg: telemedicina_front-end\src\components\layout\MobileHeader\MobileHeader.tsx, telemedicina_front-end\src\components\layout\Sidebar\Sidebar.tsx
+/images/user.svg: telemedicina_front-end\src\components\layout\MobileHeader\MobileHeader.tsx, telemedicina_front-end\src\components\layout\Sidebar\Sidebar.tsx
+/icons/historia.png: telemedicina_front-end\src\components\layout\MobileHeader\MobileHeader.tsx, telemedicina_front-end\src\components\layout\Sidebar\Sidebar.tsx
+/icons/icon-logout.png: telemedicina_front-end\src\components\layout\MobileHeader\MobileHeader.tsx, telemedicina_front-end\src\components\layout\Sidebar\Sidebar.tsx

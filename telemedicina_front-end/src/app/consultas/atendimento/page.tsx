@@ -674,55 +674,7 @@ function AtendimentoInner() {
     return () => clearTimeout(timer);
   }, [remoteDisconnected]);
 
-  // Polling de participantes: detecta quando o outro usuário entra e dispara a conexão
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (remoteConnected) return; // Se já está conectado, não precisa de polling redundante
-
-    const cid = getConsultaIdFromUrl() || consultaIdState || consultaId || '';
-    if (!cid || !token || (role === 'medico' && !isClaimed)) return;
-    if (pollingRef.current !== null) return;
-
-    let stopped = false;
-    const check = async () => {
-      try {
-        const resp = await listParticipants(cid, token);
-        if (!stopped && Array.isArray(resp?.participants) && resp.participants.length >= 2) {
-          // Se o polling detecta 2 pessoas mas não estamos conectados, reforça o sinal de 'ready'
-          if (!remoteConnected) {
-            if (!hasReadySignalRef.current) {
-              console.log('[UI] Polling detectou participantes. Ativando handshake hand...');
-              hasReadySignalRef.current = true;
-            }
-            // Chama independentemente para garantir que um médico entrando depois dispare a oferta
-            checkAndInitiateOffering();
-          }
-        }
-      } catch (err: any) {
-        // Se der 403, paramos o polling para evitar flood no console
-        if (err?.response?.status === 403) {
-          console.warn('[UI] Polling de participantes desativado (403 Forbidden).');
-          stopped = true;
-          if (pollingRef.current !== null) {
-            clearInterval(pollingRef.current);
-            pollingRef.current = null;
-          }
-        }
-      }
-    };
-    const intervalMs = 5000; // 5s para reduzir carga na API (evita spam de checkAuth)
-    const timerId = window.setInterval(check, intervalMs);
-    pollingRef.current = timerId;
-    check();
-    return () => {
-      stopped = true;
-      if (pollingRef.current !== null) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role, consultaIdState, consultaId, token, remoteConnected]);
+  // Redundant polling removed: Signaling server handles peer detection via WS events.
 
   // Efeito para cronômetro e notificações de tempo máximo
   useEffect(() => {

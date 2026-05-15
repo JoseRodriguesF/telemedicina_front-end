@@ -11,6 +11,7 @@ interface ChatBody {
   message: string
   history?: ChatMessage[]
   tipoConsulta?: string
+  images?: string[]
 }
 
 interface ConfirmTriagemBody {
@@ -108,10 +109,10 @@ function formatarContextoHistorico(resumo: string | null): string {
  */
 export async function openaiChatController(req: FastifyRequest<{ Body: ChatBody }>, reply: FastifyReply) {
   try {
-    const { message, history = [] } = req.body
+    const { message, history = [], images = [] } = req.body
 
-    if (!message || typeof message !== 'string') {
-      return reply.code(400).send({ error: 'message é obrigatório e deve ser string' })
+    if (typeof message !== 'string') {
+      return reply.code(400).send({ error: 'message deve ser string' })
     }
 
     if (history && (!Array.isArray(history) || !history.every(m => m.role && m.content))) {
@@ -170,7 +171,8 @@ export async function openaiChatController(req: FastifyRequest<{ Body: ChatBody 
       finalMessage,
       'Paciente', // Anonimizado conforme LGPD
       history || [],
-      contextoHistorico
+      contextoHistorico,
+      images
     )
 
     // Triagem concluída: retornar dados para confirmação do paciente.

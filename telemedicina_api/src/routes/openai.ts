@@ -7,6 +7,9 @@ export async function openaiRoutes(fastify: FastifyInstance) {
     method: 'POST',
     url: '/chat-ia',
     preHandler: authenticateJWT,
+    config: {
+      rateLimit: { max: 10, timeWindow: '1 minute' }
+    },
     handler: openaiChatController
   })
 
@@ -21,6 +24,9 @@ export async function openaiRoutes(fastify: FastifyInstance) {
     method: 'POST',
     url: '/chat-ia/transcrever',
     preHandler: authenticateJWT,
+    config: {
+      rateLimit: { max: 5, timeWindow: '1 minute' }
+    },
     handler: transcreverConsultaController,
     bodyLimit: 50 * 1024 * 1024, // 50MB para áudios longos
   })
@@ -41,6 +47,9 @@ export async function openaiRoutes(fastify: FastifyInstance) {
     method: 'POST',
     url: '/chat-ia/gerar-evolucao-triagem',
     preHandler: authenticateJWT,
+    config: {
+      rateLimit: { max: 5, timeWindow: '1 minute' }
+    },
     handler: gerarEvolucaoTriagemController
   })
 }

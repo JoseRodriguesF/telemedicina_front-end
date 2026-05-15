@@ -14,10 +14,18 @@ type ClientInfo = {
 
 const clients = new Map<WebSocket, ClientInfo>()
 
-function verifyToken(token?: string): { id: number } | null {
+interface JWTPayload {
+  id: number
+  email: string
+  tipo_usuario: string
+  pacienteId?: number
+  medicoId?: number
+}
+
+function verifyToken(token?: string): JWTPayload | null {
   if (!token) return null
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload
     return decoded
   } catch {
     return null
@@ -57,20 +65,26 @@ export function initSignalServer(httpServer: Server) {
       ws.close(4004, 'room_consulta_not_found')
       return
     }
-    // decoded.id é usuario.id; precisamos mapear para medico.id ou paciente.id
-    const usuarioId = decoded.id
-    // tentar mapear como medico
-    const medico = await prisma.medico.findUnique({ where: { usuario_id: usuarioId } })
-    // tentar mapear como paciente
-    const paciente = await prisma.paciente.findUnique({ where: { usuario_id: usuarioId } })
+    
+    // Otimização: Usar IDs cacheados no JWT para evitar 2 queries extras no banco por conexão
+    let resolvedPacienteId = decoded.pacienteId
+    let resolvedMedicoId = decoded.medicoId
 
-    const isMedicoDaConsulta = !!medico && consulta.medicoId === medico.id
-    const isPacienteDaConsulta = !!paciente && consulta.pacienteId === paciente.id
+    if (resolvedPacienteId === undefined && resolvedMedicoId === undefined) {
+      // Fallback para tokens legados
+      const medico = await prisma.medico.findUnique({ where: { usuario_id: decoded.id } })
+      const paciente = await prisma.paciente.findUnique({ where: { usuario_id: decoded.id } })
+      resolvedPacienteId = paciente?.id
+      resolvedMedicoId = medico?.id
+    }
+
+    const isMedicoDaConsulta = !!resolvedMedicoId && consulta.medicoId === resolvedMedicoId
+    const isPacienteDaConsulta = !!resolvedPacienteId && consulta.pacienteId === resolvedPacienteId
 
     if (!isMedicoDaConsulta && !isPacienteDaConsulta) {
       logger.warn('Tentativa de acesso não autorizado a sala de consulta', { 
         roomId, 
-        userId: usuarioId,
+        userId: decoded.id,
         consultaId: room.consultaId 
       })
       ws.close(4003, 'forbidden')

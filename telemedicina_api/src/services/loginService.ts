@@ -61,11 +61,13 @@ export class LoginService {
       nome = user.paciente.nome_completo
     }
 
-    // Gerar JWT usando helper seguro
+    // Gerar JWT usando helper seguro com cache dos IDs de perfil para evitar queries futuras
     const token = generateJWT({
       id: user.id,
       email: user.email,
-      tipo_usuario: user.tipo_usuario
+      tipo_usuario: user.tipo_usuario,
+      pacienteId: user.paciente?.id,
+      medicoId: user.medico?.id
     })
 
     logger.info('Successful login', { userId: user.id, tipo_usuario: user.tipo_usuario })

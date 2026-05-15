@@ -41,12 +41,6 @@ export class GoogleAuthService {
         throw new ApiError('Conta não encontrada. Por favor, realize o cadastro primeiro.', 404, 'USER_NOT_FOUND');
       }
 
-      const token = generateJWT({
-        id: user.id,
-        email: user.email,
-        tipo_usuario: user.tipo_usuario
-      });
-
       // Carregar perfis vinculados
       let nome: string | undefined;
       let verificacao: string | undefined;
@@ -67,6 +61,14 @@ export class GoogleAuthService {
           pacienteId = paciente.id;
         }
       }
+
+      const token = generateJWT({
+        id: user.id,
+        email: user.email,
+        tipo_usuario: user.tipo_usuario,
+        pacienteId: pacienteId || undefined,
+        medicoId: medicoId || undefined
+      });
 
       return {
         id: user.id,
@@ -136,12 +138,6 @@ export class GoogleAuthService {
         }
       });
 
-      const token = generateJWT({
-        id: user.id,
-        email: user.email,
-        tipo_usuario: user.tipo_usuario
-      });
-
       // Carregar perfis vinculados
       let nome: string | undefined;
       let pacienteId: number | null = null;
@@ -160,6 +156,14 @@ export class GoogleAuthService {
           pacienteId = paciente.id;
         }
       }
+
+      const token = generateJWT({
+        id: user.id,
+        email: user.email,
+        tipo_usuario: user.tipo_usuario,
+        pacienteId: pacienteId || undefined,
+        medicoId: medicoId || undefined
+      });
 
       return {
         id: user.id,

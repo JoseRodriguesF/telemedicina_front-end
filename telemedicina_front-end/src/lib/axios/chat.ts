@@ -8,6 +8,7 @@ const CHAT_IA_URL = '/api/chat-ia';
 export type SendChatMessagePayload = {
   message: string;
   history?: ChatHistory;
+  images?: string[];
 };
 
 /**

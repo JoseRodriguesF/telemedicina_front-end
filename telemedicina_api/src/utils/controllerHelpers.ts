@@ -48,19 +48,3 @@ export function validateDate(dateString: any): { valid: boolean; error?: object 
     return { valid: true }
 }
 
-/**
- * Respostas padronizadas para erros comuns
- */
-export const standardErrors = {
-    unauthorized: () => ({ error: 'unauthorized', message: 'Authentication required' }),
-    forbidden: () => ({ error: 'forbidden', message: 'Access denied' }),
-    notFound: (resource = 'Resource') => ({ error: 'not_found', message: `${resource} not found` }),
-    invalidInput: (field: string) => ({ error: 'invalid_input', message: `Invalid ${field}` }),
-}
-
-/**
- * Helper para enviar resposta de erro com código HTTP
- */
-export function sendError(reply: FastifyReply, statusCode: number, error: object) {
-    return reply.code(statusCode).send(error)
-}

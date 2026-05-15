@@ -56,9 +56,9 @@ function AguardandoInner() {
             }
         };
 
-        // Inicia o polling (a cada 3 segundos)
+        // Inicia o polling (a cada 10 segundos para preservar o banco de dados)
         checkStatus();
-        pollingRef.current = setInterval(checkStatus, 3000);
+        pollingRef.current = setInterval(checkStatus, 10000);
 
         return () => {
             if (pollingRef.current) clearInterval(pollingRef.current);

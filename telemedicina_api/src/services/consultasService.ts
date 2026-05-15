@@ -273,7 +273,7 @@ export async function cancelConsulta(
 /**
  * Marca consultas agendadas ou solicitadas que passaram da data como expiradas.
  */
-export async function cleanupExpiredConsultations() {
+async function cleanupExpiredConsultations() {
   try {
     const now = new Date()
     

@@ -68,6 +68,7 @@ export default function Sidebar({ activeId: propActiveId, className = '' }: Prop
     localStorage.removeItem('telemedicina_token');
     localStorage.removeItem('auth_token');
     localStorage.removeItem('token');
+    document.cookie = "telemedicina_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     router.push('/login');
   };
 

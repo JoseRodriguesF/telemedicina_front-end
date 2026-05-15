@@ -8,21 +8,16 @@ interface JWTPayload {
   id: number
   email: string
   tipo_usuario: string
+  pacienteId?: number
+  medicoId?: number
 }
 
 export const authenticateJWT = async (request: FastifyRequest, reply: FastifyReply) => {
   let token: string | null = null
   const authHeader = request.headers.authorization
-  const queryToken = (request.query as any)?.token
 
   if (authHeader && authHeader.startsWith('Bearer ')) {
     token = authHeader.substring(7)
-  } else if (queryToken) {
-    // LGPD Security Warning: Tokens in query params are exposed in server logs and browser history.
-    // We allow it only for backward compatibility in specific read-only file routes if needed,
-    // but we should aim to migrate all clients to headers.
-    token = queryToken
-    logger.warn('JWT received via query parameter. This is deprecated for security reasons.', { path: request.url })
   }
 
   if (!token) {
@@ -33,28 +28,39 @@ export const authenticateJWT = async (request: FastifyRequest, reply: FastifyRep
   try {
     const decoded = verifyJWT(token) as JWTPayload
 
-    // Buscar usuário completo no banco e perfis vinculados
-    const usuario = await prisma.usuario.findUnique({
-      where: { id: decoded.id },
-      include: {
-        paciente: { select: { id: true } },
-        medico: { select: { id: true } }
-      }
-    })
+    // Otimização Extrema (Evitando DB Query no Middleware)
+    // Se o token já tiver os IDs cacheados, confiamos nele e pulamos o DB.
+    // Só fazemos a query no banco se for um token legado (backward compatibility) ou falhar no cache.
+    let resolvedPacienteId = decoded.pacienteId || null;
+    let resolvedMedicoId = decoded.medicoId || null;
 
-    if (!usuario) {
-      logger.warn('JWT valid but user not found', { userId: decoded.id })
-      reply.code(401).send({ error: 'unauthorized', message: 'Usuário não encontrado' })
-      return
+    if (decoded.pacienteId === undefined && decoded.medicoId === undefined) {
+      // Token antigo sem cache: realiza a query pesada
+      const usuario = await prisma.usuario.findUnique({
+        where: { id: decoded.id },
+        include: {
+          paciente: { select: { id: true } },
+          medico: { select: { id: true } }
+        }
+      });
+
+      if (!usuario) {
+        logger.warn('JWT valid but user not found (legacy token)', { userId: decoded.id });
+        reply.code(401).send({ error: 'unauthorized', message: 'Usuário não encontrado' });
+        return;
+      }
+      
+      resolvedPacienteId = usuario.paciente?.id || null;
+      resolvedMedicoId = usuario.medico?.id || null;
     }
 
-    // Anexa o usuário ao request com tipo correto e IDs de perfil resolvidos
+    // Anexa o usuário ao request com tipo correto e IDs de perfil resolvidos instantaneamente
     request.user = {
-      id: usuario.id,
-      email: usuario.email,
-      tipo_usuario: usuario.tipo_usuario as any,
-      pacienteId: usuario.paciente?.id || null,
-      medicoId: usuario.medico?.id || null
+      id: decoded.id,
+      email: decoded.email,
+      tipo_usuario: decoded.tipo_usuario as any,
+      pacienteId: resolvedPacienteId,
+      medicoId: resolvedMedicoId
     }
   } catch (error: any) {
     logger.debug('JWT verification failed', { error: error.message })

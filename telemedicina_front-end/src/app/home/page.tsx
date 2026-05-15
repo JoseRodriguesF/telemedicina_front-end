@@ -55,7 +55,7 @@ export default function HomeScreen() {
 				<div className="container">
 					<div className="section-header">
 						<h2 className="display-title">Tecnologia que <span className="text-highlight">Humaniza</span></h2>
-						<p className="section-subtitle">Combinamos inteligência clínica com o acolhimento digital para entregar o melhor diagnóstico.</p>
+						<p className="section-subtitle">Da triagem inteligente à videoconsulta em tempo real, cada etapa foi pensada para tornar o cuidado médico simples, seguro e acessível.</p>
 					</div>
 					
 					<div className="tech-grid">
@@ -63,10 +63,10 @@ export default function HomeScreen() {
 							<div className="card-icon-round">
 								<img src="/images/technology.png" alt="Inteligência Clínica" width="64" height="64" />
 							</div>
-							<h3>Inteligência Clínica</h3>
-							<p>Algoritmos avançados que auxiliam médicos em diagnósticos precoces, garantindo precisão cirúrgica no seu tratamento.</p>
+							<h3>Triagem com Inteligência</h3>
+							<p>Antes de cada consulta, nosso sistema coleta seus sintomas e gera automaticamente um resumo clínico estruturado para o médico — acelerando o diagnóstico desde o primeiro contato.</p>
 							<div className="card-visual">
-								<img src="/images/brain-scan.png" alt="Brain Diagnostic" width="400" height="200" className="rounded-xl overflow-hidden" />
+								<img src="/images/smart-triage.png" alt="Triagem com Inteligência" width="400" className="rounded-xl overflow-hidden" style={{ width: '100%', height: 'auto', aspectRatio: '16/9', objectFit: 'cover' }} />
 							</div>
 						</div>
 						
@@ -75,22 +75,22 @@ export default function HomeScreen() {
 								<div className="card-icon-small">
 									<img src="/icons/cronometro.png" alt="Rápido" width="56" height="56" />
 								</div>
-								<h3>Atendimento Rápido</h3>
-								<p>Tempo médio de espera inferior a 15 minutos para triagem.</p>
+								<h3>Pronto Atendimento</h3>
+								<p>Entre na fila e seja atendido por um clínico geral disponível, sem hora marcada.</p>
 							</div>
 							<div className="tech-card mini-card animate-fadeIn">
 								<div className="card-icon-small">
 									<img src="/icons/escudo.png" alt="Privacidade" width="56" height="56" />
 								</div>
-								<h3>Privacidade Total</h3>
-								<p>Criptografia de ponta a ponta seguindo as mais rígidas normas.</p>
+								<h3>Privacidade & LGPD</h3>
+								<p>Seus dados e prontuários são protegidos em conformidade com a LGPD e a Resolução CFM nº 2.314/2022.</p>
 							</div>
 							<div className="tech-card wide-card animate-fadeIn">
 								<div className="card-icon-small">
 									<img src="/icons/verificar.png" alt="Especialistas" width="56" height="56" />
 								</div>
-								<h3>Profissionais Qualificados</h3>
-								<p>Trabalhamos apenas com especialistas certificados pelas principais instituições nacionais e internacionais.</p>
+								<h3>Médicos Verificados</h3>
+								<p>Todo profissional passa por verificação documental antes de atender — você consulta apenas médicos habilitados e validados pela plataforma.</p>
 							</div>
 						</div>
 					</div>
@@ -105,32 +105,32 @@ export default function HomeScreen() {
 							<div className="benefit-item">
 								<span className="benefit-number">01</span>
 								<div className="benefit-content">
-									<h3>Economia de Tempo</h3>
-									<p>Elimine deslocamentos e filas de espera. Consulte do conforto de onde você estiver.</p>
+									<h3>Sem Deslocamento</h3>
+									<p>Consulte de onde estiver via videochamada. Nada de filas, deslocamentos ou salas de espera.</p>
 								</div>
 							</div>
 							<div className="benefit-item">
 								<span className="benefit-number">02</span>
 								<div className="benefit-content">
-									<h3>Acesso 24/7</h3>
-									<p>Emergências não têm hora. Nosso plantão está sempre ativo para sua segurança.</p>
+									<h3>Agendamento Flexível</h3>
+									<p>Marque consultas com especialistas no horário que for melhor para você, ou use o pronto atendimento imediato sem agendamento.</p>
 								</div>
 							</div>
 							<div className="benefit-item">
 								<span className="benefit-number">03</span>
 								<div className="benefit-content">
-									<h3>Prescrições Digitais</h3>
-									<p>Receba receitas, atestados e pedidos de exames validados digitalmente em seu smartphone.</p>
+									<h3>Prescrições com Validade Legal</h3>
+									<p>Receitas, atestados e pedidos de exame emitidos com assinatura digital ICP-Brasil — aceitos em qualquer farmácia ou laboratório do país.</p>
 								</div>
 							</div>
 						</div>
 						<div className="dashboard-visual animate-fadeIn">
 							<img 
-								src="/images/dashboard-mockup.png" 
-								alt="Matriarca Dashboard" 
+								src="/images/Gemini_Generated_Image_8zx0rz8zx0rz8zx0.png" 
+								alt="Benefícios Telemedicina" 
 								width="800" 
-								height="600" 
 								className="dashboard-img shadow-2xl"
+								style={{ width: '100%', height: 'auto', objectFit: 'cover', borderRadius: '1rem' }}
 							/>
 						</div>
 					</div>
@@ -146,28 +146,28 @@ export default function HomeScreen() {
 					<div className="faq-list-v2">
 						{[
 							{ 
-								q: "Como funciona o atendimento de telemedicina na Matriarca?", 
-								a: "Nosso atendimento é rápido e prático. Após criar sua conta, você passa por uma triagem inovadora suportada por inteligência clínica. Em uma média de tempo inferior a 15 minutos, você é direcionado a um de nossos médicos que estão de plantão. Toda a consulta ocorre por vídeo com conexão estável, garantindo a mesma atenção humanizada das clínicas presenciais, além de diagnósticos ágeis." 
+								q: "Como funciona o atendimento na Matriarca? Preciso agendar ou posso consultar na hora?", 
+								a: "A Matriarca oferece dois modos de atendimento. No Pronto Atendimento, você entra na fila e é atendido por um clínico geral disponível sem hora marcada — ideal para sintomas imediatos. No Agendamento, você escolhe um especialista, seleciona data e horário, e entra na sala de vídeo no momento marcado. Em ambos os casos, antes da consulta você preenche uma triagem rápida que prepara o médico com um resumo clínico do seu caso." 
 							},
 							{ 
-								q: "A teleconsulta é segura e meus dados são protegidos?", 
-								a: "Sim, a máxima segurança e privacidade é parte do nosso compromisso. Todo o ambiente da plataforma emprega criptografia militar (ponta a ponta, AES-256). Seu prontuário eletrônico e a sala de vídeo são estritamente confidenciais e adequados 100% à LGPD e à Resolução CFM nº 2.314/2022, o que consolida nosso sigilo ético-profissional absoluto." 
+								q: "O que acontece durante a triagem antes da consulta?", 
+								a: "A triagem é uma etapa essencial antes de qualquer atendimento. Você responde perguntas sobre seus sintomas, histórico e motivo da consulta. Essas informações geram automaticamente um resumo clínico estruturado que é disponibilizado ao médico antes mesmo de você entrar na videochamada — tornando o atendimento mais ágil e preciso desde o primeiro minuto." 
+							},
+							{ 
+								q: "Como funciona a videoconsulta? Preciso instalar algum aplicativo?", 
+								a: "Não é necessário instalar nada. A videoconsulta acontece diretamente no navegador, dentro da própria plataforma. Ao entrar na sala, você e o médico se conectam via chamada de vídeo em tempo real. A sala fica disponível poucos minutos antes do horário agendado e você pode reconectar caso a conexão seja interrompida, sem perder a consulta." 
 							},
 							{ 
 								q: "Receberei minha receita médica, exame ou atestado de forma digital?", 
-								a: "Com certeza. Durante ou ao final de cada sua consulta, caso necessário, o especialista prescreverá suas receitas, que são validadas através de assinatura digital certificada pelo ICP-Brasil. Esses documentos são imediatos de acessar, tendo a mesma validade de um papel chancelado em todas as farmácias e laboratórios do Brasil inteiro, poupando totalmente o seu tempo e logística física. Você os recebe no seu app, SMS e e-mail." 
+								a: "Sim. Durante ou ao final da consulta, o médico pode emitir receitas, atestados e pedidos de exame com assinatura digital — com a mesma validade jurídica de um documento físico. Os documentos ficam disponíveis no seu histórico na plataforma e podem ser apresentados em qualquer farmácia ou laboratório do país." 
 							},
 							{ 
-								q: "Quais as especialidades de saúde estão incluídas na plataforma?", 
-								a: "Mantemos uma rede vasta contendo os melhores especialistas do país, abrangendo mais de 50 áreas focais de atuação médica. Nossos pacientes encontram práticos Clínicos Gerais para plantão imediato 24h, passando por especialistas renomados em áreas como Pediatria, Psiquiatria, Terapia, Cardiologia, Ginecologia, Ortopedia e Nutrição, entre diversas outras modalidades cruciais de bem estar." 
+								q: "Meus dados e prontuários são protegidos?", 
+								a: "Sim. Toda a comunicação na plataforma é protegida por criptografia de ponta a ponta, garantindo que nenhum dado trafegue de forma exposta. Seus prontuários e os dados da triagem ficam armazenados de forma segura e criptografada, com acesso restrito exclusivamente a você e ao médico responsável pelo atendimento." 
 							},
 							{ 
-								q: "Como o sistema de Home Care se vincula à telemedicina?", 
-								a: "Entendemos que alguns quadros demandam atenção mais física. Enquanto a plataforma online atende ocorrências leves de rotina e acompanhamentos, a Matriarca também gerencia soluções integradas de serviço de saúde residencial (Home Care). Nossas equipes são enviadas (mediante cobertura geográfica ou contratação a parte) para oferecer amparo em loco e tratamentos continuados que complementam as visitas digitais do seu médico titular." 
-							},
-							{ 
-								q: "Pessoas idosas têm dificuldade para utilizar o sistema de consulta online?", 
-								a: "A usabilidade e o design da nossa plataforma foram construídos essencialmente para reduzir os atritos de qualquer perfil de tecnologia. O fluxo é limpo, visivelmente agradável e possuímos uma excelente assistência técnica preparada na retaguarda. Se o paciente idoso — ou até mesmo leigo com acessos digitais — encontrar qualquer dificuldade, em 1 ou 2 toques, nossos consultores e enfermeiros o ajudam a entrar na sua sala digital com seu médico no horário correto." 
+								q: "Como sei que os médicos da plataforma são habilitados?", 
+								a: "Antes de realizar qualquer atendimento, todos os médicos cadastrados passam por um processo de verificação documental dentro da plataforma. Apenas profissionais com documentação validada — incluindo registro no CRM — recebem liberação para atender. Essa verificação é um requisito obrigatório, garantindo que você sempre seja atendido por um profissional legalmente habilitado." 
 							}
 						].map((item, i) => (
 							<div key={i} className={`faq-item-v2 ${openFaq === i ? 'active' : ''}`}>
@@ -187,8 +187,8 @@ export default function HomeScreen() {
 			<section className="final-cta">
 				<div className="container">
 					<div className="cta-box">
-						<h2 className="cta-title">Pronto para transformar seu cuidado?</h2>
-						<p className="cta-subtitle">Junte-se a milhares de pessoas que já descobriram a facilidade de cuidar da saúde.</p>
+						<h2 className="cta-title">Sua saúde a um clique de distância.</h2>
+						<p className="cta-subtitle">Crie sua conta e acesse pronto atendimento, agendamento com especialistas e prescrições digitais — tudo em um só lugar.</p>
 						<div className="cta-btns">
 							<Link href="/register" className="btn btn-white">Criar Conta Grátis</Link>
 							<Link href={{ pathname: '/register', query: { tipo: 'medico' } }} className="btn btn-outline-white">Sou Médico</Link>

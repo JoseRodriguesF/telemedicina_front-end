@@ -29,7 +29,8 @@ export async function chatWithOpenAI(
   message: string,
   nomePaciente: string | null = null,
   history: ChatMessage[] = [],
-  contextoHistorico: string = ''
+  contextoHistorico: string = '',
+  images: string[] = []
 ) {
   // PRIVACIDADE: Scrubbing de PII
   const primeiroNome = sanitizePatientName(nomePaciente)
@@ -238,15 +239,24 @@ export async function chatWithOpenAI(
     processedMessage = message.replace('[FORCAR_CONCLUSAO]', '').trim() || "Encerrar triagem agora."
   }
 
+  // Processar o array de imagens para a OpenAI
+  let finalUserContent: any = processedMessage;
+  if (images && images.length > 0) {
+    finalUserContent = [
+      { type: 'text', text: processedMessage },
+      ...images.map(img => ({ type: 'image_url', image_url: { url: img } }))
+    ];
+  }
+
   const response = await client.chat.completions.create({
-    model: 'gpt-4o',
+    model: 'gpt-4o-mini', // gpt-4o-mini has vision capabilities natively
     temperature: 0.1,
     messages: [
       { role: 'system', content: promptComportamento + extraInstruction },
       // histórico enviado pelo frontend (mantém contexto apenas durante a sessão)
       ...history.map((m) => ({ role: m.role, content: m.content })),
-      // nova mensagem do usuário
-      { role: 'user', content: processedMessage }
+      // nova mensagem do usuário (texto + possíveis imagens)
+      { role: 'user', content: finalUserContent }
     ]
   })
 

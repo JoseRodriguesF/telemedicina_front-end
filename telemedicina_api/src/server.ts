@@ -16,7 +16,8 @@ process.env.TZ = 'America/Sao_Paulo';
 
 const server = Fastify({ 
   logger: true,
-  trustProxy: true // Essencial para rate limiting atrás de um balanceador/proxy
+  trustProxy: true, // Essencial para rate limiting atrás de um balanceador/proxy
+  bodyLimit: 52428800 // 50MB
 })
 
 // Hardening 1: Helmet para proteção contra Clickjacking, XSS e Sniffing
