@@ -146,14 +146,23 @@ Para garantir estabilidade e organização no versionamento do código, o reposi
 1. **`main` (Produção):** 
    - Apenas código completamente testado e validado deve constar aqui. 
    - Reflete exatamente o que está rodando no ambiente real com os usuários finais.
+   - **Infraestrutura Recomendada no GCP (Mín. de 60 conexões simultâneas):**
+     - **API (Cloud Run ou GKE):** Instâncias de 2 a 4 vCPUs com 4GB a 8GB de RAM. Configurar auto-scaling com o mínimo de 2 instâncias ligadas para segurar picos de chamadas.
+     - **Banco (Cloud SQL):** Instância dedicada de 2 vCPUs e 8GB de RAM (ex: `db-custom-2-8192`), obrigatoriamente com Alta Disponibilidade (HA) ativada.
 
 2. **`dev` (Homologação / Staging):** 
    - Branch dedicada ao ambiente de homologação.
    - Todo o código recém-desenvolvido é unificado aqui para ser testado como um sistema completo antes de ir para produção.
+   - **Infraestrutura Recomendada no GCP (Máx. de 20 conexões simultâneas):**
+     - **API (Cloud Run):** Instâncias de 1 a 2 vCPUs e 2GB de RAM. O auto-scaling deve ter um teto baixo (ex: máximo de 2 instâncias) para economizar custos.
+     - **Banco (Cloud SQL):** Instância de 1 vCPU e 3.75GB de RAM (ex: `db-n1-standard-1`), rodando em zona única (sem HA) por ser apenas ambiente de homologação.
 
 3. **`tests` (Testes e Commits de Desenvolvimento):** 
    - Branch utilizada como rascunho seguro para subir commits frequentes, experimentações e wip (work in progress). 
    - O desenvolvimento diário acontece aqui ou em sub-branches derivadas daqui. Quando os testes passam, o código vai para `dev`.
+   - **Infraestrutura Recomendada no GCP (Máx. de 2 conexões simultâneas):**
+     - **API (Cloud Run):** Instância mínima de 1 vCPU e 512MB de RAM, com limite de 1 instância simultânea máxima (escala a 0 quando não utilizada).
+     - **Banco (Cloud SQL):** Instância micro compartilhada (ex: `db-f1-micro`), voltada puramente para economia. (Muitas vezes, a equipe pode preferir usar apenas o Docker localmente ao invés de subir na nuvem nesta fase).
 
 ---
 
