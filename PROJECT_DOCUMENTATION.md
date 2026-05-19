@@ -160,9 +160,9 @@ Para garantir estabilidade e organização no versionamento do código, o reposi
 3. **`tests` (Testes e Commits de Desenvolvimento):** 
    - Branch utilizada como rascunho seguro para subir commits frequentes, experimentações e wip (work in progress). 
    - O desenvolvimento diário acontece aqui ou em sub-branches derivadas daqui. Quando os testes passam, o código vai para `dev`.
-   - **Infraestrutura Recomendada no GCP (Máx. de 2 conexões simultâneas):**
-     - **API (Cloud Run):** Instância mínima de 1 vCPU e 512MB de RAM, com limite de 1 instância simultânea máxima (escala a 0 quando não utilizada).
-     - **Banco (Cloud SQL):** Instância micro compartilhada (ex: `db-f1-micro`), voltada puramente para economia. (Muitas vezes, a equipe pode preferir usar apenas o Docker localmente ao invés de subir na nuvem nesta fase).
+   - **Infraestrutura Recomendada no GCP (Folga para até 6 conexões simultâneas):**
+     - **API (Cloud Run):** Instância com 1 vCPU e 1GB de RAM, escalando até 2 instâncias máximas (escala a 0 quando não utilizada, mas permite picos leves sem gargalo de CPU na sinalização WebRTC).
+     - **Banco (Cloud SQL):** Instância pequena (ex: `db-g1-small`), que garante folga de memória para múltiplas transações simultâneas sem travar. (Lembrando que a equipe pode preferir usar o Docker localmente nesta fase ao invés de subir na nuvem).
 
 ---
 
