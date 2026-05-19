@@ -10,7 +10,7 @@ import { encrypt, decrypt } from '../utils/encryption'
 const historiaService = new HistoriaClinicaService()
 
 // Schema de validação para criar história clínica
-const criarHistoriaSchema = z.object({
+export const criarHistoriaSchema = z.object({
     pacienteId: z.number().int().positive(),
     dados: z.object({
         queixa_principal: z.string().optional(),
@@ -25,8 +25,8 @@ const criarHistoriaSchema = z.object({
 
 /**
  * Função Auxiliar de Verificação de Propriedade (BAC/IDOR Prevention)
- * Garante que apenas o paciente dono do prontuário ou o médico em atendimento
- * possam acessar os dados sensíveis da História Clínica.
+ * Quando é utilizada: Antes de qualquer leitura ou escrita nos dados de prontuário (História Clínica).
+ * Para que é utilizada: Garante que apenas o paciente dono do prontuário ou um médico/admin autenticado possam acessar os dados sensíveis, prevenindo vazamentos de dados (IDOR).
  */
 function checkOwnership(user: AuthenticatedUser, targetPacienteId: number): boolean {
     if (user.tipo_usuario === 'admin') return true
@@ -43,6 +43,8 @@ function checkOwnership(user: AuthenticatedUser, targetPacienteId: number): bool
 export class HistoriaClinicaController {
     /**
      * Criar nova história clínica
+     * Quando é utilizada: Durante ou ao final de uma teleconsulta, quando o médico preenche e salva o prontuário do paciente.
+     * Para que é utilizada: Recebe os dados clínicos, verifica permissões, criptografa as informações sensíveis (LGPD) e persiste no banco de dados.
      */
     async criar(request: FastifyRequest, reply: FastifyReply) {
         try {
@@ -88,6 +90,8 @@ export class HistoriaClinicaController {
 
     /**
      * Buscar histórias clínicas de um paciente com verificação de segurança
+     * Quando é utilizada: Quando o paciente acessa seu próprio histórico ou quando o médico entra no perfil do paciente para ver consultas passadas.
+     * Para que é utilizada: Recupera todas as histórias daquele paciente, descriptografa os dados para exibição e gera um log de auditoria de acesso.
      */
     async buscarPorPaciente(request: FastifyRequest, reply: FastifyReply) {
         try {
@@ -133,6 +137,8 @@ export class HistoriaClinicaController {
 
     /**
      * Buscar a última história clínica com proteção de dados
+     * Quando é utilizada: No início de uma nova consulta, para o médico revisar o estado clínico mais recente do paciente.
+     * Para que é utilizada: Retorna o prontuário mais recente descriptografado, agilizando a triagem/anamnese do médico atual.
      */
     async buscarUltima(request: FastifyRequest, reply: FastifyReply) {
         try {
@@ -174,6 +180,11 @@ export class HistoriaClinicaController {
         }
     }
 
+    /**
+     * Buscar história clínica por ID específico
+     * Quando é utilizada: Quando o usuário clica para "Ver detalhes" de um prontuário específico em uma lista do histórico.
+     * Para que é utilizada: Valida o ID, recupera os dados criptografados do banco, valida a permissão de visualização e retorna o registro limpo.
+     */
     async buscarPorId(request: FastifyRequest, reply: FastifyReply) {
         try {
             const { id } = request.params as { id: string }

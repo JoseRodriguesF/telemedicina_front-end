@@ -9,13 +9,13 @@ import { logAuditoria } from '../utils/auditLogger'
 const registerService = new RegisterService()
 
 // Schemas de validação com Zod
-const registerAccessSchema = z.object({
+export const registerAccessSchema = z.object({
   email: z.string().email('Email inválido'),
   senha: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres (OWASP Recomendation)'),
   tipo_usuario: z.enum(['medico', 'paciente'])
 })
 
-const registerPersonalSchema = z.object({
+export const registerPersonalSchema = z.object({
   usuario_id: z.number().int().positive('ID do usuário deve ser um número positivo'),
   nome_completo: z.string().min(1, 'Nome completo é obrigatório'),
   data_nascimento: z.string().refine((date) => !isNaN(Date.parse(date)), 'Data de nascimento inválida'),
@@ -37,7 +37,7 @@ const registerPersonalSchema = z.object({
   })
 })
 
-const registerMedicoSchema = z.object({
+export const registerMedicoSchema = z.object({
   usuario_id: z.number().int().positive('ID do usuário deve ser um número positivo'),
   nome_completo: z.string().min(1, 'Nome completo é obrigatório'),
   data_nascimento: z.string().refine((date) => !isNaN(Date.parse(date)), 'Data de nascimento inválida'),
@@ -50,6 +50,11 @@ const registerMedicoSchema = z.object({
 })
 
 export class RegisterController {
+  /**
+   * Função responsável pelo registro inicial das credenciais de acesso de um usuário.
+   * Quando é utilizada: Na primeira etapa de cadastro (tela de "Criar Conta"), antes de preencher os dados pessoais.
+   * Para que é utilizada: Cria a entrada base na tabela `Usuario` com email e senha criptografada, gerando também log de auditoria da criação da conta.
+   */
   async registerAccess(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { email, senha, tipo_usuario } = registerAccessSchema.parse(request.body)
@@ -78,6 +83,11 @@ export class RegisterController {
     }
   }
 
+  /**
+   * Função responsável por completar o perfil de um paciente no banco de dados.
+   * Quando é utilizada: Na segunda etapa do cadastro de paciente, logo após o registro das credenciais.
+   * Para que é utilizada: Valida e armazena os dados demográficos (CPF, data de nascimento, etc.), vincula o endereço preenchido, registra o aceite do TCLE (LGPD) e devolve o JWT gerado para autologin imediato.
+   */
   async registerPersonal(request: FastifyRequest, reply: FastifyReply) {
     try {
       const data = registerPersonalSchema.parse(request.body)
@@ -137,6 +147,11 @@ export class RegisterController {
     }
   }
 
+  /**
+   * Função responsável por completar o perfil profissional de um médico.
+   * Quando é utilizada: Na segunda etapa do cadastro de um profissional de saúde, após ele escolher o tipo "medico".
+   * Para que é utilizada: Salva dados médicos essenciais como CRM e UF, vincula os dados ao `Usuario`, gera o JWT e coloca a conta com o status de `pendente_documentos` aguardando aprovação administrativa.
+   */
   async registerMedico(request: FastifyRequest, reply: FastifyReply) {
     try {
       const data = registerMedicoSchema.parse(request.body)

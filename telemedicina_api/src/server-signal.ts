@@ -32,6 +32,11 @@ function verifyToken(token?: string): JWTPayload | null {
   }
 }
 
+/**
+ * Inicializa o Servidor de Sinalização WebRTC via WebSockets (WS).
+ * Quando é utilizada: Ao ligar o servidor Fastify/Node, o servidor WS acopla-se à porta HTTP principal.
+ * Para que é utilizada: Intermedia a troca de pacotes SDP (Offer/Answer) e candidatos ICE entre o médico e o paciente, permitindo que eles estabeleçam uma conexão direta par-a-par (P2P) de vídeo e áudio sem trafegar a mídia pelo backend.
+ */
 export function initSignalServer(httpServer: Server) {
   const wss = new WebSocketServer({ server: httpServer, path: '/signal' })
 
@@ -169,6 +174,11 @@ export function initSignalServer(httpServer: Server) {
     })
   })
 
+  /**
+   * Envia uma mensagem para todos os participantes de uma sala.
+   * Quando é utilizada: Quando um evento geral de sala acontece (ex: alguém entrou 'peer-joined', a sala está pronta 'ready', ou a chamada terminou 'end').
+   * Para que é utilizada: Notifica os peers conectados sobre mudanças de estado da sala, permitindo excluir o remetente original (exclude) para não receber ecos.
+   */
   function broadcastToRoom(roomId: string, exclude: WebSocket | null, payload: any) {
     for (const [sock, info] of clients.entries()) {
       if (info.roomId === roomId && sock !== exclude && sock.readyState === WebSocket.OPEN) {
@@ -177,6 +187,11 @@ export function initSignalServer(httpServer: Server) {
     }
   }
 
+  /**
+   * Repassa uma mensagem direta para os outros peers na sala.
+   * Quando é utilizada: Para trafegar informações cruciais de negociação P2P, como "offer", "answer", "ice-candidate" e "chat".
+   * Para que é utilizada: Funciona como o correio que entrega o pacote WebRTC de um cliente (médico) diretamente para o outro (paciente), viabilizando a conexão final.
+   */
   function relayToPeer(roomId: string, from: WebSocket, payload: any) {
     for (const [sock, info] of clients.entries()) {
       if (info.roomId === roomId && sock !== from && sock.readyState === WebSocket.OPEN) {

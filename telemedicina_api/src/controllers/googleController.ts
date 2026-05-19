@@ -6,7 +6,7 @@ import { logAuditoria } from '../utils/auditLogger';
 
 const googleService = new GoogleAuthService();
 
-const googleSchema = z.object({
+export const googleSchema = z.object({
   id_token: z.string().min(1, 'id_token é obrigatório'),
   tipo_usuario: z.enum(['medico', 'paciente']).optional()
 });

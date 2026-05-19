@@ -10,6 +10,9 @@ import { appRoutes } from './routes/index'
 import { initSignalServer } from './server-signal'
 import logger from './utils/logger'
 import { errorHandler } from './middlewares/errorHandler'
+import swagger from '@fastify/swagger'
+import swaggerUi from '@fastify/swagger-ui'
+import { validatorCompiler, serializerCompiler, jsonSchemaTransform } from 'fastify-type-provider-zod'
 
 // Garantir que o servidor utilize o fuso horário local de Brasília para sincronização
 process.env.TZ = 'America/Sao_Paulo';
@@ -19,6 +22,9 @@ const server = Fastify({
   trustProxy: true, // Essencial para rate limiting atrás de um balanceador/proxy
   bodyLimit: 52428800 // 50MB
 })
+
+server.setValidatorCompiler(validatorCompiler)
+server.setSerializerCompiler(serializerCompiler)
 
 // Hardening 1: Helmet para proteção contra Clickjacking, XSS e Sniffing
 server.register(helmet, {
@@ -82,6 +88,53 @@ const start = async () => {
         logger.error('Erro ao aplicar migrações. O servidor tentará continuar...', migrateErr as Error)
       }
     }
+
+    // Configurar Swagger para documentação da API
+    await server.register(swagger, {
+      transform: jsonSchemaTransform,
+      openapi: {
+        info: {
+          title: 'Telemedicina API',
+          description: 'Documentação da API do projeto de Telemedicina',
+          version: '1.0.0'
+        },
+        components: {
+          securitySchemes: {
+            bearerAuth: {
+              type: 'http',
+              scheme: 'bearer',
+              bearerFormat: 'JWT',
+              description: 'Insira o token JWT no formato: Bearer <token>'
+            }
+          }
+        }
+      }
+    })
+
+    await server.register(swaggerUi, {
+      routePrefix: '/docs',
+      uiConfig: {
+        docExpansion: 'list',
+        deepLinking: false
+      },
+      staticCSP: true,
+      transformStaticCSP: (header) => header
+    })
+
+    // Adiciona schema básico para rotas sem schema definido para que apareçam no Swagger
+    server.addHook('onRoute', (routeOptions) => {
+      if (!routeOptions.schema) {
+        routeOptions.schema = {}
+      }
+      if (!routeOptions.schema.tags) {
+        const tag = routeOptions.url.split('/')[1] || 'geral'
+        routeOptions.schema.tags = [tag]
+      }
+      if (!routeOptions.schema.security && routeOptions.preHandler) {
+        // Se tem preHandler, provavelmente tem autenticação
+        routeOptions.schema.security = [{ bearerAuth: [] }]
+      }
+    })
 
     // Registrar todas as rotas centralizadas
     await server.register(appRoutes)

@@ -45,6 +45,11 @@ export type WebRTCSession = {
   setPeerReady: () => void;
 };
 
+/**
+ * Inicializa a sessão WebRTC e os listeners do WebSocket (Sinalização).
+ * Quando é utilizada: Quando o paciente ou médico entram na tela de "Atendimento", após a liberação da câmera e microfone.
+ * Para que é utilizada: Cria a interface RTCPeerConnection, conecta ao WebSocket de sinalização, lida com eventos P2P e expõe métodos (startLocalMedia, end, sendMessage) para o componente React consumir de forma abstrata.
+ */
 export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
   const pc = new RTCPeerConnection({
     iceServers: args.iceServers,
@@ -187,6 +192,11 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     }
   };
 
+  /**
+   * Listener principal do WebSocket de sinalização.
+   * Quando é utilizada: A todo momento durante a vida útil da sala.
+   * Para que é utilizada: Recebe pacotes de estado ('joined', 'ready') e pacotes de negociação P2P ('offer', 'answer', 'ice-candidate') enviados pelo outro participante.
+   */
   ws.onmessage = async (evt) => {
     try {
       const msg = JSON.parse(evt.data) as SignalMessage;
@@ -273,6 +283,11 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     }
   };
 
+  /**
+   * Associa os tracks de mídia local (vídeo/áudio) à conexão Peer-to-Peer.
+   * Quando é utilizada: Ao capturar a câmera do usuário (startLocalMedia) ou quando as constraints mudam (ativar/desativar câmera).
+   * Para que é utilizada: Extrai as faixas de mídia do dispositivo do usuário e as injeta nos Transceivers do WebRTC. Se houver mudanças, engatilha uma nova negociação SDP.
+   */
   const setLocalStream = (stream: MediaStream | null) => {
     localStream = stream;
     if (stream) {
@@ -318,6 +333,11 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     return stream;
   };
 
+  /**
+   * Cria uma Oferta SDP e a envia via WebSocket.
+   * Quando é utilizada: Geralmente iniciada pelo 'medico' assim que ambos conectam na sala (evento 'ready'), ou ao reiniciar o ICE.
+   * Para que é utilizada: Descreve os codecs (H264, VP8) e recursos (áudio/vídeo) do remetente, propondo a conexão ao outro peer, que deverá responder com um Answer.
+   */
   const createAndSendOffer = async () => {
     if (isMakingOffer) return;
     // Permitimos que o médico envie oferta mesmo se não estiver perfeitamente estável (retry)
@@ -339,6 +359,11 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     }
   };
 
+  /**
+   * Responde a uma Oferta SDP recebida.
+   * Quando é utilizada: Automaticamente chamada pelo cliente que recebe um evento WebSocket do tipo 'offer' (normalmente o paciente).
+   * Para que é utilizada: Gera a resposta SDP aceitando as rotas viáveis, completando o handshake do WebRTC.
+   */
   const createAndSendAnswer = async () => {
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
@@ -353,6 +378,11 @@ export function createWebRTCSession(args: WebRTCSessionArgs): WebRTCSession {
     }
   };
 
+  /**
+   * Reinicia o processo ICE (Interactivity Connectivity Establishment).
+   * Quando é utilizada: Em cenários onde a conexão falha silenciosamente (estado 'failed') ou há perda severa de rota P2P.
+   * Para que é utilizada: Força a criação de uma nova Oferta forçando a busca de novos candidatos de rede, tentando restaurar a chamada de vídeo sem recarregar a página.
+   */
   const restartIce = () => {
     if (args.role === 'medico') {
       pc.createOffer({ iceRestart: true })

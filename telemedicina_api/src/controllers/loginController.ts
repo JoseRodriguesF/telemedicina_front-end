@@ -7,12 +7,17 @@ import { logAuditoria } from '../utils/auditLogger';
 const loginService = new LoginService();
 
 // Schema de validação com Zod
-const loginSchema = z.object({
+export const loginSchema = z.object({
   email: z.string().email('Email inválido'),
   senha: z.string().min(1, 'Senha é obrigatória')
 });
 
 export class LoginController {
+  /**
+   * Função responsável por autenticar um usuário no sistema.
+   * Quando é utilizada: Durante o fluxo de login do paciente, médico ou administrador na tela inicial da aplicação.
+   * Para que é utilizada: Valida as credenciais (email e senha), chama o serviço de autenticação, gera o log de auditoria de sucesso ou erro (LGPD), e retorna o token de acesso (JWT) e os dados do usuário.
+   */
   async login(request: FastifyRequest, reply: FastifyReply) {
     try {
       const { email, senha } = loginSchema.parse(request.body);

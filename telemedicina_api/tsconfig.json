@@ -11,6 +11,9 @@
     "moduleResolution": "node",
     "resolveJsonModule": true
   },
+  "ts-node": {
+    "files": true
+  },
   "include": [
     "src/**/*"
   ],

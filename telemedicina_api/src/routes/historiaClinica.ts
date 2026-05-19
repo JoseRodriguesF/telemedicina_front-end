@@ -1,15 +1,22 @@
 import { FastifyInstance } from 'fastify'
-import { HistoriaClinicaController } from '../controllers/historiaClinicaController'
+import { HistoriaClinicaController, criarHistoriaSchema } from '../controllers/historiaClinicaController'
 import { authenticateJWT } from '../middlewares/auth'
+import { ZodTypeProvider } from 'fastify-type-provider-zod'
 
 const controller = new HistoriaClinicaController()
 
-export async function historiaClinicaRoutes(fastify: FastifyInstance) {
+export async function historiaClinicaRoutes(app: FastifyInstance) {
+    const fastify = app.withTypeProvider<ZodTypeProvider>()
+
     // Criar história clínica
     fastify.route({
         method: 'POST',
         url: '/historia-clinica',
         preHandler: authenticateJWT,
+        schema: {
+            body: criarHistoriaSchema,
+            description: 'Cria uma nova história clínica para um paciente'
+        },
         handler: (req, reply) => controller.criar(req, reply)
     })
 
