@@ -9,7 +9,11 @@
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
-    "migrate": "dotenv -e .env -- npx prisma migrate dev"
+    "migrate": "dotenv -e .env -- npx prisma migrate dev",
+    "seed:admin": "dotenv -e .env -- npx ts-node prisma/seed_admin.ts",
+    "seed:dashboard": "dotenv -e .env -- npx ts-node prisma/seed_dashboard.ts",
+    "seed:medicos": "dotenv -e .env -- npx ts-node prisma/seed_pending_medicos.ts",
+    "seed": "npm run seed:admin && npm run seed:dashboard && npm run seed:medicos"
   },
   "keywords": [],
   "author": "",

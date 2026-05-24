@@ -111,6 +111,24 @@ npm run migrate
 npm run prisma:migrate
 ```
 
+### 3.3. Inicialização de Dados Mock (Seed)
+
+Para popular o seu banco de dados local com dados fictícios administrativos, médicos e consultas de teste, execute qualquer um dos comandos utilitários a partir da pasta `telemedicina_api/`:
+
+```bash
+# Executa todos os seeds sequencialmente (Recomendado para novos setups)
+npm run seed
+
+# Executa apenas o seed de usuários administrativos e fluxo básico
+npm run seed:admin
+
+# Executa apenas o seed de dados médicos, pacientes e consultas de teste
+npm run seed:dashboard
+
+# Executa apenas o seed de novos médicos aguardando aprovação
+npm run seed:medicos
+```
+
 ---
 
 ## 4. Execução Local (Bare Metal / Sem Docker)
@@ -243,16 +261,15 @@ chmod +x scripts/generate-certs.sh
 
 ## 7. Pipeline de Deploy Contínuo (CI/CD)
 
-O deploy da plataforma é totalmente automatizado e estruturado por meio de **GitHub Actions** em ambientes serverless do Google Cloud Platform (GCP). Os fluxos estão localizados em `.github/workflows/`.
+O deploy da plataforma é automatizado e estruturado por meio de **GitHub Actions** realizando deploy síncrono na Máquina Virtual de produção via conexões SSH seguras e reconstrução dos containers Docker. O arquivo de fluxo está localizado em `.github/workflows/deploy.yml`.
 
-*   **Deploy do Backend (`api-deploy.yml`)**: Realiza o build da imagem Docker do backend, faz o push para o GCP Artifact Registry e executa a atualização automática no **Google Cloud Run (API Backend)** ao mesclar códigos na branch `main`.
-*   **Deploy do Frontend (`web-deploy.yml`)**: Compila a aplicação Next.js injetando variáveis de ambiente em tempo de build, empacota a imagem do frontend e realiza o deploy no **Google Cloud Run (Frontend Web)**.
+*   **Deploy Unificado (`deploy.yml`)**: Ao realizar um push ou merge na branch `main`, o fluxo se conecta à VM de produção via SSH, faz o pull do repositório atualizado no diretório `~/app`, reconstrói as imagens locais com o `docker compose up -d --build` e reinicia o proxy reverso do Nginx para aplicar as novas configurações.
 
 ### 7.1. Variáveis de Deploy Exigidas nas Secrets do GitHub
 
-Para viabilizar o deploy sem vazamento de tokens, configure as seguintes secrets no painel do repositório no GitHub (`Settings > Secrets and variables > Actions`):
+Para viabilizar o deploy contínuo seguro, configure as seguintes secrets no painel do repositório no GitHub (`Settings > Secrets and variables > Actions`):
 
-*   `GCP_SA_KEY`: Chave JSON de uma conta de serviço no Google Cloud Platform com permissões de deploy no Cloud Run e escrita no Artifact Registry.
-*   `GCP_PROJECT_ID`: ID do projeto ativo registrado no console do GCP.
-*   `NEXT_PUBLIC_GOOGLE_CLIENT_ID`: ID do Google OAuth SSO para inclusão no build do Next.js.
-*   `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`: Chave do Google Maps para inclusão no build do Next.js.
+*   `VM_HOST`: Endereço IP público ou domínio DNS da Máquina Virtual de produção.
+*   `VM_USERNAME`: Nome do usuário para login SSH no servidor (ex: `ubuntu`).
+*   `VM_SSH_KEY`: Chave privada SSH (formato PEM ou OpenSSH) correspondente à chave pública cadastrada na VM em `~/.ssh/authorized_keys` para autenticação sem senha.
+
