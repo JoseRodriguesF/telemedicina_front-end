@@ -10,9 +10,13 @@ export async function vidaasRoutes(fastify: FastifyInstance) {
         instance.addHook('preHandler', authenticateJWT)
         
         instance.get('/api/vidaas/authenticate', controller.authenticate.bind(controller))
+        instance.get('/vidaas/authenticate', controller.authenticate.bind(controller))
+        
         instance.get('/api/vidaas/status', controller.checkStatus.bind(controller))
+        instance.get('/vidaas/status', controller.checkStatus.bind(controller))
     })
 
     // Rota pública para callback (OAuth2)
     fastify.get('/api/vidaas/callback', controller.callback.bind(controller))
+    fastify.get('/vidaas/callback', controller.callback.bind(controller))
 }

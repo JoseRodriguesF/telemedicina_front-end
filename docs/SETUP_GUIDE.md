@@ -214,6 +214,9 @@ A stack iniciará quatro containers interconectados na rede interna `telemedicin
 *   `nginx-proxy`: Servidor Nginx que escuta as portas públicas `80` e `443` e roteia as chamadas HTTP/WS de acordo com o subdomínio.
 *   `certbot`: Mapeia e atualiza automaticamente os certificados digitais SSL.
 
+> [!IMPORTANT]
+> No arquivo `docker-compose.yml`, a variável de compilação `NEXT_PUBLIC_API_URL` do frontend deve ser configurada exatamente como o subdomínio real da API (`https://api.matriarcatelemed.com.br`) e **nunca** com o caminho da rota proxy do frontend (`https://matriarcatelemed.com.br/api`). Caso contrário, o mecanismo de *rewrites* do Next.js entrará em um loop de redirecionamento infinito que resulta em consumo excessivo de recursos e no erro `502 Bad Gateway` durante o login e outras chamadas da API.
+
 ---
 
 ## 6. Utilização de Scripts e Automação de Infraestrutura
